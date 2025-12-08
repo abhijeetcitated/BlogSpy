@@ -1,16 +1,24 @@
 import { AppSidebar } from "@/components/app-sidebar"
-import { CommandCenter } from "@/components/command-center"
+import { TopNav } from "@/components/top-nav"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
-export default function DashboardPage() {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
+        <TopNav />
         <main className="flex-1 p-6">
-          <CommandCenter />
+          {children}
         </main>
       </SidebarInset>
     </SidebarProvider>
   )
 }
+
+
+

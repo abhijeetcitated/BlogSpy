@@ -1,14 +1,14 @@
 import { AppSidebar } from "@/components/app-sidebar"
-import { CommandCenter } from "@/components/command-center"
+import { TrendSpotter } from "@/components/trend-spotter"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
-export default function DashboardPage() {
+export default function TrendsPage() {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <main className="flex-1 p-6">
-          <CommandCenter />
+          <TrendSpotter />
         </main>
       </SidebarInset>
     </SidebarProvider>

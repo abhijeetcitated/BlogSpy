@@ -1,14 +1,14 @@
 import { AppSidebar } from "@/components/app-sidebar"
-import { CommandCenter } from "@/components/command-center"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { KeywordMagicContent } from "@/components/keyword-magic-content"
 
-export default function DashboardPage() {
+export default function KeywordMagicPage() {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <main className="flex-1 p-6">
-          <CommandCenter />
+        <main className="flex-1 flex flex-col h-screen overflow-hidden">
+          <KeywordMagicContent />
         </main>
       </SidebarInset>
     </SidebarProvider>
