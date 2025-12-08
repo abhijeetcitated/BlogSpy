@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { TopNav } from "@/components/top-nav"
-import { TrendSpotterContent } from "@/components/trend-spotter-content"
+import { TrendSpotter } from "@/components/trend-spotter-content"
 
 export default function TrendSpotterPage() {
   return (
@@ -9,7 +9,7 @@ export default function TrendSpotterPage() {
       <AppSidebar />
       <SidebarInset>
         <TopNav />
-        <TrendSpotterContent />
+        <TrendSpotter />
       </SidebarInset>
     </SidebarProvider>
   )
