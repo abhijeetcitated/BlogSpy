@@ -241,7 +241,7 @@ function ImagePlaceholder({ onUpload }: { onUpload: (url: string) => void }) {
 // ============================================
 // EDITOR TOOLBAR COMPONENT
 // ============================================
-function EditorToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
+function EditorToolbar({ editor }: { editor: ReturnType<typeof useEditor> | null }) {
   if (!editor) return null
 
   return (
