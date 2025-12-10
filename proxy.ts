@@ -97,6 +97,21 @@ export default function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // ============================================
+  // DEMO MODE: Allow all access during development
+  // Remove this block when implementing real auth
+  // ============================================
+  const isDemoMode = true // Set to false when real auth is ready
+  
+  if (isDemoMode) {
+    const response = NextResponse.next()
+    // Add security headers even in demo mode
+    response.headers.set("X-Frame-Options", "DENY")
+    response.headers.set("X-Content-Type-Options", "nosniff")
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+    return response
+  }
+
   // Get auth status (in production, use Clerk's auth())
   // For now, check cookie
   const authToken = request.cookies.get("__session")?.value ||
