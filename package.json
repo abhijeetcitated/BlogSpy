@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -16,17 +16,18 @@
     "format:check": "prettier --check .",
     "test": "echo \"Tests coming soon\" && exit 0",
     "test:watch": "echo \"Tests coming soon\" && exit 0",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
-    "db:generate": "prisma generate",
-    "db:seed": "prisma db seed",
+    "db:push": "npx prisma db push",
+    "db:migrate": "npx prisma migrate dev",
+    "db:studio": "npx prisma studio",
+    "db:generate": "npx prisma generate",
+    "db:seed": "npx prisma db seed",
     "clean": "rm -rf .next node_modules/.cache",
     "analyze": "ANALYZE=true next build",
-    "postinstall": "prisma generate"
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
+    "@prisma/client": "^6.19.1",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
@@ -71,6 +72,7 @@
     "lucide-react": "^0.454.0",
     "next": "16.0.7",
     "next-themes": "^0.4.6",
+    "prisma": "^6.19.1",
     "react": "19.2.0",
     "react-day-picker": "9.8.0",
     "react-dom": "19.2.0",
@@ -83,9 +85,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "zod": "3.25.76",
-    "zustand": "^5.0.9",
-    "prisma": "^6.1.0",
-    "@prisma/client": "^6.1.0"
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
