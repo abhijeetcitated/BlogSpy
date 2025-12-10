@@ -7,28 +7,47 @@ import "./globals.css"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
-// <CHANGE> Updated metadata for BlogSpy SEO Dashboard
+// Updated metadata for BlogSpy SEO Dashboard
 export const metadata: Metadata = {
-  title: "BlogSpy - SEO Dashboard",
-  description: "Modern SEO SaaS Dashboard for keyword research and content optimization",
-  generator: "v0.app",
-  icons: {
-    icon: [
+  title: {
+    default: "BlogSpy - AI-Powered SEO Intelligence Platform",
+    template: "%s | BlogSpy",
+  },
+  description: "AI-Powered SEO Intelligence Platform for keyword research, rank tracking, content optimization, and competitor analysis.",
+  keywords: ["SEO", "keyword research", "rank tracking", "content optimization", "competitor analysis", "AI writer"],
+  authors: [{ name: "BlogSpy" }],
+  creator: "BlogSpy",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName: "BlogSpy",
+    title: "BlogSpy - AI-Powered SEO Intelligence Platform",
+    description: "AI-Powered SEO Intelligence Platform for keyword research, rank tracking, content optimization, and competitor analysis.",
+    images: [
       {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "BlogSpy - AI-Powered SEO Intelligence Platform",
       },
     ],
-    apple: "/apple-icon.png",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "BlogSpy - AI-Powered SEO Intelligence Platform",
+    description: "AI-Powered SEO Intelligence Platform for keyword research, rank tracking, and content optimization.",
+    images: ["/og-image.svg"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
+  manifest: "/manifest.json",
 }
 
 export default function RootLayout({
