@@ -1,36 +1,165 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔍 BlogSpy - Modern SEO SaaS Platform
 
-## Getting Started
+> Enterprise-grade SEO dashboard for keyword research, rank tracking, and content optimization.
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-16.0-black?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?logo=tailwindcss)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Features
+
+### 🔑 Keyword Research
+- **Keyword Magic** - Discover thousands of keyword ideas with volume, difficulty, CPC
+- **Keyword Overview** - Deep dive into any keyword with SERP analysis
+- **Trend Spotter** - Find emerging topics before they peak
+
+### 📊 Rank Tracking
+- **Rank Tracker** - Monitor keyword positions across search engines
+- **Competitor Gap** - Find untapped keyword opportunities
+- **Content Decay** - Identify declining content for updates
+
+### ✍️ Content Tools
+- **AI Writer** - Generate SEO-optimized content with AI
+- **On-Page Checker** - Analyze pages for SEO issues
+- **Snippet Stealer** - Optimize for featured snippets
+
+### 🗺️ Content Strategy
+- **Topic Clusters** - Build semantic content clusters
+- **Content Roadmap** - Plan your content calendar
+
+## 🏗️ Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 4 |
+| UI Components | Radix UI + shadcn/ui |
+| State | Zustand |
+| Database | PostgreSQL (Prisma ORM) |
+| Auth | Clerk |
+| Payments | Stripe |
+| SEO Data | DataForSEO API |
+| Deployment | Vercel |
+
+## 📁 Project Structure
+
+```
+blogspy-saas/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Auth routes (login, register)
+│   ├── (marketing)/       # Marketing pages (blog, features)
+│   ├── api/               # API routes
+│   └── dashboard/         # Protected dashboard routes
+│
+├── components/
+│   ├── ui/                # shadcn/ui components
+│   ├── features/          # Feature components (organized by domain)
+│   ├── layout/            # Layout components (sidebar, nav)
+│   ├── charts/            # Chart components
+│   ├── common/            # Shared components
+│   └── forms/             # Form components
+│
+├── lib/                   # Utilities & helpers
+├── services/              # API service layer
+├── types/                 # TypeScript types
+├── config/                # App configuration
+├── store/                 # Zustand stores
+├── hooks/                 # Custom React hooks
+├── prisma/                # Database schema
+└── public/                # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 18+
+- pnpm (recommended) or npm
+- PostgreSQL database
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/blogspy-saas.git
+cd blogspy-saas
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Install dependencies
+pnpm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Copy environment variables
+cp .env.example .env.local
 
-## Deploy on Vercel
+# Setup database
+pnpm db:push
+pnpm db:generate
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Start development server
+pnpm dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Environment Variables
+
+```env
+# Required
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+DATABASE_URL=postgresql://...
+
+# Auth (Clerk)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+# SEO Data
+DATAFORSEO_LOGIN=
+DATAFORSEO_PASSWORD=
+
+# Payments (Stripe)
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+```
+
+## 📜 Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
+| `pnpm lint` | Run ESLint |
+| `pnpm lint:fix` | Fix ESLint errors |
+| `pnpm type-check` | Run TypeScript check |
+| `pnpm db:push` | Push schema to database |
+| `pnpm db:studio` | Open Prisma Studio |
+
+## 🔒 Security
+
+- Middleware-based route protection
+- Security headers (HSTS, XSS, etc.)
+- Rate limiting on API routes
+- Input validation with Zod
+
+## 📈 Performance
+
+- React Server Components
+- Optimized images with next/image
+- Code splitting & lazy loading
+- Turbopack for fast builds
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing`)
+5. Open Pull Request
+
+## 📄 License
+
+Private - All rights reserved.
+
+---
+
+Built with ❤️ by BlogSpy Team

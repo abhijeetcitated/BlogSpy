@@ -1,7 +1,121 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // ============================================
+  // PERFORMANCE OPTIMIZATION
+  // ============================================
+  
+  // Enable React Strict Mode for better debugging
+  reactStrictMode: true,
+
+  // ============================================
+  // TURBOPACK (Next.js 16 default)
+  // ============================================
+  turbopack: {
+    // Turbopack configuration (empty = use defaults)
+  },
+
+  // ============================================
+  // IMAGE OPTIMIZATION
+  // ============================================
+  images: {
+    // Remote image domains
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+    // Image formats
+    formats: ["image/avif", "image/webp"],
+  },
+
+  // ============================================
+  // SECURITY HEADERS
+  // ============================================
+  async headers() {
+    return [
+      {
+        // Apply to all routes
+        source: "/:path*",
+        headers: [
+          {
+            key: "X-DNS-Prefetch-Control",
+            value: "on",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains; preload",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ];
+  },
+
+  // ============================================
+  // REDIRECTS (SEO & Legacy URLs)
+  // ============================================
+  async redirects() {
+    return [
+      // Example: Redirect old URLs to new
+      // {
+      //   source: "/old-path",
+      //   destination: "/new-path",
+      //   permanent: true,
+      // },
+    ];
+  },
+
+  // ============================================
+  // EXPERIMENTAL FEATURES
+  // ============================================
+  experimental: {
+    // Enable optimized package imports
+    optimizePackageImports: [
+      "lucide-react",
+      "@radix-ui/react-icons",
+      "recharts",
+      "date-fns",
+    ],
+  },
+
+  // ============================================
+  // LOGGING (Development)
+  // ============================================
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+
+  // ============================================
+  // POWERED BY HEADER
+  // ============================================
+  poweredByHeader: false, // Remove X-Powered-By header
 };
 
 export default nextConfig;

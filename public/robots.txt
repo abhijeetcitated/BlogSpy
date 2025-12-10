@@ -1,0 +1,22 @@
+# BlogSpy - robots.txt
+# https://blogspy.io
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow private areas
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /settings/
+Disallow: /_next/
+Disallow: /admin/
+
+# Allow specific API endpoints for rich results
+Allow: /api/og/
+
+# Crawl delay (optional - be nice to servers)
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://blogspy.io/sitemap.xml

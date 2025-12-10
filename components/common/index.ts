@@ -13,6 +13,15 @@ export {
   PageLoading 
 } from "./loading-spinner"
 
+// Page Loading (Suspense)
+export {
+  PageLoading as SuspenseLoading,
+  CardLoading,
+  TableLoading,
+  ChartLoading,
+  SidebarLoading,
+} from "./page-loading"
+
 // Error Handling
 export { 
   ErrorBoundary, 

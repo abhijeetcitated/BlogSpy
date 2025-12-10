@@ -1,12 +1,29 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "blogspy-saas",
+  "version": "1.0.0",
+  "description": "BlogSpy - Modern SEO SaaS Platform for Keyword Research & Content Optimization",
   "private": true,
+  "author": "BlogSpy Team",
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "echo \"Tests coming soon\" && exit 0",
+    "test:watch": "echo \"Tests coming soon\" && exit 0",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate",
+    "db:seed": "prisma db seed",
+    "clean": "rm -rf .next node_modules/.cache",
+    "analyze": "ANALYZE=true next build",
+    "prepare": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
