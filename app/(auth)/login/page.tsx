@@ -1,17 +1,20 @@
 "use client"
 
+/**
+ * Login Page - Demo Mode Only
+ * Real authentication will be added later
+ * Last updated: Dec 10, 2025
+ */
+
 import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Loader2, ArrowRight, Sparkles, Construction } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function LoginPage() {
-  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleDemoLogin = async () => {
+  const handleDemoLogin = () => {
     setIsLoading(true)
     
     // Set demo user in localStorage
@@ -26,11 +29,8 @@ export default function LoginPage() {
     localStorage.setItem("auth_token", "demo_token_" + Date.now())
     localStorage.setItem("user", JSON.stringify(demoUser))
     
-    // Small delay for UX
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    router.push("/dashboard")
-    setIsLoading(false)
+    // Redirect using window.location for full page reload
+    window.location.href = "/dashboard"
   }
 
   return (
