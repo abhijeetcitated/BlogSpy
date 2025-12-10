@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#gradient)"/>
+  <!-- Letter B -->
+  <text x="100" y="135" font-family="Arial, sans-serif" font-size="100" font-weight="bold" fill="white" text-anchor="middle">B</text>
+  <!-- Spy Glass Handle -->
+  <line x1="145" y1="145" x2="175" y2="175" stroke="white" stroke-width="12" stroke-linecap="round"/>
+</svg>
