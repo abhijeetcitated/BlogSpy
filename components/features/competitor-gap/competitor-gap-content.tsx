@@ -16,7 +16,15 @@ import {
   ArrowDown,
   ArrowUpDown,
   Download,
-  Plus
+  Plus,
+  MessageSquare,
+  Globe,
+  Sparkles,
+  TrendingUp,
+  Zap,
+  Trophy,
+  Users,
+  FileText
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -26,6 +34,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent } from "@/components/ui/card"
 
 // ============================================
 // TYPES
@@ -343,6 +353,169 @@ const MOCK_GAP_DATA: GapKeyword[] = [
     competitor2Url: "https://theverge.com/notion-chatgpt",
     source: "comp2",
   },
+]
+
+// ============================================
+// WEAK SPOT DATA - Reddit/Quora/Forum Rankings
+// ============================================
+type WeakSpotType = "reddit" | "quora" | "linkedin" | "medium" | "forum"
+
+interface WeakSpotKeyword {
+  id: string
+  keyword: string
+  volume: number
+  kd: number
+  intent: Intent
+  weakSpotType: WeakSpotType
+  weakSpotRank: number
+  weakSpotUrl: string
+  weakSpotTitle: string
+  yourRank: number | null
+  opportunity: "high" | "medium" | "low"
+  trafficPotential: number
+}
+
+const WEAK_SPOT_DATA: WeakSpotKeyword[] = [
+  {
+    id: "ws1",
+    keyword: "best ai writing tools 2024",
+    volume: 12500,
+    kd: 18,
+    intent: "commercial",
+    weakSpotType: "reddit",
+    weakSpotRank: 2,
+    weakSpotUrl: "https://reddit.com/r/artificial/comments/...",
+    weakSpotTitle: "What AI writing tools are you guys using? Thread getting outdated",
+    yourRank: null,
+    opportunity: "high",
+    trafficPotential: 8500
+  },
+  {
+    id: "ws2",
+    keyword: "chatgpt vs claude for coding",
+    volume: 8900,
+    kd: 22,
+    intent: "informational",
+    weakSpotType: "reddit",
+    weakSpotRank: 1,
+    weakSpotUrl: "https://reddit.com/r/programming/comments/...",
+    weakSpotTitle: "ChatGPT or Claude for coding? Need opinions (6 months old)",
+    yourRank: 15,
+    opportunity: "high",
+    trafficPotential: 6200
+  },
+  {
+    id: "ws3",
+    keyword: "how to do keyword research",
+    volume: 22000,
+    kd: 35,
+    intent: "informational",
+    weakSpotType: "quora",
+    weakSpotRank: 4,
+    weakSpotUrl: "https://quora.com/How-do-I-do-keyword-research",
+    weakSpotTitle: "How do I do keyword research for my blog? - Generic 2019 answer",
+    yourRank: 28,
+    opportunity: "medium",
+    trafficPotential: 4800
+  },
+  {
+    id: "ws4",
+    keyword: "seo tools comparison",
+    volume: 6700,
+    kd: 28,
+    intent: "commercial",
+    weakSpotType: "linkedin",
+    weakSpotRank: 3,
+    weakSpotUrl: "https://linkedin.com/pulse/best-seo-tools-2023",
+    weakSpotTitle: "Best SEO Tools 2023 - LinkedIn Pulse Article (Outdated)",
+    yourRank: null,
+    opportunity: "high",
+    trafficPotential: 4200
+  },
+  {
+    id: "ws5",
+    keyword: "content marketing strategy examples",
+    volume: 14200,
+    kd: 32,
+    intent: "informational",
+    weakSpotType: "medium",
+    weakSpotRank: 5,
+    weakSpotUrl: "https://medium.com/@marketer/content-strategy",
+    weakSpotTitle: "My Content Marketing Strategy - Personal Blog Post",
+    yourRank: 12,
+    opportunity: "medium",
+    trafficPotential: 3500
+  },
+  {
+    id: "ws6",
+    keyword: "free seo audit tools",
+    volume: 9800,
+    kd: 24,
+    intent: "transactional",
+    weakSpotType: "reddit",
+    weakSpotRank: 3,
+    weakSpotUrl: "https://reddit.com/r/SEO/comments/...",
+    weakSpotTitle: "Best free SEO audit tools? Thread from 2 years ago",
+    yourRank: null,
+    opportunity: "high",
+    trafficPotential: 5800
+  },
+  {
+    id: "ws7",
+    keyword: "ai content writing tips",
+    volume: 5400,
+    kd: 19,
+    intent: "informational",
+    weakSpotType: "quora",
+    weakSpotRank: 2,
+    weakSpotUrl: "https://quora.com/What-are-tips-for-AI-content",
+    weakSpotTitle: "Tips for using AI to write content - Basic answer",
+    yourRank: 22,
+    opportunity: "high",
+    trafficPotential: 3800
+  },
+  {
+    id: "ws8",
+    keyword: "how to rank on google fast",
+    volume: 18500,
+    kd: 42,
+    intent: "informational",
+    weakSpotType: "reddit",
+    weakSpotRank: 6,
+    weakSpotUrl: "https://reddit.com/r/SEO/comments/...",
+    weakSpotTitle: "How to rank faster? Outdated advice thread",
+    yourRank: 35,
+    opportunity: "medium",
+    trafficPotential: 2800
+  },
+  {
+    id: "ws9",
+    keyword: "jasper ai alternatives",
+    volume: 7200,
+    kd: 26,
+    intent: "commercial",
+    weakSpotType: "reddit",
+    weakSpotRank: 1,
+    weakSpotUrl: "https://reddit.com/r/EntrepreneurRideAlong/...",
+    weakSpotTitle: "Looking for Jasper alternatives - Thread from last year",
+    yourRank: null,
+    opportunity: "high",
+    trafficPotential: 5100
+  },
+  {
+    id: "ws10",
+    keyword: "blog post optimization checklist",
+    volume: 4100,
+    kd: 21,
+    intent: "informational",
+    weakSpotType: "medium",
+    weakSpotRank: 4,
+    weakSpotUrl: "https://medium.com/seo-tips/optimization-checklist",
+    weakSpotTitle: "SEO Checklist - Basic Medium article",
+    yourRank: 18,
+    opportunity: "high",
+    trafficPotential: 2900
+  }
 ]
 
 // ============================================

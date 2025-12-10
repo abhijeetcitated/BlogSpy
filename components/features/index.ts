@@ -33,7 +33,7 @@ export { KeywordOverviewContent } from "./keyword-overview"
 export { RankTrackerContent } from "./rank-tracker"
 
 // Competitor Gap
-export { CompetitorGapContent } from "./competitor-gap"
+export { CompetitorGapContent, WeakSpotDetector } from "./competitor-gap"
 
 // Content Decay
 export { ContentDecayContent } from "./content-decay"

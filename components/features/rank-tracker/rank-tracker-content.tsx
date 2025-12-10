@@ -23,10 +23,16 @@ import {
   CheckCircle2,
   Search,
   X,
+  Sparkles,
+  Eye,
+  EyeOff,
+  Bot,
+  AlertTriangle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -47,6 +53,14 @@ import { cn } from "@/lib/utils"
 // ============================================
 // TYPES
 // ============================================
+interface AIOverviewStatus {
+  inOverview: boolean
+  position: "cited" | "mentioned" | "not_included"
+  citationUrl: string | null
+  competitors: string[]
+  recommendation: string | null
+}
+
 interface RankData {
   id: string
   keyword: string
@@ -58,11 +72,44 @@ interface RankData {
   url: string
   trendHistory: number[]
   lastUpdated: string
+  aiOverview: AIOverviewStatus
 }
 
 type FilterTab = "All" | "Top 3" | "Top 10" | "Top 100" | "Improved" | "Declined"
 type SortField = "keyword" | "rank" | "change" | "volume" | null
 type SortDirection = "asc" | "desc"
+
+// AI Overview mock statuses
+const AI_OVERVIEW_STATUSES: AIOverviewStatus[] = [
+  {
+    inOverview: true,
+    position: "cited",
+    citationUrl: "/blog/best-seo-tools",
+    competitors: ["semrush.com", "ahrefs.com"],
+    recommendation: null
+  },
+  {
+    inOverview: true,
+    position: "mentioned",
+    citationUrl: null,
+    competitors: ["hubspot.com", "moz.com"],
+    recommendation: "Add more specific examples to get cited"
+  },
+  {
+    inOverview: false,
+    position: "not_included",
+    citationUrl: null,
+    competitors: ["semrush.com", "ahrefs.com", "moz.com"],
+    recommendation: "Add these entities: 'pricing comparison', 'free trial', 'enterprise features'"
+  },
+  {
+    inOverview: true,
+    position: "cited",
+    citationUrl: "/tools/keyword-research",
+    competitors: ["neilpatel.com", "backlinko.com"],
+    recommendation: null
+  }
+]
 
 // ============================================
 // MOCK DATA - Comprehensive Rank Data
@@ -79,6 +126,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/blog/best-seo-tools",
     trendHistory: [15, 12, 10, 8, 6, 5, 4, 3, 2, 2],
     lastUpdated: "2 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[0],
   },
   {
     id: "2",
@@ -91,6 +139,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/tools/ai-writer",
     trendHistory: [12, 10, 9, 8, 7, 6, 6, 5, 5, 5],
     lastUpdated: "1 hour ago",
+    aiOverview: AI_OVERVIEW_STATUSES[1],
   },
   {
     id: "3",
@@ -103,6 +152,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/features/keyword-magic",
     trendHistory: [4, 5, 5, 6, 6, 7, 7, 8, 8, 8],
     lastUpdated: "3 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[2],
   },
   {
     id: "4",
@@ -115,6 +165,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/features/rank-tracker",
     trendHistory: [8, 6, 5, 4, 3, 2, 2, 2, 1, 1],
     lastUpdated: "30 mins ago",
+    aiOverview: AI_OVERVIEW_STATUSES[0],
   },
   {
     id: "5",
@@ -127,6 +178,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/features/competitor-gap",
     trendHistory: [12, 13, 12, 11, 12, 12, 12, 12, 12, 12],
     lastUpdated: "4 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[2],
   },
   {
     id: "6",
@@ -139,6 +191,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/blog/content-optimization",
     trendHistory: [18, 15, 12, 10, 8, 6, 5, 4, 3, 3],
     lastUpdated: "1 hour ago",
+    aiOverview: AI_OVERVIEW_STATUSES[1],
   },
   {
     id: "7",
@@ -151,6 +204,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/tools/backlinks",
     trendHistory: [10, 11, 12, 13, 13, 14, 14, 15, 15, 15],
     lastUpdated: "2 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[2],
   },
   {
     id: "8",
@@ -163,6 +217,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/features/serp-analyzer",
     trendHistory: [14, 12, 11, 10, 9, 8, 8, 7, 7, 7],
     lastUpdated: "5 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[0],
   },
   {
     id: "9",
@@ -175,6 +230,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/tools/on-page-checker",
     trendHistory: [20, 16, 14, 12, 10, 8, 6, 5, 4, 4],
     lastUpdated: "1 hour ago",
+    aiOverview: AI_OVERVIEW_STATUSES[1],
   },
   {
     id: "10",
@@ -187,6 +243,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/features/content-gap",
     trendHistory: [4, 5, 5, 6, 6, 7, 8, 8, 9, 9],
     lastUpdated: "6 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[2],
   },
   {
     id: "11",
@@ -199,6 +256,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/tools/ai-assistant",
     trendHistory: [22, 18, 15, 13, 11, 9, 8, 7, 6, 6],
     lastUpdated: "45 mins ago",
+    aiOverview: AI_OVERVIEW_STATUSES[0],
   },
   {
     id: "12",
@@ -211,6 +269,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/blog/post-ideas",
     trendHistory: [10, 11, 12, 13, 14, 15, 16, 17, 18, 18],
     lastUpdated: "3 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[2],
   },
   {
     id: "13",
@@ -223,6 +282,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/blog/seo-strategy",
     trendHistory: [25, 22, 19, 17, 15, 14, 13, 12, 11, 11],
     lastUpdated: "2 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[1],
   },
   {
     id: "14",
@@ -235,6 +295,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/tools/keyword-density",
     trendHistory: [14, 15, 16, 17, 18, 19, 20, 21, 22, 22],
     lastUpdated: "8 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[2],
   },
   {
     id: "15",
@@ -247,6 +308,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/tools/meta-generator",
     trendHistory: [12, 10, 8, 7, 6, 5, 4, 3, 2, 2],
     lastUpdated: "1 hour ago",
+    aiOverview: AI_OVERVIEW_STATUSES[0],
   },
   {
     id: "16",
@@ -259,6 +321,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/tools/da-checker",
     trendHistory: [8, 9, 9, 10, 10, 11, 12, 13, 14, 14],
     lastUpdated: "4 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[3],
   },
   {
     id: "17",
@@ -271,6 +334,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/tools/snippet-optimizer",
     trendHistory: [15, 13, 11, 9, 8, 7, 5, 4, 3, 3],
     lastUpdated: "2 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[0],
   },
   {
     id: "18",
@@ -283,6 +347,7 @@ const MOCK_RANK_DATA: RankData[] = [
     url: "/features/local-seo",
     trendHistory: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
     lastUpdated: "5 hours ago",
+    aiOverview: AI_OVERVIEW_STATUSES[1],
   },
 ]
 
@@ -568,6 +633,7 @@ export function RankTrackerContent() {
       url: `/blog/${keyword.toLowerCase().replace(/\s+/g, '-')}`,
       trendHistory: Array(10).fill(0).map(() => Math.floor(Math.random() * 30) + 20),
       lastUpdated: "Just now",
+      aiOverview: AI_OVERVIEW_STATUSES[Math.floor(Math.random() * AI_OVERVIEW_STATUSES.length)],
     }))
 
     // Calculate change based on generated ranks
@@ -833,6 +899,9 @@ export function RankTrackerContent() {
                 <th className="px-4 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider">
                   SERP Features
                 </th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  AI Overview
+                </th>
                 <th className="px-4 py-3 text-right">
                   <button
                     onClick={() => handleSort("volume")}
@@ -890,6 +959,60 @@ export function RankTrackerContent() {
                       {row.serpFeatures.map((feature, i) => (
                         <SerpFeatureIcon key={i} type={feature} />
                       ))}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center">
+                      {row.aiOverview ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className={cn(
+                              "inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium",
+                              row.aiOverview.position === "cited" && "bg-emerald-500/20 text-emerald-400",
+                              row.aiOverview.position === "mentioned" && "bg-amber-500/20 text-amber-400",
+                              row.aiOverview.position === "not_included" && "bg-red-500/20 text-red-400",
+                              !row.aiOverview.inOverview && "bg-slate-700/50 text-slate-400"
+                            )}>
+                              <Eye className="w-3 h-3" />
+                              {row.aiOverview.position === "cited" && "Cited"}
+                              {row.aiOverview.position === "mentioned" && "Mentioned"}
+                              {row.aiOverview.position === "not_included" && "Not In AI"}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs max-w-[220px]">
+                            {row.aiOverview.position === "cited" && (
+                              <div>
+                                <p className="font-medium text-emerald-400">✓ Your site is cited!</p>
+                                {row.aiOverview.citationUrl && <p>URL: {row.aiOverview.citationUrl}</p>}
+                                {row.aiOverview.competitors.length > 0 && (
+                                  <p className="mt-1 text-slate-400">Also showing: {row.aiOverview.competitors.join(", ")}</p>
+                                )}
+                              </div>
+                            )}
+                            {row.aiOverview.position === "mentioned" && (
+                              <div>
+                                <p className="font-medium text-amber-400">~ Brand mentioned</p>
+                                {row.aiOverview.recommendation && (
+                                  <p className="mt-1 text-slate-300">{row.aiOverview.recommendation}</p>
+                                )}
+                              </div>
+                            )}
+                            {row.aiOverview.position === "not_included" && (
+                              <div>
+                                <p className="font-medium text-red-400">✗ Not in AI Overview</p>
+                                {row.aiOverview.competitors.length > 0 && (
+                                  <p className="mt-1">Competitors shown: {row.aiOverview.competitors.join(", ")}</p>
+                                )}
+                                {row.aiOverview.recommendation && (
+                                  <p className="mt-1 text-slate-300 text-[10px]">{row.aiOverview.recommendation}</p>
+                                )}
+                              </div>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <span className="text-slate-500 text-xs">—</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">

@@ -15,6 +15,13 @@ import {
   Zap,
   Loader2,
   ExternalLink,
+  Bell,
+  BellRing,
+  Mail,
+  MessageSquare,
+  Clock,
+  Shield,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -201,6 +208,96 @@ const RECOVERED_ARTICLES: RecoveredArticle[] = [
   },
 ]
 
+// ============================================
+// DECAY ALERT SYSTEM
+// ============================================
+type AlertSeverity = "critical" | "warning" | "info"
+type AlertChannel = "email" | "slack" | "whatsapp" | "push"
+
+interface DecayAlert {
+  id: string
+  title: string
+  message: string
+  severity: AlertSeverity
+  timestamp: string
+  articleId: string | null
+  actionTaken: boolean
+  channel: AlertChannel
+}
+
+interface AlertPreferences {
+  email: boolean
+  slack: boolean
+  whatsapp: boolean
+  push: boolean
+  criticalOnly: boolean
+  dailyDigest: boolean
+  instantAlerts: boolean
+}
+
+const MOCK_ALERTS: DecayAlert[] = [
+  {
+    id: "alert1",
+    title: "🚨 Critical Decay Detected",
+    message: "\"Best Gaming Laptops 2024\" dropped 5 positions in 24h - immediate action required",
+    severity: "critical",
+    timestamp: "2 hours ago",
+    articleId: "1",
+    actionTaken: false,
+    channel: "push",
+  },
+  {
+    id: "alert2",
+    title: "⚠️ Competitor Update Alert",
+    message: "Competitor ahrefs.com updated their SEO guide - your content may need refresh",
+    severity: "warning",
+    timestamp: "5 hours ago",
+    articleId: "3",
+    actionTaken: false,
+    channel: "email",
+  },
+  {
+    id: "alert3",
+    title: "📉 Traffic Decline Pattern",
+    message: "3 articles showing consistent traffic decline over past week",
+    severity: "warning",
+    timestamp: "8 hours ago",
+    articleId: null,
+    actionTaken: true,
+    channel: "slack",
+  },
+  {
+    id: "alert4",
+    title: "🔍 Schema Issues Found",
+    message: "\"Email Marketing Best Practices\" missing FAQ schema - easy win opportunity",
+    severity: "info",
+    timestamp: "1 day ago",
+    articleId: "5",
+    actionTaken: false,
+    channel: "email",
+  },
+  {
+    id: "alert5",
+    title: "⏰ Scheduled Refresh Due",
+    message: "\"Python vs JavaScript\" is due for quarterly refresh based on your calendar",
+    severity: "info",
+    timestamp: "1 day ago",
+    articleId: "6",
+    actionTaken: true,
+    channel: "push",
+  },
+]
+
+const DEFAULT_ALERT_PREFS: AlertPreferences = {
+  email: true,
+  slack: false,
+  whatsapp: true,
+  push: true,
+  criticalOnly: false,
+  dailyDigest: true,
+  instantAlerts: true,
+}
+
 // Generate matrix points from article data
 const generateMatrixPoints = (articles: DecayArticle[]): MatrixPoint[] => {
   return articles.map((article) => {
@@ -288,6 +385,11 @@ export function ContentDecayContent() {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
 
+  // Alert states
+  const [alerts, setAlerts] = useState<DecayAlert[]>(MOCK_ALERTS)
+  const [alertPrefs, setAlertPrefs] = useState<AlertPreferences>(DEFAULT_ALERT_PREFS)
+  const [showAlertPanel, setShowAlertPanel] = useState(false)
+
   // Refs for scrolling
   const articleRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
@@ -362,6 +464,31 @@ export function ContentDecayContent() {
     setTimeout(() => setHighlightedArticleId(null), 3000)
   }, [])
 
+  // Dismiss alert
+  const handleDismissAlert = useCallback((alertId: string) => {
+    setAlerts(prev => prev.filter(a => a.id !== alertId))
+    showNotification("Alert dismissed")
+  }, [showNotification])
+
+  // Mark alert as actioned
+  const handleMarkActioned = useCallback((alertId: string) => {
+    setAlerts(prev => prev.map(a => 
+      a.id === alertId ? { ...a, actionTaken: true } : a
+    ))
+    showNotification("Marked as actioned ✓")
+  }, [showNotification])
+
+  // Toggle alert preference
+  const toggleAlertPref = useCallback((key: keyof AlertPreferences) => {
+    setAlertPrefs(prev => ({ ...prev, [key]: !prev[key] }))
+  }, [])
+
+  // Unread alerts count
+  const unreadAlertsCount = useMemo(
+    () => alerts.filter(a => !a.actionTaken).length,
+    [alerts]
+  )
+
   // Get article by ID for tooltip
   const getArticleById = useCallback(
     (articleId: string) => articles.find((a) => a.id === articleId),
@@ -426,6 +553,211 @@ export function ContentDecayContent() {
               </>
             )}
           </Button>
+        </div>
+
+        {/* Decay Alert Center */}
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          <div 
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors"
+            onClick={() => setShowAlertPanel(!showAlertPanel)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <BellRing className="w-5 h-5 text-amber-400" />
+                {unreadAlertsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
+                    {unreadAlertsCount}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Decay Alert Center</h2>
+                <p className="text-xs text-muted-foreground">{unreadAlertsCount} unread alerts</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {alertPrefs.email && <Mail className="w-4 h-4 text-muted-foreground" />}
+                {alertPrefs.slack && <MessageSquare className="w-4 h-4 text-muted-foreground" />}
+                {alertPrefs.whatsapp && <MessageSquare className="w-4 h-4 text-emerald-400" />}
+                {alertPrefs.push && <Bell className="w-4 h-4 text-muted-foreground" />}
+              </div>
+              <TrendingDown className={cn(
+                "w-4 h-4 text-muted-foreground transition-transform",
+                showAlertPanel && "rotate-180"
+              )} />
+            </div>
+          </div>
+
+          {showAlertPanel && (
+            <div className="border-t border-border">
+              {/* Alert Preferences */}
+              <div className="p-4 bg-muted/20 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Alert Channels</span>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => toggleAlertPref("email")}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                        alertPrefs.email ? "bg-blue-500/20 text-blue-400" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      <Mail className="w-3 h-3" />
+                      Email
+                    </button>
+                    <button 
+                      onClick={() => toggleAlertPref("slack")}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                        alertPrefs.slack ? "bg-purple-500/20 text-purple-400" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      Slack
+                    </button>
+                    <button 
+                      onClick={() => toggleAlertPref("whatsapp")}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                        alertPrefs.whatsapp ? "bg-emerald-500/20 text-emerald-400" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      <MessageSquare className="w-3 h-3" />
+                      WhatsApp
+                    </button>
+                    <button 
+                      onClick={() => toggleAlertPref("push")}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                        alertPrefs.push ? "bg-amber-500/20 text-amber-400" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      <Bell className="w-3 h-3" />
+                      Push
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 mt-3">
+                  <button
+                    onClick={() => toggleAlertPref("criticalOnly")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                      alertPrefs.criticalOnly ? "bg-red-500/20 text-red-400" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <Shield className="w-3 h-3" />
+                    Critical Only
+                  </button>
+                  <button
+                    onClick={() => toggleAlertPref("dailyDigest")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                      alertPrefs.dailyDigest ? "bg-cyan-500/20 text-cyan-400" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <Clock className="w-3 h-3" />
+                    Daily Digest
+                  </button>
+                  <button
+                    onClick={() => toggleAlertPref("instantAlerts")}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs transition-colors",
+                      alertPrefs.instantAlerts ? "bg-amber-500/20 text-amber-400" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <Zap className="w-3 h-3" />
+                    Instant Alerts
+                  </button>
+                </div>
+              </div>
+
+              {/* Alert List */}
+              <div className="max-h-[300px] overflow-y-auto divide-y divide-border">
+                {alerts.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">All caught up! No new alerts.</p>
+                  </div>
+                ) : (
+                  alerts.map((alert) => (
+                    <div 
+                      key={alert.id}
+                      className={cn(
+                        "p-4 hover:bg-muted/30 transition-colors",
+                        !alert.actionTaken && "bg-muted/10"
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={cn(
+                              "w-2 h-2 rounded-full",
+                              alert.severity === "critical" && "bg-red-500",
+                              alert.severity === "warning" && "bg-amber-500",
+                              alert.severity === "info" && "bg-blue-500"
+                            )} />
+                            <span className={cn(
+                              "text-sm font-medium",
+                              alert.actionTaken ? "text-muted-foreground" : "text-foreground"
+                            )}>
+                              {alert.title}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2">{alert.message}</p>
+                          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {alert.timestamp}
+                            </span>
+                            {alert.channel === "email" && <Mail className="w-3 h-3" />}
+                            {alert.channel === "slack" && <MessageSquare className="w-3 h-3" />}
+                            {alert.channel === "whatsapp" && <MessageSquare className="w-3 h-3 text-emerald-400" />}
+                            {alert.channel === "push" && <Bell className="w-3 h-3" />}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {!alert.actionTaken && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => handleMarkActioned(alert.id)}
+                            >
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Done
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                            onClick={() => handleDismissAlert(alert.id)}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      {alert.articleId && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs mt-2"
+                          onClick={() => {
+                            handleMatrixDotClick(alert.articleId!)
+                            handleMarkActioned(alert.id)
+                          }}
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          View Article
+                        </Button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Decay Matrix */}

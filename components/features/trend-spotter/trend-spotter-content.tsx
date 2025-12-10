@@ -15,6 +15,12 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
+  Calendar,
+  Sparkles,
+  Sun,
+  Snowflake,
+  Leaf,
+  Flower2,
 } from "lucide-react"
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps"
 import { Button } from "@/components/ui/button"
@@ -62,6 +68,134 @@ const trendingTopics = [
   { topic: "Remote work 2025", category: "Business", growth: 120, volume: "420K" },
   { topic: "Plant-based protein", category: "Health", growth: 95, volume: "380K" },
 ]
+
+// Seasonal Trend Calendar Data
+type Season = "winter" | "spring" | "summer" | "fall"
+interface SeasonalTrend {
+  month: string
+  season: Season
+  events: {
+    name: string
+    keyword: string
+    predictedVolume: string
+    confidence: number
+    daysUntil: number
+    category: string
+  }[]
+}
+
+const seasonalCalendar: SeasonalTrend[] = [
+  {
+    month: "January",
+    season: "winter",
+    events: [
+      { name: "New Year Resolutions", keyword: "fitness goals 2025", predictedVolume: "125K", confidence: 92, daysUntil: 15, category: "Health" },
+      { name: "Winter Sales", keyword: "winter clearance deals", predictedVolume: "89K", confidence: 88, daysUntil: 20, category: "Shopping" },
+    ]
+  },
+  {
+    month: "February",
+    season: "winter",
+    events: [
+      { name: "Valentine's Day", keyword: "romantic gift ideas", predictedVolume: "210K", confidence: 95, daysUntil: 45, category: "Lifestyle" },
+      { name: "Super Bowl", keyword: "super bowl party snacks", predictedVolume: "180K", confidence: 90, daysUntil: 38, category: "Entertainment" },
+    ]
+  },
+  {
+    month: "March",
+    season: "spring",
+    events: [
+      { name: "Spring Break", keyword: "spring break destinations", predictedVolume: "320K", confidence: 87, daysUntil: 75, category: "Travel" },
+      { name: "Tax Season", keyword: "tax filing tips", predictedVolume: "450K", confidence: 94, daysUntil: 60, category: "Finance" },
+    ]
+  },
+  {
+    month: "April",
+    season: "spring",
+    events: [
+      { name: "Easter", keyword: "easter decoration ideas", predictedVolume: "95K", confidence: 91, daysUntil: 100, category: "Lifestyle" },
+      { name: "Earth Day", keyword: "sustainable living tips", predictedVolume: "78K", confidence: 85, daysUntil: 110, category: "Environment" },
+    ]
+  },
+  {
+    month: "May",
+    season: "spring",
+    events: [
+      { name: "Mother's Day", keyword: "mothers day gift guide", predictedVolume: "280K", confidence: 93, daysUntil: 130, category: "Lifestyle" },
+      { name: "Memorial Day", keyword: "memorial day sales 2025", predictedVolume: "165K", confidence: 89, daysUntil: 145, category: "Shopping" },
+    ]
+  },
+  {
+    month: "June",
+    season: "summer",
+    events: [
+      { name: "Father's Day", keyword: "fathers day gifts", predictedVolume: "195K", confidence: 92, daysUntil: 160, category: "Lifestyle" },
+      { name: "Summer Vacation", keyword: "summer travel deals", predictedVolume: "380K", confidence: 88, daysUntil: 170, category: "Travel" },
+    ]
+  },
+  {
+    month: "July",
+    season: "summer",
+    events: [
+      { name: "4th of July", keyword: "july 4th fireworks near me", predictedVolume: "420K", confidence: 96, daysUntil: 185, category: "Entertainment" },
+      { name: "Prime Day", keyword: "amazon prime day deals", predictedVolume: "550K", confidence: 91, daysUntil: 195, category: "Shopping" },
+    ]
+  },
+  {
+    month: "August",
+    season: "summer",
+    events: [
+      { name: "Back to School", keyword: "back to school supplies", predictedVolume: "680K", confidence: 95, daysUntil: 220, category: "Shopping" },
+      { name: "Summer End", keyword: "end of summer activities", predictedVolume: "145K", confidence: 82, daysUntil: 235, category: "Lifestyle" },
+    ]
+  },
+  {
+    month: "September",
+    season: "fall",
+    events: [
+      { name: "Labor Day", keyword: "labor day weekend trips", predictedVolume: "175K", confidence: 89, daysUntil: 250, category: "Travel" },
+      { name: "Fall Fashion", keyword: "fall fashion trends 2025", predictedVolume: "220K", confidence: 86, daysUntil: 260, category: "Fashion" },
+    ]
+  },
+  {
+    month: "October",
+    season: "fall",
+    events: [
+      { name: "Halloween", keyword: "halloween costume ideas", predictedVolume: "890K", confidence: 97, daysUntil: 290, category: "Entertainment" },
+      { name: "Breast Cancer Awareness", keyword: "breast cancer awareness", predictedVolume: "125K", confidence: 93, daysUntil: 280, category: "Health" },
+    ]
+  },
+  {
+    month: "November",
+    season: "fall",
+    events: [
+      { name: "Black Friday", keyword: "black friday deals 2025", predictedVolume: "1.2M", confidence: 98, daysUntil: 320, category: "Shopping" },
+      { name: "Thanksgiving", keyword: "thanksgiving recipes", predictedVolume: "450K", confidence: 94, daysUntil: 315, category: "Food" },
+    ]
+  },
+  {
+    month: "December",
+    season: "winter",
+    events: [
+      { name: "Christmas", keyword: "christmas gift ideas", predictedVolume: "980K", confidence: 97, daysUntil: 350, category: "Shopping" },
+      { name: "Year in Review", keyword: "best of 2025", predictedVolume: "320K", confidence: 90, daysUntil: 360, category: "Media" },
+    ]
+  },
+]
+
+const seasonIcons = {
+  winter: Snowflake,
+  spring: Flower2,
+  summer: Sun,
+  fall: Leaf,
+}
+
+const seasonColors = {
+  winter: "text-blue-400 bg-blue-500/20",
+  spring: "text-pink-400 bg-pink-500/20",
+  summer: "text-amber-400 bg-amber-500/20",
+  fall: "text-orange-400 bg-orange-500/20",
+}
 
 const regionData = [
   { rank: 1, name: "California", value: 100 },
@@ -473,6 +607,112 @@ export function TrendSpotter() {
             </table>
           </div>
         </Card>
+      </div>
+
+      {/* Seasonal Trend Calendar */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-purple-500" />
+            Trend Calendar
+            <Badge variant="outline" className="ml-2 text-xs border-purple-500/30 text-purple-400">
+              <Sparkles className="h-3 w-3 mr-1" />
+              AI Predicted
+            </Badge>
+          </h2>
+          <div className="flex items-center gap-3 text-xs">
+            {(["winter", "spring", "summer", "fall"] as Season[]).map((season) => {
+              const Icon = seasonIcons[season]
+              return (
+                <div key={season} className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${seasonColors[season]}`}>
+                  <Icon className="h-3 w-3" />
+                  <span className="capitalize">{season}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <Card className="bg-card border-border overflow-hidden">
+          <div className="grid grid-cols-4 gap-px bg-border">
+            {seasonalCalendar.map((month, idx) => {
+              const SeasonIcon = seasonIcons[month.season]
+              return (
+                <div 
+                  key={idx} 
+                  className={`p-4 bg-card hover:bg-muted/30 transition-colors ${
+                    idx < 4 ? "" : ""
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-foreground">{month.month}</span>
+                    <div className={`p-1.5 rounded-md ${seasonColors[month.season]}`}>
+                      <SeasonIcon className="h-3.5 w-3.5" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {month.events.map((event, eventIdx) => (
+                      <div 
+                        key={eventIdx}
+                        className="p-2 rounded-lg bg-muted/30 border border-border/50 hover:border-emerald-500/30 transition-colors cursor-pointer group"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-medium text-foreground group-hover:text-emerald-400 transition-colors">
+                            {event.name}
+                          </span>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[10px] px-1.5 py-0 ${
+                              event.confidence >= 90 
+                                ? "border-emerald-500/30 text-emerald-400" 
+                                : event.confidence >= 85 
+                                  ? "border-amber-500/30 text-amber-400"
+                                  : "border-muted text-muted-foreground"
+                            }`}
+                          >
+                            {event.confidence}%
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mb-1.5 truncate">
+                          "{event.keyword}"
+                        </p>
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-purple-400 font-mono">{event.predictedVolume}</span>
+                          <span className="text-muted-foreground">
+                            {event.daysUntil < 30 ? (
+                              <span className="text-amber-400 font-medium">In {event.daysUntil}d</span>
+                            ) : (
+                              `${event.daysUntil}d away`
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+
+        {/* Quick Actions for Calendar */}
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            <Sparkles className="h-3 w-3 inline mr-1 text-purple-400" />
+            AI predictions based on historical trends & current velocity data
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8 text-xs">
+              <Download className="h-3 w-3 mr-1" />
+              Export Calendar
+            </Button>
+            <Button size="sm" className="h-8 text-xs bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30">
+              <Calendar className="h-3 w-3 mr-1" />
+              Add to Google Calendar
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )
