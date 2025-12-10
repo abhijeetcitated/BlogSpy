@@ -1,0 +1,256 @@
+/**
+ * Mock Keywords Data
+ * Sample keyword data for development and testing
+ */
+
+export interface MockKeyword {
+  id: string
+  keyword: string
+  volume: number
+  difficulty: number
+  cpc: number
+  trend: "up" | "down" | "stable"
+  intent: "informational" | "navigational" | "transactional" | "commercial"
+  position?: number
+  change?: number
+  serpFeatures?: string[]
+  monthlyData?: number[]
+}
+
+export const mockKeywords: MockKeyword[] = [
+  {
+    id: "kw_1",
+    keyword: "best seo tools 2024",
+    volume: 12500,
+    difficulty: 67,
+    cpc: 8.50,
+    trend: "up",
+    intent: "commercial",
+    position: 3,
+    change: 2,
+    serpFeatures: ["featured_snippet", "people_also_ask", "site_links"],
+    monthlyData: [9500, 10200, 10800, 11200, 11800, 12000, 12200, 12300, 12400, 12450, 12480, 12500],
+  },
+  {
+    id: "kw_2",
+    keyword: "how to improve website seo",
+    volume: 8900,
+    difficulty: 45,
+    cpc: 5.20,
+    trend: "stable",
+    intent: "informational",
+    position: 7,
+    change: -1,
+    serpFeatures: ["featured_snippet", "video", "people_also_ask"],
+    monthlyData: [8800, 8850, 8900, 8920, 8900, 8880, 8900, 8910, 8900, 8890, 8900, 8900],
+  },
+  {
+    id: "kw_3",
+    keyword: "keyword research tool free",
+    volume: 6700,
+    difficulty: 52,
+    cpc: 4.80,
+    trend: "up",
+    intent: "commercial",
+    position: 12,
+    change: 5,
+    serpFeatures: ["shopping", "site_links"],
+    monthlyData: [5200, 5500, 5800, 6000, 6200, 6350, 6450, 6550, 6600, 6650, 6680, 6700],
+  },
+  {
+    id: "kw_4",
+    keyword: "content marketing strategy",
+    volume: 14200,
+    difficulty: 73,
+    cpc: 12.40,
+    trend: "up",
+    intent: "informational",
+    position: 5,
+    change: 1,
+    serpFeatures: ["featured_snippet", "people_also_ask", "image_pack"],
+    monthlyData: [11000, 11500, 12000, 12500, 13000, 13300, 13600, 13800, 14000, 14100, 14150, 14200],
+  },
+  {
+    id: "kw_5",
+    keyword: "blog post seo checklist",
+    volume: 4500,
+    difficulty: 38,
+    cpc: 3.60,
+    trend: "stable",
+    intent: "informational",
+    position: 2,
+    change: 0,
+    serpFeatures: ["featured_snippet", "people_also_ask"],
+    monthlyData: [4400, 4450, 4480, 4500, 4520, 4500, 4480, 4490, 4500, 4510, 4500, 4500],
+  },
+  {
+    id: "kw_6",
+    keyword: "backlink checker",
+    volume: 22000,
+    difficulty: 81,
+    cpc: 15.20,
+    trend: "down",
+    intent: "transactional",
+    position: 18,
+    change: -3,
+    serpFeatures: ["shopping", "site_links", "reviews"],
+    monthlyData: [24000, 23500, 23200, 23000, 22800, 22600, 22500, 22400, 22300, 22200, 22100, 22000],
+  },
+  {
+    id: "kw_7",
+    keyword: "google analytics setup",
+    volume: 9800,
+    difficulty: 42,
+    cpc: 6.70,
+    trend: "stable",
+    intent: "navigational",
+    position: 8,
+    change: 2,
+    serpFeatures: ["knowledge_panel", "video", "people_also_ask"],
+    monthlyData: [9600, 9650, 9700, 9750, 9800, 9820, 9800, 9780, 9800, 9810, 9800, 9800],
+  },
+  {
+    id: "kw_8",
+    keyword: "long tail keyword generator",
+    volume: 3200,
+    difficulty: 35,
+    cpc: 4.20,
+    trend: "up",
+    intent: "commercial",
+    position: 4,
+    change: 3,
+    serpFeatures: ["people_also_ask"],
+    monthlyData: [2500, 2600, 2700, 2800, 2900, 3000, 3050, 3100, 3120, 3150, 3180, 3200],
+  },
+  {
+    id: "kw_9",
+    keyword: "technical seo audit",
+    volume: 5600,
+    difficulty: 58,
+    cpc: 9.80,
+    trend: "up",
+    intent: "commercial",
+    position: 6,
+    change: 4,
+    serpFeatures: ["featured_snippet", "people_also_ask"],
+    monthlyData: [4200, 4400, 4600, 4800, 5000, 5150, 5300, 5400, 5500, 5550, 5580, 5600],
+  },
+  {
+    id: "kw_10",
+    keyword: "competitor analysis tool",
+    volume: 7800,
+    difficulty: 64,
+    cpc: 11.20,
+    trend: "stable",
+    intent: "transactional",
+    position: 11,
+    change: 0,
+    serpFeatures: ["shopping", "reviews", "site_links"],
+    monthlyData: [7700, 7750, 7780, 7800, 7820, 7800, 7790, 7800, 7810, 7800, 7800, 7800],
+  },
+  {
+    id: "kw_11",
+    keyword: "seo for beginners guide",
+    volume: 18500,
+    difficulty: 55,
+    cpc: 6.90,
+    trend: "up",
+    intent: "informational",
+    position: 9,
+    change: 1,
+    serpFeatures: ["featured_snippet", "video", "people_also_ask", "image_pack"],
+    monthlyData: [15000, 15500, 16000, 16500, 17000, 17400, 17800, 18000, 18200, 18350, 18450, 18500],
+  },
+  {
+    id: "kw_12",
+    keyword: "meta description best practices",
+    volume: 2800,
+    difficulty: 32,
+    cpc: 2.90,
+    trend: "stable",
+    intent: "informational",
+    position: 1,
+    change: 0,
+    serpFeatures: ["featured_snippet"],
+    monthlyData: [2750, 2780, 2790, 2800, 2810, 2800, 2790, 2800, 2805, 2800, 2800, 2800],
+  },
+  {
+    id: "kw_13",
+    keyword: "website traffic checker",
+    volume: 11200,
+    difficulty: 69,
+    cpc: 8.90,
+    trend: "down",
+    intent: "transactional",
+    position: 15,
+    change: -2,
+    serpFeatures: ["shopping", "site_links"],
+    monthlyData: [12000, 11800, 11700, 11600, 11500, 11450, 11400, 11350, 11300, 11250, 11220, 11200],
+  },
+  {
+    id: "kw_14",
+    keyword: "internal linking strategy",
+    volume: 4100,
+    difficulty: 41,
+    cpc: 5.40,
+    trend: "up",
+    intent: "informational",
+    position: 3,
+    change: 2,
+    serpFeatures: ["featured_snippet", "people_also_ask"],
+    monthlyData: [3200, 3400, 3550, 3700, 3800, 3900, 3950, 4000, 4030, 4060, 4080, 4100],
+  },
+  {
+    id: "kw_15",
+    keyword: "serp analysis tool",
+    volume: 2400,
+    difficulty: 48,
+    cpc: 7.30,
+    trend: "up",
+    intent: "commercial",
+    position: 7,
+    change: 5,
+    serpFeatures: ["people_also_ask", "reviews"],
+    monthlyData: [1800, 1900, 2000, 2100, 2150, 2200, 2250, 2300, 2340, 2370, 2390, 2400],
+  },
+]
+
+// Related keywords for suggestions
+export const mockRelatedKeywords: Record<string, MockKeyword[]> = {
+  "best seo tools 2024": [
+    { id: "rel_1", keyword: "top seo software", volume: 3200, difficulty: 62, cpc: 7.80, trend: "up", intent: "commercial" },
+    { id: "rel_2", keyword: "seo tools comparison", volume: 2100, difficulty: 55, cpc: 6.50, trend: "stable", intent: "commercial" },
+    { id: "rel_3", keyword: "free seo tools online", volume: 8500, difficulty: 48, cpc: 4.20, trend: "up", intent: "transactional" },
+    { id: "rel_4", keyword: "enterprise seo platform", volume: 1800, difficulty: 71, cpc: 18.50, trend: "stable", intent: "commercial" },
+    { id: "rel_5", keyword: "seo audit tools", volume: 4500, difficulty: 58, cpc: 9.20, trend: "up", intent: "commercial" },
+  ],
+  "content marketing strategy": [
+    { id: "rel_6", keyword: "content marketing plan template", volume: 5400, difficulty: 42, cpc: 5.60, trend: "up", intent: "informational" },
+    { id: "rel_7", keyword: "b2b content marketing", volume: 6200, difficulty: 65, cpc: 14.80, trend: "stable", intent: "informational" },
+    { id: "rel_8", keyword: "content calendar tool", volume: 3800, difficulty: 38, cpc: 4.90, trend: "up", intent: "commercial" },
+    { id: "rel_9", keyword: "content marketing examples", volume: 4100, difficulty: 35, cpc: 3.20, trend: "stable", intent: "informational" },
+    { id: "rel_10", keyword: "content distribution strategy", volume: 2900, difficulty: 52, cpc: 7.40, trend: "up", intent: "informational" },
+  ],
+}
+
+// Questions (People Also Ask)
+export const mockQuestions: Record<string, string[]> = {
+  "best seo tools 2024": [
+    "What is the best SEO tool for beginners?",
+    "Which SEO tool is most accurate?",
+    "Is SEMrush better than Ahrefs?",
+    "What free SEO tools does Google offer?",
+    "How much do SEO tools cost?",
+    "What features should I look for in an SEO tool?",
+  ],
+  "content marketing strategy": [
+    "How do I create a content marketing strategy?",
+    "What are the 7 steps of content marketing?",
+    "What is an example of content marketing?",
+    "How do you measure content marketing success?",
+    "What is the difference between content marketing and SEO?",
+    "How often should you post content?",
+  ],
+}
+
+export default mockKeywords

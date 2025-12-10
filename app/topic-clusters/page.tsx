@@ -2,15 +2,27 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { TopNav } from "@/components/top-nav"
 import { TopicClusterContent } from "@/components/topic-cluster-content"
+import { DemoWrapper } from "@/components/common/demo-wrapper"
 
-export default function TopicClustersPage() {
+export const metadata = {
+  title: "Topic Clusters Demo - BlogSpy | Build Content Authority",
+  description: "Try our topic cluster tool. Organize content into strategic clusters for better SEO. Sign up for full access.",
+}
+
+export default function TopicClustersDemoPage() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="flex flex-col">
-        <TopNav />
-        <TopicClusterContent />
-      </SidebarInset>
-    </SidebarProvider>
+    <DemoWrapper
+      featureName="Topic Clusters"
+      featureDescription="Create unlimited topic clusters with AI-powered content suggestions and internal linking strategies."
+      dashboardPath="/dashboard/strategy/topic-clusters"
+    >
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset className="flex flex-col">
+          <TopNav />
+          <TopicClusterContent />
+        </SidebarInset>
+      </SidebarProvider>
+    </DemoWrapper>
   )
 }

@@ -1,0 +1,363 @@
+// ============================================
+// PRISMA SCHEMA - BlogSpy Database Models
+// ============================================
+// Database: PostgreSQL (Supabase)
+// ORM: Prisma
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique // Clerk user ID
+  email         String    @unique
+  name          String?
+  avatar        String?
+  
+  // Subscription
+  plan          Plan      @default(FREE)
+  credits       Int       @default(50)
+  stripeCustomerId String? @unique
+  
+  // Settings
+  settings      Json?     @default("{}")
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  
+  // Relations
+  projects      Project[]
+  keywords      Keyword[]
+  rankings      Ranking[]
+  content       Content[]
+  searches      SearchHistory[]
+  subscriptions Subscription[]
+  
+  @@map("users")
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// ============================================
+// SUBSCRIPTION & BILLING
+// ============================================
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stripe
+  stripeSubscriptionId String   @unique
+  stripePriceId        String
+  stripeCurrentPeriodEnd DateTime
+  
+  // Status
+  status               SubscriptionStatus @default(ACTIVE)
+  plan                 Plan
+  
+  // Timestamps
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  canceledAt           DateTime?
+  
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+  TRIALING
+}
+
+// ============================================
+// PROJECTS
+// ============================================
+
+model Project {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name        String
+  domain      String
+  description String?
+  
+  // Settings
+  settings    Json?    @default("{}")
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  keywords    Keyword[]
+  rankings    Ranking[]
+  content     Content[]
+  competitors Competitor[]
+  
+  @@unique([userId, domain])
+  @@map("projects")
+}
+
+// ============================================
+// KEYWORDS
+// ============================================
+
+model Keyword {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  
+  // Keyword Data
+  keyword     String
+  location    String   @default("US")
+  language    String   @default("en")
+  
+  // Metrics (cached from DataForSEO)
+  volume      Int?
+  difficulty  Int?
+  cpc         Float?
+  competition Float?
+  intent      String?
+  
+  // Trend Data
+  trend       String?  // up, down, stable
+  monthlyData Json?    // Array of monthly volumes
+  
+  // SERP Features
+  serpFeatures Json?   // Array of SERP features
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastFetchedAt DateTime?
+  
+  // Relations
+  rankings    Ranking[]
+  
+  @@unique([userId, keyword, location])
+  @@index([keyword])
+  @@map("keywords")
+}
+
+// ============================================
+// RANKINGS
+// ============================================
+
+model Ranking {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  keywordId   String
+  keyword     Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  
+  // Ranking Data
+  position    Int
+  previousPosition Int?
+  change      Int      @default(0)
+  url         String?
+  
+  // Traffic Estimate
+  traffic     Int?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  checkedAt   DateTime @default(now())
+  
+  // History (stored as separate entries)
+  @@index([keywordId, checkedAt])
+  @@map("rankings")
+}
+
+// ============================================
+// CONTENT
+// ============================================
+
+model Content {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  
+  // Content Data
+  title       String
+  url         String
+  status      ContentStatus @default(DRAFT)
+  
+  // Metrics
+  score       Int?
+  wordCount   Int?
+  
+  // Traffic & Decay
+  traffic     Int?
+  previousTraffic Int?
+  decayRisk   DecayRisk @default(NONE)
+  
+  // SEO Analysis (cached)
+  analysis    Json?
+  
+  // Keywords
+  keywords    Json?    // Array of target keywords
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  publishedAt DateTime?
+  lastAnalyzedAt DateTime?
+  
+  @@unique([userId, url])
+  @@map("content")
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum DecayRisk {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ============================================
+// COMPETITORS
+// ============================================
+
+model Competitor {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  domain      String
+  name        String?
+  
+  // Metrics (cached)
+  commonKeywords Int?
+  avgPosition Float?
+  visibility  Float?
+  traffic     Int?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([projectId, domain])
+  @@map("competitors")
+}
+
+// ============================================
+// SEARCH HISTORY
+// ============================================
+
+model SearchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  query       String
+  type        SearchType
+  location    String?
+  
+  // Results count
+  resultsCount Int?
+  
+  // Credits used
+  creditsUsed Int      @default(1)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@map("search_history")
+}
+
+enum SearchType {
+  KEYWORD
+  COMPETITOR
+  CONTENT
+  TREND
+}
+
+// ============================================
+// TOPIC CLUSTERS
+// ============================================
+
+model TopicCluster {
+  id          String   @id @default(cuid())
+  userId      String
+  projectId   String?
+  
+  // Cluster Data
+  name        String
+  pillarTopic String
+  
+  // Metrics
+  totalKeywords Int    @default(0)
+  avgDifficulty Float?
+  totalVolume   Int?
+  
+  // Topics
+  topics      Json?    // Array of subtopics
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("topic_clusters")
+}
+
+// ============================================
+// API USAGE TRACKING
+// ============================================
+
+model ApiUsage {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // API Info
+  endpoint    String
+  method      String
+  
+  // Credits
+  creditsUsed Int      @default(1)
+  
+  // Response
+  statusCode  Int?
+  responseTime Int?    // in ms
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@map("api_usage")
+}
