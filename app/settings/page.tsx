@@ -1,7 +1,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { TopNav } from "@/components/top-nav"
-import { SettingsContent } from "@/components/settings-content"
+import { AppSidebar, TopNav } from "@/components/layout"
+import { SettingsContent } from "@/components/features"
 
 export default function SettingsPage() {
   return (

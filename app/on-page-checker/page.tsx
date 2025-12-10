@@ -1,7 +1,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { TopNav } from "@/components/top-nav"
-import { OnPageCheckerContent } from "@/components/on-page-checker-content"
+import { AppSidebar, TopNav } from "@/components/layout"
+import { OnPageCheckerContent } from "@/components/features"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
 
 export const metadata = {

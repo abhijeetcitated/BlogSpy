@@ -1,4 +1,4 @@
-import { OnPageCheckerContent } from "@/components/on-page-checker-content"
+import { OnPageCheckerContent } from "@/components/features"
 
 export default function OnPageCheckerPage() {
   return <OnPageCheckerContent />

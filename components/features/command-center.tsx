@@ -6,8 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { TrendingSparkline } from "@/components/trending-sparkline"
-import { CreditRing } from "@/components/credit-ring"
+import { TrendingSparkline, CreditRing } from "@/components/charts"
 
 const quickActions = [
   { 

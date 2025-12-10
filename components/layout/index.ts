@@ -1,15 +1,12 @@
 // ============================================
 // LAYOUT COMPONENTS - BARREL EXPORT
 // ============================================
-// Re-export layout components for organized imports
-// New code can import from "@/components/layout"
+// All layout components live in this folder
+// Import from "@/components/layout"
 // ============================================
 
-// Top Navigation
-export { TopNav } from "../top-nav"
+// Top Navigation - Global search, theme, notifications
+export { TopNav } from "./top-nav"
 
-// Sidebar
-export { Sidebar } from "../sidebar"
-
-// App Sidebar (shadcn)
-export { AppSidebar } from "../app-sidebar"
+// App Sidebar - Main navigation sidebar
+export { AppSidebar } from "./app-sidebar"

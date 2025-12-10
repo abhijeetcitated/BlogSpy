@@ -1,4 +1,4 @@
-import { ContentRoadmapContent } from "@/components/content-roadmap-content"
+import { ContentRoadmapContent } from "@/components/features"
 
 export default function ContentRoadmapPage() {
   return <ContentRoadmapContent />

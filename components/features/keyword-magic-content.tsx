@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
-import { KeywordTable, type Keyword } from "@/components/keyword-table"
+import { KeywordTable, type Keyword } from "./keyword-table"
 import { cn } from "@/lib/utils"
 
 // Mock Keywords Data - 15+ items with diverse intents, volumes, KD, CPC, and Weak Spots

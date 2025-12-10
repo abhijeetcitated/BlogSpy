@@ -5,7 +5,7 @@ import { Search, X, Upload, Download, Home, FlaskConical, ChevronRight } from "l
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { KeywordTable } from "@/components/keyword-table"
+import { KeywordTable } from "./keyword-table"
 import { cn } from "@/lib/utils"
 
 const countryData = [

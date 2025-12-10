@@ -19,8 +19,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { NetworkGraph } from "@/components/network-graph"
-import { ClusterListView } from "@/components/cluster-list-view"
+import { NetworkGraph } from "./network-graph"
+import { ClusterListView } from "./cluster-list-view"
 
 type ViewMode = "graph" | "list"
 type ColorMode = "kd" | "volume" | "intent"

@@ -1,7 +1,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { TopNav } from "@/components/top-nav"
-import { ContentRoadmapContent } from "@/components/content-roadmap-content"
+import { AppSidebar, TopNav } from "@/components/layout"
+import { ContentRoadmapContent } from "@/components/features"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
 
 export const metadata = {

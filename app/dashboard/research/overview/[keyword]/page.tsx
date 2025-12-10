@@ -1,4 +1,4 @@
-import { KeywordOverviewContent } from "@/components/keyword-overview-content"
+import { KeywordOverviewContent } from "@/components/features"
 
 interface PageProps {
   params: Promise<{

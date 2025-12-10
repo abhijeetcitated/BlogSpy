@@ -1,4 +1,4 @@
-import { SnippetStealerContent } from "@/components/snippet-stealer-content"
+import { SnippetStealerContent } from "@/components/features"
 
 export default function SnippetStealerPage() {
   return <SnippetStealerContent />

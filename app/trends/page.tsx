@@ -1,5 +1,5 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import { TrendSpotter } from "@/components/trend-spotter"
+import { AppSidebar } from "@/components/layout"
+import { TrendSpotter } from "@/components/features"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
 

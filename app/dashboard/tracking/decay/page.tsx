@@ -1,4 +1,4 @@
-import { ContentDecayContent } from "@/components/content-decay-content"
+import { ContentDecayContent } from "@/components/features"
 
 export default function ContentDecayPage() {
   return <ContentDecayContent />

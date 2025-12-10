@@ -1,4 +1,4 @@
-import { AIWriterContent } from "@/components/ai-writer-content"
+import { AIWriterContent } from "@/components/features"
 
 export default function AIWriterPage() {
   return <AIWriterContent />

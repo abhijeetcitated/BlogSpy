@@ -1,5 +1,4 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import { TopNav } from "@/components/top-nav"
+import { AppSidebar, TopNav } from "@/components/layout"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
 export default function DashboardLayout({

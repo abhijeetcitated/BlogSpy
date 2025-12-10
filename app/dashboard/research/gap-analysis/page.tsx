@@ -1,4 +1,4 @@
-import { CompetitorGapContent } from "@/components/competitor-gap-content"
+import { CompetitorGapContent } from "@/components/features"
 
 export default function CompetitorGapPage() {
   return <CompetitorGapContent />

@@ -1,4 +1,4 @@
-import { NavigationExamples } from "@/components/navigation-examples"
+import { NavigationExamples } from "@/components/common/navigation-examples"
 
 export default function NavigationDemoPage() {
   return (

@@ -1,4 +1,4 @@
-import { RankTrackerContent } from "@/components/rank-tracker-content"
+import { RankTrackerContent } from "@/components/features"
 
 export default function RankTrackerPage() {
   return <RankTrackerContent />

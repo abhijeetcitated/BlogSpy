@@ -41,7 +41,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Sparkline } from "./sparkline"
+import { Sparkline } from "@/components/charts"
 import { cn } from "@/lib/utils"
 
 // ============================================

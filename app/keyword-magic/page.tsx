@@ -1,6 +1,6 @@
-import { AppSidebar } from "@/components/app-sidebar"
+import { AppSidebar } from "@/components/layout"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { KeywordMagicContent } from "@/components/keyword-magic-content"
+import { KeywordMagicContent } from "@/components/features"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
 
 export const metadata = {

@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Sparkline } from "@/components/sparkline"
-import { KDRing } from "@/components/kd-ring"
+import { Sparkline, KDRing } from "@/components/charts"
 import {
   Plus,
   Video,

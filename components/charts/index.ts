@@ -1,21 +1,21 @@
 // ============================================
 // CHARTS - BARREL EXPORT
 // ============================================
-// Re-export chart components for organized imports
-// New code can import from "@/components/charts"
+// All chart components live in this folder
+// Import from "@/components/charts"
 // ============================================
 
-// Sparkline Chart
-export { Sparkline } from "../sparkline"
+// Sparkline Chart - Simple trend lines
+export { Sparkline } from "./sparkline"
 
-// Velocity Chart
-export { VelocityChart } from "../velocity-chart"
+// Velocity Chart - Time-series with predictions
+export { VelocityChart } from "./velocity-chart"
 
-// Trending Sparkline
-export { TrendingSparkline } from "../trending-sparkline"
+// Trending Sparkline - Gradient area chart
+export { TrendingSparkline } from "./trending-sparkline"
 
-// KD Ring (circular progress)
-export { KDRing } from "../kd-ring"
+// KD Ring - Keyword difficulty indicator
+export { KDRing } from "./kd-ring"
 
-// Credit Ring
-export { CreditRing } from "../credit-ring"
+// Credit Ring - Usage meter
+export { CreditRing } from "./credit-ring"

@@ -1,4 +1,4 @@
-import { KeywordMagicContent } from "@/components/keyword-magic-content"
+import { KeywordMagicContent } from "@/components/features"
 
 export default function KeywordMagicPage() {
   return (

@@ -1,4 +1,4 @@
-import { TrendSpotter } from "@/components/trend-spotter"
+import { TrendSpotter } from "@/components/features"
 
 export default function TrendsPage() {
   return <TrendSpotter />

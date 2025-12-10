@@ -1,5 +1,5 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import { CommandCenter } from "@/components/command-center"
+import { AppSidebar } from "@/components/layout"
+import { CommandCenter } from "@/components/features"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
 export default function DashboardPage() {

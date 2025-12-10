@@ -1,4 +1,4 @@
-import { TopicClusterContent } from "@/components/topic-cluster-content"
+import { TopicClusterContent } from "@/components/features"
 
 export default function TopicClustersPage() {
   return <TopicClusterContent />
