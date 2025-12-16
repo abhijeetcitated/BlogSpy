@@ -4,6 +4,7 @@ import { Search, Zap, Loader2, Target, Download } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { getScoreInfo, getScoreGradientColor, calculateRemainingTime } from "../utils/checker-utils"
+import { URLValidator } from "./url-validator"
 
 interface ScanHeaderProps {
   url: string
@@ -18,6 +19,8 @@ interface ScanHeaderProps {
   warningCount: number
   onScan: () => void
   onExport?: () => void
+  urlError?: string
+  urlInputRef?: React.RefObject<HTMLInputElement>
 }
 
 export function ScanHeader({
@@ -33,6 +36,8 @@ export function ScanHeader({
   warningCount,
   onScan,
   onExport,
+  urlError,
+  urlInputRef,
 }: ScanHeaderProps) {
   const scoreInfo = getScoreInfo(score)
   const gradientColors = getScoreGradientColor(score)
@@ -47,12 +52,17 @@ export function ScanHeader({
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={urlInputRef}
                 value={url}
                 onChange={(e) => onUrlChange(e.target.value)}
                 placeholder="Enter URL to audit (e.g., https://myblog.com/seo-guide)"
                 className="pl-10 bg-muted/50 border-border h-11"
                 disabled={isScanning}
+                aria-label="Enter website URL to analyze"
+                aria-invalid={!!urlError}
+                aria-describedby={urlError ? "url-error" : undefined}
               />
+              <URLValidator url={url} error={urlError} />
             </div>
             {/* Target Keyword Input */}
             <div className="relative w-64">
@@ -69,6 +79,8 @@ export function ScanHeader({
               onClick={onScan}
               disabled={isScanning}
               className="h-11 px-6 bg-linear-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-white font-medium shadow-lg shadow-cyan-500/20"
+              aria-label={isScanning ? "Scanning in progress" : "Run SEO scan"}
+              aria-busy={isScanning}
             >
               {isScanning ? (
                 <>
@@ -144,6 +156,7 @@ export function ScanHeader({
                 <button
                   onClick={onExport}
                   className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Export scan report as JSON"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Export Report

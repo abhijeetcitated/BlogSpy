@@ -132,3 +132,36 @@ export function getTagClasses(tag: string): string {
   if (tag === "A") return "bg-cyan-500/20 text-cyan-400"
   return "bg-muted text-muted-foreground"
 }
+
+/**
+ * Validate URL format and accessibility
+ */
+export function validateURL(url: string): { valid: boolean; error?: string } {
+  // Empty check
+  if (!url.trim()) {
+    return { valid: false, error: "URL is required" }
+  }
+
+  // Format check - must start with http:// or https://
+  const urlRegex = /^https?:\/\/.+\..+/
+  if (!urlRegex.test(url)) {
+    return { valid: false, error: "Invalid URL format. Must start with http:// or https://" }
+  }
+
+  // Check for localhost/private IPs
+  if (url.includes('localhost') || url.includes('127.0.0.1') || url.includes('192.168.')) {
+    return { valid: false, error: "Cannot scan localhost or private IP addresses" }
+  }
+
+  // Check max length
+  if (url.length > 2048) {
+    return { valid: false, error: "URL too long (maximum 2048 characters)" }
+  }
+
+  // Check for common invalid patterns
+  if (url.includes(' ')) {
+    return { valid: false, error: "URL cannot contain spaces" }
+  }
+
+  return { valid: true }
+}

@@ -106,7 +106,15 @@ export function EmptyState({ history = [], onSelectUrl, onClearHistory }: EmptyS
   )
 }
 
-export function ScanningState() {
+import { useLoadingMessage } from "../hooks"
+
+interface ScanningStateProps {
+  progress?: number
+}
+
+export function ScanningState({ progress = 0 }: ScanningStateProps) {
+  const loadingMessage = useLoadingMessage(progress)
+  
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Skeleton 3-Column Grid */}
@@ -201,8 +209,11 @@ export function ScanningState() {
           <h2 className="text-xl font-semibold text-foreground mb-2">
             Scanning Page...
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Analyzing structure, content, and SEO factors
+          <p className="text-sm text-muted-foreground animate-pulse">
+            {loadingMessage}
+          </p>
+          <p className="text-xs text-muted-foreground/70 mt-2">
+            {progress}% complete
           </p>
         </div>
       </div>

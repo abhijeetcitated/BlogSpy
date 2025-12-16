@@ -6,26 +6,33 @@ import {
   ScanHeader,
   EmptyState,
   ScanningState,
+  ErrorState,
   PageStructureColumn,
   IssuesPanel,
   NLPKeywordsPanel,
   SERPPreviewBar,
   AIFixModal,
   FeatureLinksBar,
+  MobileTabsLayout,
 } from "./components"
 import { MOCK_PAGE_STRUCTURE, MOCK_ISSUES, MOCK_NLP_KEYWORDS } from "./__mocks__/checker-data"
 import { SCAN_DURATION_MS, SCAN_INTERVAL_MS } from "./constants"
-import { calculateDynamicScore } from "./utils/checker-utils"
-import { useScanHistory } from "./hooks"
+import { calculateDynamicScore, validateURL } from "./utils/checker-utils"
+import { useScanHistory, useKeyboardShortcuts } from "./hooks"
+import { useMobile } from "@/hooks"
 import type { CurrentIssue } from "./types"
+import { useRef } from "react"
 
 export function OnPageCheckerContent() {
+  // Refs for keyboard shortcuts
+  const urlInputRef = useRef<HTMLInputElement>(null)
   // URL and scanning state
   const [url, setUrl] = useState("")
   const [targetKeyword, setTargetKeyword] = useState("")
   const [isScanning, setIsScanning] = useState(false)
   const [scanComplete, setScanComplete] = useState(false)
   const [scanProgress, setScanProgress] = useState(0)
+  const [scanError, setScanError] = useState<string | null>(null)
   
   // Dynamic score based on issues
   const score = useMemo(() => calculateDynamicScore(MOCK_ISSUES), [])
@@ -40,6 +47,12 @@ export function OnPageCheckerContent() {
   // Toast state
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+  
+  // Mobile responsive
+  const isMobile = useMobile()
+  
+  // URL validation
+  const urlValidation = useMemo(() => validateURL(url), [url])
 
   // Show toast helper
   const showToastMessage = useCallback((message: string) => {
@@ -50,12 +63,24 @@ export function OnPageCheckerContent() {
 
   // Handle scan
   const handleScan = useCallback(() => {
-    if (!url.trim()) return
+    // Validate URL before scanning
+    const validation = validateURL(url)
+    if (!validation.valid) {
+      showToastMessage(validation.error || "Invalid URL")
+      return
+    }
     
     setIsScanning(true)
     setScanComplete(false)
     setScanProgress(0)
-  }, [url])
+    setScanError(null)
+  }, [url, showToastMessage])
+  
+  // Handle retry after error
+  const handleRetry = useCallback(() => {
+    setScanError(null)
+    handleScan()
+  }, [handleScan])
 
   // Handle selecting URL from history
   const handleSelectFromHistory = useCallback((historyUrl: string, historyKeyword: string) => {
@@ -132,8 +157,23 @@ export function OnPageCheckerContent() {
     showToastMessage("Fix copied to clipboard!")
   }, [showToastMessage])
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onFocusSearch: () => urlInputRef.current?.focus(),
+    onScan: () => !isScanning && handleScan(),
+    onExport: () => scanComplete && handleExport(),
+    onCloseModal: () => setShowAIModal(false),
+  })
+
   return (
     <div className="h-full flex flex-col bg-background">
+      {/* Screen Reader Announcements */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {isScanning && `Scan in progress. ${scanProgress}% complete.`}
+        {scanComplete && !scanError && `Scan complete. Your SEO score is ${score} out of 100. ${MOCK_ISSUES.errors.length} errors found, ${MOCK_ISSUES.warnings.length} warnings found.`}
+        {scanError && `Scan failed: ${scanError}`}
+      </div>
+      
       {/* Toast Notification */}
       <ToastNotification message={toastMessage} show={showToast} />
 
@@ -151,10 +191,12 @@ export function OnPageCheckerContent() {
         warningCount={MOCK_ISSUES.warnings.length}
         onScan={handleScan}
         onExport={scanComplete ? handleExport : undefined}
+        urlError={!urlValidation.valid ? urlValidation.error : undefined}
+        urlInputRef={urlInputRef}
       />
 
       {/* Main Content Area */}
-      {!scanComplete && !isScanning && (
+      {!scanComplete && !isScanning && !scanError && (
         <EmptyState 
           history={history}
           onSelectUrl={handleSelectFromHistory}
@@ -164,23 +206,36 @@ export function OnPageCheckerContent() {
       
       {isScanning && (
         <div className="flex-1 relative">
-          <ScanningState />
+          <ScanningState progress={scanProgress} />
         </div>
       )}
+      
+      {scanError && (
+        <ErrorState error={scanError} onRetry={handleRetry} />
+      )}
 
-      {scanComplete && (
+      {scanComplete && !scanError && (
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* 3-Column Grid */}
-          <div className="flex-1 grid grid-cols-12 overflow-hidden">
-            {/* Page Structure - Left Column */}
-            <PageStructureColumn structure={MOCK_PAGE_STRUCTURE} />
+          {/* Mobile: Tabs Layout | Desktop: 3-Column Grid */}
+          {isMobile ? (
+            <MobileTabsLayout
+              structure={MOCK_PAGE_STRUCTURE}
+              issues={MOCK_ISSUES}
+              keywords={MOCK_NLP_KEYWORDS}
+              onFixWithAI={handleFixWithAI}
+            />
+          ) : (
+            <div className="flex-1 grid grid-cols-12 overflow-hidden">
+              {/* Page Structure - Left Column */}
+              <PageStructureColumn structure={MOCK_PAGE_STRUCTURE} />
 
-            {/* Issues Panel - Middle Column */}
-            <IssuesPanel issues={MOCK_ISSUES} onFixWithAI={handleFixWithAI} />
+              {/* Issues Panel - Middle Column */}
+              <IssuesPanel issues={MOCK_ISSUES} onFixWithAI={handleFixWithAI} />
 
-            {/* NLP Keywords - Right Column */}
-            <NLPKeywordsPanel keywords={MOCK_NLP_KEYWORDS} />
-          </div>
+              {/* NLP Keywords - Right Column */}
+              <NLPKeywordsPanel keywords={MOCK_NLP_KEYWORDS} />
+            </div>
+          )}
 
           {/* SERP Preview Bar */}
           <SERPPreviewBar
