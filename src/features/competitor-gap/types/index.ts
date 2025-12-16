@@ -24,7 +24,7 @@ export type TrendDirection = "rising" | "growing" | "stable" | "declining" | "fa
 /**
  * Sorting Fields for Keywords Table
  */
-export type SortField = "keyword" | "volume" | "kd" | "yourRank" | "trend" | "engagement" | "opportunity" | null
+export type SortField = "keyword" | "volume" | "kd" | "yourRank" | "competitorRank" | "trend" | "engagement" | "opportunity" | null
 
 /**
  * Sort Direction
