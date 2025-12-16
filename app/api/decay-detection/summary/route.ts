@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const summary = await decayDetectionService.getDecaySummary(userId);
+    const summary = await decayDetectionService.getSummary(userId);
 
     return NextResponse.json({
       success: true,
