@@ -98,7 +98,7 @@ export function getPlatformStats(citations: AICitation[]): PlatformStats[] {
       citations: platformCitations.length,
       avgPosition: Math.round(avgPos * 10) / 10,
       topQueries: queries,
-      trend: platformCitations.length > 2 ? "rising" : platformCitations.length > 0 ? "stable" : "declining",
+      trend: (platformCitations.length > 2 ? "rising" : platformCitations.length > 0 ? "stable" : "declining") as VisibilityTrend,
       lastUpdated: platformCitations[0]?.timestamp || "",
     }
   }).sort((a, b) => b.citations - a.citations)
