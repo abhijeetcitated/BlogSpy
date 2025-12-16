@@ -9,18 +9,122 @@
  * 3. Replace mock functions with real Supabase imports
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyData = any;
+
+// Mock Supabase Query Builder for proper chaining
+class MockQueryBuilder {
+  private tableName: string;
+  private queryType: 'select' | 'insert' | 'update' | 'delete' | 'upsert' = 'select';
+  private data: AnyData = null;
+
+  constructor(tableName: string) {
+    this.tableName = tableName;
+  }
+
+  select(columns?: string, options?: { count?: string; head?: boolean }) {
+    this.queryType = 'select';
+    return this;
+  }
+
+  insert(data: AnyData) {
+    this.queryType = 'insert';
+    this.data = data;
+    return this;
+  }
+
+  update(data: AnyData) {
+    this.queryType = 'update';
+    this.data = data;
+    return this;
+  }
+
+  delete() {
+    this.queryType = 'delete';
+    return this;
+  }
+
+  upsert(data: AnyData, options?: { onConflict?: string }) {
+    this.queryType = 'upsert';
+    this.data = data;
+    return this;
+  }
+
+  eq(column: string, value: AnyData) {
+    return this;
+  }
+
+  neq(column: string, value: AnyData) {
+    return this;
+  }
+
+  gt(column: string, value: AnyData) {
+    return this;
+  }
+
+  gte(column: string, value: AnyData) {
+    return this;
+  }
+
+  lt(column: string, value: AnyData) {
+    return this;
+  }
+
+  lte(column: string, value: AnyData) {
+    return this;
+  }
+
+  like(column: string, pattern: string) {
+    return this;
+  }
+
+  ilike(column: string, pattern: string) {
+    return this;
+  }
+
+  is(column: string, value: AnyData) {
+    return this;
+  }
+
+  in(column: string, values: AnyData[]) {
+    return this;
+  }
+
+  order(column: string, options?: { ascending?: boolean }) {
+    return this;
+  }
+
+  limit(count: number) {
+    return this;
+  }
+
+  range(from: number, to: number) {
+    return this;
+  }
+
+  single() {
+    return Promise.resolve({ data: null, error: null });
+  }
+
+  maybeSingle() {
+    return Promise.resolve({ data: null, error: null });
+  }
+
+  then<TResult>(
+    onfulfilled?: ((value: { data: AnyData; error: null; count?: number }) => TResult) | null
+  ): Promise<TResult> {
+    const result = {
+      data: this.queryType === 'select' ? [] : this.data,
+      error: null,
+      count: 0,
+    };
+    return Promise.resolve(result).then(onfulfilled);
+  }
+}
+
 // Mock Supabase server client type
 interface MockSupabaseServerClient {
-  from: (table: string) => {
-    select: (columns?: string) => {
-      eq: (col: string, val: unknown) => Promise<{ data: unknown[]; error: null }>;
-      single: () => Promise<{ data: unknown | null; error: null }>;
-    } & Promise<{ data: unknown[]; error: null }>;
-    insert: (data: unknown) => Promise<{ data: unknown; error: null }>;
-    update: (data: unknown) => { eq: (col: string, val: unknown) => Promise<{ data: unknown; error: null }> };
-    delete: () => { eq: (col: string, val: unknown) => Promise<{ data: null; error: null }> };
-    upsert: (data: unknown) => Promise<{ data: unknown; error: null }>;
-  };
+  from: (table: string) => MockQueryBuilder;
   auth: {
     getSession: () => Promise<{ data: { session: null }; error: null }>;
     getUser: () => Promise<{ data: { user: null }; error: null }>;
@@ -53,26 +157,8 @@ export function createAdminClient(): MockSupabaseServerClient {
 
 // Helper to create mock client
 function createMockClient(): MockSupabaseServerClient {
-  const selectResult = Object.assign(
-    Promise.resolve({ data: [], error: null }),
-    {
-      eq: async () => ({ data: [], error: null }),
-      single: async () => ({ data: null, error: null }),
-    }
-  )
-
   return {
-    from: (table: string) => ({
-      select: () => selectResult,
-      insert: async (data) => ({ data, error: null }),
-      update: (data) => ({
-        eq: async () => ({ data, error: null }),
-      }),
-      delete: () => ({
-        eq: async () => ({ data: null, error: null }),
-      }),
-      upsert: async (data) => ({ data, error: null }),
-    }),
+    from: (table: string) => new MockQueryBuilder(table),
     auth: {
       getSession: async () => ({ data: { session: null }, error: null }),
       getUser: async () => ({ data: { user: null }, error: null }),

@@ -66,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // For now, just use demo mode
       // In production, this would call the real API
-      console.log('Login attempt:', email);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));

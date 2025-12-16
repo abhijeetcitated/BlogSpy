@@ -16,10 +16,10 @@ export function KDRing({ value, size = 28 }: KDRingProps) {
 
   // Color based on difficulty
   const getColor = (kd: number) => {
-    if (kd <= 30) return { stroke: "#22c55e", text: "text-green-400" } // Easy - Green
-    if (kd <= 50) return { stroke: "#eab308", text: "text-yellow-400" } // Medium - Yellow
-    if (kd <= 70) return { stroke: "#f97316", text: "text-orange-400" } // Hard - Orange
-    return { stroke: "#ef4444", text: "text-red-400" } // Very Hard - Red
+    if (kd <= 30) return { stroke: "#22c55e", text: "text-green-600 dark:text-green-400" } // Easy - Green
+    if (kd <= 50) return { stroke: "#eab308", text: "text-yellow-600 dark:text-yellow-400" } // Medium - Yellow
+    if (kd <= 70) return { stroke: "#f97316", text: "text-orange-600 dark:text-orange-400" } // Hard - Orange
+    return { stroke: "#ef4444", text: "text-red-600 dark:text-red-400" } // Very Hard - Red
   }
 
   const colors = getColor(value)

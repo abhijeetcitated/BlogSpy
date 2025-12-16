@@ -32,40 +32,32 @@ export async function POST(request: NextRequest) {
     // Handle different webhook types
     switch (webhookType) {
       case "stripe.checkout.completed":
-        // Handle successful payment
-        console.log("Payment completed:", body)
-        // Update user subscription in database
+        // TODO: Handle successful payment - Update user subscription in database
         break
 
       case "stripe.subscription.updated":
-        // Handle subscription change
-        console.log("Subscription updated:", body)
+        // TODO: Handle subscription change
         break
 
       case "stripe.subscription.deleted":
-        // Handle subscription cancellation
-        console.log("Subscription cancelled:", body)
+        // TODO: Handle subscription cancellation
         break
 
       case "clerk.user.created":
-        // Handle new user registration
-        console.log("New user created:", body)
-        // Create user record in database
+        // TODO: Handle new user registration - Create user record in database
         break
 
       case "clerk.user.updated":
-        // Handle user profile update
-        console.log("User updated:", body)
+        // TODO: Handle user profile update
         break
 
       case "dataforseo.task.completed":
-        // Handle DataForSEO task completion
-        console.log("DataForSEO task completed:", body)
-        // Process and store results
+        // TODO: Handle DataForSEO task completion - Process and store results
         break
 
       default:
-        console.log("Unknown webhook type:", webhookType, body)
+        // Unknown webhook type - log for monitoring
+        break
     }
 
     return NextResponse.json({

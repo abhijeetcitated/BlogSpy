@@ -43,6 +43,18 @@ interface EnvConfig {
   useMockData: boolean
   enableAnalytics: boolean
   enablePayments: boolean
+
+  // Google OAuth (GSC & GA4)
+  googleClientId: string
+  googleClientSecret: string
+  googleRedirectUri: string
+
+  // Email (Resend)
+  resendApiKey: string
+  resendFromEmail: string
+
+  // Cron Security
+  cronSecret: string
 }
 
 function getEnvVar(key: string, defaultValue = ""): string {
@@ -101,6 +113,18 @@ export const env: EnvConfig = {
   useMockData: getBoolEnvVar("NEXT_PUBLIC_USE_MOCK_DATA", true),
   enableAnalytics: getBoolEnvVar("NEXT_PUBLIC_ENABLE_ANALYTICS", false),
   enablePayments: getBoolEnvVar("NEXT_PUBLIC_ENABLE_PAYMENTS", false),
+
+  // Google OAuth (GSC & GA4)
+  googleClientId: getEnvVar("GOOGLE_CLIENT_ID"),
+  googleClientSecret: getEnvVar("GOOGLE_CLIENT_SECRET"),
+  googleRedirectUri: getEnvVar("GOOGLE_REDIRECT_URI", "http://localhost:3000/api/integrations/gsc/callback"),
+
+  // Email (Resend)
+  resendApiKey: getEnvVar("RESEND_API_KEY"),
+  resendFromEmail: getEnvVar("RESEND_FROM_EMAIL", "alerts@blogspy.io"),
+
+  // Cron Security
+  cronSecret: getEnvVar("CRON_SECRET"),
 }
 
 // Validate required env vars (server-side only)

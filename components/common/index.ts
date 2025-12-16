@@ -38,7 +38,7 @@ export {
 
 // Data Display
 export { DataTable } from "./data-table"
-export type { Column } from "./data-table"
+export type { Column, DataTableProps, DataTableAction } from "./data-table"
 
 // Page Layout
 export { PageHeader, SectionTitle } from "./page-header"

@@ -18,6 +18,19 @@ import {
   ChevronDown,
   FolderKanban,
   LayoutDashboard,
+  Copy,
+  Video,
+  Quote,
+  DollarSign,
+  Calculator,
+  Target,
+  ShoppingCart,
+  Bot,
+  Eye,
+  Code2,
+  Newspaper,
+  MessageCircle,
+  Share2,
 } from "lucide-react"
 import {
   Sidebar,
@@ -45,10 +58,13 @@ const researchItems = [
   { title: "Keyword Magic", icon: Search, href: "/dashboard/research/keyword-magic" },
   { title: "Trend Spotter", icon: Flame, href: "/dashboard/research/trends", accentColor: "text-amber-500" },
   { title: "Competitor Gap", icon: Crosshair, href: "/dashboard/research/gap-analysis" },
+  { title: "Affiliate Finder", icon: ShoppingCart, href: "/dashboard/research/affiliate-finder", accentColor: "text-purple-500" },
+  { title: "Video Hijack", icon: Video, href: "/dashboard/research/video-hijack", accentColor: "text-red-500" },
+  { title: "Am I Cited?", icon: Quote, href: "/dashboard/research/citation-checker", accentColor: "text-violet-500" },
 ]
 
 const strategyItems = [
-  { title: "Topic Clusters", icon: Network, href: "/dashboard/strategy/topic-clusters" },
+  { title: "Topic Clusters", icon: Network, href: "/dashboard/strategy/topic-clusters", accentColor: "text-violet-500" },
   { title: "Content Roadmap", icon: Map, href: "/dashboard/strategy/roadmap" },
 ]
 
@@ -56,11 +72,26 @@ const creationItems = [
   { title: "AI Writer", icon: Sparkles, href: "/dashboard/creation/ai-writer", accentColor: "text-yellow-400" },
   { title: "Snippet Stealer", icon: Scissors, href: "/dashboard/creation/snippet-stealer" },
   { title: "On-Page Checker", icon: CheckCircle, href: "/dashboard/creation/on-page" },
+  { title: "Schema Generator", icon: Code2, href: "/dashboard/creation/schema-generator", accentColor: "text-cyan-500" },
 ]
 
 const trackingItems = [
   { title: "Rank Tracker", icon: BarChart2, href: "/dashboard/tracking/rank-tracker" },
   { title: "Decay Alerts", icon: TrendingDown, href: "/dashboard/tracking/decay", accentColor: "text-red-500" },
+  { title: "Cannibalization", icon: Copy, href: "/dashboard/tracking/cannibalization", accentColor: "text-orange-500" },
+  { title: "News Tracker", icon: Newspaper, href: "/dashboard/tracking/news-tracker", accentColor: "text-blue-500" },
+  { title: "Community Tracker", icon: MessageCircle, href: "/dashboard/tracking/community-tracker", accentColor: "text-amber-500" },
+  { title: "Social Tracker", icon: Share2, href: "/dashboard/tracking/social-tracker", accentColor: "text-pink-500" },
+  { title: "Commerce Tracker", icon: ShoppingCart, href: "/dashboard/tracking/commerce-tracker", accentColor: "text-orange-400" },
+]
+
+const monetizationItems = [
+  { title: "Earnings Calculator", icon: Calculator, href: "/dashboard/monetization/earnings-calculator", accentColor: "text-emerald-500" },
+  { title: "Content ROI", icon: Target, href: "/dashboard/monetization/content-roi", accentColor: "text-purple-500" },
+]
+
+const aiInsightsItems = [
+  { title: "AI Visibility", icon: Bot, href: "/dashboard/ai-visibility", accentColor: "text-cyan-500" },
 ]
 
 export function AppSidebar() {
@@ -190,6 +221,48 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {trackingItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="gap-3">
+                    <Link href={item.href}>
+                      <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Monetization Group */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
+            💰 Monetization
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {monetizationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="gap-3">
+                    <Link href={item.href}>
+                      <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* AI Insights Group */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
+            🤖 AI Insights
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {aiInsightsItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="gap-3">
                     <Link href={item.href}>

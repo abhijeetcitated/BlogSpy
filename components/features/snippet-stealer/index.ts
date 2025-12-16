@@ -1,5 +1,6 @@
 // ============================================
 // SNIPPET STEALER - Feature Components
+// Refactored to: src/features/snippet-stealer/
 // ============================================
 
-export { SnippetStealerContent } from "./snippet-stealer-content"
+export { SnippetStealerContent } from "@/src/features/snippet-stealer"

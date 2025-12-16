@@ -21,7 +21,6 @@ export function NavigationExamples() {
 
   // Method 2: Navigate with router and show loading state
   const handleNavigateWithLoading = async () => {
-    console.log("Loading...")
     router.push(routes.research.keywordMagic)
   }
 

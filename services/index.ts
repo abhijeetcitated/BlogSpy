@@ -31,6 +31,24 @@ export type {
   RankingsParams,
 } from "./rankings.service"
 
+// Rank Tracker Service (Multi-Platform)
+export { rankTrackerService, rankTrackerQueryKeys } from "./rank-tracker.service"
+export type {
+  Platform,
+  SerpFeature,
+  AIOverviewPosition,
+  AIOverviewData,
+  TrackedKeyword,
+  PlatformStats,
+  CountryStats,
+  RankTrackerSummary,
+  GetKeywordsParams,
+  AddKeywordParams,
+  UpdateKeywordParams,
+  BulkAddParams,
+  ExportParams,
+} from "./rank-tracker.service"
+
 // Content Service
 export { contentService } from "./content.service"
 export type {
@@ -50,3 +68,19 @@ export type {
   TrendsListResponse,
   TrendsParams,
 } from "./trends.service"
+
+// GSC Service
+export { gscService } from "./gsc.service"
+export { GSCService } from "./gsc.service"
+
+// GA4 Service
+export { ga4Service } from "./ga4.service"
+export { GA4Service } from "./ga4.service"
+
+// Decay Detection Service
+export { decayDetectionService } from "./decay-detection.service"
+export { DecayDetectionService } from "./decay-detection.service"
+
+// Alerts Service
+export { alertsService } from "./alerts.service"
+export { AlertService } from "./alerts.service"
