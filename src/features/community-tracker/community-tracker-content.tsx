@@ -139,14 +139,14 @@ export function CommunityTrackerContent() {
           subreddits: ["r/SEO", "r/marketing", "r/blogging"].slice(0, Math.floor(Math.random() * 3) + 1),
           hasOurContent: false,
           topPosts: [],
-        } : undefined,
+        } : null,
         quora: selectedPlatforms.includes("quora") ? {
           position: Math.floor(Math.random() * 20) + 1,
           avgViews: Math.floor(Math.random() * 50000) + 5000,
           totalQuestions: Math.floor(Math.random() * 50) + 5,
           hasOurContent: false,
           topAnswers: [],
-        } : undefined,
+        } : null,
       },
       lastUpdated: new Date().toISOString(),
     }
