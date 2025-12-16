@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const days = parseInt(searchParams.get('days') || '30');
 
-    const stats = await alertsService.getStatistics(userId, { days });
+    const stats = await alertsService.getStatistics(userId, days);
 
     return NextResponse.json({
       success: true,
