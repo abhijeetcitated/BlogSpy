@@ -2,6 +2,9 @@
 // COMPETITOR GAP & FORUM INTEL - Type Definitions
 // ============================================
 
+// Weak spot types (re-exported for public API)
+export type { WeakSpotType, WeakSpotKeyword } from "./weak-spot.types"
+
 /**
  * Gap Type Classification
  * - missing: You don't rank, competitors do

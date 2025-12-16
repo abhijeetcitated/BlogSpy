@@ -3,3 +3,4 @@
 // ============================================
 
 export { MOCK_GAP_DATA, MOCK_FORUM_INTEL_DATA } from "./gap-data"
+export { WEAK_SPOT_DATA } from "./weak-spot.mock"

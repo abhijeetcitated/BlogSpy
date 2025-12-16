@@ -29,7 +29,7 @@ export function getOpportunityLevel(score: number): OpportunityLevel {
 /**
  * Get color classes for opportunity level
  */
-export function getOpportunityColor(level: OpportunityLevel): string {
+export function getPlatformOpportunityColor(level: OpportunityLevel): string {
   switch (level) {
     case "excellent":
       return "text-emerald-700 dark:text-emerald-400 bg-emerald-500/15 border-emerald-500/30 font-semibold"

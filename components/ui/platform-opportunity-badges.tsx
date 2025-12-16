@@ -15,7 +15,7 @@ import {
   type CommerceOpportunity, 
   type SocialOpportunity,
   type OpportunityLevel,
-  getOpportunityColor,
+  getPlatformOpportunityColor,
 } from "@/types/platform-opportunity.types"
 
 // ============================================
@@ -39,7 +39,7 @@ function OpportunityBadge({
   tooltipContent,
   className 
 }: OpportunityBadgeProps) {
-  const colorClasses = getOpportunityColor(level)
+  const colorClasses = getPlatformOpportunityColor(level)
   
   return (
     <Tooltip>

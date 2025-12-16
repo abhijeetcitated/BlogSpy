@@ -103,7 +103,7 @@ export function SchemaGeneratorDashboard() {
     setValidation(result)
     
     if (result.isValid) {
-      const schema = generateSchema(selectedType, formData as SchemaData)
+      const schema = generateSchema(selectedType, formData as unknown as SchemaData)
       setGeneratedSchema(schema)
     }
   }

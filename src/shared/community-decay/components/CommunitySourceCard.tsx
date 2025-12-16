@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils"
 import {
   type CommunitySource,
   PLATFORM_INFO,
-  getDecayLevel,
-  getDecayColor,
-  getDecayBgColor,
+  getCommunityDecayLevel,
+  getCommunityDecayColor,
+  getCommunityDecayBgColor,
   formatAge,
 } from "@/types/community-decay.types"
 import { Badge } from "@/components/ui/badge"
@@ -35,7 +35,7 @@ export function CommunitySourceCard({
   className,
 }: CommunitySourceCardProps) {
   const platformInfo = PLATFORM_INFO[source.platform]
-  const decayLevel = getDecayLevel(source.ageInDays)
+  const decayLevel = getCommunityDecayLevel(source.ageInDays)
 
   return (
     <Card className={cn("bg-slate-800/50 border-slate-700", className)}>
@@ -55,7 +55,7 @@ export function CommunitySourceCard({
               <Badge variant="outline" className="text-xs">
                 Rank #{source.rankPosition}
               </Badge>
-              <Badge className={cn("text-xs", getDecayBgColor(decayLevel), getDecayColor(decayLevel))}>
+              <Badge className={cn("text-xs", getCommunityDecayBgColor(decayLevel), getCommunityDecayColor(decayLevel))}>
                 {decayLevel.charAt(0).toUpperCase() + decayLevel.slice(1)}
               </Badge>
               {source.hasOutdatedFlag && (

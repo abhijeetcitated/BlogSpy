@@ -11,9 +11,9 @@ import {
   type CommunityDecayAnalysis,
   type CommunityDecayRecommendation,
   type CommunityDecayAlert,
-  type DecayLevel,
+  type CommunityDecayLevel,
   PLATFORM_INFO,
-  getDecayLevel,
+  getCommunityDecayLevel,
   calculateDecayScoreFromAge,
   getOpportunityFromDecayScore,
   formatAge,
@@ -74,7 +74,7 @@ export function analyzeCommunityDecay(
   }
 
   const decayScore = Math.round(weightedDecayScore / totalWeight)
-  const decayLevel = getDecayLevel(avgContentAge)
+  const decayLevel = getCommunityDecayLevel(avgContentAge)
   const opportunityLevel = getOpportunityFromDecayScore(decayScore, true)
 
   // Find best opportunity (oldest + highest rank)
@@ -132,7 +132,7 @@ function generateRecommendations(
   // Top target recommendations
   for (const source of sortedSources.slice(0, 3)) {
     const platformInfo = PLATFORM_INFO[source.platform]
-    const decayLevel = getDecayLevel(source.ageInDays)
+    const decayLevel = getCommunityDecayLevel(source.ageInDays)
     
     if (decayLevel === "ancient" || decayLevel === "decayed") {
       recommendations.push({

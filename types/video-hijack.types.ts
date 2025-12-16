@@ -161,7 +161,7 @@ export function getPresenceLabel(presence: VideoPresence): string {
 /**
  * Get color for opportunity level
  */
-export function getOpportunityColor(level: VideoOpportunityLevel): string {
+export function getVideoOpportunityColor(level: VideoOpportunityLevel): string {
   switch (level) {
     case "high":
       return "text-emerald-500"

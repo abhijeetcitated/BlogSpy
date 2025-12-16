@@ -32,7 +32,7 @@ export type {
 // Re-export types from central types file
 export type {
   CommunityPlatform,
-  DecayLevel,
+  CommunityDecayLevel,
   CommunitySource,
   CommunityDecayAnalysis,
 } from "@/types/community-decay.types"
@@ -40,8 +40,8 @@ export type {
 // Re-export utility functions
 export {
   PLATFORM_INFO,
-  getDecayLevel,
-  getDecayColor,
-  getDecayBgColor,
+  getCommunityDecayLevel,
+  getCommunityDecayColor,
+  getCommunityDecayBgColor,
   formatAge,
 } from "@/types/community-decay.types"

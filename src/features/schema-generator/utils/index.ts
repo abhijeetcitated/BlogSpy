@@ -205,7 +205,7 @@ function generateBreadcrumbSchema(data: BreadcrumbSchema): object {
 
 // Generate JSON-LD for LocalBusiness schema
 function generateLocalBusinessSchema(data: Record<string, unknown>): object {
-  return {
+  const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": data.name,
@@ -221,8 +221,11 @@ function generateLocalBusinessSchema(data: Record<string, unknown>): object {
     },
     "telephone": data.telephone,
     "priceRange": data.priceRange,
-    ...(data.openingHours && { "openingHours": data.openingHours })
   }
+  if (data.openingHours) {
+    schema["openingHours"] = data.openingHours
+  }
+  return schema
 }
 
 // Generate JSON-LD for Event schema
@@ -251,12 +254,13 @@ function generateEventSchema(data: Record<string, unknown>): object {
     }
   }
   if (data.offerPrice) {
-    schema.offers = {
+    const offers: Record<string, unknown> = {
       "@type": "Offer",
       "price": data.offerPrice,
       "priceCurrency": data.offerCurrency || "USD",
-      ...(data.offerUrl && { "url": data.offerUrl })
     }
+    if (data.offerUrl) offers["url"] = data.offerUrl
+    schema.offers = offers
   }
 
   return schema
@@ -274,22 +278,22 @@ function generateOrganizationSchema(data: Record<string, unknown>): object {
   }
 
   if (data.email || data.telephone) {
-    schema.contactPoint = {
-      "@type": "ContactPoint",
-      ...(data.email && { "email": data.email }),
-      ...(data.telephone && { "telephone": data.telephone })
-    }
+    const contactPoint: Record<string, unknown> = { "@type": "ContactPoint" }
+    if (data.email) contactPoint["email"] = data.email
+    if (data.telephone) contactPoint["telephone"] = data.telephone
+    schema.contactPoint = contactPoint
   }
 
   if (data.streetAddress) {
-    schema.address = {
+    const address: Record<string, unknown> = {
       "@type": "PostalAddress",
       "streetAddress": data.streetAddress,
-      ...(data.addressLocality && { "addressLocality": data.addressLocality }),
-      ...(data.addressRegion && { "addressRegion": data.addressRegion }),
-      ...(data.postalCode && { "postalCode": data.postalCode }),
-      ...(data.addressCountry && { "addressCountry": data.addressCountry })
     }
+    if (data.addressLocality) address["addressLocality"] = data.addressLocality
+    if (data.addressRegion) address["addressRegion"] = data.addressRegion
+    if (data.postalCode) address["postalCode"] = data.postalCode
+    if (data.addressCountry) address["addressCountry"] = data.addressCountry
+    schema.address = address
   }
 
   if (data.foundingDate) schema.foundingDate = data.foundingDate
@@ -334,16 +338,18 @@ function generatePersonSchema(data: Record<string, unknown>): object {
 
 // Generate JSON-LD for Course schema
 function generateCourseSchema(data: Record<string, unknown>): object {
+  const provider: Record<string, unknown> = {
+    "@type": "Organization",
+    "name": data.provider,
+  }
+  if (data.providerUrl) provider["url"] = data.providerUrl
+  
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Course",
     "name": data.name,
     "description": data.description,
-    "provider": {
-      "@type": "Organization",
-      "name": data.provider,
-      ...(data.providerUrl && { "url": data.providerUrl })
-    },
+    "provider": provider,
     "url": data.courseUrl
   }
 
@@ -379,18 +385,20 @@ function generateCourseSchema(data: Record<string, unknown>): object {
 
 // Generate JSON-LD for JobPosting schema
 function generateJobPostingSchema(data: Record<string, unknown>): object {
+  const hiringOrganization: Record<string, unknown> = {
+    "@type": "Organization",
+    "name": data.hiringOrganization,
+  }
+  if (data.companyLogo) hiringOrganization["logo"] = data.companyLogo
+  if (data.companyUrl) hiringOrganization["sameAs"] = data.companyUrl
+  
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     "title": data.title,
     "description": data.description,
     "datePosted": data.datePosted,
-    "hiringOrganization": {
-      "@type": "Organization",
-      "name": data.hiringOrganization,
-      ...(data.companyLogo && { "logo": data.companyLogo }),
-      ...(data.companyUrl && { "sameAs": data.companyUrl })
-    },
+    "hiringOrganization": hiringOrganization,
     "jobLocation": {
       "@type": "Place",
       "address": {
@@ -409,15 +417,16 @@ function generateJobPostingSchema(data: Record<string, unknown>): object {
   }
 
   if (data.salaryMin || data.salaryMax) {
+    const salaryValue: Record<string, unknown> = {
+      "@type": "QuantitativeValue",
+      "unitText": data.salaryUnit || "YEAR"
+    }
+    if (data.salaryMin) salaryValue["minValue"] = data.salaryMin
+    if (data.salaryMax) salaryValue["maxValue"] = data.salaryMax
     schema.baseSalary = {
       "@type": "MonetaryAmount",
       "currency": data.salaryCurrency || "USD",
-      "value": {
-        "@type": "QuantitativeValue",
-        ...(data.salaryMin && { "minValue": data.salaryMin }),
-        ...(data.salaryMax && { "maxValue": data.salaryMax }),
-        "unitText": data.salaryUnit || "YEAR"
-      }
+      "value": salaryValue
     }
   }
 
@@ -454,22 +463,22 @@ export function generateSchema(type: SchemaType, data: SchemaData): string {
       schemaObject = generateBreadcrumbSchema(data as BreadcrumbSchema)
       break
     case "localbusiness":
-      schemaObject = generateLocalBusinessSchema(data as Record<string, unknown>)
+      schemaObject = generateLocalBusinessSchema(data as unknown as Record<string, unknown>)
       break
     case "event":
-      schemaObject = generateEventSchema(data as Record<string, unknown>)
+      schemaObject = generateEventSchema(data as unknown as Record<string, unknown>)
       break
     case "organization":
-      schemaObject = generateOrganizationSchema(data as Record<string, unknown>)
+      schemaObject = generateOrganizationSchema(data as unknown as Record<string, unknown>)
       break
     case "person":
-      schemaObject = generatePersonSchema(data as Record<string, unknown>)
+      schemaObject = generatePersonSchema(data as unknown as Record<string, unknown>)
       break
     case "course":
-      schemaObject = generateCourseSchema(data as Record<string, unknown>)
+      schemaObject = generateCourseSchema(data as unknown as Record<string, unknown>)
       break
     case "jobposting":
-      schemaObject = generateJobPostingSchema(data as Record<string, unknown>)
+      schemaObject = generateJobPostingSchema(data as unknown as Record<string, unknown>)
       break
     default:
       schemaObject = {}

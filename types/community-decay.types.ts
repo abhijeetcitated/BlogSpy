@@ -20,7 +20,7 @@ export type CommunityPlatform =
 /**
  * Decay Level based on content age
  */
-export type DecayLevel = 
+export type CommunityDecayLevel = 
   | "fresh"      // 0-30 days
   | "aging"      // 31-90 days
   | "stale"      // 91-180 days
@@ -84,7 +84,7 @@ export interface CommunityDecayAnalysis {
   /** Overall decay score (0-100, higher = more decayed = bigger opportunity) */
   decayScore: number
   /** Decay level */
-  decayLevel: DecayLevel
+  decayLevel: CommunityDecayLevel
   /** Opportunity level */
   opportunityLevel: CommunityOpportunityLevel
   /** Average age of community content */
@@ -214,7 +214,7 @@ export const DECAY_SCORE_MULTIPLIERS = {
 /**
  * Get decay level from age in days
  */
-export function getDecayLevel(ageInDays: number): DecayLevel {
+export function getCommunityDecayLevel(ageInDays: number): CommunityDecayLevel {
   if (ageInDays <= DECAY_THRESHOLDS.FRESH) return "fresh"
   if (ageInDays <= DECAY_THRESHOLDS.AGING) return "aging"
   if (ageInDays <= DECAY_THRESHOLDS.STALE) return "stale"
@@ -225,7 +225,7 @@ export function getDecayLevel(ageInDays: number): DecayLevel {
 /**
  * Get decay color based on level
  */
-export function getDecayColor(level: DecayLevel): string {
+export function getCommunityDecayColor(level: CommunityDecayLevel): string {
   const colors = {
     fresh: "text-emerald-400",
     aging: "text-yellow-400",
@@ -239,7 +239,7 @@ export function getDecayColor(level: DecayLevel): string {
 /**
  * Get decay background color based on level
  */
-export function getDecayBgColor(level: DecayLevel): string {
+export function getCommunityDecayBgColor(level: CommunityDecayLevel): string {
   const colors = {
     fresh: "bg-emerald-500/20 border-emerald-500/30",
     aging: "bg-yellow-500/20 border-yellow-500/30",
@@ -253,7 +253,7 @@ export function getDecayBgColor(level: DecayLevel): string {
 /**
  * Get opportunity color
  */
-export function getOpportunityColor(level: CommunityOpportunityLevel): string {
+export function getCommunityOpportunityColor(level: CommunityOpportunityLevel): string {
   const colors = {
     excellent: "text-emerald-400",
     high: "text-green-400",
@@ -293,7 +293,7 @@ export function formatAge(days: number): string {
 /**
  * Get decay level label
  */
-export function getDecayLevelLabel(level: DecayLevel): string {
+export function getCommunityDecayLevelLabel(level: CommunityDecayLevel): string {
   const labels = {
     fresh: "Fresh",
     aging: "Aging",

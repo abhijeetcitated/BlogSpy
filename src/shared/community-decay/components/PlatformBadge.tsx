@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils"
 import {
   type CommunityPlatform,
   PLATFORM_INFO,
-  getDecayLevel,
-  getDecayColor,
+  getCommunityDecayLevel,
+  getCommunityDecayColor,
   formatAge,
 } from "@/types/community-decay.types"
 
@@ -27,7 +27,7 @@ export function PlatformBadge({
   className,
 }: PlatformBadgeProps) {
   const platformInfo = PLATFORM_INFO[platform]
-  const decayLevel = getDecayLevel(ageInDays)
+  const decayLevel = getCommunityDecayLevel(ageInDays)
 
   return (
     <div
@@ -43,7 +43,7 @@ export function PlatformBadge({
           {platformInfo.name}
           {rank && <span className="ml-1 opacity-70">#{rank}</span>}
         </span>
-        <span className={cn("text-xs", getDecayColor(decayLevel))}>
+        <span className={cn("text-xs", getCommunityDecayColor(decayLevel))}>
           {formatAge(ageInDays)} old
         </span>
       </div>

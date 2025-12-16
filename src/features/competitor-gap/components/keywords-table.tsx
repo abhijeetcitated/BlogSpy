@@ -198,33 +198,33 @@ export function KeywordsTable({
                   )}
                 </td>
                 <td className="px-4 py-3 text-center">
-                  {kw.competitorRank && kw.competitorUrl ? (
+                  {kw.comp1Rank && kw.comp1Url ? (
                     <a
-                      href={kw.competitorUrl}
+                      href={kw.comp1Url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title={kw.competitorUrl}
+                      title={kw.comp1Url}
                       className="inline-flex items-center justify-center gap-1 w-auto min-w-[2rem] h-6 px-2 rounded bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 hover:text-red-300 transition-all group/rank"
                     >
-                      #{kw.competitorRank}
+                      #{kw.comp1Rank}
                       <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover/rank:opacity-100 transition-opacity" />
                     </a>
-                  ) : kw.competitorRank ? (
+                  ) : kw.comp1Rank ? (
                     <span className="inline-flex items-center justify-center w-8 h-6 rounded bg-red-500/20 text-red-400 text-xs font-bold">
-                      #{kw.competitorRank}
+                      #{kw.comp1Rank}
                     </span>
                   ) : (
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
-                  {hasCompetitor2 && kw.competitor2Rank && kw.competitor2Url && (
+                  {hasCompetitor2 && kw.comp2Rank && kw.comp2Url && (
                     <a
-                      href={kw.competitor2Url}
+                      href={kw.comp2Url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      title={kw.competitor2Url}
+                      title={kw.comp2Url}
                       className="inline-flex items-center justify-center gap-1 w-auto min-w-[2rem] h-6 px-2 rounded bg-orange-500/20 text-orange-400 text-xs font-bold hover:bg-orange-500/30 hover:text-orange-300 transition-all ml-1 group/rank2"
                     >
-                      #{kw.competitor2Rank}
+                      #{kw.comp2Rank}
                       <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover/rank2:opacity-100 transition-opacity" />
                     </a>
                   )}

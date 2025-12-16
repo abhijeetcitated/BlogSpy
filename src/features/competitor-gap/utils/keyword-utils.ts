@@ -9,7 +9,9 @@ import { INTENT_STYLES, QUICK_FILTERS } from "../constants"
  * Get styling classes for intent badges
  */
 export function getIntentStyle(intent: Intent): string {
-  return INTENT_STYLES[intent] || "bg-slate-500/20 text-slate-400 border-slate-500/30"
+  const style = INTENT_STYLES[intent]
+  if (!style) return "bg-slate-500/20 text-slate-400 border-slate-500/30"
+  return `${style.bg} ${style.text} ${style.border}`
 }
 
 /**
@@ -17,10 +19,13 @@ export function getIntentStyle(intent: Intent): string {
  */
 export function calculateGapStats(keywords: GapKeyword[]): GapStats {
   return {
+    all: keywords.length,
     missing: keywords.filter((k) => k.gapType === "missing").length,
     weak: keywords.filter((k) => k.gapType === "weak").length,
     strong: keywords.filter((k) => k.gapType === "strong").length,
     shared: keywords.filter((k) => k.gapType === "shared").length,
+    totalVolume: keywords.reduce((sum, k) => sum + k.volume, 0),
+    avgKD: Math.round(keywords.reduce((sum, k) => sum + k.kd, 0) / keywords.length) || 0,
   }
 }
 
@@ -47,13 +52,13 @@ export function exportKeywordsToCSV(
   keywords.forEach((kw) => {
     const row = [
       `"${kw.keyword}"`,
-      kw.competitorRank ?? "N/A",
+      kw.comp1Rank ?? "N/A",
       kw.yourRank ?? "Not Ranking",
       kw.volume,
       kw.kd,
       kw.intent,
       kw.gapType,
-      `"${kw.competitorUrl}"`,
+      `"${kw.comp1Url ?? ""}"`,
     ]
     csvRows.push(row.join(","))
   })
@@ -145,8 +150,8 @@ export function sortKeywords(
         break
       case "competitorRank":
         // Handle nulls - push to end
-        const aRank = a.competitorRank ?? 999
-        const bRank = b.competitorRank ?? 999
+        const aRank = a.comp1Rank ?? 999
+        const bRank = b.comp1Rank ?? 999
         comparison = aRank - bRank
         break
       case "yourRank":

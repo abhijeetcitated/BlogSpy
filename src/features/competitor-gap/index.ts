@@ -35,7 +35,6 @@ export {
   GAP_TYPE_INFO,
   INTENT_STYLES,
   SOURCE_STYLES,
-  WEAK_SPOT_INFO,
 } from "./constants"
 
 // Utils
