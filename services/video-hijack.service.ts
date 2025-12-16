@@ -419,7 +419,7 @@ class VideoHijackService {
     )
     const channelsData = await channelsResponse.json()
     
-    const channelMap = new Map(
+    const channelMap = new Map<string, { name: string; subscribers: number }>(
       channelsData.items.map((ch: {
         id: string
         snippet: { title: string }
