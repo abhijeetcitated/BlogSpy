@@ -6,6 +6,7 @@ import {
   AIVisibilityStats,
   PlatformStats,
   VisibilityTrendData,
+  VisibilityTrend,
   ContentVisibility,
   QueryAnalysis,
   CitationType,
