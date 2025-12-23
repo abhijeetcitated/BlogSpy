@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,45 +20,13 @@ import {
   FileCode,
   BookTemplate,
   AlertTriangle,
-  FileText,
-  HelpCircle,
-  ListOrdered,
-  ShoppingCart,
-  UtensilsCrossed,
-  Star,
-  Video,
-  Link2,
-  Store,
-  CalendarDays,
-  Building2,
-  User,
-  GraduationCap,
-  Briefcase,
 } from "lucide-react"
 import { SchemaTypeCard } from "./SchemaTypeCard"
 import { SchemaForm } from "./SchemaForm"
 import { SchemaPreview } from "./SchemaPreview"
-import { SCHEMA_TYPES, SCHEMA_TEMPLATES } from "../constants"
+import { SCHEMA_TYPES, SCHEMA_TEMPLATES, SCHEMA_ICONS } from "../constants"
 import { generateSchema, validateSchema, copyToClipboard, generateScriptTag } from "../utils"
 import type { SchemaType, SchemaData, ValidationResult } from "../types"
-
-// Icon mapping for schema types
-const SCHEMA_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  FileText,
-  HelpCircle,
-  ListOrdered,
-  ShoppingCart,
-  UtensilsCrossed,
-  Star,
-  Video,
-  Link2,
-  Store,
-  CalendarDays,
-  Building2,
-  User,
-  GraduationCap,
-  Briefcase
-}
 
 export function SchemaGeneratorDashboard() {
   const [selectedType, setSelectedType] = useState<SchemaType | null>(null)
@@ -69,6 +37,18 @@ export function SchemaGeneratorDashboard() {
   const [copiedHtml, setCopiedHtml] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [showTemplates, setShowTemplates] = useState(false)
+  
+  // Timer refs for cleanup
+  const copyTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const copyHtmlTimerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+      if (copyHtmlTimerRef.current) clearTimeout(copyHtmlTimerRef.current)
+    }
+  }, [])
 
   const filteredTypes = useMemo(() => {
     if (!searchQuery) return SCHEMA_TYPES
@@ -113,7 +93,8 @@ export function SchemaGeneratorDashboard() {
     const success = await copyToClipboard(generatedSchema)
     if (success) {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000)
     }
   }
 
@@ -123,7 +104,8 @@ export function SchemaGeneratorDashboard() {
     const success = await copyToClipboard(htmlCode)
     if (success) {
       setCopiedHtml(true)
-      setTimeout(() => setCopiedHtml(false), 2000)
+      if (copyHtmlTimerRef.current) clearTimeout(copyHtmlTimerRef.current)
+      copyHtmlTimerRef.current = setTimeout(() => setCopiedHtml(false), 2000)
     }
   }
 

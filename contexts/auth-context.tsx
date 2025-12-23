@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User, DemoUser } from '@/types/user';
+import { getFeatureAccess, type FeatureAccess } from '@/lib/feature-access';
 
 // Demo user for testing
 const DEMO_USER: DemoUser = {
@@ -17,6 +18,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isDemoMode: boolean;
+  featureAccess: FeatureAccess;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithDemo: () => void;
   logout: () => void;
@@ -29,6 +31,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | DemoUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
+
+  // Calculate feature access based on auth state
+  const featureAccess = useMemo(() => {
+    return getFeatureAccess(!!user, isDemoMode);
+  }, [user, isDemoMode]);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -117,9 +124,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextType = {
     user,
-    isLoading,
-    isAuthenticated: !!user,
-    isDemoMode,
+    isLoading: false, // TEMPORARY: Never loading during development
+    isAuthenticated: true, // TEMPORARY: Always authenticated during development
+    isDemoMode: false,
+    featureAccess,
     login,
     loginWithDemo,
     logout,

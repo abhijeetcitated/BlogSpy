@@ -121,19 +121,19 @@ export function CalendarView({ tasks, onTaskClick, onAddTask }: CalendarViewProp
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
-        <div className="flex items-center gap-4">
-          <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+          <h2 className="text-base sm:text-lg font-semibold">
             {MONTHS[month]} {year}
           </h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={goToToday}
-            className="text-xs border-slate-700"
+            className="text-xs border-border h-7 sm:h-8 px-2 sm:px-3"
           >
             Today
           </Button>
@@ -141,7 +141,7 @@ export function CalendarView({ tasks, onTaskClick, onAddTask }: CalendarViewProp
             variant="ghost"
             size="icon"
             onClick={goToPrevMonth}
-            className="h-8 w-8"
+            className="h-7 w-7 sm:h-8 sm:w-8"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -149,7 +149,7 @@ export function CalendarView({ tasks, onTaskClick, onAddTask }: CalendarViewProp
             variant="ghost"
             size="icon"
             onClick={goToNextMonth}
-            className="h-8 w-8"
+            className="h-7 w-7 sm:h-8 sm:w-8"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -161,9 +161,10 @@ export function CalendarView({ tasks, onTaskClick, onAddTask }: CalendarViewProp
         {WEEKDAYS.map((day) => (
           <div
             key={day}
-            className="py-2 text-center text-xs font-medium text-muted-foreground bg-muted/20"
+            className="py-1.5 sm:py-2 text-center text-[10px] sm:text-xs font-medium text-muted-foreground bg-muted/20"
           >
-            {day}
+            <span className="hidden xs:inline">{day}</span>
+            <span className="xs:hidden">{day.charAt(0)}</span>
           </div>
         ))}
       </div>
@@ -173,56 +174,78 @@ export function CalendarView({ tasks, onTaskClick, onAddTask }: CalendarViewProp
         {calendarDays.map((day, idx) => (
           <div
             key={idx}
+            onClick={(e) => {
+              // On mobile, tap on empty area adds task
+              if (window.innerWidth < 640 && day.tasks.length === 0) {
+                onAddTask(day.date.toISOString().split("T")[0])
+              }
+            }}
             className={cn(
-              "min-h-[120px] p-2 border-b border-r border-border relative group",
+              "min-h-[70px] sm:min-h-[120px] p-1 sm:p-2 border-b border-r border-border relative group",
               !day.isCurrentMonth && "bg-muted/10",
-              isToday(day.date) && "bg-purple-950/20 ring-1 ring-inset ring-purple-500/50"
+              isToday(day.date) && "bg-purple-950/20 ring-1 ring-inset ring-purple-500/50",
+              // Touch-friendly cursor
+              "cursor-pointer sm:cursor-default"
             )}
           >
             {/* Date Number */}
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-0.5 sm:mb-1">
               <span
                 className={cn(
-                  "text-sm font-medium",
+                  "text-xs sm:text-sm font-medium",
                   !day.isCurrentMonth && "text-muted-foreground",
                   isToday(day.date) && "text-purple-400"
                 )}
               >
                 {day.date.getDate()}
               </span>
-              {/* Add button on hover */}
+              {/* Add button - Hidden on mobile, hover on desktop */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => onAddTask(day.date.toISOString().split("T")[0])}
+                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAddTask(day.date.toISOString().split("T")[0])
+                }}
               >
                 <Plus className="h-3 w-3" />
               </Button>
             </div>
 
             {/* Tasks */}
-            <div className="space-y-1">
-              {day.tasks.slice(0, 3).map((task) => (
+            <div className="space-y-0.5 sm:space-y-1">
+              {day.tasks.slice(0, 2).map((task) => (
                 <div
                   key={task.id}
-                  onClick={() => onTaskClick(task)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onTaskClick(task)
+                  }}
                   className={cn(
-                    "text-xs px-1.5 py-0.5 rounded truncate cursor-pointer transition-all hover:ring-1 hover:ring-white/20",
+                    "text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 sm:py-1 rounded truncate cursor-pointer transition-all",
+                    "hover:ring-1 hover:ring-white/20 active:scale-95 touch-manipulation select-none",
                     STATUS_COLORS[task.status] + "/20",
                     "text-foreground",
                     isOverdue(day.date) && task.status !== "published" && "ring-1 ring-red-500/50"
                   )}
                 >
-                  <div className="flex items-center gap-1">
-                    <div className={cn("w-1.5 h-1.5 rounded-full", STATUS_COLORS[task.status])} />
+                  <div className="flex items-center gap-0.5 sm:gap-1">
+                    <div className={cn("w-1.5 h-1.5 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0", STATUS_COLORS[task.status])} />
                     <span className="truncate">{task.title}</span>
                   </div>
                 </div>
               ))}
-              {day.tasks.length > 3 && (
-                <div className="text-xs text-muted-foreground pl-1">
-                  +{day.tasks.length - 3} more
+              {day.tasks.length > 2 && (
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    // On tap, show first hidden task
+                    if (day.tasks[2]) onTaskClick(day.tasks[2])
+                  }}
+                  className="text-[9px] sm:text-xs text-muted-foreground pl-1 cursor-pointer hover:text-foreground touch-manipulation"
+                >
+                  +{day.tasks.length - 2} more
                 </div>
               )}
             </div>
@@ -230,8 +253,8 @@ export function CalendarView({ tasks, onTaskClick, onAddTask }: CalendarViewProp
         ))}
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 px-4 py-2 border-t border-border bg-muted/20">
+      {/* Legend - Hidden on mobile */}
+      <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-t border-border bg-muted/20">
         <span className="text-xs text-muted-foreground">Status:</span>
         {Object.entries(STATUS_COLORS).map(([status, color]) => (
           <div key={status} className="flex items-center gap-1.5">

@@ -71,7 +71,7 @@ export function VelocityChart({ searchQuery }: VelocityChartProps) {
               asChild
             >
               <Link
-                href={`/dashboard/creation/ai-writer?topic=${encodeURIComponent(searchQuery)}`}
+                href={`/ai-writer?source=trend-spotter&keyword=${encodeURIComponent(searchQuery)}&velocity=rising`}
               >
                 <span className="hidden sm:inline">Write Article Now</span>
                 <span className="sm:hidden">Write Now</span>

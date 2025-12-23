@@ -5,28 +5,12 @@ import {
   Star, 
   Clock, 
   DollarSign,
-  ShoppingCart,
   Globe,
-  Target,
-  BarChart3,
-  Mail,
-  Sparkles,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { AFFILIATE_PROGRAMS } from "../constants"
-
-// Premium SVG icons for each program
-const PROGRAM_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
-  amazon: { icon: ShoppingCart, color: "text-orange-400" },
-  shareasale: { icon: ExternalLink, color: "text-blue-400" },
-  cj: { icon: Globe, color: "text-emerald-400" },
-  impact: { icon: Target, color: "text-purple-400" },
-  bluehost: { icon: Globe, color: "text-blue-500" },
-  semrush: { icon: BarChart3, color: "text-orange-500" },
-  convertkit: { icon: Mail, color: "text-pink-400" },
-  canva: { icon: Sparkles, color: "text-cyan-400" },
-}
+import { PROGRAM_ICONS } from "../constants/icons"
 
 export function TopProgramsCard() {
   const topPrograms = AFFILIATE_PROGRAMS

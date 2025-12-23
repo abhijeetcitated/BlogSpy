@@ -1,8 +1,19 @@
 import { OnPageCheckerContent } from "@/components/features"
+import { ErrorBoundary } from "@/components/common/error-boundary"
 
 export default function OnPageCheckerPage() {
-  return <OnPageCheckerContent />
+  return (
+    <ErrorBoundary>
+      <OnPageCheckerContent />
+    </ErrorBoundary>
+  )
 }
+
+
+
+
+
+
 
 
 

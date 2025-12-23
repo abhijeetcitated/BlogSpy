@@ -9,8 +9,6 @@ import {
   Target,
   Filter,
   ChevronDown,
-  Sparkles,
-  ShoppingCart,
   Download,
   Loader2,
   Globe,
@@ -19,17 +17,11 @@ import {
   CalendarPlus,
   Pencil,
   Copy,
-  ExternalLink,
   Check,
   TrendingDown,
   Minus,
-  BarChart3,
-  Mail,
-  Shield,
-  Wallet,
-  GraduationCap,
-  Monitor,
-  Dumbbell,
+  ShoppingCart,
+  Sparkles,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -48,59 +40,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useDebounce } from "@/hooks/use-debounce"
 import { 
   generateAffiliateKeywords, 
   calculateAffiliateStats,
   formatCurrency,
-  formatNumber,
-  getAffiliateTier,
 } from "../utils"
-import { AFFILIATE_NICHES, BUYER_INTENT_CONFIG, INTENT_MODIFIERS } from "../constants"
+import { AFFILIATE_NICHES, BUYER_INTENT_CONFIG } from "../constants"
+import { NICHE_ICONS, CONTENT_TYPE_CONFIG } from "../constants/icons"
 import { KeywordSearchFilters, BuyerIntent, AffiliateKeyword } from "../types"
 import { IntentDistribution } from "./IntentDistribution"
 import { TopProgramsCard } from "./TopProgramsCard"
-
-// ============================================
-// Niche Icons Configuration (Premium SVG)
-// ============================================
-
-const NICHE_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
-  hosting: { icon: Globe, color: "text-blue-400" },
-  "seo-tools": { icon: BarChart3, color: "text-emerald-400" },
-  "email-marketing": { icon: Mail, color: "text-pink-400" },
-  vpn: { icon: Shield, color: "text-cyan-400" },
-  finance: { icon: Wallet, color: "text-amber-400" },
-  "online-courses": { icon: GraduationCap, color: "text-violet-400" },
-  software: { icon: Monitor, color: "text-indigo-400" },
-  fitness: { icon: Dumbbell, color: "text-orange-400" },
-}
-
-// Program Icons (Premium SVG instead of emojis)
-const PROGRAM_ICONS: Record<string, { icon: React.ElementType; color: string }> = {
-  amazon: { icon: ShoppingCart, color: "text-orange-400" },
-  shareasale: { icon: ExternalLink, color: "text-blue-400" },
-  cj: { icon: Globe, color: "text-emerald-400" },
-  impact: { icon: Target, color: "text-purple-400" },
-  bluehost: { icon: Globe, color: "text-blue-500" },
-  semrush: { icon: BarChart3, color: "text-orange-500" },
-  convertkit: { icon: Mail, color: "text-pink-400" },
-  canva: { icon: Sparkles, color: "text-cyan-400" },
-}
+import { AffiliateKeywordRow } from "./AffiliateKeywordRow"
 
 // ============================================
 // Constants
 // ============================================
 
 const ITEMS_PER_PAGE = 10
-
-const CONTENT_TYPE_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  review: { label: "Review", icon: Sparkles, color: "text-amber-400" },
-  comparison: { label: "Compare", icon: BarChart3, color: "text-cyan-400" },
-  roundup: { label: "Roundup", icon: Target, color: "text-emerald-400" },
-  "deals-page": { label: "Deals", icon: DollarSign, color: "text-pink-400" },
-  tutorial: { label: "Tutorial", icon: GraduationCap, color: "text-violet-400" },
-  "buying-guide": { label: "Guide", icon: ShoppingCart, color: "text-blue-400" },
-}
 
 // ============================================
 // Main Component
@@ -141,14 +98,17 @@ export function AffiliateFinderDashboard() {
   // Generate sample data
   const allKeywords = useMemo(() => generateAffiliateKeywords(), [])
   
+  // Debounce search query for better performance (300ms delay)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
+  
   // Filter and sort keywords
   const filteredKeywords = useMemo(() => {
     let result = [...allKeywords]
 
-    // Search filter
-    if (searchQuery) {
+    // Search filter (using debounced value)
+    if (debouncedSearchQuery) {
       result = result.filter(k => 
-        k.keyword.toLowerCase().includes(searchQuery.toLowerCase())
+        k.keyword.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       )
     }
 
@@ -186,7 +146,7 @@ export function AffiliateFinderDashboard() {
     })
 
     return result
-  }, [allKeywords, searchQuery, filters])
+  }, [allKeywords, debouncedSearchQuery, filters])
 
   // Pagination
   const totalPages = Math.ceil(filteredKeywords.length / ITEMS_PER_PAGE)
@@ -634,11 +594,11 @@ export function AffiliateFinderDashboard() {
           {/* Keywords Table */}
           <div className="rounded-xl border border-border bg-card overflow-hidden">
             {/* Table Header */}
-            <div className="px-6 py-4 border-b border-border bg-muted/30">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4 text-purple-500" />
-                  Affiliate Keywords
+            <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-border bg-muted/30">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm sm:text-base font-semibold text-foreground flex items-center gap-2 min-w-0">
+                  <ShoppingCart className="h-4 w-4 text-purple-500 shrink-0" />
+                  <span className="truncate">Affiliate Keywords</span>
                   <span className="text-sm font-normal text-muted-foreground">
                     ({filteredKeywords.length})
                   </span>
@@ -672,7 +632,7 @@ export function AffiliateFinderDashboard() {
             ) : (
               <div className="divide-y divide-border">
                 {paginatedKeywords.map((keyword) => (
-                  <KeywordRow 
+                  <AffiliateKeywordRow 
                     key={keyword.id}
                     keyword={keyword}
                     isAddedToCalendar={addedToCalendar.has(keyword.id)}
@@ -688,15 +648,17 @@ export function AffiliateFinderDashboard() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex items-center justify-between">
+              <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-border bg-muted/30 flex items-center justify-center gap-2 sm:gap-3">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
+                  className="h-8 px-2 sm:px-3 text-xs sm:text-sm min-w-[70px] sm:min-w-[90px]"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
+                  <span className="hidden sm:inline">Previous</span>
+                  <span className="sm:hidden">Prev</span>
                 </Button>
                 
                 <div className="flex items-center gap-1">
@@ -716,7 +678,7 @@ export function AffiliateFinderDashboard() {
                         key={pageNum}
                         variant={currentPage === pageNum ? "default" : "ghost"}
                         size="sm"
-                        className="w-8 h-8 p-0"
+                        className="w-8 h-8 p-0 text-sm"
                         onClick={() => setCurrentPage(pageNum)}
                       >
                         {pageNum}
@@ -730,6 +692,7 @@ export function AffiliateFinderDashboard() {
                   size="sm"
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
+                  className="h-8 px-2 sm:px-3 text-xs sm:text-sm min-w-[60px] sm:min-w-[75px]"
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -739,198 +702,6 @@ export function AffiliateFinderDashboard() {
           </div>
         </>
       )}
-    </div>
-  )
-}
-
-// ============================================
-// Keyword Row Component
-// ============================================
-
-interface KeywordRowProps {
-  keyword: AffiliateKeyword
-  isAddedToCalendar: boolean
-  isCopied: boolean
-  onWriteArticle: () => void
-  onAddToCalendar: () => void
-  onCopy: () => void
-  onViewSerp: () => void
-}
-
-function KeywordRow({ 
-  keyword, 
-  isAddedToCalendar, 
-  isCopied,
-  onWriteArticle, 
-  onAddToCalendar, 
-  onCopy,
-  onViewSerp,
-}: KeywordRowProps) {
-  const intentConfig = BUYER_INTENT_CONFIG[keyword.buyerIntent]
-  const affiliateTier = getAffiliateTier(keyword.affiliateScore)
-  const contentType = CONTENT_TYPE_CONFIG[keyword.contentType]
-  const ContentIcon = contentType?.icon || Sparkles
-
-  return (
-    <div className="px-6 py-4 hover:bg-muted/30 transition-colors">
-      <div className="flex items-start gap-4">
-        {/* Affiliate Score */}
-        <div className={`p-3 rounded-xl ${affiliateTier.bg} shrink-0 text-center min-w-[60px]`}>
-          <span className={`text-xl font-bold ${affiliateTier.color}`}>{keyword.affiliateScore}</span>
-          <p className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-wider">Score</p>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
-          {/* Keyword & Badges */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h3 className="font-semibold text-foreground text-base">
-                {keyword.keyword}
-              </h3>
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                {/* Intent Badge */}
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${intentConfig.bgColor} ${intentConfig.color}`}>
-                  {intentConfig.label}
-                </span>
-                {/* Modifiers - Using SVG icons now */}
-                {keyword.modifiers.slice(0, 2).map(mod => {
-                  const modConfig = INTENT_MODIFIERS[mod]
-                  return (
-                    <span 
-                      key={mod} 
-                      className="px-2 py-0.5 rounded-full text-[10px] bg-muted/50 text-muted-foreground"
-                      title={modConfig.description}
-                    >
-                      {modConfig.label}
-                    </span>
-                  )
-                })}
-                {/* Content Type - SVG Icon */}
-                <span className={cn(
-                  "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-purple-500/10",
-                  contentType?.color || "text-purple-400"
-                )}>
-                  <ContentIcon className="h-3 w-3" />
-                  {contentType?.label}
-                </span>
-              </div>
-            </div>
-
-            {/* Monthly Earnings */}
-            <div className="text-right shrink-0">
-              <p className="text-xl font-bold text-emerald-400">
-                {formatCurrency(keyword.estimatedEarnings.monthly)}
-              </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Est. Monthly</p>
-            </div>
-          </div>
-
-          {/* Stats Row */}
-          <div className="grid grid-cols-5 gap-4 mt-3">
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Volume</p>
-              <p className="font-mono text-sm font-semibold text-foreground flex items-center gap-1">
-                {formatNumber(keyword.searchVolume)}
-                {keyword.trend === 'up' && <TrendingUp className="h-3 w-3 text-emerald-400" />}
-                {keyword.trend === 'down' && <TrendingDown className="h-3 w-3 text-red-400" />}
-                {keyword.trend === 'stable' && <Minus className="h-3 w-3 text-muted-foreground" />}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">KD</p>
-              <p className={`font-mono text-sm font-semibold ${
-                keyword.keywordDifficulty < 40 ? 'text-emerald-400' : 
-                keyword.keywordDifficulty < 60 ? 'text-amber-400' : 'text-red-400'
-              }`}>{keyword.keywordDifficulty}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">CPC</p>
-              <p className="font-mono text-sm font-semibold text-cyan-400">${keyword.cpc.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Commission</p>
-              <p className="font-mono text-sm font-semibold text-purple-400">{formatCurrency(keyword.estimatedCommission)}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Conversion</p>
-              <p className={`text-sm font-semibold capitalize ${
-                keyword.conversionPotential === 'high' ? 'text-emerald-400' :
-                keyword.conversionPotential === 'medium' ? 'text-amber-400' : 'text-red-400'
-              }`}>{keyword.conversionPotential}</p>
-            </div>
-          </div>
-
-          {/* Programs & Actions */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Programs:</span>
-              {keyword.suggestedPrograms.slice(0, 3).map(program => {
-                const programIcon = PROGRAM_ICONS[program.id]
-                const ProgramIconComponent = programIcon?.icon || ExternalLink
-                return (
-                  <span 
-                    key={program.id} 
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 text-xs"
-                  >
-                    <ProgramIconComponent className={cn("h-3 w-3", programIcon?.color || "text-muted-foreground")} />
-                    <span className="text-foreground">{program.name}</span>
-                  </span>
-                )
-              })}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-3 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
-                onClick={onWriteArticle}
-              >
-                <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Write
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 w-8 p-0 ${isAddedToCalendar ? 'text-emerald-400' : 'text-muted-foreground hover:text-foreground'}`}
-                onClick={onAddToCalendar}
-                disabled={isAddedToCalendar}
-              >
-                {isAddedToCalendar ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <CalendarPlus className="h-4 w-4" />
-                )}
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 w-8 p-0 ${isCopied ? 'text-emerald-400' : 'text-muted-foreground hover:text-foreground'}`}
-                onClick={onCopy}
-              >
-                {isCopied ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                onClick={onViewSerp}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

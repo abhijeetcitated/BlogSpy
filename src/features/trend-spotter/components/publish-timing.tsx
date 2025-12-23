@@ -104,7 +104,7 @@ export function PublishTiming({ searchQuery, data = publishTimingData, className
           className="h-7 sm:h-8 px-3 sm:px-4 gap-1 sm:gap-1.5 text-xs sm:text-sm bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-semibold shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all active:scale-95"
           asChild
         >
-          <Link href={`/dashboard/creation/ai-writer?topic=${encodeURIComponent(searchQuery)}`}>
+          <Link href={`/ai-writer?source=trend-spotter&keyword=${encodeURIComponent(searchQuery)}&velocity=rising`}>
             <RocketIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             <span className="hidden sm:inline">Start Writing</span>
             <span className="sm:hidden">Write</span>

@@ -8,6 +8,9 @@ export { NotificationDropdown, NotificationItem } from "./components"
 // Hooks
 export { useNotifications } from "./hooks/useNotifications"
 
+// Services
+export { notificationsService } from "./services"
+
 // Types
 export type {
   Notification,

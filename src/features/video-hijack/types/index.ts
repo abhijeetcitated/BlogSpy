@@ -1,7 +1,29 @@
-// Video Hijack Types
+// ============================================
+// VIDEO HIJACK - Types Barrel Export
+// ============================================
 
 // Re-export platform types
 export * from "./platforms"
+
+// Re-export video search types (refactored) - this has base types
+export * from "./video-search.types"
+
+// New platform-specific types - explicitly export non-conflicting types
+export type {
+  BaseVideoResult,
+  VideoSearchParams,
+  Pagination,
+  ApiResponseMeta,
+  TopChannel,
+  VideoSuggestion,
+  VideoROI as CommonVideoROI,
+} from "./common.types"
+
+// YouTube specific types
+export * from "./youtube.types"
+
+// TikTok specific types  
+export * from "./tiktok.types"
 
 export type VideoPresence = "dominant" | "significant" | "moderate" | "minimal" | "none"
 export type VideoPlatform = "youtube" | "tiktok" | "vimeo" | "instagram" | "other"

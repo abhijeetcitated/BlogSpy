@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ErrorBoundary } from "@/components/common/error-boundary"
 import { 
   User, 
   Bell, 
@@ -85,6 +86,7 @@ export default function SettingsPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -442,5 +444,6 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </ErrorBoundary>
   )
 }

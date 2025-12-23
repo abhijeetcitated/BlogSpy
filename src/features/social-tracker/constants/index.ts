@@ -54,6 +54,26 @@ export const SOCIAL_PLATFORM_CONFIG: Record<SocialPlatform, SocialPlatformConfig
 export const DEFAULT_SOCIAL_PLATFORM: SocialPlatform = "pinterest"
 
 /**
+ * Default Values - Avoid hardcoding in components
+ */
+export const SOCIAL_TRACKER_DEFAULTS = {
+  /** Initial credits for new users */
+  initialCredits: 100,
+  /** Demo/placeholder credit balance */
+  demoCredits: 125,
+  /** Max keywords per platform (free tier) */
+  maxKeywordsFree: 10,
+  /** Max keywords per platform (paid tier) */
+  maxKeywordsPaid: 100,
+  /** Refresh interval in minutes */
+  refreshIntervalMinutes: 60,
+  /** Search debounce delay in ms */
+  searchDebounceMs: 300,
+  /** Virtualization threshold */
+  virtualizationThreshold: 20,
+} as const
+
+/**
  * Intent Colors
  */
 export const SOCIAL_INTENT_COLORS = {
@@ -95,3 +115,24 @@ export const INSTAGRAM_TIPS = [
   "Use Stories for behind-the-scenes",
   "Collaborate with niche creators",
 ]
+
+/**
+ * Platform Audience Insights
+ */
+export const PLATFORM_AUDIENCE: Record<SocialPlatform, string[]> = {
+  pinterest: [
+    "80% female users",
+    "High purchase intent",
+    "Visual search dominant",
+  ],
+  twitter: [
+    "Real-time engagement",
+    "News & trending topics",
+    "B2B & tech audience",
+  ],
+  instagram: [
+    "18-34 age dominant",
+    "Visual storytelling",
+    "Lifestyle & product focus",
+  ],
+}

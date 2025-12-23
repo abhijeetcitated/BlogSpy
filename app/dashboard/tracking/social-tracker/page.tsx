@@ -1,5 +1,10 @@
 import { SocialTrackerContent } from "@/src/features/social-tracker"
+import { ErrorBoundary } from "@/components/common/error-boundary"
 
 export default function SocialTrackerPage() {
-  return <SocialTrackerContent />
+  return (
+    <ErrorBoundary>
+      <SocialTrackerContent />
+    </ErrorBoundary>
+  )
 }

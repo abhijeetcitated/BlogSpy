@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react"
 import {
   ToastNotification,
   ScanHeader,
@@ -11,7 +11,6 @@ import {
   IssuesPanel,
   NLPKeywordsPanel,
   SERPPreviewBar,
-  AIFixModal,
   FeatureLinksBar,
   MobileTabsLayout,
 } from "./components"
@@ -19,9 +18,14 @@ import { MOCK_PAGE_STRUCTURE, MOCK_ISSUES, MOCK_NLP_KEYWORDS } from "./__mocks__
 import { SCAN_DURATION_MS, SCAN_INTERVAL_MS } from "./constants"
 import { calculateDynamicScore, validateURL } from "./utils/checker-utils"
 import { useScanHistory, useKeyboardShortcuts } from "./hooks"
-import { useMobile } from "@/hooks"
+import { useIsMobile } from "@/hooks"
 import type { CurrentIssue } from "./types"
 import { useRef } from "react"
+
+// Lazy load heavy AIFixModal component
+const AIFixModal = lazy(() => 
+  import("./components/ai-fix-modal").then(mod => ({ default: mod.AIFixModal }))
+)
 
 export function OnPageCheckerContent() {
   // Refs for keyboard shortcuts
@@ -47,18 +51,35 @@ export function OnPageCheckerContent() {
   // Toast state
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   // Mobile responsive
-  const isMobile = useMobile()
+  const isMobile = useIsMobile()
   
   // URL validation
   const urlValidation = useMemo(() => validateURL(url), [url])
 
-  // Show toast helper
+  // Clean up toast timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Show toast helper with proper cleanup
   const showToastMessage = useCallback((message: string) => {
+    // Clear existing timeout to prevent memory leak
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current)
+    }
     setToastMessage(message)
     setShowToast(true)
-    setTimeout(() => setShowToast(false), 3000)
+    toastTimeoutRef.current = setTimeout(() => {
+      setShowToast(false)
+      toastTimeoutRef.current = null
+    }, 3000)
   }, [])
 
   // Handle scan
@@ -249,13 +270,17 @@ export function OnPageCheckerContent() {
         </div>
       )}
 
-      {/* AI Fix Modal */}
-      <AIFixModal
-        open={showAIModal}
-        onOpenChange={setShowAIModal}
-        currentIssue={currentIssue}
-        onCopySuccess={handleCopySuccess}
-      />
+      {/* AI Fix Modal - Lazy Loaded */}
+      {showAIModal && (
+        <Suspense fallback={null}>
+          <AIFixModal
+            open={showAIModal}
+            onOpenChange={setShowAIModal}
+            currentIssue={currentIssue}
+            onCopySuccess={handleCopySuccess}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

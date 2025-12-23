@@ -143,21 +143,21 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-slate-900 border-slate-800 shadow-2xl shadow-black/50 p-0 overflow-hidden rounded-xl">
+      <DialogContent className="w-[95vw] max-w-2xl bg-card border-border shadow-2xl p-0 overflow-hidden rounded-xl mx-auto">
         {/* Header */}
-        <DialogHeader className="px-6 py-4 border-b border-slate-800 bg-gradient-to-r from-slate-900 to-slate-800">
-          <DialogTitle className="flex items-center gap-3 text-lg font-semibold text-white">
+        <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border bg-muted/50">
+          <DialogTitle className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg font-semibold text-foreground">
             {mode === "add" ? (
               <>
                 <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                  <Plus className="h-5 w-5 text-emerald-400" />
+                  <Plus className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
                 </div>
                 <span>Add New Content</span>
               </>
             ) : (
               <>
                 <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                  <Pencil className="h-5 w-5 text-blue-400" />
+                  <Pencil className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                 </div>
                 <span>Edit Content</span>
               </>
@@ -166,40 +166,40 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
         </DialogHeader>
 
         {/* Form Content */}
-        <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Title */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <FileText className="h-4 w-4 text-slate-400" />
-              Content Title <span className="text-red-400">*</span>
+            <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              Content Title <span className="text-red-500 dark:text-red-400">*</span>
             </Label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="How to optimize for Google AI Overviews in 2025"
-              className="h-10 bg-slate-800/60 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-purple-500/50 focus:ring-purple-500/20 rounded-lg"
+              className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 focus:ring-purple-500/20 rounded-lg"
             />
           </div>
 
           {/* Keyword */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <Target className="h-4 w-4 text-slate-400" />
-              Target Keyword <span className="text-red-400">*</span>
+            <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Target className="h-4 w-4 text-muted-foreground" />
+              Target Keyword <span className="text-red-500 dark:text-red-400">*</span>
             </Label>
             <Input
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="ai overview seo"
-              className="h-10 bg-slate-800/60 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-purple-500/50 focus:ring-purple-500/20 rounded-lg"
+              className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 focus:ring-purple-500/20 rounded-lg"
             />
           </div>
 
           {/* Volume, KD, Word Count Row */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <TrendingUp className="h-4 w-4 text-slate-400" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 Search Volume
               </Label>
               <Input
@@ -207,12 +207,12 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
                 value={volume}
                 onChange={(e) => setVolume(e.target.value)}
                 placeholder="5400"
-                className="h-10 bg-slate-800/60 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-purple-500/50 rounded-lg"
+                className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 rounded-lg"
               />
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <Hash className="h-4 w-4 text-slate-400" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Hash className="h-4 w-4 text-muted-foreground" />
                 Keyword Difficulty
               </Label>
               <Input
@@ -222,12 +222,12 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
                 placeholder="35"
                 min="0"
                 max="100"
-                className="h-10 bg-slate-800/60 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-purple-500/50 rounded-lg"
+                className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 rounded-lg"
               />
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <Sparkles className="h-4 w-4 text-slate-400" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
                 Target Words
               </Label>
               <Input
@@ -235,41 +235,41 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
                 value={targetWordCount}
                 onChange={(e) => setTargetWordCount(e.target.value)}
                 placeholder="2000"
-                className="h-10 bg-slate-800/60 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-purple-500/50 rounded-lg"
+                className="h-10 bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 rounded-lg"
               />
             </div>
           </div>
 
           {/* Status, Assignee, Due Date Row */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-300">Status</Label>
+              <Label className="text-sm font-medium text-muted-foreground">Status</Label>
               <Select value={status} onValueChange={(v: TaskStatus) => setStatus(v)}>
-                <SelectTrigger className="h-9 bg-slate-800 border-slate-700 text-white rounded-lg">
+                <SelectTrigger className="h-9 bg-muted border-border text-foreground rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border border-slate-800 shadow-2xl rounded-lg">
-                  <SelectItem value="backlog" className="text-sm text-slate-300 focus:bg-slate-800 focus:text-white">
+                <SelectContent className="bg-popover border border-border shadow-2xl rounded-lg">
+                  <SelectItem value="backlog" className="text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground">
                     <div className="flex items-center gap-2">
-                      <Lightbulb className="h-4 w-4 text-slate-400" />
+                      <Lightbulb className="h-4 w-4 text-muted-foreground" />
                       Backlog
                     </div>
                   </SelectItem>
-                  <SelectItem value="ready" className="text-sm text-slate-300 focus:bg-slate-800 focus:text-white">
+                  <SelectItem value="ready" className="text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground">
                     <div className="flex items-center gap-2">
-                      <PenTool className="h-4 w-4 text-blue-400" />
+                      <PenTool className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                       Ready to Write
                     </div>
                   </SelectItem>
-                  <SelectItem value="progress" className="text-sm text-slate-300 focus:bg-slate-800 focus:text-white">
+                  <SelectItem value="progress" className="text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground">
                     <div className="flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-amber-400" />
+                      <Flame className="h-4 w-4 text-amber-500 dark:text-amber-400" />
                       In Progress
                     </div>
                   </SelectItem>
-                  <SelectItem value="published" className="text-sm text-slate-300 focus:bg-slate-800 focus:text-white">
+                  <SelectItem value="published" className="text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
                       Published
                     </div>
                   </SelectItem>
@@ -277,17 +277,17 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <User className="h-4 w-4 text-slate-400" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <User className="h-4 w-4 text-muted-foreground" />
                 Assignee
               </Label>
               <Select value={assignee} onValueChange={setAssignee}>
-                <SelectTrigger className="h-9 bg-slate-800 border-slate-700 text-white rounded-lg">
+                <SelectTrigger className="h-9 bg-muted border-border text-foreground rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border border-slate-800 shadow-2xl rounded-lg">
+                <SelectContent className="bg-popover border border-border shadow-2xl rounded-lg">
                   {ASSIGNEES.map((a) => (
-                    <SelectItem key={a.id} value={a.id} className="text-sm text-slate-300 focus:bg-slate-800 focus:text-white">
+                    <SelectItem key={a.id} value={a.id} className="text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground">
                       <div className="flex items-center gap-2">
                         <div className={cn("w-2 h-2 rounded-full", a.color)} />
                         {a.name}
@@ -298,23 +298,23 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <Calendar className="h-4 w-4 text-slate-400" />
+              <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
                 Due Date
               </Label>
               <Input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="h-10 bg-slate-800/60 border-slate-700/50 text-white focus:border-purple-500/50 rounded-lg"
+                className="h-10 bg-muted border-border text-foreground focus:border-purple-500/50 rounded-lg"
               />
             </div>
           </div>
 
           {/* Tags */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <Tag className="h-4 w-4 text-slate-400" />
+            <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Tag className="h-4 w-4 text-muted-foreground" />
               Content Type Tags
             </Label>
             <div className="flex flex-wrap gap-2">
@@ -329,7 +329,7 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
                       "cursor-pointer transition-all px-3 py-1 rounded-md",
                       isSelected
                         ? `${colors.bg} ${colors.text} ${colors.border}`
-                        : "bg-slate-800/60 text-slate-400 border-slate-700/50 hover:border-slate-600 hover:text-slate-300"
+                        : "bg-muted text-muted-foreground border-border hover:border-border/80 hover:text-foreground"
                     )}
                     onClick={() => toggleTag(tag)}
                   >
@@ -343,24 +343,24 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm font-medium text-slate-300">
-              <FileEdit className="h-4 w-4 text-slate-400" />
+            <Label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <FileEdit className="h-4 w-4 text-muted-foreground" />
               Notes
             </Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any notes, outline, or brief for this content..."
-              className="bg-slate-800/60 border-slate-700/50 text-white placeholder:text-slate-500 focus:border-purple-500/50 min-h-[80px] resize-none rounded-lg"
+              className="bg-muted border-border text-foreground placeholder:text-muted-foreground focus:border-purple-500/50 min-h-[80px] resize-none rounded-lg"
             />
           </div>
 
           {/* Progress (Edit mode only) */}
           {mode === "edit" && (
-            <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/50 space-y-3">
+            <div className="p-3 sm:p-4 bg-muted/50 rounded-xl border border-border space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium text-slate-300">Writing Progress</Label>
-                <span className="text-sm font-bold text-purple-400">{progress}%</span>
+                <Label className="text-sm font-medium text-muted-foreground">Writing Progress</Label>
+                <span className="text-sm font-bold text-purple-500 dark:text-purple-400">{progress}%</span>
               </div>
               <input
                 type="range"
@@ -369,36 +369,36 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
                 step="5"
                 value={progress}
                 onChange={(e) => setProgress(parseInt(e.target.value))}
-                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-purple-500"
               />
-              <div className="flex justify-between text-xs text-slate-500">
+              <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Not Started</span>
                 <span>Complete</span>
               </div>
               {/* Current Word Count */}
-              <div className="flex items-center gap-3 pt-3 border-t border-slate-700/50">
-                <Label className="text-sm text-slate-400">Current Words:</Label>
+              <div className="flex items-center gap-3 pt-3 border-t border-border">
+                <Label className="text-sm text-muted-foreground">Current Words:</Label>
                 <Input
                   type="number"
                   value={wordCount}
                   onChange={(e) => setWordCount(e.target.value)}
                   placeholder="0"
-                  className="bg-slate-800/60 border-slate-700/50 text-white w-24 h-8 text-sm rounded-lg"
+                  className="bg-muted border-border text-foreground w-24 h-8 text-sm rounded-lg"
                 />
-                <span className="text-xs text-slate-500">/ {targetWordCount || 2000} target</span>
+                <span className="text-xs text-muted-foreground">/ {targetWordCount || 2000} target</span>
               </div>
             </div>
           )}
 
           {/* Quick Import (Add mode only) */}
           {mode === "add" && (
-            <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/50">
-              <p className="text-sm text-slate-400 mb-3">Or import from:</p>
-              <div className="flex gap-2">
+            <div className="p-3 sm:p-4 bg-muted/50 rounded-xl border border-border">
+              <p className="text-sm text-muted-foreground mb-3">Or import from:</p>
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2 border-slate-700/50 bg-slate-800/60 text-slate-400 hover:bg-slate-700 hover:text-white rounded-lg"
+                  className="gap-2 border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg"
                   disabled
                 >
                   🔮 Keyword Magic
@@ -406,7 +406,7 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2 border-slate-700/50 bg-slate-800/60 text-slate-400 hover:bg-slate-700 hover:text-white rounded-lg"
+                  className="gap-2 border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg"
                   disabled
                 >
                   📈 Trend Spotter
@@ -414,20 +414,20 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-2 border-slate-700/50 bg-slate-800/60 text-slate-400 hover:bg-slate-700 hover:text-white rounded-lg"
+                  className="gap-2 border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg"
                   disabled
                 >
                   🎯 Topic Clusters
                 </Button>
               </div>
-              <p className="text-xs text-slate-500 mt-2">Coming soon - Import keywords directly from other tools</p>
+              <p className="text-xs text-muted-foreground mt-2">Coming soon - Import keywords directly from other tools</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-800 bg-slate-900/80 flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose} className="border-slate-700/50 bg-slate-800/60 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-border bg-muted/30 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
+          <Button variant="outline" onClick={onClose} className="border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg">
             Cancel
           </Button>
           <Button

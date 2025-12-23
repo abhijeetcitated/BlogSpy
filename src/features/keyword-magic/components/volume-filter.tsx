@@ -33,9 +33,9 @@ export function VolumeFilter({
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 sm:h-9 gap-1 sm:gap-1.5 bg-secondary/50 border-border text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+        <Button variant="outline" size="sm" className="h-7 sm:h-9 gap-0.5 sm:gap-1.5 bg-secondary/50 border-border text-[11px] sm:text-sm px-1.5 sm:px-3 shrink-0 min-w-0">
           Vol
-          <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[280px] p-3" align="start">

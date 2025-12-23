@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import {
   ToastNotification,
   OpportunityList,
@@ -11,6 +11,7 @@ import {
 } from "./components"
 import { MOCK_OPPORTUNITIES, AI_RESPONSES, DEFAULT_AI_RESPONSE_TEMPLATE } from "./__mocks__/snippet-data"
 import { calculateWordCount, calculateKeywordsUsed } from "./utils/snippet-utils"
+import { DELAYS } from "./constants"
 import type { SnippetOpportunity, ViewMode, FilterType } from "./types"
 
 export function SnippetStealerContent() {
@@ -24,10 +25,25 @@ export function SnippetStealerContent() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [savedSnippets, setSavedSnippets] = useState<Set<string>>(new Set())
+  const [error, setError] = useState<string | null>(null)
   
   // Toast state
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+  
+  // Timer refs for cleanup
+  const toastTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const generateTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+      if (generateTimerRef.current) clearTimeout(generateTimerRef.current)
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [])
 
   // Computed values
   const wordCount = useMemo(() => calculateWordCount(userSnippet), [userSnippet])
@@ -42,7 +58,8 @@ export function SnippetStealerContent() {
   const showNotification = useCallback((message: string) => {
     setToastMessage(message)
     setShowToast(true)
-    setTimeout(() => setShowToast(false), 3000)
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setShowToast(false), DELAYS.TOAST_DURATION)
   }, [])
 
   // Handle snippet selection
@@ -54,15 +71,26 @@ export function SnippetStealerContent() {
 
   // Handle AI generation
   const handleGenerate = useCallback(async () => {
-    setIsGenerating(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    const response = AI_RESPONSES[selectedSnippet.id] || 
-      DEFAULT_AI_RESPONSE_TEMPLATE(selectedSnippet.keyword)
-    
-    setUserSnippet(response)
-    setIsGenerating(false)
-    showNotification("AI snippet generated successfully! ✨")
+    try {
+      setError(null)
+      setIsGenerating(true)
+      
+      await new Promise(resolve => {
+        generateTimerRef.current = setTimeout(resolve, DELAYS.GENERATE_DELAY)
+      })
+      
+      const response = AI_RESPONSES[selectedSnippet.id] || 
+        DEFAULT_AI_RESPONSE_TEMPLATE(selectedSnippet.keyword)
+      
+      setUserSnippet(response)
+      showNotification("AI snippet generated successfully! ✨")
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to generate snippet"
+      setError(message)
+      showNotification(`Error: ${message}`)
+    } finally {
+      setIsGenerating(false)
+    }
   }, [selectedSnippet, showNotification])
 
   // Handle save snippet
@@ -72,16 +100,27 @@ export function SnippetStealerContent() {
       return
     }
     
-    setIsSaving(true)
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    setSavedSnippets(prev => new Set([...prev, selectedSnippet.id]))
-    setIsSaving(false)
-    showNotification(`Snippet saved to Content Plan for "${selectedSnippet.keyword}" 🎯`)
+    try {
+      setError(null)
+      setIsSaving(true)
+      
+      await new Promise(resolve => {
+        saveTimerRef.current = setTimeout(resolve, DELAYS.SAVE_DELAY)
+      })
+      
+      setSavedSnippets(prev => new Set([...prev, selectedSnippet.id]))
+      showNotification(`Snippet saved to Content Plan for "${selectedSnippet.keyword}" 🎯`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save snippet"
+      setError(message)
+      showNotification(`Error: ${message}`)
+    } finally {
+      setIsSaving(false)
+    }
   }, [selectedSnippet, userSnippet, showNotification])
 
   return (
-    <main className="flex-1 flex overflow-hidden bg-background">
+    <main className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-background">
       {/* Left Panel - Opportunities List */}
       <OpportunityList
         opportunities={MOCK_OPPORTUNITIES}
@@ -103,7 +142,7 @@ export function SnippetStealerContent() {
         />
 
         {/* Workbench Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6">
           {/* Competitor Snippet */}
           <CompetitorSnippetCard snippet={selectedSnippet} />
 

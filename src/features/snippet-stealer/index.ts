@@ -26,6 +26,7 @@ export {
   WORD_COUNT_THRESHOLDS,
   KEYWORD_THRESHOLDS,
   COMPETITOR_WORD_COUNT_RANGE,
+  DELAYS,
 } from "./constants"
 
 // Utils
@@ -40,3 +41,15 @@ export {
   generateSlug,
   capitalizeFirst,
 } from "./utils/snippet-utils"
+
+// Services
+export {
+  snippetStealerService,
+  SnippetStealerService,
+  type SaveSnippetRequest,
+  type SaveSnippetResponse,
+  type GenerateSnippetRequest,
+  type GenerateSnippetResponse,
+  type GetSavedSnippetsResponse,
+  type SnippetOpportunitiesResponse,
+} from "./services"

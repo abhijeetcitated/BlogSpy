@@ -4,7 +4,7 @@
 // Types for API integration
 // ============================================
 
-import type { Keyword, MatchType, Country } from "./index"
+import type { Keyword, MatchType, Country, SERPFeature } from "./index"
 
 /**
  * API Request for keyword research
@@ -156,14 +156,17 @@ export interface IntentData {
  * SERP features data
  */
 export interface SERPData {
-  features: SERPFeature[]
+  features: APISERPFeature[]
   organicResults: number
   adsCount: number
   paaQuestions: string[]
   relatedSearches: string[]
 }
 
-export interface SERPFeature {
+/**
+ * API SERP Feature (detailed object from API response)
+ */
+export interface APISERPFeature {
   type: string
   position: number
   clickShare: number // Estimated click share 0-100
@@ -308,7 +311,7 @@ export function transformAPIKeyword(apiKeyword: APIKeyword): Keyword {
     },
     kd: apiKeyword.kd,
     cpc: apiKeyword.cpc,
-    serpFeatures: apiKeyword.serp.features.map((f) => f.type),
+    serpFeatures: apiKeyword.serp.features.map((f) => f.type) as SERPFeature[],
     geoScore: apiKeyword.geoScore.score,
   }
 }

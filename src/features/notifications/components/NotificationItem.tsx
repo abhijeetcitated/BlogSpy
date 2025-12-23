@@ -37,7 +37,6 @@ interface NotificationItemProps {
   onMarkAsRead: (id: string) => void
   onDismiss: (id: string) => void
   timeAgo: string
-  onClose?: () => void
 }
 
 export function NotificationItem({
@@ -45,7 +44,6 @@ export function NotificationItem({
   onMarkAsRead,
   onDismiss,
   timeAgo,
-  onClose,
 }: NotificationItemProps) {
   const config = NOTIFICATION_TYPE_CONFIG[notification.type]
   const IconComponent = ICON_MAP[config.icon] || Info
@@ -131,7 +129,7 @@ export function NotificationItem({
   // Wrap in Link if actionUrl exists
   if (notification.actionUrl) {
     return (
-      <Link href={notification.actionUrl} onClick={onClose}>
+      <Link href={notification.actionUrl}>
         {content}
       </Link>
     )

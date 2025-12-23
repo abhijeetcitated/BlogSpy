@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 
 export interface ScanHistoryItem {
   id: string
@@ -11,33 +11,55 @@ export interface ScanHistoryItem {
   timestamp: number
 }
 
-const STORAGE_KEY = "on-page-checker-history"
-const MAX_HISTORY_ITEMS = 10
+interface UseScanHistoryOptions {
+  /** User ID for user-specific history. If not provided, uses global storage */
+  userId?: string
+  /** Maximum number of history items to keep */
+  maxItems?: number
+}
 
-export function useScanHistory() {
+const STORAGE_KEY_PREFIX = "on-page-checker-history"
+const DEFAULT_MAX_ITEMS = 10
+
+/**
+ * Hook for managing on-page scan history in localStorage
+ * Supports user-specific history when userId is provided
+ */
+export function useScanHistory(options: UseScanHistoryOptions = {}) {
+  const { userId, maxItems = DEFAULT_MAX_ITEMS } = options
   const [history, setHistory] = useState<ScanHistoryItem[]>([])
+  
+  // Create user-specific storage key
+  const storageKey = useMemo(() => {
+    return userId 
+      ? `${STORAGE_KEY_PREFIX}-${userId}` 
+      : STORAGE_KEY_PREFIX
+  }, [userId])
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount or when storageKey changes
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(storageKey)
       if (stored) {
         setHistory(JSON.parse(stored))
+      } else {
+        setHistory([])
       }
     } catch {
       console.error("Failed to load scan history")
+      setHistory([])
     }
-  }, [])
+  }, [storageKey])
 
   // Save to localStorage
   const saveHistory = useCallback((items: ScanHistoryItem[]) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+      localStorage.setItem(storageKey, JSON.stringify(items))
       setHistory(items)
     } catch {
       console.error("Failed to save scan history")
     }
-  }, [])
+  }, [storageKey])
 
   // Add new scan to history
   const addScan = useCallback((scan: Omit<ScanHistoryItem, "id" | "timestamp">) => {
@@ -47,12 +69,12 @@ export function useScanHistory() {
       timestamp: Date.now(),
     }
     
-    // Prepend new item, keep only MAX_HISTORY_ITEMS
-    const updatedHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS)
+    // Prepend new item, keep only maxItems
+    const updatedHistory = [newItem, ...history].slice(0, maxItems)
     saveHistory(updatedHistory)
     
     return newItem
-  }, [history, saveHistory])
+  }, [history, saveHistory, maxItems])
 
   // Remove scan from history
   const removeScan = useCallback((id: string) => {

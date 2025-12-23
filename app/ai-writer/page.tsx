@@ -1,26 +1,30 @@
+import { Suspense } from "react"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout"
-import { AIWriterContent } from "@/components/features"
-import { DemoWrapper } from "@/components/common/demo-wrapper"
+import { AIWriterContent } from "@/src/features/ai-writer"
 
 export const metadata = {
-  title: "AI Writer Demo - BlogSpy | AI-Powered Content Creation",
-  description: "Try our AI-powered content writer. Generate SEO-optimized blog posts, articles, and more. Sign up for full access.",
+  title: "AI Writer - BlogSpy | AI-Powered Content Creation",
+  description: "AI-powered content writer. Generate SEO-optimized blog posts, articles, and more.",
 }
 
-export default function AIWriterDemoPage() {
+function AIWriterLoader() {
   return (
-    <DemoWrapper
-      featureName="AI Writer"
-      featureDescription="Generate unlimited SEO-optimized content with advanced AI models and real-time suggestions."
-      dashboardPath="/dashboard/creation/ai-writer"
-    >
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          <AppSidebar />
+    <div className="flex-1 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  )
+}
+
+export default function AIWriterPage() {
+  return (
+    <SidebarProvider>
+      <div className="flex h-screen w-full overflow-hidden">
+        <AppSidebar />
+        <Suspense fallback={<AIWriterLoader />}>
           <AIWriterContent />
-        </div>
-      </SidebarProvider>
-    </DemoWrapper>
+        </Suspense>
+      </div>
+    </SidebarProvider>
   )
 }

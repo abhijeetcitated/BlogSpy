@@ -18,3 +18,7 @@ export {
   exportTasksToCSV,
   downloadCSV,
 } from "./roadmap-utils"
+
+// New split utilities
+export { computeRoadmapValues } from "./roadmap-computed"
+export { createModalHelpers } from "./roadmap-modal"

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 
 import { NicheSelector, EventCard, MyPlanSidebar } from "./components"
-import { getEventsForNiche, mockCalendarEvents } from "./__mocks__"
+import { getEventsForNiche } from "./__mocks__"
 import type { ContentNiche, MyPlanItem, CalendarEvent } from "./types"
 import {
   ArrowLeftIcon,
@@ -19,19 +19,18 @@ import {
 } from "./components/icons"
 
 export function ContentCalendar() {
-  const [selectedNiche, setSelectedNiche] = useState<ContentNiche | "all">("all")
+  const [selectedNiche, setSelectedNiche] = useState<ContentNiche>("all")
   const [myPlan, setMyPlan] = useState<MyPlanItem[]>([])
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
   const [showAllEvents, setShowAllEvents] = useState(false)
 
   // Get filtered events based on selected niche
   const filteredEvents = useMemo(() => {
-    const events = selectedNiche === "all" 
-      ? mockCalendarEvents 
-      : getEventsForNiche(selectedNiche)
-    
-    // Sort by urgency (days until event)
-    return events.sort((a: CalendarEvent, b: CalendarEvent) => a.daysUntil - b.daysUntil)
+    const events = getEventsForNiche(selectedNiche)
+
+    // Sort by days until; push past events to the end
+    const sortKey = (event: CalendarEvent) => (event.daysUntil < 0 ? Number.POSITIVE_INFINITY : event.daysUntil)
+    return [...events].sort((a: CalendarEvent, b: CalendarEvent) => sortKey(a) - sortKey(b))
   }, [selectedNiche])
 
   // Show 5 events by default or all if showAllEvents is true

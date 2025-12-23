@@ -85,7 +85,7 @@ export function AddKeywordModal({ isOpen, onClose, onAdd, isLoading = false }: A
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-slate-500/10 dark:bg-slate-400/10">
@@ -140,10 +140,11 @@ export function AddKeywordModal({ isOpen, onClose, onAdd, isLoading = false }: A
                         checked={isSelected}
                         disabled={isLoading}
                         onCheckedChange={() => handlePlatformToggle(platform.id)}
+                        aria-describedby={`${platform.id}-credits`}
                       />
-                      <Icon className={cn("h-4 w-4", platform.color)} />
+                      <Icon className={cn("h-4 w-4", platform.color)} aria-hidden="true" />
                       <span className="text-sm font-medium text-foreground">{platform.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground">{platform.credits} credits</span>
+                      <span id={`${platform.id}-credits`} className="ml-auto text-xs text-muted-foreground">{platform.credits} credits</span>
                     </label>
                   )
                 })}
@@ -160,7 +161,7 @@ export function AddKeywordModal({ isOpen, onClose, onAdd, isLoading = false }: A
 
             {/* Error Message */}
             {error && (
-              <p className="text-sm text-red-500">{error}</p>
+              <p className="text-sm text-red-500" role="alert" aria-live="polite">{error}</p>
             )}
           </div>
 

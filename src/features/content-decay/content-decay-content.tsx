@@ -209,13 +209,39 @@ export function ContentDecayContent() {
     async (articleId: string) => {
       setRevivingIds((prev) => new Set([...prev, articleId]))
 
+      // Find the article for context
+      const article = articles.find(a => a.id === articleId)
+      
       // Simulate loading
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Navigate to AI Writer with revival mode
-      router.push(`/dashboard/creation/ai-writer?mode=revival&articleId=${articleId}`)
+      // Navigate to AI Writer with revival mode and full context
+      const params = new URLSearchParams({
+        source: "content-decay",
+        mode: "revival",
+        articleId: articleId,
+      })
+      
+      if (article) {
+        // Extract keyword from title (simple approach - first 3-4 significant words)
+        const titleWords = article.title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, '')
+          .split(' ')
+          .filter(w => w.length > 3)
+          .slice(0, 4)
+          .join(' ')
+        
+        params.append("keyword", titleWords)
+        params.append("title", article.title)
+        params.append("decay_reason", article.decayReason)
+        params.append("traffic_loss", String(article.trafficLoss))
+        params.append("current_rank", String(article.currentRank))
+      }
+      
+      router.push(`/ai-writer?${params.toString()}`)
     },
-    [router]
+    [router, articles]
   )
 
   // Handle "Schedule" click for watch list items

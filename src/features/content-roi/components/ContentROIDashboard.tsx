@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { 
   DollarSign, 
   TrendingUp, 
@@ -53,6 +53,18 @@ export function ContentROIDashboard() {
   const [lastSynced, setLastSynced] = useState<Date | null>(null)
   const [articlesData, setArticlesData] = useState<ArticleROI[]>(() => generateSampleROIData())
   const [syncProgress, setSyncProgress] = useState(0)
+
+  // Timer ref for cleanup
+  const syncStatusTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (syncStatusTimerRef.current) {
+        clearTimeout(syncStatusTimerRef.current)
+      }
+    }
+  }, [])
 
   // Sync Analytics Handler
   const handleSyncAnalytics = useCallback(async () => {
@@ -116,12 +128,14 @@ export function ContentROIDashboard() {
       setSyncStatus('success')
       
       // Reset success status after 3 seconds
-      setTimeout(() => setSyncStatus('idle'), 3000)
+      if (syncStatusTimerRef.current) clearTimeout(syncStatusTimerRef.current)
+      syncStatusTimerRef.current = setTimeout(() => setSyncStatus('idle'), 3000)
       
     } catch (error) {
       console.error('Sync failed:', error)
       setSyncStatus('error')
-      setTimeout(() => setSyncStatus('idle'), 3000)
+      if (syncStatusTimerRef.current) clearTimeout(syncStatusTimerRef.current)
+      syncStatusTimerRef.current = setTimeout(() => setSyncStatus('idle'), 3000)
     } finally {
       setIsSyncing(false)
       setSyncProgress(0)
@@ -248,7 +262,7 @@ export function ContentROIDashboard() {
       {isSyncing && (
         <div className="w-full bg-muted/30 rounded-full h-1.5 overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-300 ease-out"
+            className="h-full bg-linear-to-r from-amber-500 to-amber-400 transition-all duration-300 ease-out"
             style={{ width: `${syncProgress}%` }}
           />
         </div>

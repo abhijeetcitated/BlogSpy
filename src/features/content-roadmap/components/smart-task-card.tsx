@@ -47,6 +47,10 @@ interface SmartTaskCardProps {
   isDragging?: boolean
   onDragStart: (e: React.DragEvent, task: TaskCard) => void
   onDragEnd: (e: React.DragEvent) => void
+  // Touch handlers for mobile
+  onTouchStart?: (e: React.TouchEvent, task: TaskCard) => void
+  onTouchMove?: (e: React.TouchEvent) => void
+  onTouchEnd?: () => void
   isSelected?: boolean
   onSelect?: (id: string, selected: boolean) => void
   showSelection?: boolean
@@ -60,6 +64,9 @@ export function SmartTaskCard({
   isDragging,
   onDragStart,
   onDragEnd,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
   isSelected = false,
   onSelect,
   showSelection = false,
@@ -89,10 +96,15 @@ export function SmartTaskCard({
       draggable
       onDragStart={(e) => onDragStart(e, task)}
       onDragEnd={onDragEnd}
+      onTouchStart={onTouchStart ? (e) => onTouchStart(e, task) : undefined}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
       className={cn(
-        "group relative bg-slate-900/60 border rounded-xl p-3 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg hover:shadow-black/30",
+        "group relative bg-card border rounded-xl p-3 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg",
+        // Touch handling for smooth mobile drag
+        "touch-manipulation select-none",
         isDragging && "opacity-50 scale-95",
-        isSelected ? "border-purple-500/50 bg-purple-500/10 ring-1 ring-purple-500/30" : "border-slate-700/50 hover:border-slate-600",
+        isSelected ? "border-purple-500/50 bg-purple-500/10 ring-1 ring-purple-500/30" : "border-border hover:border-border/80",
         isOverdue && "border-red-500/50 bg-red-500/5"
       )}
       onMouseEnter={() => setIsHovered(true)}
@@ -104,7 +116,7 @@ export function SmartTaskCard({
           <Checkbox
             checked={isSelected}
             onCheckedChange={(checked) => onSelect(task.id, checked as boolean)}
-            className="h-4 w-4 border-slate-600 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
+            className="h-4 w-4 border-border data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
           />
         </div>
       )}
@@ -128,30 +140,30 @@ export function SmartTaskCard({
             size="sm"
             className={cn(
               "absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
-              "hover:bg-slate-700/50"
+              "hover:bg-accent"
             )}
           >
-            <MoreVertical className="h-3.5 w-3.5 text-slate-400" />
+            <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40 bg-slate-900 border border-slate-800 shadow-2xl rounded-lg">
+        <DropdownMenuContent align="end" className="w-40 bg-popover border border-border shadow-2xl rounded-lg">
           <DropdownMenuItem 
-            className="text-sm cursor-pointer text-slate-300 hover:bg-slate-800 hover:text-white focus:bg-slate-800 focus:text-white"
+            className="text-sm cursor-pointer text-popover-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
             onClick={() => onEdit(task)}
           >
             <Pencil className="h-3.5 w-3.5 mr-2" />
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem
-            className="text-sm cursor-pointer text-slate-300 hover:bg-slate-800 hover:text-white focus:bg-slate-800 focus:text-white"
+            className="text-sm cursor-pointer text-popover-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
             onClick={() => onMoveToTop(task.id)}
           >
             <ArrowUp className="h-3.5 w-3.5 mr-2" />
             Move to Top
           </DropdownMenuItem>
-          <DropdownMenuSeparator className="bg-slate-800" />
+          <DropdownMenuSeparator className="bg-border" />
           <DropdownMenuItem
-            className="text-sm cursor-pointer text-red-400 hover:bg-red-500/10 hover:text-red-400 focus:bg-red-500/10 focus:text-red-400"
+            className="text-sm cursor-pointer text-red-500 dark:text-red-400 hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 focus:bg-red-500/10 focus:text-red-500 dark:focus:text-red-400"
             onClick={() => onDelete(task.id)}
           >
             <Trash2 className="h-3.5 w-3.5 mr-2" />
@@ -162,20 +174,20 @@ export function SmartTaskCard({
 
       {/* Grip Handle */}
       <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <GripVertical className="h-4 w-4 text-slate-500" />
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>
 
       {/* Card Content */}
       <div className="pl-4 pr-6">
         {/* Title */}
-        <h4 className="text-sm font-medium text-white mb-2 leading-tight line-clamp-2">
+        <h4 className="text-sm font-medium text-foreground mb-2 leading-tight line-clamp-2">
           {task.title}
         </h4>
 
         {/* Keyword Badge */}
         <Badge
           variant="secondary"
-          className="mb-2 text-xs font-normal bg-slate-800/80 text-slate-300 hover:bg-slate-700 rounded-md"
+          className="mb-2 text-xs font-normal bg-muted text-muted-foreground hover:bg-muted/80 rounded-md"
         >
           {task.keyword}
         </Badge>
@@ -198,7 +210,7 @@ export function SmartTaskCard({
               </Badge>
             ))}
             {task.tags.length > 2 && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-slate-800/60 text-slate-400 border-slate-700/50 rounded-md">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted text-muted-foreground border-border rounded-md">
                 +{task.tags.length - 2}
               </Badge>
             )}
@@ -206,9 +218,9 @@ export function SmartTaskCard({
         )}
 
         {/* Metrics */}
-        <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
           <span>
-            Vol: <span className="text-white font-medium">{task.volumeDisplay}</span>
+            Vol: <span className="text-foreground font-medium">{task.volumeDisplay}</span>
           </span>
           <span>
             KD: <span className={cn("font-medium", getKdColor(task.kd))}>{task.kd}%</span>
@@ -218,13 +230,13 @@ export function SmartTaskCard({
         {/* Progress Bar (show for all tasks with progress, except published) */}
         {task.status !== "published" && (task.progress > 0 || task.wordCount) && (
           <div className="mb-2">
-            <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
               <span>Progress</span>
-              <span className="text-purple-400 font-medium">{task.progress}%</span>
+              <span className="text-purple-500 dark:text-purple-400 font-medium">{task.progress}%</span>
             </div>
             <Progress value={task.progress} className="h-1.5" />
             {task.wordCount !== undefined && task.targetWordCount && (
-              <div className="text-[10px] text-slate-500 mt-0.5">
+              <div className="text-[10px] text-muted-foreground mt-0.5">
                 {task.wordCount.toLocaleString()} / {task.targetWordCount.toLocaleString()} words
               </div>
             )}
@@ -235,7 +247,7 @@ export function SmartTaskCard({
         {task.dueDate && (
           <div className={cn(
             "flex items-center gap-1.5 text-xs mb-2",
-            isOverdue ? "text-red-400" : "text-slate-400"
+            isOverdue ? "text-red-500 dark:text-red-400" : "text-muted-foreground"
           )}>
             {isOverdue ? (
               <AlertTriangle className="h-3.5 w-3.5" />
@@ -247,14 +259,14 @@ export function SmartTaskCard({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+        <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="flex items-center gap-2">
             {/* Assignee Avatar */}
             <Avatar className="h-5 w-5">
               <AvatarFallback className={cn(
                 "text-[9px] font-medium",
-                assigneeInfo?.color || "bg-slate-700",
-                "text-white"
+                assigneeInfo?.color || "bg-muted",
+                "text-foreground"
               )}>
                 {task.assignee}
               </AvatarFallback>
@@ -262,7 +274,7 @@ export function SmartTaskCard({
 
             {/* Comments Count */}
             {task.comments && task.comments.length > 0 && (
-              <div className="flex items-center gap-1 text-xs text-slate-400">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <MessageSquare className="h-3.5 w-3.5" />
                 <span>{task.comments.length}</span>
               </div>
@@ -282,7 +294,7 @@ export function SmartTaskCard({
             )}
           >
             <Link
-              href={`/dashboard/creation/ai-writer?topic=${encodeURIComponent(task.title)}&keyword=${encodeURIComponent(task.keyword)}`}
+              href={`/dashboard/creation/ai-writer?source=content-roadmap&keyword=${encodeURIComponent(task.keyword)}&volume=${task.volume || 0}&difficulty=${task.kd || 50}&intent=${'informational'}&type=${'standalone'}`}
             >
               <Play className="h-3.5 w-3.5" />
               Write

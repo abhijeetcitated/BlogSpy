@@ -3,13 +3,15 @@
  * Authentication state and actions
  */
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { authService, User } from "@/services"
+import { getFeatureAccess, type FeatureAccess } from "@/lib/feature-access"
 
 interface UseAuthReturn {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
+  featureAccess: FeatureAccess
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -26,6 +28,12 @@ export function useAuth(): UseAuthReturn {
     setUser(currentUser)
     setIsLoading(false)
   }, [])
+
+  // Calculate feature access based on auth state
+  const featureAccess = useMemo(() => {
+    const isDemoUser = user?.email === "demo@blogspy.io"
+    return getFeatureAccess(!!user, isDemoUser)
+  }, [user])
 
   // Login handler
   const login = useCallback(async (email: string, password: string) => {
@@ -71,8 +79,9 @@ export function useAuth(): UseAuthReturn {
 
   return {
     user,
-    isAuthenticated: !!user,
-    isLoading,
+    isAuthenticated: true, // TEMPORARY: Always authenticated during development
+    isLoading: false,
+    featureAccess,
     login,
     register,
     logout,

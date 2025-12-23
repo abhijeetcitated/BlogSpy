@@ -59,18 +59,18 @@ export function PerformanceDistribution({ groups }: PerformanceDistributionProps
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1c1c1c',
-                  border: '1px solid #333',
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  color: '#ffffff',
+                  color: 'hsl(var(--card-foreground))',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
                   padding: '8px 12px',
                 }}
                 itemStyle={{
-                  color: '#ffffff',
+                  color: 'hsl(var(--card-foreground))',
                 }}
                 labelStyle={{
-                  color: '#ffffff',
+                  color: 'hsl(var(--card-foreground))',
                   fontWeight: 600,
                 }}
                 formatter={(value: number, name: string) => [

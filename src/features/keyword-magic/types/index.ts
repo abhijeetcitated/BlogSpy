@@ -2,6 +2,13 @@
 // KEYWORD MAGIC - Type Definitions
 // ============================================
 
+import type { CTRStealingFeature } from "@/types/rtv.types"
+
+/**
+ * SERP Feature type - valid values for keyword SERP features
+ */
+export type SERPFeature = CTRStealingFeature | "snippet" | "faq" | "reviews" | "image" | "video" | "shopping" | "ad"
+
 export interface Keyword {
   id: number
   keyword: string
@@ -11,8 +18,12 @@ export interface Keyword {
   weakSpot: { type: "reddit" | "quora" | null; rank?: number }
   kd: number
   cpc: number
-  serpFeatures: string[]
+  serpFeatures: SERPFeature[]
   geoScore?: number
+  // Future API integration fields
+  updatedAt?: string
+  dataSource?: "dataforseo" | "semrush" | "mock"
+  yourPosition?: number
 }
 
 export interface Country {

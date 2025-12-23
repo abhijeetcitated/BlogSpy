@@ -79,4 +79,23 @@ export const NOTIFICATION_SETTINGS = {
   autoMarkReadDelay: 3000,   // Auto mark as read after 3s
   refreshInterval: 60000,    // Refresh every 60s
   maxUnreadBadge: 99,        // Show "99+" after this
+  
+  // Fix O: Sound settings
+  sound: {
+    enabled: true,
+    volume: 0.5,
+    file: "/sounds/notification.mp3",
+    playOnHighPriority: true,
+    playOnMediumPriority: false,
+    playOnLowPriority: false,
+  },
+  
+  // Push notification settings (Fix P: structure ready)
+  push: {
+    enabled: false,
+    askPermission: true,
+    showBadge: true,
+    showInForeground: false,
+    vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY || "",
+  },
 }

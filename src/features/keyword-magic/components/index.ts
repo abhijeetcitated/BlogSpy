@@ -15,7 +15,23 @@ export { IncludeExcludeFilter } from "./include-exclude-filter"
 export { MatchTypeToggle } from "./match-type-toggle"
 export { BulkModeToggle } from "./bulk-mode-toggle"
 export { BulkKeywordsInput } from "./bulk-keywords-input"
-export { KeywordMagicTool } from "./KeywordMagicTool"
 export { KeywordTable } from "./KeywordTable"
 export { KeywordTableRow } from "./KeywordTableRow"
 export type { KeywordTableProps } from "./KeywordTable"
+
+// Table sub-components
+export { 
+  KeywordTableHeader, 
+  KeywordTableFooter, 
+  sortKeywords, 
+  downloadKeywordsCSV,
+  generateKeywordCSV 
+} from "./table"
+
+// Content sub-components
+export {
+  KeywordMagicHeader,
+  KeywordMagicSearch,
+  KeywordMagicFilters,
+  KeywordMagicResults
+} from "./keyword-magic"

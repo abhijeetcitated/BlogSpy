@@ -54,7 +54,11 @@ const PLATFORM_ICONS: Record<SocialPlatform, React.FC<{ className?: string }>> =
 
 export function SocialPlatformTabs({ activePlatform, onPlatformChange, stats }: SocialPlatformTabsProps) {
   return (
-    <div className="flex w-full sm:inline-flex sm:w-auto items-center rounded-lg border border-border bg-card p-1">
+    <div 
+      className="flex w-full sm:inline-flex sm:w-auto items-center rounded-lg border border-border bg-card p-1"
+      role="tablist"
+      aria-label="Social media platforms"
+    >
       {SOCIAL_PLATFORMS.map((platform) => {
         const config = SOCIAL_PLATFORM_CONFIG[platform]
         const isActive = activePlatform === platform
@@ -65,7 +69,17 @@ export function SocialPlatformTabs({ activePlatform, onPlatformChange, stats }: 
         return (
           <button
             key={platform}
+            role="tab"
+            aria-selected={isActive}
+            aria-controls={`${platform}-panel`}
+            id={`${platform}-tab`}
             onClick={() => onPlatformChange(platform)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onPlatformChange(platform)
+              }
+            }}
             className={cn(
               "flex flex-1 sm:flex-initial items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all border",
               isActive
@@ -78,20 +92,28 @@ export function SocialPlatformTabs({ activePlatform, onPlatformChange, stats }: 
                 "h-3.5 w-3.5 sm:h-4 sm:w-4",
                 isActive ? "text-pink-500 dark:text-pink-400" : config.iconColor
               )}
+              aria-hidden="true"
             />
             {/* Hide text for X/Twitter since icon is self-explanatory */}
             {platform !== "twitter" && (
               <span className="hidden sm:inline">{config.name}</span>
             )}
+            {/* Screen reader only label for Twitter */}
+            {platform === "twitter" && (
+              <span className="sr-only">{config.name}</span>
+            )}
             {platformStats && (
-              <span className={cn(
-                "text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-[18px] text-center",
-                hasKeywords
-                  ? isActive 
-                    ? "bg-pink-500 text-white" 
-                    : "bg-emerald-500 text-white"
-                  : "bg-muted text-muted-foreground"
-              )}>
+              <span 
+                className={cn(
+                  "text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-4.5 text-center",
+                  hasKeywords
+                    ? isActive 
+                      ? "bg-pink-500 text-white" 
+                      : "bg-emerald-500 text-white"
+                    : "bg-muted text-muted-foreground"
+                )}
+                aria-label={`${platformStats.count} keywords tracked`}
+              >
                 {platformStats.count}
               </span>
             )}

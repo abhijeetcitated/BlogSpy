@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ErrorBoundary } from "@/components/common/error-boundary"
 import { 
   CreditCard, 
   Check, 
@@ -121,6 +122,7 @@ export default function BillingPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="p-6 space-y-8">
       {/* Header */}
       <div>
@@ -348,5 +350,6 @@ export default function BillingPage() {
         </Card>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

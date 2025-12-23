@@ -1,232 +1,135 @@
+/**
+ * Social Tracker Main Hook
+ * 
+ * @description Composes useSocialKeywords and useSocialFilters to provide
+ * a complete API for managing social media keyword tracking. This hook
+ * follows the composition pattern for better maintainability.
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *   keywords,
+ *   isLoading,
+ *   searchQuery,
+ *   setSearchQuery,
+ *   activePlatform,
+ *   setActivePlatform,
+ *   filteredKeywords,
+ *   addKeyword,
+ *   deleteKeyword
+ * } = useSocialTracker({ defaultPlatform: 'pinterest' })
+ * ```
+ * 
+ * @module hooks/useSocialTracker
+ */
+
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
-import { toast } from "sonner"
+import { useMemo } from "react"
+import { useSocialKeywords, type UseSocialKeywordsOptions } from "./useSocialKeywords"
+import { useSocialFilters, type UseSocialFiltersOptions } from "./useSocialFilters"
 import type { SocialKeyword, SocialSummary, SocialPlatform } from "../types"
-import { socialTrackerService } from "../../../../services/social-tracker.service"
 
-export interface UseSocialTrackerOptions {
-  platform?: SocialPlatform
-  autoFetch?: boolean
-}
+/**
+ * Options for configuring the social tracker hook
+ */
+export interface UseSocialTrackerOptions extends UseSocialKeywordsOptions, UseSocialFiltersOptions {}
 
+/**
+ * Return type for useSocialTracker hook
+ */
 export interface UseSocialTrackerReturn {
-  // Data
+  /** All keywords tracked by the user */
   keywords: SocialKeyword[]
+  /** Summary statistics across all platforms */
   summary: SocialSummary | null
   
-  // Loading states
+  /** True during initial data fetch */
   isLoading: boolean
+  /** True during background data refresh */
   isRefreshing: boolean
+  /** True while adding a new keyword */
   isAddingKeyword: boolean
+  /** True while deleting a keyword */
   isDeletingKeyword: boolean
   
-  // Error state
+  /** Error message if any operation failed */
   error: string | null
   
-  // Actions
+  /** Fetch all keywords from the API */
   fetchKeywords: () => Promise<void>
+  /** Refresh all keyword data in the background */
   refreshData: () => Promise<void>
+  /** Add a new keyword to track on specified platforms */
   addKeyword: (keyword: string, platforms: SocialPlatform[]) => Promise<boolean>
+  /** Delete a tracked keyword */
   deleteKeyword: (keywordId: string) => Promise<boolean>
+  /** Update keyword data */
   updateKeyword: (keywordId: string, data: Partial<SocialKeyword>) => Promise<boolean>
   
-  // Filters
+  /** Current search query */
   searchQuery: string
+  /** Update the search query */
   setSearchQuery: (query: string) => void
+  /** Currently selected platform tab */
   activePlatform: SocialPlatform
+  /** Switch to a different platform tab */
   setActivePlatform: (platform: SocialPlatform) => void
   
-  // Computed
+  /** Keywords filtered by search and platform (memoized) */
   filteredKeywords: SocialKeyword[]
+  /** Count of keywords per platform (memoized) */
   platformStats: Record<SocialPlatform, { count: number }>
 }
 
-const DEFAULT_SUMMARY: SocialSummary = {
-  totalKeywords: 0,
-  pinterestRanking: 0,
-  twitterRanking: 0,
-  instagramRanking: 0,
-  totalImpressions: 0,
-  avgEngagement: 0,
-  trendingCount: 0,
-}
-
+/**
+ * Main hook for Social Tracker feature
+ * 
+ * @param options - Configuration options
+ * @returns Complete API for managing social keyword tracking
+ */
 export function useSocialTracker(options: UseSocialTrackerOptions = {}): UseSocialTrackerReturn {
-  const { autoFetch = true } = options
+  // Compose keyword management
+  const {
+    keywords,
+    summary,
+    isLoading,
+    isRefreshing,
+    isAddingKeyword,
+    isDeletingKeyword,
+    error,
+    fetchKeywords,
+    refreshData,
+    addKeyword,
+    deleteKeyword,
+    updateKeyword,
+  } = useSocialKeywords({ autoFetch: options.autoFetch })
 
-  // Data state
-  const [keywords, setKeywords] = useState<SocialKeyword[]>([])
-  const [summary, setSummary] = useState<SocialSummary | null>(null)
-  
-  // Loading states
-  const [isLoading, setIsLoading] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isAddingKeyword, setIsAddingKeyword] = useState(false)
-  const [isDeletingKeyword, setIsDeletingKeyword] = useState(false)
-  
-  // Error state
-  const [error, setError] = useState<string | null>(null)
-  
-  // Filters
-  const [searchQuery, setSearchQuery] = useState("")
-  const [activePlatform, setActivePlatform] = useState<SocialPlatform>("pinterest")
+  // Compose filtering
+  const {
+    searchQuery,
+    setSearchQuery,
+    activePlatform,
+    setActivePlatform,
+    filterKeywords,
+    getPlatformStats,
+  } = useSocialFilters({ defaultPlatform: options.defaultPlatform })
 
-  // Fetch keywords from API
-  const fetchKeywords = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    
-    try {
-      const response = await socialTrackerService.getKeywords()
-      
-      if (response.success && response.data) {
-        setKeywords(response.data.keywords)
-        setSummary(response.data.summary)
-      } else {
-        throw new Error(response.error || "Failed to fetch keywords")
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch keywords"
-      setError(message)
-      console.error("Fetch keywords error:", err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  // Memoize computed values
+  const filteredKeywords = useMemo(() => 
+    filterKeywords(keywords), 
+    [filterKeywords, keywords]
+  )
 
-  // Refresh data (with loading indicator)
-  const refreshData = useCallback(async () => {
-    setIsRefreshing(true)
-    setError(null)
-    
-    try {
-      const response = await socialTrackerService.refreshKeywords()
-      
-      if (response.success && response.data) {
-        setKeywords(response.data.keywords)
-        setSummary(response.data.summary)
-        toast.success("Data refreshed successfully")
-      } else {
-        throw new Error(response.error || "Failed to refresh data")
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to refresh data"
-      setError(message)
-      toast.error(message)
-    } finally {
-      setIsRefreshing(false)
-    }
-  }, [])
-
-  // Add new keyword
-  const addKeyword = useCallback(async (keyword: string, platforms: SocialPlatform[]): Promise<boolean> => {
-    if (!keyword.trim()) {
-      toast.error("Please enter a keyword")
-      return false
-    }
-    
-    if (platforms.length === 0) {
-      toast.error("Please select at least one platform")
-      return false
-    }
-    
-    setIsAddingKeyword(true)
-    
-    try {
-      const response = await socialTrackerService.addKeyword(keyword, platforms)
-      
-      if (response.success && response.data) {
-        setKeywords(prev => [response.data!, ...prev])
-        // Update summary
-        setSummary(prev => prev ? {
-          ...prev,
-          pinterestRanking: platforms.includes("pinterest") ? prev.pinterestRanking + 1 : prev.pinterestRanking,
-          twitterRanking: platforms.includes("twitter") ? prev.twitterRanking + 1 : prev.twitterRanking,
-          instagramRanking: platforms.includes("instagram") ? prev.instagramRanking + 1 : prev.instagramRanking,
-        } : prev)
-        toast.success(`Keyword "${keyword}" added successfully`)
-        return true
-      } else {
-        throw new Error(response.error || "Failed to add keyword")
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to add keyword"
-      toast.error(message)
-      return false
-    } finally {
-      setIsAddingKeyword(false)
-    }
-  }, [])
-
-  // Delete keyword
-  const deleteKeyword = useCallback(async (keywordId: string): Promise<boolean> => {
-    setIsDeletingKeyword(true)
-    
-    try {
-      const response = await socialTrackerService.deleteKeyword(keywordId)
-      
-      if (response.success) {
-        setKeywords(prev => prev.filter(k => k.id !== keywordId))
-        toast.success("Keyword deleted successfully")
-        return true
-      } else {
-        throw new Error(response.error || "Failed to delete keyword")
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to delete keyword"
-      toast.error(message)
-      return false
-    } finally {
-      setIsDeletingKeyword(false)
-    }
-  }, [])
-
-  // Update keyword
-  const updateKeyword = useCallback(async (keywordId: string, data: Partial<SocialKeyword>): Promise<boolean> => {
-    try {
-      const response = await socialTrackerService.updateKeyword(keywordId, data)
-      
-      if (response.success && response.data) {
-        setKeywords(prev => prev.map(k => k.id === keywordId ? { ...k, ...response.data } : k))
-        toast.success("Keyword updated successfully")
-        return true
-      } else {
-        throw new Error(response.error || "Failed to update keyword")
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to update keyword"
-      toast.error(message)
-      return false
-    }
-  }, [])
-
-  // Filtered keywords based on search and platform
-  const filteredKeywords = keywords.filter(k => {
-    const matchesSearch = searchQuery === "" || 
-      k.keyword.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesPlatform = k.platforms[activePlatform] !== undefined
-    return matchesSearch && matchesPlatform
-  })
-
-  // Platform stats
-  const platformStats: Record<SocialPlatform, { count: number }> = {
-    pinterest: { count: keywords.filter(k => k.platforms.pinterest).length },
-    twitter: { count: keywords.filter(k => k.platforms.twitter).length },
-    instagram: { count: keywords.filter(k => k.platforms.instagram).length },
-  }
-
-  // Auto-fetch on mount
-  useEffect(() => {
-    if (autoFetch) {
-      fetchKeywords()
-    }
-  }, [autoFetch, fetchKeywords])
+  const platformStats = useMemo(() => 
+    getPlatformStats(keywords), 
+    [getPlatformStats, keywords]
+  )
 
   return {
     // Data
     keywords,
-    summary: summary || DEFAULT_SUMMARY,
+    summary,
     
     // Loading states
     isLoading,
@@ -255,3 +158,7 @@ export function useSocialTracker(options: UseSocialTrackerOptions = {}): UseSoci
     platformStats,
   }
 }
+
+// Re-export individual hooks for granular usage
+export { useSocialKeywords } from "./useSocialKeywords"
+export { useSocialFilters } from "./useSocialFilters"

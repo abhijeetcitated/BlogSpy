@@ -32,9 +32,8 @@ export function IntentFilter({
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 sm:h-9 gap-1 sm:gap-1.5 bg-secondary/50 border-border text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-          <span className="hidden sm:inline">Intent</span>
-          <span className="sm:hidden">Int</span>
+        <Button variant="outline" size="sm" className="h-7 sm:h-9 gap-0.5 sm:gap-1.5 bg-secondary/50 border-border text-[11px] sm:text-sm px-1.5 sm:px-3 shrink-0 min-w-0">
+          Intent
           {selectedIntents.length > 0 && (
             <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
               {selectedIntents.length}
@@ -50,13 +49,13 @@ export function IntentFilter({
               <label
                 key={intent.value}
                 onClick={() => onToggleIntent(intent.value)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors hover:bg-muted/50 cursor-pointer"
+                className="w-full flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded text-xs sm:text-sm transition-colors hover:bg-muted/50 cursor-pointer"
               >
                 <Checkbox checked={tempSelectedIntents.includes(intent.value)} />
-                <span className={cn("px-2 py-0.5 rounded text-xs font-medium border", intent.color)}>
+                <span className={cn("px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium border", intent.color)}>
                   {intent.value}
                 </span>
-                <span className="flex-1 text-left">{intent.label}</span>
+                <span className="flex-1 text-left text-xs sm:text-sm">{intent.label}</span>
               </label>
             ))}
           </div>

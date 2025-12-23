@@ -70,18 +70,18 @@ export function TrendFilter({
           variant="outline" 
           size="sm" 
           className={cn(
-            "h-8 sm:h-9 gap-1 sm:gap-1.5 bg-secondary/50 border-border text-xs sm:text-sm px-2 sm:px-3 shrink-0",
+            "h-7 sm:h-9 gap-0.5 sm:gap-1.5 bg-secondary/50 border-border text-[11px] sm:text-sm px-1.5 sm:px-3 shrink-0 min-w-0",
             hasFilter && "border-emerald-500/50"
           )}
         >
-          <TrendingUp className="h-3 w-3 text-emerald-400" />
-          <span className="hidden sm:inline">Trend</span>
+          <TrendingUp className="h-3 w-3 text-emerald-400 shrink-0" />
+          <span>Trend</span>
           {hasFilter && (
-            <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs bg-emerald-500/20 text-emerald-400">
+            <Badge variant="secondary" className="ml-0.5 h-4 px-1 text-[10px] bg-emerald-500/20 text-emerald-400">
               {tempTrendDirection === "up" ? "↑" : tempTrendDirection === "down" ? "↓" : "→"}
             </Badge>
           )}
-          <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[280px] p-3" align="start">

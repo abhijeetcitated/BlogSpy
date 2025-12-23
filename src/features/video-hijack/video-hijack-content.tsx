@@ -551,15 +551,15 @@ export function VideoHijackContent() {
 
   return (
     <TooltipProvider>
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         {/* ==================== HEADER ==================== */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground flex items-center gap-2 sm:gap-3 flex-nowrap">
               <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20">
                 <VideoIcon size={20} className="text-red-500" />
               </div>
-              Video Keyword Research
+              <span className="whitespace-nowrap">Video Keyword Research</span>
             </h1>
             <p className="text-muted-foreground mt-1">
               Find trending video opportunities on YouTube & TikTok
@@ -722,8 +722,8 @@ export function VideoHijackContent() {
         {/* ==================== RESULTS ==================== */}
         {!isLoading && hasSearched && (
           <>
-            {/* Platform Tabs */}
-            <div className="flex items-center justify-between">
+            {/* Platform Tabs + Sort (stack on mobile) */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2 p-1.5 rounded-xl bg-muted/50 border border-border">
                 <button
                   onClick={() => { setPlatform("youtube"); setCurrentPage(1) }}
@@ -759,7 +759,7 @@ export function VideoHijackContent() {
 
               {/* Sort */}
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="w-48 bg-background border-border">
+                <SelectTrigger className="w-full sm:w-48 bg-background border-border">
                   <SortIcon size={16} className="mr-2" />
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -1004,26 +1004,26 @@ export function VideoHijackContent() {
                   {(paginatedResults as VideoResult[]).map((video, i) => (
                     <div
                       key={video.id}
-                      className="rounded-xl border border-border bg-card p-4 hover:border-red-500/30 transition-colors group"
+                      className="rounded-xl border border-border bg-card p-3 sm:p-4 hover:border-red-500/30 transition-colors group"
                     >
-                      <div className="flex gap-4">
-                        {/* Rank + Hijack Score */}
-                        <div className="flex flex-col items-center gap-2 shrink-0">
-                          <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-sm font-bold text-red-500">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                        {/* Top Row: Rank + Score + Badges (Mobile) */}
+                        <div className="flex items-center gap-3 sm:flex-col sm:items-center sm:gap-2 sm:shrink-0">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-xs sm:text-sm font-bold text-red-500">
                             {(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
                           </div>
                           <Tooltip>
                             <TooltipTrigger>
                               <div className={cn(
-                                "w-10 h-10 rounded-full flex flex-col items-center justify-center border-2",
+                                "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex flex-col items-center justify-center border-2",
                                 video.hijackScore >= 80 
                                   ? "border-emerald-500 bg-emerald-500/10" 
                                   : video.hijackScore >= 60 
                                   ? "border-amber-500 bg-amber-500/10"
                                   : "border-red-500 bg-red-500/10"
                               )}>
-                                <ZapIcon size={12} className={getHijackScoreColor(video.hijackScore)} />
-                                <span className={cn("text-xs font-bold", getHijackScoreColor(video.hijackScore))}>
+                                <ZapIcon size={10} className={cn("sm:w-3 sm:h-3", getHijackScoreColor(video.hijackScore))} />
+                                <span className={cn("text-[10px] sm:text-xs font-bold", getHijackScoreColor(video.hijackScore))}>
                                   {video.hijackScore}
                                 </span>
                               </div>
@@ -1033,14 +1033,21 @@ export function VideoHijackContent() {
                               <p className="text-xs text-muted-foreground">Higher = easier to outrank</p>
                             </TooltipContent>
                           </Tooltip>
+                          {/* Badges - Mobile inline with rank */}
+                          <div className="flex gap-1 sm:hidden ml-auto">
+                            <Badge className={cn("text-[10px] capitalize", getViralPotentialColor(video.viralPotential))}>
+                              <FlameIcon size={8} className="mr-0.5" />
+                              {video.viralPotential}
+                            </Badge>
+                          </div>
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 space-y-2">
                           <div className="flex items-start gap-2">
-                            <h3 className="font-medium text-foreground truncate flex-1">{video.title}</h3>
-                            {/* Badges */}
-                            <div className="flex gap-1.5 shrink-0">
+                            <h3 className="font-medium text-foreground text-sm sm:text-base line-clamp-2 sm:truncate flex-1">{video.title}</h3>
+                            {/* Badges - Desktop only */}
+                            <div className="hidden sm:flex gap-1.5 shrink-0">
                               <Badge className={cn("text-xs capitalize", getViralPotentialColor(video.viralPotential))}>
                                 <FlameIcon size={10} className="mr-1" />
                                 {video.viralPotential}
@@ -1051,42 +1058,60 @@ export function VideoHijackContent() {
                               </Badge>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                          {/* Creator Info */}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
-                              <SubscribersIcon size={14} />
+                              <SubscribersIcon size={12} className="sm:w-3.5 sm:h-3.5" />
                               {video.channel} ({video.subscribers})
                             </span>
-                            <span>•</span>
+                            <span className="hidden xs:inline">•</span>
                             <span className="flex items-center gap-1">
-                              <DurationIcon size={14} />
+                              <DurationIcon size={12} className="sm:w-3.5 sm:h-3.5" />
                               {video.duration}
                             </span>
-                            <span>•</span>
+                            <span className="hidden xs:inline">•</span>
                             <span>{video.publishedAt}</span>
                           </div>
+                          
+                          {/* Stats - Mobile: Inline row */}
+                          <div className="flex sm:hidden items-center gap-2 text-xs">
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40">
+                              <ViewsIcon size={12} className="text-muted-foreground" />
+                              <span className="font-semibold">{formatViews(video.views)}</span>
+                            </div>
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40">
+                              <LikeIcon size={12} className="text-muted-foreground" />
+                              <span className="font-semibold">{formatViews(video.likes)}</span>
+                            </div>
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40">
+                              <CommentIcon size={12} className="text-muted-foreground" />
+                              <span className="font-semibold">{formatViews(video.comments)}</span>
+                            </div>
+                          </div>
+
                           {/* YouTube Tags */}
-                          <div className="flex gap-1.5 mt-2 flex-wrap">
-                            {video.tags.slice(0, 4).map((tag) => (
+                          <div className="flex gap-1 flex-wrap">
+                            {video.tags.slice(0, 3).map((tag) => (
                               <Badge
                                 key={tag}
                                 variant="secondary"
-                                className="text-xs bg-red-500/10 text-red-500 cursor-pointer hover:bg-red-500/20"
+                                className="text-[10px] sm:text-xs bg-red-500/10 text-red-500 cursor-pointer hover:bg-red-500/20 px-1.5 py-0"
                                 onClick={() => handleCopy(tag)}
                               >
-                                <TagIcon size={10} className="mr-1" />
+                                <TagIcon size={8} className="mr-0.5 sm:w-2.5 sm:h-2.5 sm:mr-1" />
                                 {tag}
                               </Badge>
                             ))}
-                            {video.tags.length > 4 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{video.tags.length - 4} more
+                            {video.tags.length > 3 && (
+                              <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0">
+                                +{video.tags.length - 3}
                               </Badge>
                             )}
                           </div>
                         </div>
 
-                        {/* Stats */}
-                        <div className="flex items-center gap-3 text-sm shrink-0">
+                        {/* Stats - Desktop */}
+                        <div className="hidden sm:flex items-center gap-3 text-sm shrink-0">
                           <div className="text-center p-2 rounded-lg bg-muted/30">
                             <div className="flex items-center gap-1 justify-center">
                               <ViewsIcon size={14} className="text-muted-foreground" />
@@ -1114,33 +1139,33 @@ export function VideoHijackContent() {
                           </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Actions - Always Visible */}
+                        <div className="flex items-center gap-0.5 shrink-0">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7 rounded-md hover:bg-red-500/10 hover:text-red-500"
                                 onClick={() => handleCopy(video.title)}
                               >
-                                <CopyIcon size={16} />
+                                <CopyIcon size={14} />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Copy title</TooltipContent>
+                            <TooltipContent side="top">Copy title</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7 rounded-md hover:bg-red-500/10 hover:text-red-500"
                                 onClick={() => window.open(video.videoUrl, "_blank")}
                               >
-                                <ExternalLinkIcon size={16} />
+                                <ExternalLinkIcon size={14} />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Watch video</TooltipContent>
+                            <TooltipContent side="top">Watch video</TooltipContent>
                           </Tooltip>
                         </div>
                       </div>
@@ -1155,26 +1180,26 @@ export function VideoHijackContent() {
                   {(paginatedResults as TikTokResult[]).map((video, i) => (
                     <div
                       key={video.id}
-                      className="rounded-xl border border-border bg-card p-4 hover:border-cyan-500/30 transition-colors group"
+                      className="rounded-xl border border-border bg-card p-3 sm:p-4 hover:border-cyan-500/30 transition-colors group"
                     >
-                      <div className="flex gap-4">
-                        {/* Rank + Hijack Score */}
-                        <div className="flex flex-col items-center gap-2 shrink-0">
-                          <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-sm font-bold text-cyan-500">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                        {/* Top Row: Rank + Score + Badges (Mobile) */}
+                        <div className="flex items-center gap-3 sm:flex-col sm:items-center sm:gap-2 sm:shrink-0">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-xs sm:text-sm font-bold text-cyan-500">
                             {(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
                           </div>
                           <Tooltip>
                             <TooltipTrigger>
                               <div className={cn(
-                                "w-10 h-10 rounded-full flex flex-col items-center justify-center border-2",
+                                "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex flex-col items-center justify-center border-2",
                                 video.hijackScore >= 80 
                                   ? "border-emerald-500 bg-emerald-500/10" 
                                   : video.hijackScore >= 60 
                                   ? "border-amber-500 bg-amber-500/10"
                                   : "border-red-500 bg-red-500/10"
                               )}>
-                                <ZapIcon size={12} className={getHijackScoreColor(video.hijackScore)} />
-                                <span className={cn("text-xs font-bold", getHijackScoreColor(video.hijackScore))}>
+                                <ZapIcon size={10} className={cn("sm:w-3 sm:h-3", getHijackScoreColor(video.hijackScore))} />
+                                <span className={cn("text-[10px] sm:text-xs font-bold", getHijackScoreColor(video.hijackScore))}>
                                   {video.hijackScore}
                                 </span>
                               </div>
@@ -1184,14 +1209,27 @@ export function VideoHijackContent() {
                               <p className="text-xs text-muted-foreground">Higher = easier to outrank</p>
                             </TooltipContent>
                           </Tooltip>
+                          {/* Badges - Mobile inline with rank */}
+                          <div className="flex gap-1 sm:hidden ml-auto">
+                            <Badge className={cn("text-[10px] capitalize", getViralPotentialColor(video.viralPotential))}>
+                              <FlameIcon size={8} className="mr-0.5" />
+                              {video.viralPotential}
+                            </Badge>
+                            {video.soundTrending && (
+                              <Badge className="text-[10px] bg-pink-500/10 text-pink-500">
+                                <SoundIcon size={8} className="mr-0.5" />
+                                Trending
+                              </Badge>
+                            )}
+                          </div>
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 space-y-2">
                           <div className="flex items-start gap-2">
-                            <p className="font-medium text-foreground line-clamp-2 flex-1">{video.description}</p>
-                            {/* Badges */}
-                            <div className="flex gap-1.5 shrink-0">
+                            <p className="font-medium text-foreground text-sm sm:text-base line-clamp-2 flex-1">{video.description}</p>
+                            {/* Badges - Desktop only */}
+                            <div className="hidden sm:flex gap-1.5 shrink-0">
                               <Badge className={cn("text-xs capitalize", getViralPotentialColor(video.viralPotential))}>
                                 <FlameIcon size={10} className="mr-1" />
                                 {video.viralPotential}
@@ -1204,36 +1242,60 @@ export function VideoHijackContent() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                          {/* Creator Info */}
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
-                              <SubscribersIcon size={14} />
+                              <SubscribersIcon size={12} className="sm:w-3.5 sm:h-3.5" />
                               @{video.creator} ({video.followers})
                             </span>
-                            <span>•</span>
+                            <span className="hidden xs:inline">•</span>
                             <span className="flex items-center gap-1">
-                              <DurationIcon size={14} />
+                              <DurationIcon size={12} className="sm:w-3.5 sm:h-3.5" />
                               {video.duration}
                             </span>
-                            <span>•</span>
+                            <span className="hidden xs:inline">•</span>
                             <span>{video.publishedAt}</span>
                           </div>
-                          <div className="flex gap-1.5 mt-2 flex-wrap">
-                            {video.hashtags.slice(0, 5).map((tag) => (
+                          
+                          {/* Stats - Mobile: Inline row */}
+                          <div className="flex sm:hidden items-center gap-2 text-xs">
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40">
+                              <ViewsIcon size={12} className="text-muted-foreground" />
+                              <span className="font-semibold">{formatViews(video.views)}</span>
+                            </div>
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40">
+                              <LikeIcon size={12} className="text-muted-foreground" />
+                              <span className="font-semibold">{formatViews(video.likes)}</span>
+                            </div>
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40">
+                              <ShareIcon size={12} className="text-muted-foreground" />
+                              <span className="font-semibold">{formatViews(video.shares)}</span>
+                            </div>
+                          </div>
+
+                          {/* TikTok Hashtags */}
+                          <div className="flex gap-1 flex-wrap">
+                            {video.hashtags.slice(0, 4).map((tag) => (
                               <Badge
                                 key={tag}
                                 variant="secondary"
-                                className="text-xs bg-cyan-500/10 text-cyan-500 cursor-pointer hover:bg-cyan-500/20"
+                                className="text-[10px] sm:text-xs bg-cyan-500/10 text-cyan-500 cursor-pointer hover:bg-cyan-500/20 px-1.5 py-0"
                                 onClick={() => handleCopy(`#${tag}`)}
                               >
-                                <HashtagIcon size={10} className="mr-0.5" />
+                                <HashtagIcon size={8} className="mr-0.5 sm:w-2.5 sm:h-2.5" />
                                 {tag}
                               </Badge>
                             ))}
+                            {video.hashtags.length > 4 && (
+                              <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0">
+                                +{video.hashtags.length - 4}
+                              </Badge>
+                            )}
                           </div>
                         </div>
 
-                        {/* Stats */}
-                        <div className="flex items-center gap-3 text-sm shrink-0">
+                        {/* Stats - Desktop */}
+                        <div className="hidden sm:flex items-center gap-3 text-sm shrink-0">
                           <div className="text-center p-2 rounded-lg bg-muted/30">
                             <div className="flex items-center gap-1 justify-center">
                               <ViewsIcon size={14} className="text-muted-foreground" />
@@ -1261,33 +1323,33 @@ export function VideoHijackContent() {
                           </div>
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {/* Actions - Always Visible */}
+                        <div className="flex items-center gap-0.5 shrink-0">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7 rounded-md hover:bg-cyan-500/10 hover:text-cyan-500"
                                 onClick={() => handleCopy(video.description)}
                               >
-                                <CopyIcon size={16} />
+                                <CopyIcon size={14} />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Copy description</TooltipContent>
+                            <TooltipContent side="top">Copy description</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7 rounded-md hover:bg-cyan-500/10 hover:text-cyan-500"
                                 onClick={() => window.open(video.videoUrl, "_blank")}
                               >
-                                <ExternalLinkIcon size={16} />
+                                <ExternalLinkIcon size={14} />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Watch video</TooltipContent>
+                            <TooltipContent side="top">Watch video</TooltipContent>
                           </Tooltip>
                         </div>
                       </div>

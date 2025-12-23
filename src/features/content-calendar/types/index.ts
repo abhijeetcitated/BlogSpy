@@ -17,7 +17,7 @@ export type ContentNiche =
   | "education"
   | "all"
 
-export type EventUrgency = "urgent" | "upcoming" | "planned" | "future"
+export type EventUrgency = "urgent" | "upcoming" | "planned" | "future" | "past"
 
 export type EventStatus = "not-started" | "in-progress" | "published"
 

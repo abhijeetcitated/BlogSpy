@@ -46,7 +46,7 @@ export function KeywordTableRow({ item, index, isSelected, onSelect }: KeywordTa
         isSelected && "bg-primary/5 hover:bg-primary/10",
       )}
     >
-      <td className="p-2 align-middle">
+      <td className="p-1.5 sm:p-2 align-middle">
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onSelect(item.id)}
@@ -193,7 +193,7 @@ export function KeywordTableRow({ item, index, isSelected, onSelect }: KeywordTa
             </Link>
           </Button>
           <Button asChild variant="ghost" size="sm" className="h-7 px-2.5 text-xs gap-1.5 hover:bg-emerald-500/10 hover:text-emerald-400">
-            <Link href={`/dashboard/creation/ai-writer?topic=${encodeURIComponent(item.keyword)}`}>
+            <Link href={`/ai-writer?source=keyword-magic&keyword=${encodeURIComponent(item.keyword)}&volume=${item.volume}&difficulty=${item.kd}&intent=${item.intent[0] || "informational"}&cpc=${item.cpc}&serp_features=${item.serpFeatures.join(",")}`}>
               <Pencil className="h-3 w-3" />
               Write
             </Link>

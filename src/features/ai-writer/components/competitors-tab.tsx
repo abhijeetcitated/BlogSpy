@@ -21,7 +21,7 @@ export function CompetitorsTab({ editorStats }: CompetitorsTabProps) {
           Top Ranking Competitors
         </h3>
         {COMPETITOR_DATA.map((competitor) => (
-          <Card key={competitor.rank} className="p-3 bg-slate-800/50 border-slate-700">
+          <Card key={competitor.rank} className="p-3 bg-card/50 border-border">
             <div className="flex items-start gap-3">
               <span className="text-lg font-bold text-muted-foreground">
                 #{competitor.rank}

@@ -2,13 +2,28 @@
 // KEYWORD MAGIC - Hooks Index
 // ============================================
 
+// Filter state management
 export {
   useKeywordFilters,
-  useKeywordData,
-  useBulkAnalysis,
-  useCountrySelector,
   type UseKeywordFiltersReturn,
+} from "./use-keyword-filters"
+
+// Keyword data management
+export {
+  useKeywordData,
   type UseKeywordDataReturn,
+  type UseKeywordDataOptions,
+} from "./use-keyword-data"
+
+// Bulk analysis
+export {
+  useBulkAnalysis,
   type UseBulkAnalysisReturn,
+} from "./use-bulk-analysis"
+
+// Country selection
+export {
+  useCountrySelector,
   type UseCountrySelectorReturn,
-} from "./use-keyword-magic"
+} from "./use-country-selector"
+

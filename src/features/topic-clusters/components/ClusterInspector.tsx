@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { ClusterData } from "../types"
@@ -37,6 +38,7 @@ interface ClusterInspectorProps {
 }
 
 export function ClusterInspector({ cluster, isOpen, onClose, onOpen }: ClusterInspectorProps) {
+  const router = useRouter()
   const [isAddingToRoadmap, setIsAddingToRoadmap] = useState(false)
   const [isAddedToRoadmap, setIsAddedToRoadmap] = useState(false)
   const [copiedKeyword, setCopiedKeyword] = useState<string | null>(null)
@@ -58,6 +60,19 @@ export function ClusterInspector({ cluster, isOpen, onClose, onOpen }: ClusterIn
     navigator.clipboard.writeText(keyword)
     setCopiedKeyword(keyword)
     setTimeout(() => setCopiedKeyword(null), 1500)
+  }
+  
+  // Navigate to AI Writer with cluster context
+  const handleWriteContent = (keyword: string, volume: number, isPillar: boolean = false) => {
+    const params = new URLSearchParams({
+      source: "topic-clusters",
+      keyword: keyword,
+      volume: String(volume),
+      difficulty: String(cluster.kd),
+      type: isPillar ? "pillar" : "cluster",
+      parent_pillar: cluster.name, // Parent cluster name
+    })
+    router.push(`/ai-writer?${params.toString()}`)
   }
 
   if (!isOpen) {
@@ -155,6 +170,7 @@ export function ClusterInspector({ cluster, isOpen, onClose, onOpen }: ClusterIn
                     )}
                   </button>
                   <button 
+                    onClick={() => handleWriteContent(kw.keyword, parseInt(kw.volume) || 0)}
                     className="p-1.5 sm:p-2 rounded-md sm:rounded-lg bg-violet-100 dark:bg-violet-500/20 hover:bg-violet-200 dark:hover:bg-violet-500/30 text-violet-600 dark:text-violet-400 transition-all"
                     title="Write content"
                   >

@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { Target } from "lucide-react"
+import { chartTooltipStyles, intentColors } from "@/components/charts"
 import { AffiliateKeyword, BuyerIntent } from "../types"
 import { BUYER_INTENT_CONFIG } from "../constants"
 
@@ -9,12 +10,8 @@ interface IntentDistributionProps {
   keywords: AffiliateKeyword[]
 }
 
-const INTENT_COLORS: Record<BuyerIntent, string> = {
-  transactional: '#10b981',
-  commercial: '#06b6d4',
-  informational: '#f59e0b',
-  navigational: '#a855f7',
-}
+// Use centralized intent colors for consistency
+const INTENT_COLORS: Record<BuyerIntent, string> = intentColors
 
 export function IntentDistribution({ keywords }: IntentDistributionProps) {
   // Count keywords by intent
@@ -40,22 +37,22 @@ export function IntentDistribution({ keywords }: IntentDistributionProps) {
   const total = keywords.length
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-5 overflow-hidden">
       <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
         <Target className="h-4 w-4 text-emerald-500" />
         Buyer Intent Distribution
       </h3>
-      <div className="flex items-center gap-6">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
         {/* Pie Chart */}
-        <div className="h-[180px] w-[180px]">
+        <div className="h-[160px] w-[160px] sm:h-[180px] sm:w-[180px] shrink-0 flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={45}
-                outerRadius={70}
+                innerRadius={40}
+                outerRadius={65}
                 paddingAngle={2}
                 dataKey="value"
               >
@@ -68,22 +65,9 @@ export function IntentDistribution({ keywords }: IntentDistributionProps) {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1c1c1e',
-                  border: '1px solid #2c2c2e',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                  padding: '8px 12px',
-                }}
-                itemStyle={{
-                  color: '#ffffff',
-                }}
-                labelStyle={{
-                  color: '#a1a1aa',
-                  fontWeight: 600,
-                  marginBottom: '4px',
-                }}
+                contentStyle={chartTooltipStyles.contentStyle}
+                itemStyle={chartTooltipStyles.itemStyle}
+                labelStyle={chartTooltipStyles.labelStyle}
                 formatter={(value: number, name: string) => [
                   `${value} keywords (${((value / total) * 100).toFixed(0)}%)`,
                   name
@@ -94,7 +78,7 @@ export function IntentDistribution({ keywords }: IntentDistributionProps) {
         </div>
 
         {/* Legend */}
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-2 w-full sm:w-auto">
           {Object.entries(BUYER_INTENT_CONFIG).map(([intent, config]) => {
             const count = intentCounts[intent as BuyerIntent]
             return (

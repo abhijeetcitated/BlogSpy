@@ -170,6 +170,14 @@ export const urgencyConfig: Record<string, UrgencyConfigItem> = {
     badge: "FUTURE",
     icon: <CrystalBallIcon className="h-4 w-4" />,
   },
+  past: {
+    label: "Just Missed",
+    color: "text-slate-600 dark:text-slate-400",
+    bgColor: "bg-slate-100 dark:bg-slate-800/50",
+    borderColor: "border-slate-200 dark:border-slate-700",
+    badge: "PAST",
+    icon: <ClipboardIcon className="h-4 w-4" />,
+  },
 }
 
 // ============================================

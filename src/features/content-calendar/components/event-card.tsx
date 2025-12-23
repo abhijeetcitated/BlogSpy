@@ -66,7 +66,8 @@ export function EventCard({
         event.urgency === "urgent" && "bg-linear-to-r from-red-500 to-red-400",
         event.urgency === "upcoming" && "bg-linear-to-r from-amber-500 to-amber-400",
         event.urgency === "planned" && "bg-linear-to-r from-blue-500 to-blue-400",
-        event.urgency === "future" && "bg-linear-to-r from-slate-400 to-slate-300"
+        event.urgency === "future" && "bg-linear-to-r from-slate-400 to-slate-300",
+        event.urgency === "past" && "bg-linear-to-r from-slate-500 to-slate-400"
       )} />
 
       {/* Main Card Content */}

@@ -199,7 +199,7 @@ export function WeakSpotTable({
                         className="h-7 px-3 bg-cyan-500 hover:bg-cyan-600 text-cyan-950 font-semibold text-xs"
                         onClick={() => onAddKeyword(kw)}
                       >
-                        <Link href={`/dashboard/creation/ai-writer?keyword=${encodeURIComponent(kw.keyword)}`}>
+                        <Link href={`/dashboard/creation/ai-writer?source=competitor-gap&keyword=${encodeURIComponent(kw.keyword)}&volume=${kw.volume}&difficulty=${kw.kd}&intent=${kw.intent || 'informational'}`}>
                           <Zap className="h-3 w-3 mr-1" />
                           Write Article
                         </Link>

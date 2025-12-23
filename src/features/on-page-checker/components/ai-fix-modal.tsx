@@ -59,42 +59,42 @@ export function AIFixModal({ open, onOpenChange, currentIssue, onCopySuccess }: 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-card border-border">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg bg-card border-border mx-4">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className={cn("h-5 w-5", isError ? "text-red-400" : "text-amber-400")} />
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Sparkles className={cn("h-4 w-4 sm:h-5 sm:w-5", isError ? "text-red-400" : "text-amber-400")} />
             AI Fix Suggestion
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
             {currentIssue.title}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 mt-4">
+        <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
           <div
             className={cn(
-              "p-3 rounded-lg border text-sm",
+              "p-2 sm:p-3 rounded-lg border text-xs sm:text-sm",
               isError
                 ? "bg-red-500/5 border-red-500/20 text-red-300"
                 : "bg-amber-500/5 border-amber-500/20 text-amber-300"
             )}
           >
-            <p className="font-medium mb-1">Issue:</p>
-            <p className="text-muted-foreground">{currentIssue.description}</p>
+            <p className="font-medium mb-1 text-xs sm:text-sm">Issue:</p>
+            <p className="text-muted-foreground text-[10px] sm:text-xs">{currentIssue.description}</p>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">Suggested Fix:</span>
+              <span className="text-xs sm:text-sm font-medium text-foreground">Suggested Fix:</span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleRegenerate}
                 disabled={isGenerating}
-                className="text-xs text-muted-foreground hover:text-foreground"
+                className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground touch-manipulation min-h-[36px] px-2 sm:px-3"
               >
-                <RefreshCw className={cn("h-3.5 w-3.5 mr-1", isGenerating && "animate-spin")} />
-                Regenerate
+                <RefreshCw className={cn("h-3.5 w-3.5 sm:h-3.5 sm:w-3.5 mr-1", isGenerating && "animate-spin")} />
+                <span className="hidden xs:inline">Regenerate</span>
               </Button>
             </div>
             <Textarea

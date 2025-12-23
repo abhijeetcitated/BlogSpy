@@ -2,7 +2,7 @@
 // KEYWORD MAGIC - Filter Utilities
 // ============================================
 
-import type { Keyword, MatchType, Country } from "../types"
+import type { Keyword, MatchType, Country, SERPFeature } from "../types"
 
 /**
  * Filter keywords based on search text and match type
@@ -134,7 +134,7 @@ export function filterByWeakSpot(
  */
 export function filterBySerpFeatures(
   keywords: Keyword[],
-  selectedFeatures: string[]
+  selectedFeatures: SERPFeature[]
 ): Keyword[] {
   if (selectedFeatures.length === 0) return keywords
   return keywords.filter((k) =>
@@ -218,7 +218,7 @@ export interface FilterOptions {
   // New advanced filters
   hasWeakSpot: boolean | null
   weakSpotTypes: string[]
-  selectedSerpFeatures: string[]
+  selectedSerpFeatures: SERPFeature[]
   trendDirection: "up" | "down" | "stable" | null
   minTrendGrowth: number | null
 }

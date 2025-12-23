@@ -20,7 +20,7 @@ interface ScanHeaderProps {
   onScan: () => void
   onExport?: () => void
   urlError?: string
-  urlInputRef?: React.RefObject<HTMLInputElement>
+  urlInputRef?: React.RefObject<HTMLInputElement | null>
 }
 
 export function ScanHeader({
@@ -43,11 +43,11 @@ export function ScanHeader({
   const gradientColors = getScoreGradientColor(score)
 
   return (
-    <div className="border-b border-border bg-card/50 p-6">
-      <div className="flex items-center gap-8">
+    <div className="border-b border-border bg-card/50 p-3 sm:p-4 lg:p-6">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8">
         {/* URL Input and Target Keyword */}
-        <div className="flex-1 max-w-2xl">
-          <div className="flex gap-2">
+        <div className="flex-1 lg:max-w-2xl">
+          <div className="flex flex-col sm:flex-row gap-2">
             {/* URL Input */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -65,7 +65,7 @@ export function ScanHeader({
               <URLValidator url={url} error={urlError} />
             </div>
             {/* Target Keyword Input */}
-            <div className="relative w-64">
+            <div className="relative sm:w-64">
               <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={targetKeyword}
@@ -78,7 +78,7 @@ export function ScanHeader({
             <Button
               onClick={onScan}
               disabled={isScanning}
-              className="h-11 px-6 bg-linear-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-white font-medium shadow-lg shadow-cyan-500/20"
+              className="h-11 px-4 sm:px-6 w-auto self-start sm:self-auto bg-linear-to-r from-cyan-500 to-emerald-500 hover:from-cyan-600 hover:to-emerald-600 text-white font-medium shadow-lg shadow-cyan-500/20"
               aria-label={isScanning ? "Scanning in progress" : "Run SEO scan"}
               aria-busy={isScanning}
             >
@@ -114,8 +114,8 @@ export function ScanHeader({
 
         {/* Health Score Gauge */}
         {scanComplete && (
-          <div className="flex items-center gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className={`relative w-32 h-32 rounded-full bg-card shadow-xl ${scoreInfo.glow}`}>
+          <div className="flex items-center gap-3 sm:gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className={`relative w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-card shadow-xl ${scoreInfo.glow} flex-shrink-0`}>
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle
                   cx="50"
@@ -145,13 +145,13 @@ export function ScanHeader({
                 </defs>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-3xl font-bold ${scoreInfo.color}`}>{score}</span>
-                <span className="text-xs text-muted-foreground">/100</span>
+                <span className={`text-xl sm:text-2xl lg:text-3xl font-bold ${scoreInfo.color}`}>{score}</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground">/100</span>
               </div>
             </div>
-            <div>
-              <p className={`text-lg font-semibold ${scoreInfo.color}`}>{scoreInfo.message}</p>
-              <p className="text-sm text-muted-foreground">{errorCount} errors, {warningCount} warnings</p>
+            <div className="min-w-0">
+              <p className={`text-sm sm:text-base lg:text-lg font-semibold ${scoreInfo.color} truncate`}>{scoreInfo.message}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">{errorCount} errors, {warningCount} warnings</p>
               {onExport && (
                 <button
                   onClick={onExport}

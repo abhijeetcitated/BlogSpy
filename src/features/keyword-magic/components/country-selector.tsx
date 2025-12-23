@@ -44,33 +44,37 @@ export function CountrySelector({
   )
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
+    <Popover open={open} onOpenChange={onOpenChange} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="h-9 gap-2 bg-secondary/50 border-border min-w-[180px] justify-between"
+          className="h-9 gap-1.5 sm:gap-2 bg-secondary/50 border-border hover:bg-accent min-w-0 sm:min-w-[180px] justify-between px-2 sm:px-3"
         >
           {selectedCountry ? (
             <>
               <span className="text-base">{selectedCountry.flag}</span>
-              <span className="text-sm font-medium">{selectedCountry.name}</span>
+              <span className="text-xs sm:text-sm font-medium truncate max-w-[80px] sm:max-w-none">{selectedCountry.name}</span>
             </>
           ) : (
             <>
               <Globe className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Worldwide</span>
+              <span className="text-xs sm:text-sm">Worldwide</span>
             </>
           )}
-          <ChevronDown className="h-4 w-4 text-muted-foreground ml-auto" />
+          <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground ml-auto shrink-0" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-0" align="end">
+      <PopoverContent 
+        className="w-[280px] p-0" 
+        align="end" 
+        sideOffset={8}
+      >
         <div className="p-2 border-b border-border">
           <Input
             placeholder="Search countries..."
             value={countrySearch}
             onChange={(e) => setCountrySearch(e.target.value)}
-            className="h-8 text-sm"
+            className="h-8 text-sm bg-input border-border"
           />
         </div>
         <div className="max-h-[300px] overflow-y-auto p-1">
@@ -81,8 +85,8 @@ export function CountrySelector({
               onOpenChange(false)
             }}
             className={cn(
-              "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted/50 transition-colors",
-              !selectedCountry && "bg-muted/50"
+              "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors",
+              !selectedCountry && "bg-accent"
             )}
           >
             <Globe className="h-4 w-4 text-muted-foreground" />
@@ -104,8 +108,8 @@ export function CountrySelector({
                     onOpenChange(false)
                   }}
                   className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted/50 transition-colors",
-                    selectedCountry?.code === country.code && "bg-muted/50"
+                    "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors",
+                    selectedCountry?.code === country.code && "bg-accent"
                   )}
                 >
                   <span className="text-base">{country.flag}</span>
@@ -132,8 +136,8 @@ export function CountrySelector({
                     onOpenChange(false)
                   }}
                   className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-muted/50 transition-colors",
-                    selectedCountry?.code === country.code && "bg-muted/50"
+                    "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors",
+                    selectedCountry?.code === country.code && "bg-accent"
                   )}
                 >
                   <span className="text-base">{country.flag}</span>

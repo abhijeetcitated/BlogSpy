@@ -38,12 +38,12 @@ export function IncludeExcludeFilter({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 sm:h-9 gap-1 sm:gap-1.5 bg-secondary/50 border-border text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-          <Filter className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+        <Button variant="outline" size="sm" className="h-7 sm:h-9 gap-0.5 sm:gap-1.5 bg-secondary/50 border-border text-[11px] sm:text-sm px-1.5 sm:px-3 shrink-0 min-w-0">
+          <Filter className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
           <span className="hidden sm:inline">Include/Exclude</span>
           <span className="sm:hidden">+/-</span>
           {(includeTerms.length > 0 || excludeTerms.length > 0) && (
-            <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
+            <Badge variant="secondary" className="ml-0.5 h-4 px-1 text-[10px]">
               {includeTerms.length + excludeTerms.length}
             </Badge>
           )}

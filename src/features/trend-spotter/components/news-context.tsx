@@ -62,7 +62,7 @@ export function NewsContext() {
                 asChild
               >
                 <Link
-                  href={`/dashboard/creation/ai-writer?type=news&topic=${encodeURIComponent(news.headline)}`}
+                  href={`/ai-writer?source=trend-spotter&keyword=${encodeURIComponent(news.headline)}&velocity=rising&news_angle=true`}
                 >
                   Draft Response
                 </Link>

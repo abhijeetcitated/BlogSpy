@@ -105,24 +105,32 @@ export function getPlatformStats(citations: AICitation[]): PlatformStats[] {
   }).sort((a, b) => b.citations - a.citations)
 }
 
-// Generate trend data for chart
+// Generate trend data for chart (deterministic to avoid hydration mismatch)
 export function generateTrendData(): VisibilityTrendData[] {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   
+  // Use deterministic seed-based values instead of Math.random()
+  const seedValues = [
+    { chatgpt: 3, claude: 2, perplexity: 2, gemini: 1 },
+    { chatgpt: 4, claude: 2, perplexity: 3, gemini: 2 },
+    { chatgpt: 5, claude: 3, perplexity: 3, gemini: 2 },
+    { chatgpt: 5, claude: 3, perplexity: 4, gemini: 2 },
+    { chatgpt: 6, claude: 4, perplexity: 4, gemini: 3 },
+    { chatgpt: 7, claude: 4, perplexity: 5, gemini: 3 },
+    { chatgpt: 8, claude: 5, perplexity: 5, gemini: 4 },
+  ]
+  
   return days.map((day, index) => {
-    const base = 2 + Math.floor(index / 2)
+    const values = seedValues[index]
     return {
       date: day,
-      chatgpt: base + Math.floor(Math.random() * 3),
-      claude: Math.floor(base * 0.6) + Math.floor(Math.random() * 2),
-      perplexity: Math.floor(base * 0.8) + Math.floor(Math.random() * 2),
-      gemini: Math.floor(base * 0.5) + Math.floor(Math.random() * 2),
-      total: 0, // Will calculate below
+      chatgpt: values.chatgpt,
+      claude: values.claude,
+      perplexity: values.perplexity,
+      gemini: values.gemini,
+      total: values.chatgpt + values.claude + values.perplexity + values.gemini,
     }
-  }).map(d => ({
-    ...d,
-    total: d.chatgpt + d.claude + d.perplexity + d.gemini,
-  }))
+  })
 }
 
 // Analyze queries for opportunities

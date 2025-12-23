@@ -12,6 +12,7 @@ import Link from "next/link"
 import {
   TrendingUp,
   TrendingDown,
+  Minus,
   Target,
   Bell,
   ArrowUp,
@@ -84,7 +85,7 @@ import { AI_OVERVIEW_STATUSES } from "./constants"
 import { PLATFORM_CONFIG, DEFAULT_PLATFORM } from "./constants/platforms"
 import { getCountryByCode } from "./constants/countries"
 import { calculateStats, getTopWinners, getTopLosers, filterByTab, filterBySearch, sortData, convertToRankData, exportToCSV, downloadCSV } from "./utils"
-import { RankBadge, SerpFeatureIcon, StatsCards, WinnersLosersCards, SearchFilterBar, PlatformTabs, PlatformComparison, EmptyState, RankTrackerSkeleton, MobileCardView, getPlatformIcon, CountryDropdown } from "./components"
+import { AIOverviewBadge, RankBadge, SerpFeatureIcon, StatsCards, WinnersLosersCards, SearchFilterBar, PlatformTabs, PlatformComparison, EmptyState, RankTrackerSkeleton, MobileCardView, getPlatformIcon, CountryDropdown } from "./components"
 import type { RankData, FilterTab, SortField, SortDirection, SearchPlatform } from "./types"
 
 // ============================================
@@ -430,10 +431,10 @@ export function RankTrackerContent() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="min-h-screen bg-background">
+        <div className="space-y-4 sm:space-y-6">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-linear-to-br from-emerald-500 to-cyan-500">
                 <Target className="w-5 h-5 text-white" />
@@ -461,7 +462,7 @@ export function RankTrackerContent() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:justify-end">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -544,6 +545,7 @@ export function RankTrackerContent() {
                 value={activeCountry}
                 onChange={setActiveCountry}
                 countryStats={countryStats}
+                className="w-full max-w-[14rem] sm:w-auto sm:max-w-none"
               />
             </div>
             <PlatformComparison 
@@ -567,6 +569,66 @@ export function RankTrackerContent() {
             onSearchChange={setSearchQuery}
             stats={stats}
           />
+
+          {/* Mobile/Tablet Filters (Match Desktop Controls) */}
+          {!isLoading && filteredAndSortedData.length > 0 && (
+            <div className="lg:hidden space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Date Range:</span>
+                  <Select value={dateRange} onValueChange={(v) => setDateRange(v as typeof dateRange)}>
+                    <SelectTrigger className="h-7 w-24 text-xs bg-background border-border text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="7d" className="text-foreground focus:bg-muted">7 Days</SelectItem>
+                      <SelectItem value="30d" className="text-foreground focus:bg-muted">30 Days</SelectItem>
+                      <SelectItem value="90d" className="text-foreground focus:bg-muted">90 Days</SelectItem>
+                      <SelectItem value="all" className="text-foreground focus:bg-muted">All Time</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Auto Refresh */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-7 text-xs bg-background border-border text-foreground hover:bg-muted">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {autoRefreshInterval ? `${autoRefreshInterval}m` : "Auto"}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-popover border-border">
+                      <DropdownMenuItem className="text-foreground focus:bg-muted" onClick={() => startAutoRefresh(1)}>Every 1 min</DropdownMenuItem>
+                      <DropdownMenuItem className="text-foreground focus:bg-muted" onClick={() => startAutoRefresh(5)}>Every 5 mins</DropdownMenuItem>
+                      <DropdownMenuItem className="text-foreground focus:bg-muted" onClick={() => startAutoRefresh(15)}>Every 15 mins</DropdownMenuItem>
+                      <DropdownMenuItem className="text-foreground focus:bg-muted" onClick={() => startAutoRefresh(30)}>Every 30 mins</DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-border" />
+                      <DropdownMenuItem className="text-foreground focus:bg-muted" onClick={stopAutoRefresh} disabled={!autoRefreshInterval}>
+                        Disable Auto-refresh
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Show:</span>
+                  <Select value={String(itemsPerPage)} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
+                    <SelectTrigger className="h-7 w-16 text-xs bg-background border-border text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="10" className="text-foreground focus:bg-muted">10</SelectItem>
+                      <SelectItem value="25" className="text-foreground focus:bg-muted">25</SelectItem>
+                      <SelectItem value="50" className="text-foreground focus:bg-muted">50</SelectItem>
+                      <SelectItem value="100" className="text-foreground focus:bg-muted">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground">
+                    of {filteredAndSortedData.length} keywords
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Loading State */}
           {isLoading && <RankTrackerSkeleton />}
@@ -650,24 +712,37 @@ export function RankTrackerContent() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <RankBadge rank={row.rank} />
-                      {row.change !== 0 && (
-                        <span className={cn(
+                      <span
+                        className={cn(
                           "inline-flex items-center gap-1 text-sm font-medium",
-                          row.change > 0 ? "text-emerald-400" : "text-red-400"
-                        )}>
-                          {row.change > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                          {row.change > 0 ? `+${row.change}` : row.change}
-                        </span>
-                      )}
+                          row.change > 0
+                            ? "text-emerald-400"
+                            : row.change < 0
+                            ? "text-red-400"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {row.change > 0 ? (
+                          <TrendingUp className="w-3 h-3" />
+                        ) : row.change < 0 ? (
+                          <TrendingDown className="w-3 h-3" />
+                        ) : (
+                          <Minus className="w-3 h-3" />
+                        )}
+                        {row.change > 0 ? `+${row.change}` : row.change}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {row.serpFeatures.slice(0, 3).map((feature, i) => (
-                        <SerpFeatureIcon key={i} feature={feature} />
-                      ))}
-                      {row.serpFeatures.length > 3 && (
-                        <span className="text-xs text-muted-foreground">+{row.serpFeatures.length - 3}</span>
-                      )}
-                    </div>
+                    <AIOverviewBadge status={row.aiOverview} />
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1">
+                    {row.serpFeatures.length > 0 ? (
+                      row.serpFeatures.map((feature, i) => (
+                        <SerpFeatureIcon key={`${row.id}-${feature}-${i}`} feature={feature} />
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No SERP features</span>
+                    )}
                   </div>
                   
                   <div className="flex items-center justify-between pt-2 border-t border-border/50">

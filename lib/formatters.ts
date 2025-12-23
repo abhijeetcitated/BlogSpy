@@ -148,3 +148,27 @@ export function slugify(text: string): string {
 export function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
+
+/**
+ * Format time ago (relative time)
+ * L: Moved from notifications hook for reusability
+ */
+export function formatTimeAgo(timestamp: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - timestamp.getTime()
+  const diffMins = Math.floor(diffMs / (1000 * 60))
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffMins < 1) return "Just now"
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays === 1) return "Yesterday"
+  if (diffDays < 7) return `${diffDays}d ago`
+  return timestamp.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
+/**
+ * Get time ago string (alias for formatTimeAgo)
+ */
+export const getTimeAgo = formatTimeAgo

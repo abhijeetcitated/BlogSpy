@@ -1,5 +1,10 @@
 import { CannibalizationContent } from "@/components/features/cannibalization"
+import { ErrorBoundary } from "@/components/common/error-boundary"
 
 export default function CannibalizationPage() {
-  return <CannibalizationContent />
+  return (
+    <ErrorBoundary>
+      <CannibalizationContent />
+    </ErrorBoundary>
+  )
 }

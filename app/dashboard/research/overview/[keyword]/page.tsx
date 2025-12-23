@@ -1,4 +1,5 @@
 import { KeywordOverviewContent } from "@/components/features"
+import { ErrorBoundary } from "@/components/common/error-boundary"
 
 interface PageProps {
   params: Promise<{
@@ -13,6 +14,10 @@ export default async function KeywordOverviewPage({ params }: PageProps) {
   // Decode the keyword from URL (e.g., "ai-tools" -> "AI Tools")
   const decodedKeyword = decodeURIComponent(keyword)
   
-  return <KeywordOverviewContent />
+  return (
+    <ErrorBoundary>
+      <KeywordOverviewContent />
+    </ErrorBoundary>
+  )
 }
 

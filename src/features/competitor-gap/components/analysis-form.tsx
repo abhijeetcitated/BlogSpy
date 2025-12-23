@@ -32,9 +32,9 @@ export function AnalysisForm({
   const canAnalyze = yourDomain.trim() && competitor1.trim()
 
   return (
-    <div className="px-6 py-5 border-b border-border bg-card/30">
-      <div className="flex items-end gap-4">
-        <div className="flex-1 space-y-1.5">
+    <div className="py-4 sm:py-5 border-b border-border bg-card/30 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Your Domain
           </label>
@@ -48,7 +48,7 @@ export function AnalysisForm({
             />
           </div>
         </div>
-        <div className="flex-1 space-y-1.5">
+        <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Competitor 1
           </label>
@@ -62,7 +62,7 @@ export function AnalysisForm({
             />
           </div>
         </div>
-        <div className="flex-1 space-y-1.5">
+        <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Competitor 2{" "}
             <span className="text-muted-foreground/50">(Optional)</span>
@@ -77,23 +77,27 @@ export function AnalysisForm({
             />
           </div>
         </div>
-        <Button
-          onClick={onAnalyze}
-          disabled={isLoading || !canAnalyze}
-          className="h-10 px-6 bg-amber-500 hover:bg-amber-600 text-amber-950 font-semibold shadow-lg shadow-amber-500/20 disabled:opacity-50"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            <>
-              <Swords className="h-4 w-4 mr-2" />
-              Find Missing Keywords
-            </>
-          )}
-        </Button>
+        <div className="flex items-end">
+          <Button
+            onClick={onAnalyze}
+            disabled={isLoading || !canAnalyze}
+            className="w-full h-10 px-4 sm:px-6 bg-amber-500 hover:bg-amber-600 text-amber-950 font-semibold shadow-lg shadow-amber-500/20 disabled:opacity-50"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <span className="hidden sm:inline">Analyzing...</span>
+                <span className="sm:hidden">...</span>
+              </>
+            ) : (
+              <>
+                <Swords className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Find Missing Keywords</span>
+                <span className="sm:hidden">Analyze</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   )

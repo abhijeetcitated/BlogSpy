@@ -147,9 +147,8 @@ export function getTasksByStatus(tasks: TaskCard[], status: TaskStatus): TaskCar
 /**
  * Calculate total traffic potential
  */
-export function calculateTotalPotential(tasks: TaskCard[]): string {
-  const total = tasks.reduce((sum, t) => sum + t.volume, 0)
-  return total >= 1000 ? `${Math.round(total / 1000)}k` : total.toString()
+export function calculateTotalPotential(tasks: TaskCard[]): number {
+  return tasks.reduce((sum, t) => sum + t.volume, 0)
 }
 
 /**

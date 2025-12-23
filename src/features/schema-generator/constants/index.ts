@@ -1,6 +1,23 @@
 // Schema Generator Constants
 
 import { SchemaTypeConfig, SchemaField } from "../types"
+import {
+  type LucideIcon,
+  FileText,
+  HelpCircle,
+  ListOrdered,
+  ShoppingCart,
+  UtensilsCrossed,
+  Star,
+  Video,
+  Link2,
+  Store,
+  CalendarDays,
+  Building2,
+  User,
+  GraduationCap,
+  Briefcase,
+} from "lucide-react"
 
 // Common fields
 const authorField: SchemaField = {
@@ -28,6 +45,24 @@ const imageField: SchemaField = {
   placeholder: "https://example.com/image.jpg",
   required: true,
   description: "Main image URL (recommended: 1200x630px)"
+}
+
+// Icon mapping for schema types
+export const SCHEMA_ICONS: Record<string, LucideIcon> = {
+  FileText,
+  HelpCircle,
+  ListOrdered,
+  ShoppingCart,
+  UtensilsCrossed,
+  Star,
+  Video,
+  Link2,
+  Store,
+  CalendarDays,
+  Building2,
+  User,
+  GraduationCap,
+  Briefcase,
 }
 
 // Schema type configurations

@@ -1,5 +1,10 @@
 import { NewsTrackerContent } from "@/src/features/news-tracker"
+import { ErrorBoundary } from "@/components/common/error-boundary"
 
 export default function NewsTrackerPage() {
-  return <NewsTrackerContent />
+  return (
+    <ErrorBoundary>
+      <NewsTrackerContent />
+    </ErrorBoundary>
+  )
 }

@@ -811,6 +811,70 @@ export function RefreshIcon({ className, size = 24 }: IconProps) {
 }
 
 // ============================================
+// Music Icon
+// ============================================
+export function MusicIcon({ className, size = 24 }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className={cn("fill-current", className)}
+    >
+      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+    </svg>
+  )
+}
+
+// ============================================
+// Verified Icon
+// ============================================
+export function VerifiedIcon({ className, size = 24 }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className={cn("fill-current", className)}
+    >
+      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+    </svg>
+  )
+}
+
+// ============================================
+// Grid Icon
+// ============================================
+export function GridIcon({ className, size = 24 }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className={cn("fill-current", className)}
+    >
+      <path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z" />
+    </svg>
+  )
+}
+
+// ============================================
+// List Icon
+// ============================================
+export function ListIcon({ className, size = 24 }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className={cn("fill-current", className)}
+    >
+      <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+    </svg>
+  )
+}
+
+// ============================================
 // Award Icon
 // ============================================
 export function AwardIcon({ className, size = 24 }: IconProps) {
@@ -878,4 +942,8 @@ export const PlatformIcons = {
   HelpCircle: HelpCircleIcon,
   Sparkles: SparklesIcon,
   Award: AwardIcon,
+  Music: MusicIcon,
+  Verified: VerifiedIcon,
+  Grid: GridIcon,
+  List: ListIcon,
 }

@@ -1,0 +1,16 @@
+// Schema Generators - Barrel Export
+
+export { generateArticleSchema } from "./article"
+export { generateFAQSchema } from "./faq"
+export { generateHowToSchema } from "./howto"
+export { generateProductSchema } from "./product"
+export { generateRecipeSchema } from "./recipe"
+export { generateReviewSchema } from "./review"
+export { generateVideoSchema } from "./video"
+export { generateBreadcrumbSchema } from "./breadcrumb"
+export { generateLocalBusinessSchema } from "./local-business"
+export { generateEventSchema } from "./event"
+export { generateOrganizationSchema } from "./organization"
+export { generatePersonSchema } from "./person"
+export { generateCourseSchema } from "./course"
+export { generateJobPostingSchema } from "./job-posting"

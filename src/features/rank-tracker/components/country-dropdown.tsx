@@ -82,14 +82,16 @@ export function CountryDropdown({ value, onChange, className, countryStats }: Co
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all",
+          "flex w-full items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium transition-all",
           "border-border bg-card hover:bg-muted",
           isOpen && "ring-2 ring-emerald-500/20 border-emerald-500/50"
         )}
       >
         <span className="text-base">{selectedCountry.flag}</span>
-        <span className="text-foreground hidden sm:inline">{selectedCountry.name}</span>
-        <span className="text-foreground sm:hidden">{selectedCountry.code === "worldwide" ? "WW" : selectedCountry.code}</span>
+        <span className="text-foreground truncate">{selectedCountry.name}</span>
+        <span className="text-muted-foreground text-xs hidden sm:inline">
+          {selectedCountry.code === "worldwide" ? "WW" : selectedCountry.code}
+        </span>
         <ChevronDown className={cn(
           "w-3.5 h-3.5 text-muted-foreground transition-transform",
           isOpen && "rotate-180"
@@ -98,7 +100,7 @@ export function CountryDropdown({ value, onChange, className, countryStats }: Co
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-72 sm:w-80 rounded-xl border border-border bg-card shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 sm:left-auto sm:right-0 mt-1 w-72 sm:w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card shadow-xl z-50 overflow-hidden">
           {/* Search Box */}
           <div className="p-2 border-b border-border">
             <div className="relative">

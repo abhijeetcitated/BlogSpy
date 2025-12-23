@@ -17,7 +17,7 @@ export default function SnippetStealerDemoPage() {
     >
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset className="flex flex-col">
+        <SidebarInset>
           <TopNav />
           <SnippetStealerContent />
         </SidebarInset>

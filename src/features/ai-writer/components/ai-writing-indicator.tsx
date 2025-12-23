@@ -15,7 +15,7 @@ export function AIWritingIndicator({ isVisible }: AIWritingIndicatorProps) {
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <div className="flex items-center gap-3 px-4 py-3 bg-slate-800 border border-emerald-500/30 rounded-xl shadow-xl">
+      <div className="flex items-center gap-3 px-4 py-3 bg-card border border-emerald-500/30 rounded-xl shadow-xl">
         <Loader2 className="h-5 w-5 text-emerald-400 animate-spin" />
         <span className="text-sm text-foreground">AI is writing...</span>
         <div className="flex gap-1">

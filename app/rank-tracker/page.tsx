@@ -19,7 +19,9 @@ export default function RankTrackerDemoPage() {
         <AppSidebar />
         <SidebarInset>
           <TopNav />
-          <RankTrackerContent />
+          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col">
+            <RankTrackerContent />
+          </main>
         </SidebarInset>
       </SidebarProvider>
     </DemoWrapper>

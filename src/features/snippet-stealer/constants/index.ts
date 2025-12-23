@@ -28,3 +28,16 @@ export const COMPETITOR_WORD_COUNT_RANGE = {
   min: 40,
   max: 50,
 } as const
+
+/**
+ * Delay constants for async operations (in milliseconds)
+ * Centralized for consistent timing across the feature
+ */
+export const DELAYS = {
+  /** Toast notification auto-hide duration */
+  TOAST_DURATION: 3000,
+  /** AI generation simulation delay */
+  GENERATE_DELAY: 2000,
+  /** Save operation simulation delay */
+  SAVE_DELAY: 800,
+} as const

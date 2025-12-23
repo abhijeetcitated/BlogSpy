@@ -103,7 +103,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-sidebar-border">
       <SidebarHeader className="p-4 space-y-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-emerald-500 to-cyan-500">
             <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 text-white" stroke="currentColor" strokeWidth="2">
               <path d="M12 2L2 7l10 5 10-5-10-5z" />
               <path d="M2 17l10 5 10-5" />
@@ -292,7 +292,7 @@ export function AppSidebar() {
         <Link href="/settings">
           <div className="flex items-center gap-3 rounded-lg p-2 hover:bg-sidebar-accent transition-colors cursor-pointer group">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 text-emerald-400 text-xs">
+              <AvatarFallback className="bg-linear-to-br from-emerald-500/20 to-cyan-500/20 text-emerald-400 text-xs">
                 <User className="h-4 w-4" />
               </AvatarFallback>
             </Avatar>

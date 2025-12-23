@@ -6,8 +6,9 @@
 // React hooks for keyword magic functionality
 // ============================================
 
-import { useState, useCallback, useMemo, useEffect } from "react"
+import { useState, useCallback, useMemo, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 import type { Keyword, MatchType, BulkMode, Country, FilterState } from "../types"
 import type { SortableField, KeywordResearchRequest } from "../types/api.types"
 import { keywordMagicAPI } from "../services"
@@ -340,15 +341,26 @@ export function useKeywordData(
     }
   }, [sortField])
   
+  const loadMoreTimerRef = useRef<NodeJS.Timeout | null>(null)
+  
   const loadMore = useCallback(() => {
     if (!hasMore || isLoadingMore) return
     setIsLoadingMore(true)
     // Simulate loading delay for UX
-    setTimeout(() => {
+    loadMoreTimerRef.current = setTimeout(() => {
       setPage((prev) => prev + 1)
       setIsLoadingMore(false)
     }, 300)
   }, [hasMore, isLoadingMore])
+  
+  // Cleanup loadMore timer on unmount
+  useEffect(() => {
+    return () => {
+      if (loadMoreTimerRef.current) {
+        clearTimeout(loadMoreTimerRef.current)
+      }
+    }
+  }, [])
   
   const resetPagination = useCallback(() => {
     setPage(1)
@@ -554,10 +566,14 @@ export function useBulkAnalysis(): UseBulkAnalysisReturn {
         
         if (response.success) {
           // Store results and navigate to bulk results view
-          sessionStorage.setItem("bulkAnalysisResults", JSON.stringify(response.data.results))
-          sessionStorage.setItem("bulkKeywords", JSON.stringify(parsedKeywords))
+          try {
+            sessionStorage.setItem("bulkAnalysisResults", JSON.stringify(response.data.results))
+            sessionStorage.setItem("bulkKeywords", JSON.stringify(parsedKeywords))
+          } catch {
+            // sessionStorage may be blocked in privacy mode
+          }
           // TODO: Navigate to bulk results page
-          alert(`Analyzed ${response.data.results.length} keywords successfully!`)
+          toast.success(`Analyzed ${response.data.results.length} keywords successfully!`)
         } else {
           throw new Error(response.error?.message || "Bulk analysis failed")
         }

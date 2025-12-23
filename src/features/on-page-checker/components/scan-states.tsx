@@ -24,22 +24,22 @@ export function EmptyState({ history = [], onSelectUrl, onClearHistory }: EmptyS
   }
 
   return (
-    <div className="flex-1 flex items-center justify-center">
+    <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
       <div className="text-center max-w-xl">
-        <div className="mx-auto w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center mb-6">
-          <Globe className="h-10 w-10 text-cyan-600 dark:text-cyan-400" />
+        <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4 sm:mb-6">
+          <Globe className="h-8 w-8 sm:h-10 sm:w-10 text-cyan-600 dark:text-cyan-400" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">
+        <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
           Ready to Analyze Your Page
         </h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          Enter a URL above and click "Run Scan" to get a comprehensive SEO audit with 
+        <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6 px-2">
+          Enter a URL above and tap "Run Scan" to get a comprehensive SEO audit with 
           AI-powered fix suggestions, semantic keyword analysis, and SERP preview.
         </p>
-        <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground mb-8">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-muted-foreground mb-6 sm:mb-8 px-2">
           {FEATURES_LIST.map((feature) => (
-            <div key={feature.label} className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/50 rounded-full">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <div key={feature.label} className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-muted/50 rounded-full">
+              <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600 dark:text-emerald-400" />
               {feature.label}
             </div>
           ))}
@@ -47,35 +47,35 @@ export function EmptyState({ history = [], onSelectUrl, onClearHistory }: EmptyS
 
         {/* Recent Scans History */}
         {history.length > 0 && (
-          <div className="border-t border-border pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
+          <div className="border-t border-border pt-4 sm:pt-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 px-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span>Recent Scans</span>
               </div>
               {onClearHistory && (
                 <button
                   onClick={onClearHistory}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                  className="text-[10px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 touch-manipulation min-h-[36px] sm:min-h-0 px-2 sm:px-0"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-3 w-3 sm:h-3 sm:w-3" />
                   Clear
                 </button>
               )}
             </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-1.5 sm:space-y-2 max-h-48 overflow-y-auto px-2">
               {history.slice(0, 5).map((item) => {
                 const scoreInfo = getScoreInfo(item.score)
                 return (
                   <button
                     key={item.id}
                     onClick={() => onSelectUrl?.(item.url, item.targetKeyword)}
-                    className="w-full text-left p-3 rounded-lg bg-muted/30 hover:bg-muted/50 border border-transparent hover:border-border transition-all group"
+                    className="w-full text-left p-2 sm:p-3 rounded-lg bg-muted/30 hover:bg-muted/50 active:bg-muted border border-transparent hover:border-border transition-all group touch-manipulation min-h-[60px]"
                   >
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-between gap-2 sm:gap-4">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-foreground truncate">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <p className="text-xs sm:text-sm font-medium text-foreground truncate">
                             {item.url.replace(/^https?:\/\//, "")}
                           </p>
                           <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />

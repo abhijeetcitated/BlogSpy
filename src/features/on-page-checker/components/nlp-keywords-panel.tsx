@@ -12,22 +12,22 @@ interface NLPKeywordsPanelProps {
 export function NLPKeywordsPanel({ keywords }: NLPKeywordsPanelProps) {
   return (
     <div className="col-span-4 bg-card/30 overflow-y-auto">
-      <div className="p-4">
-        <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Brain className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+      <div className="p-2 sm:p-3 md:p-4">
+        <h3 className="text-xs sm:text-sm font-semibold text-foreground mb-3 sm:mb-4 flex items-center gap-2">
+          <Brain className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 dark:text-purple-400" />
           NLP Semantic Keywords
         </h3>
-        <p className="text-xs text-muted-foreground mb-4">
-          Keywords extracted using NLP analysis. Click to see density and suggestions.
+        <p className="text-[10px] sm:text-xs text-muted-foreground mb-3 sm:mb-4">
+          Keywords extracted using NLP analysis. Tap to see density and suggestions.
         </p>
         <TooltipProvider delayDuration={200}>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {keywords.map((keyword, index) => (
               <Tooltip key={index}>
                 <TooltipTrigger asChild>
                   <button
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105",
+                      "px-2.5 sm:px-3 py-1.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium transition-all hover:scale-105 active:scale-95 touch-manipulation min-h-[36px] sm:min-h-0 flex items-center",
                       keyword.status === "optimal"
                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                         : keyword.status === "overused"

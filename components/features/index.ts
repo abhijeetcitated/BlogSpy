@@ -23,7 +23,7 @@
 // ============================================
 
 // Keyword Magic (from src/features)
-export { KeywordMagicContent, KeywordMagicTool, KeywordTable } from "@/src/features/keyword-magic"
+export { KeywordMagicContent, KeywordTable } from "@/src/features/keyword-magic"
 export type { Keyword, KeywordTableProps } from "@/src/features/keyword-magic"
 
 // Keyword Overview

@@ -1,0 +1,7 @@
+export { Header } from "./components/Header"
+export { GapStatsBar, ForumStatsBar } from "./components/StatsBar"
+export { FilterBar } from "./components/FilterBar"
+export { ForumSearchBar } from "./components/ForumSearchBar"
+export { useCompetitorGap } from "./hooks/useCompetitorGap"
+export type { MainView } from "./hooks/useCompetitorGap"
+export * from "./utils/gap-utils"

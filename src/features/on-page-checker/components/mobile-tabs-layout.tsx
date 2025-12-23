@@ -29,20 +29,20 @@ export function MobileTabsLayout({ structure, issues, keywords, onFixWithAI }: M
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Mobile Tabs */}
-      <div className="flex gap-2 p-4 border-b border-border bg-card/50">
+      <div className="flex gap-1.5 sm:gap-2 p-2 sm:p-3 md:p-4 border-b border-border bg-card/50 sticky top-0 z-10">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex-1 p-3 rounded-lg text-sm font-medium transition-all",
+              "flex-1 p-2.5 sm:p-3 rounded-lg text-xs sm:text-sm font-medium transition-all touch-manipulation min-h-[44px] flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5",
               activeTab === tab.id
-                ? "bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400"
-                : "bg-muted/30 border border-transparent text-muted-foreground hover:text-foreground"
+                ? "bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 shadow-sm"
+                : "bg-muted/30 border border-transparent text-muted-foreground hover:text-foreground active:scale-95"
             )}
           >
-            {tab.label}
-            <span className="ml-1.5 text-xs opacity-70">({tab.count})</span>
+            <span className="font-semibold">{tab.label}</span>
+            <span className="text-[10px] sm:text-xs opacity-70">({tab.count})</span>
           </button>
         ))}
       </div>

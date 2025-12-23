@@ -41,5 +41,17 @@ export {
   getRankChangeIcon,
 } from "./utils"
 
+// Hooks
+export { useRankTrackerState, useAutoRefresh, useToast } from "./hooks"
+export type { RankTrackerState, RankTrackerAction } from "./hooks"
+
+// Services
+export { rankTrackerService } from "./services"
+export type {
+  AddKeywordsRequest,
+  AddKeywordsResponse,
+  RefreshResponse,
+} from "./services"
+
 // Mock data (for development)
 export { MOCK_RANK_DATA } from "./__mocks__"

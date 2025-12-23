@@ -16,7 +16,7 @@ function calculateDaysUntil(month: number, day: number, year: number): number {
 // ============================================
 
 function getUrgency(daysUntil: number): EventUrgency {
-  if (daysUntil < 0) return "future" // Past events
+  if (daysUntil < 0) return "past"
   if (daysUntil <= 14) return "urgent"
   if (daysUntil <= 45) return "upcoming"
   if (daysUntil <= 90) return "planned"
@@ -482,7 +482,7 @@ export function getEventsForNiche(niche: ContentNiche): CalendarEvent[] {
     matchScore: event.niche === niche ? 95 : niche === "all" ? 75 : 50,
   })).sort((a, b) => {
     // Sort by urgency first, then by days until
-    const urgencyOrder = { urgent: 0, upcoming: 1, planned: 2, future: 3 }
+    const urgencyOrder = { urgent: 0, upcoming: 1, planned: 2, future: 3, past: 4 }
     if (urgencyOrder[a.urgency] !== urgencyOrder[b.urgency]) {
       return urgencyOrder[a.urgency] - urgencyOrder[b.urgency]
     }

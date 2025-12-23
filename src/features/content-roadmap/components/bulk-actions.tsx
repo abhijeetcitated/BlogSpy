@@ -66,7 +66,7 @@ export function BulkActions({
         <span className="font-medium text-purple-400">{selectedCount}</span>
       </span>
 
-      <div className="h-3 w-px bg-slate-700 mx-1" />
+      <div className="h-3 w-px bg-border mx-1" />
 
       {/* Bulk Move */}
       <DropdownMenu>
@@ -74,33 +74,33 @@ export function BulkActions({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-1.5 text-xs text-slate-300 hover:text-white"
+            className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
           >
             <MoveRight className="h-3.5 w-3.5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-slate-900 border border-slate-800 shadow-2xl rounded-lg">
+        <DropdownMenuContent className="bg-popover border border-border shadow-2xl rounded-lg">
           <DropdownMenuItem
             onClick={() => onBulkMove("backlog")}
-            className="cursor-pointer text-sm text-slate-300 focus:bg-slate-800 focus:text-white"
+            className="cursor-pointer text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground"
           >
             💡 Backlog
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => onBulkMove("ready")}
-            className="cursor-pointer text-sm text-slate-300 focus:bg-slate-800 focus:text-white"
+            className="cursor-pointer text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground"
           >
             ✏️ Ready
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => onBulkMove("progress")}
-            className="cursor-pointer text-sm text-slate-300 focus:bg-slate-800 focus:text-white"
+            className="cursor-pointer text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground"
           >
             🔥 In Progress
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => onBulkMove("published")}
-            className="cursor-pointer text-sm text-slate-300 focus:bg-slate-800 focus:text-white"
+            className="cursor-pointer text-sm text-popover-foreground focus:bg-accent focus:text-accent-foreground"
           >
             ✅ Published
           </DropdownMenuItem>
@@ -122,7 +122,7 @@ export function BulkActions({
         variant="ghost"
         size="icon"
         onClick={onDeselectAll}
-        className="h-5 w-5 text-slate-400 hover:text-white"
+        className="h-5 w-5 text-muted-foreground hover:text-foreground"
       >
         <X className="h-3 w-3" />
       </Button>

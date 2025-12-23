@@ -69,6 +69,16 @@ export {
 // Services
 export { keywordMagicAPI, KeywordAPIError } from "./services"
 
+// State management
+export {
+  keywordMagicReducer,
+  createInitialState,
+  getActiveFilterCount,
+  DEFAULT_GEO_RANGE,
+  type KeywordMagicState,
+  type KeywordMagicAction,
+} from "./state"
+
 // Hooks - Not exported from barrel to avoid Server Component issues
 // Import directly from "@/src/features/keyword-magic/hooks" when needed
 // export {
@@ -93,7 +103,6 @@ export {
   MatchTypeToggle,
   BulkModeToggle,
   BulkKeywordsInput,
-  KeywordMagicTool,
   KeywordTable,
 } from "./components"
 

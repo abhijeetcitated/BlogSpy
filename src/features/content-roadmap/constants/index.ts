@@ -11,7 +11,7 @@ export const COLUMNS: ColumnConfig[] = [
     title: "Ideas / Backlog",
     icon: Lightbulb,
     color: "text-slate-400",
-    borderColor: "border-slate-700",
+    borderColor: "border-border",
     bgColor: "bg-slate-800/30",
   },
   {
