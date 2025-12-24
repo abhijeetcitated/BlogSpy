@@ -761,42 +761,45 @@ export function TopicClusterContent() {
         
         {/* HEADER */}
         <div className="flex flex-col gap-3 sm:gap-4">
-          <div>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-white">Topic Cluster Builder</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Import keywords from various sources and build optimized content clusters</p>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {/* Credit Badge */}
-            <div className="flex items-center gap-1.5 sm:gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full">
-              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-amber-500" />
-              <span className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-400">{credits} <span className="hidden sm:inline">Refresh </span>Credits</span>
-              <button onClick={() => setShowCreditModal(true)} className="ml-0.5 sm:ml-1 p-0.5 hover:bg-amber-100 dark:hover:bg-amber-800 rounded-full transition-colors" title="Buy Credits">
-                <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 dark:text-amber-400" />
-              </button>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
+            <div>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-white">Topic Cluster Builder</h1>
+              <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Import keywords from various sources and build optimized content clusters</p>
             </div>
-
-            {selectedCount > 0 && (
-              <button
-                onClick={handleDeleteSelected}
-                className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-red-500/10 text-red-500 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors text-xs sm:text-sm"
-              >
-                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Delete</span> ({selectedCount})
-              </button>
-            )}
             
-            {/* MASTER BUTTON - Generate Clusters */}
-            {keywords.length >= 5 && (
-              <button
-                onClick={handleGenerateClusters}
-                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-xs sm:text-sm font-semibold shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Generate Clusters</span>
-                <span className="sm:hidden">Generate</span> ({keywords.length})
-              </button>
-            )}
+            {/* Action buttons - right aligned on desktop */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* Credit Badge */}
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full">
+                <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-amber-500" />
+                <span className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-400">{credits} <span className="hidden sm:inline">Refresh </span>Credits</span>
+                <button onClick={() => setShowCreditModal(true)} className="ml-0.5 sm:ml-1 p-0.5 hover:bg-amber-100 dark:hover:bg-amber-800 rounded-full transition-colors" title="Buy Credits">
+                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 dark:text-amber-400" />
+                </button>
+              </div>
+
+              {selectedCount > 0 && (
+                <button
+                  onClick={handleDeleteSelected}
+                  className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-red-500/10 text-red-500 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors text-xs sm:text-sm"
+                >
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Delete</span> ({selectedCount})
+                </button>
+              )}
+              
+              {/* MASTER BUTTON - Generate Clusters */}
+              {keywords.length >= 5 && (
+                <button
+                  onClick={handleGenerateClusters}
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-xs sm:text-sm font-semibold shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Generate Clusters</span>
+                  <span className="sm:hidden">Generate</span> ({keywords.length})
+                </button>
+              )}
+            </div>
           </div>
         </div>
         
@@ -863,20 +866,33 @@ export function TopicClusterContent() {
         )}
         
         {/* TOOLBAR */}
-        <div className="flex flex-col gap-2 sm:gap-3">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 sm:max-w-md">
-              <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search keywords..."
-                className="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-lg pl-8 sm:pl-9 pr-3 sm:pr-4 py-1.5 sm:py-2 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-orange-500/50"
-              />
+        <div className="flex flex-col gap-3 sm:gap-4">
+          {/* Search, Filters, Columns - Single Row on Desktop */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            {/* Left side: Search + Stats */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search keywords..."
+                  className="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-lg pl-8 sm:pl-9 pr-3 sm:pr-4 py-1.5 sm:py-2 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-orange-500/50"
+                />
+              </div>
+              
+              {/* Stats */}
+              <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-zinc-500">
+                <span><strong className="text-zinc-900 dark:text-white">{keywords.length}</strong> total</span>
+                <span><strong className="text-zinc-900 dark:text-white">{filteredKeywords.length}</strong> shown</span>
+                <span><strong className="text-orange-500">{selectedCount}</strong> selected</span>
+              </div>
             </div>
             
+            {/* Right side: Action buttons */}
             <div className="flex flex-wrap items-center gap-2">
+              {/* Filter toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={cn(
@@ -887,10 +903,11 @@ export function TopicClusterContent() {
                 )}
               >
                 <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">Filters</span>
+                <span className="hidden sm:inline">Filters</span>
                 {showFilters ? <ChevronUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <ChevronDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
               </button>
 
+              {/* Refresh Selected */}
               {selectedCount > 0 && (
                 <button
                   onClick={() => handleBulkRefresh(selectedCount)}
@@ -902,6 +919,7 @@ export function TopicClusterContent() {
                 </button>
               )}
               
+              {/* Column toggle */}
               <div className="relative">
                 <button
                   onClick={() => setShowColumnMenu(!showColumnMenu)}
@@ -913,55 +931,50 @@ export function TopicClusterContent() {
                   )}
                 >
                   <Layout className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden xs:inline">Columns</span>
+                  <span className="hidden sm:inline">Columns</span>
                 </button>
                 
                 {showColumnMenu && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl p-2 z-50">
                     <div className="text-xs font-medium text-zinc-500 px-2 py-1 mb-1">Toggle Columns</div>
                     {[
-                  { id: "trafficPotential", label: "Traffic Potential" },
-                  { id: "clicks", label: "Clicks" },
-                  { id: "position", label: "Position" },
-                  { id: "kd", label: "Keyword Difficulty" },
-                  { id: "cpc", label: "CPC" },
-                  { id: "intent", label: "Intent" },
-                  { id: "serpFeatures", label: "SERP Features" },
-                  { id: "trend", label: "Trend" },
-                  { id: "parentTopic", label: "Parent Topic" },
-                ].map(col => (
-                  <button
-                    key={col.id}
-                    onClick={() => toggleColumn(col.id)}
-                    className="flex items-center justify-between w-full px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
-                  >
-                    <span>{col.label}</span>
-                    {columnVisibility[col.id as keyof typeof columnVisibility] && (
-                      <CheckSquare className="w-3.5 h-3.5 text-orange-500" />
-                    )}
-                  </button>
-                ))}
+                      { id: "trafficPotential", label: "Traffic Potential" },
+                      { id: "clicks", label: "Clicks" },
+                      { id: "position", label: "Position" },
+                      { id: "kd", label: "Keyword Difficulty" },
+                      { id: "cpc", label: "CPC" },
+                      { id: "intent", label: "Intent" },
+                      { id: "serpFeatures", label: "SERP Features" },
+                      { id: "trend", label: "Trend" },
+                      { id: "parentTopic", label: "Parent Topic" },
+                    ].map(col => (
+                      <button
+                        key={col.id}
+                        onClick={() => toggleColumn(col.id)}
+                        className="flex items-center justify-between w-full px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
+                      >
+                        <span>{col.label}</span>
+                        {columnVisibility[col.id as keyof typeof columnVisibility] && (
+                          <CheckSquare className="w-3.5 h-3.5 text-orange-500" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+              
+              {/* Clear All */}
+              {keywords.length > 0 && (
+                <button 
+                  onClick={handleClearAll} 
+                  className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-zinc-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 border border-zinc-300 dark:border-zinc-800 hover:border-red-300 dark:hover:border-red-800 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Clear All</span>
+                </button>
+              )}
             </div>
           </div>
-
-
-          
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-zinc-500">
-            <span><strong className="text-zinc-900 dark:text-white">{keywords.length}</strong> total</span>
-            <span><strong className="text-zinc-900 dark:text-white">{filteredKeywords.length}</strong> shown</span>
-            <span><strong className="text-orange-500">{selectedCount}</strong> selected</span>
-          </div>
-          
-          {keywords.length > 0 && (
-            <button onClick={handleClearAll} className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs text-zinc-500 hover:text-red-500 transition-colors">
-              <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden xs:inline">Clear All</span>
-              <span className="xs:hidden">Clear</span>
-            </button>
-          )}
         </div>
         
         {/* FILTERS */}
