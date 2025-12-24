@@ -3,7 +3,7 @@
 // ============================================
 
 export { useRankTrackerState } from "./use-rank-tracker-state"
-export type { RankTrackerState } from "./use-rank-tracker-state"
+export type { RankTrackerState, RankTrackerAction } from "./use-rank-tracker-state"
 
 export { useRankTrackerOps } from "./use-rank-tracker-ops"
 export { useAutoRefresh } from "./use-auto-refresh"

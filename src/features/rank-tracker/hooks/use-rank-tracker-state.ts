@@ -73,7 +73,7 @@ export interface RankTrackerState {
 /**
  * Union type of all possible actions for the rank tracker reducer
  */
-type RankTrackerAction =
+export type RankTrackerAction =
   | { type: "SET_SEARCH_QUERY"; payload: string }
   | { type: "SET_ACTIVE_TAB"; payload: FilterTab }
   | { type: "SET_SORT"; payload: { field: SortField; direction: SortDirection } }
