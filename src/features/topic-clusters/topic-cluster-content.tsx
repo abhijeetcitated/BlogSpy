@@ -962,17 +962,6 @@ export function TopicClusterContent() {
                   </div>
                 )}
               </div>
-              
-              {/* Clear All */}
-              {keywords.length > 0 && (
-                <button 
-                  onClick={handleClearAll} 
-                  className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-zinc-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 border border-zinc-300 dark:border-zinc-800 hover:border-red-300 dark:hover:border-red-800 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Clear All</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
