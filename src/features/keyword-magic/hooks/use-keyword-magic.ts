@@ -9,7 +9,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
-import type { Keyword, MatchType, BulkMode, Country, FilterState } from "../types"
+import type { Keyword, MatchType, BulkMode, Country, FilterState, SERPFeature } from "../types"
 import type { SortableField, KeywordResearchRequest } from "../types/api.types"
 import { keywordMagicAPI } from "../services"
 import { applyAllFilters } from "../utils"
@@ -455,7 +455,7 @@ export function useKeywordData(
           },
           kd: k.kd,
           cpc: k.cpc,
-          serpFeatures: k.serp.features.map((f) => f.type),
+          serpFeatures: k.serp.features.map((f) => f.type) as SERPFeature[],
           geoScore: k.geoScore.score,
         }))
         setKeywords(transformed)
