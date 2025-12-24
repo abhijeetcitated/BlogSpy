@@ -4,7 +4,7 @@
 
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import type { TikTokVideoResult } from "../types/tiktok.types"
 import type { SortOption, KeywordStats } from "../types/common.types"
@@ -12,7 +12,7 @@ import {
   generateMockTikTokResults,
   generateKeywordStats,
 } from "../utils/mock-generators"
-import { ITEMS_PER_PAGE } from "../utils/common.utils"
+import { ITEMS_PER_PAGE, escapeCsvValue, getPublishTimestamp } from "../utils/common.utils"
 
 export interface UseTikTokSearchResult {
   // State
@@ -42,6 +42,16 @@ export interface UseTikTokSearchResult {
 }
 
 export function useTikTokSearch(): UseTikTokSearchResult {
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Search state
   const [searchInput, setSearchInput] = useState("")
   const [searchedQuery, setSearchedQuery] = useState("")
@@ -70,7 +80,7 @@ export function useTikTokSearch(): UseTikTokSearchResult {
         return sorted.sort((a, b) => b.engagement - a.engagement)
       case "recent":
         return sorted.sort(
-          (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+          (a, b) => getPublishTimestamp(b.publishedAt) - getPublishTimestamp(a.publishedAt)
         )
       default:
         return sorted
@@ -95,12 +105,15 @@ export function useTikTokSearch(): UseTikTokSearchResult {
     
     setIsLoading(true)
     setHasSearched(false)
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
     
     // TODO: Replace with actual TikTok API call
     // import { tiktokService } from "../services"
     // const videos = await tiktokService.searchVideos(query)
     
-    setTimeout(() => {
+    searchTimeoutRef.current = setTimeout(() => {
       const mockResults = generateMockTikTokResults(query)
       const mockStats = generateKeywordStats(query, "tiktok")
       
@@ -173,15 +186,15 @@ export function useTikTokSearch(): UseTikTokSearchResult {
     const csv = [
       ["Description", "Creator", "Views", "Likes", "Shares", "Engagement %", "Hijack Score", "Duration", "URL"].join(","),
       ...results.map(v => [
-        `"${v.description.slice(0, 50).replace(/"/g, '""')}..."`,
-        v.creator,
-        v.views,
-        v.likes,
-        v.shares,
-        v.engagement.toFixed(2),
-        v.hijackScore,
-        v.duration,
-        v.videoUrl,
+        escapeCsvValue(`${v.description.slice(0, 50)}...`),
+        escapeCsvValue(v.creator),
+        escapeCsvValue(v.views),
+        escapeCsvValue(v.likes),
+        escapeCsvValue(v.shares),
+        escapeCsvValue(v.engagement.toFixed(2)),
+        escapeCsvValue(v.hijackScore),
+        escapeCsvValue(v.duration),
+        escapeCsvValue(v.videoUrl),
       ].join(",")),
     ].join("\n")
     
@@ -198,12 +211,21 @@ export function useTikTokSearch(): UseTikTokSearchResult {
   
   // Copy handler
   const handleCopy = useCallback((text: string) => {
+    if (!navigator?.clipboard) {
+      toast.error("Clipboard not available")
+      return
+    }
+
     navigator.clipboard.writeText(text)
-    toast.success("Copied!")
+      .then(() => toast.success("Copied!"))
+      .catch(() => toast.error("Copy failed"))
   }, [])
   
   // Reset handler
   const reset = useCallback(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
     setSearchInput("")
     setSearchedQuery("")
     setResults([])

@@ -28,8 +28,8 @@ export function RecommendationsList({
     <div className={cn("space-y-4", className)}>
       {quickWins.length > 0 && (
         <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-emerald-500/10 border border-emerald-500/20">
-          <Zap className="h-4 w-4 text-emerald-400" />
-          <span className="text-sm text-emerald-300 font-medium">
+          <Zap className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+          <span className="text-sm text-emerald-600 dark:text-emerald-300 font-medium">
             {quickWins.length} Quick Win{quickWins.length > 1 ? 's' : ''} Available
           </span>
         </div>

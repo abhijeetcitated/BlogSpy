@@ -34,8 +34,8 @@ export function CitationList({
     <div className={cn("space-y-3", className)}>
       {weakCount > 0 && (
         <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-amber-500/10 border border-amber-500/20">
-          <Lightbulb className="h-4 w-4 text-amber-400" />
-          <span className="text-xs text-amber-300">
+          <Lightbulb className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+          <span className="text-xs text-amber-600 dark:text-amber-300">
             {weakCount} weak source{weakCount > 1 ? 's' : ''} found - High opportunity to get cited!
           </span>
         </div>

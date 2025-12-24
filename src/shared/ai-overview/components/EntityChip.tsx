@@ -27,8 +27,8 @@ export function EntityChip({ entity, className }: EntityChipProps) {
           <span className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
             entity.isFromYourContent
-              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-              : "bg-slate-700 text-slate-300 border border-slate-600",
+              ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+              : "bg-muted text-foreground/80 border border-border",
             className
           )}>
             {entity.isFromYourContent && <CheckCircle className="h-3 w-3" />}

@@ -8,17 +8,9 @@ import type {
   YouTubeVideo,
   YouTubeSearchOptions,
   YouTubeVideoItem,
-  YouTubeChannelItem,
   YouTubeKeywordAnalytics,
 } from "../types/youtube.types"
 import type { ViralPotential, ContentAge } from "../types/common.types"
-
-// API Endpoints
-const YOUTUBE_API = {
-  SEARCH: "https://www.googleapis.com/youtube/v3/search",
-  VIDEOS: "https://www.googleapis.com/youtube/v3/videos",
-  CHANNELS: "https://www.googleapis.com/youtube/v3/channels",
-}
 
 // ============================================
 // Helper Functions
@@ -125,17 +117,13 @@ export function parseYouTubeDuration(iso8601: string): {
 // ============================================
 
 class YouTubeService {
-  private apiKey: string | null = null
-
-  constructor() {
-    this.apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY || null
-  }
 
   /**
    * Check if API key is configured
    */
   isConfigured(): boolean {
-    return !!this.apiKey
+    // API keys are stored server-side; client assumes the proxy is available.
+    return true
   }
 
   /**
@@ -152,144 +140,38 @@ class YouTubeService {
       videoDuration,
     } = options
 
-    if (!this.apiKey) {
-      throw new Error("YouTube API key not configured")
+    if (!query.trim()) {
+      return []
     }
 
     try {
-      // Step 1: Search for video IDs
-      const searchParams = new URLSearchParams({
-        part: "snippet",
-        q: query,
-        type: "video",
+      const params = new URLSearchParams({
+        query,
         maxResults: maxResults.toString(),
         order,
-        key: this.apiKey,
       })
 
       if (publishedAfter) {
-        searchParams.append("publishedAfter", publishedAfter.toISOString())
+        params.set("publishedAfter", publishedAfter.toISOString())
       }
       if (videoDuration) {
-        searchParams.append("videoDuration", videoDuration)
+        params.set("videoDuration", videoDuration)
       }
 
-      const searchResponse = await fetch(
-        `${YOUTUBE_API.SEARCH}?${searchParams.toString()}`
-      )
-      
-      if (!searchResponse.ok) {
-        throw new Error(`YouTube search failed: ${searchResponse.statusText}`)
+      const response = await fetch(`/api/video-hijack/youtube?${params.toString()}`)
+
+      if (!response.ok) {
+        throw new Error(`YouTube search failed: ${response.statusText}`)
       }
-      
-      const searchData = await searchResponse.json()
 
-      if (!searchData.items?.length) return []
+      const data = await response.json()
+      const items = data?.data?.items || []
 
-      // Step 2: Get video details (stats)
-      const videoIds = searchData.items
-        .map((item: { id: { videoId: string } }) => item.id.videoId)
-        .join(",")
+      if (!data.success || !items.length) {
+        return []
+      }
 
-      const videosParams = new URLSearchParams({
-        part: "snippet,statistics,contentDetails",
-        id: videoIds,
-        key: this.apiKey,
-      })
-
-      const videosResponse = await fetch(
-        `${YOUTUBE_API.VIDEOS}?${videosParams.toString()}`
-      )
-      const videosData = await videosResponse.json()
-
-      // Step 3: Get channel details
-      const channelIds = [
-        ...new Set(
-          videosData.items.map(
-            (item: { snippet: { channelId: string } }) => item.snippet.channelId
-          )
-        ),
-      ].join(",")
-
-      const channelsParams = new URLSearchParams({
-        part: "snippet,statistics",
-        id: channelIds,
-        key: this.apiKey,
-      })
-
-      const channelsResponse = await fetch(
-        `${YOUTUBE_API.CHANNELS}?${channelsParams.toString()}`
-      )
-      const channelsData = await channelsResponse.json()
-
-      const channelMap = new Map<string, { name: string; subscribers: number }>(
-        channelsData.items.map((ch: YouTubeChannelItem) => [
-          ch.id,
-          {
-            name: ch.snippet.title,
-            subscribers: parseInt(ch.statistics.subscriberCount || "0"),
-          },
-        ])
-      )
-
-      // Step 4: Transform to our format
-      return videosData.items.map((video: YouTubeVideoItem) => {
-        const views = parseInt(video.statistics.viewCount || "0")
-        const likes = parseInt(video.statistics.likeCount || "0")
-        const comments = parseInt(video.statistics.commentCount || "0")
-        const publishedDate = new Date(video.snippet.publishedAt)
-        const daysOld = Math.floor(
-          (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24)
-        )
-        const channel = channelMap.get(video.snippet.channelId) || {
-          name: video.snippet.channelTitle,
-          subscribers: 0,
-        }
-        const duration = parseYouTubeDuration(video.contentDetails.duration)
-
-        const engagement = views > 0 ? ((likes + comments) / views) * 100 : 0
-        const viewsPerDay = daysOld > 0 ? views / daysOld : views
-
-        return {
-          id: video.id,
-          videoId: video.id,
-          title: video.snippet.title,
-          description: video.snippet.description,
-          channel: {
-            id: video.snippet.channelId,
-            name: channel.name,
-            url: `https://youtube.com/channel/${video.snippet.channelId}`,
-            subscribers: channel.subscribers,
-            subscribersFormatted: formatNumber(channel.subscribers),
-          },
-          thumbnail: {
-            url: video.snippet.thumbnails.high.url,
-            width: video.snippet.thumbnails.high.width,
-            height: video.snippet.thumbnails.high.height,
-          },
-          stats: {
-            views,
-            likes,
-            comments,
-            engagement,
-          },
-          duration: duration.formatted,
-          durationSeconds: duration.seconds,
-          publishedAt: video.snippet.publishedAt,
-          publishedDate,
-          url: `https://youtube.com/watch?v=${video.id}`,
-          tags: video.snippet.tags || [],
-          hijackScore: calculateYouTubeHijackScore({
-            views,
-            likes,
-            comments,
-            daysOld,
-            subscriberCount: channel.subscribers,
-          }),
-          viralPotential: calculateYouTubeViralPotential(engagement, viewsPerDay),
-          contentAge: getYouTubeContentAge(publishedDate),
-        } as YouTubeVideo
-      })
+      return items.map((video: any) => this.transformApiVideo(video))
     } catch (error) {
       console.error("YouTube search error:", error)
       throw error
@@ -300,25 +182,22 @@ class YouTubeService {
    * Get video by ID
    */
   async getVideo(videoId: string): Promise<YouTubeVideo | null> {
-    if (!this.apiKey) {
-      throw new Error("YouTube API key not configured")
-    }
-
     try {
+      if (!videoId.trim()) {
+        return null
+      }
+
       const params = new URLSearchParams({
-        part: "snippet,statistics,contentDetails",
-        id: videoId,
-        key: this.apiKey,
+        videoId,
       })
 
-      const response = await fetch(`${YOUTUBE_API.VIDEOS}?${params.toString()}`)
+      const response = await fetch(`/api/video-hijack/youtube?${params.toString()}`)
       const data = await response.json()
 
-      if (!data.items?.length) return null
+      if (!data.success || !data?.data?.items?.length) return null
 
-      const video = data.items[0]
-      // Transform similar to searchVideos...
-      return this.transformVideoItem(video)
+      const video = data.data.items[0]
+      return this.transformApiVideo(video)
     } catch (error) {
       console.error("YouTube get video error:", error)
       throw error
@@ -371,6 +250,59 @@ class YouTubeService {
       competition: avgHijackScore < 40 ? "high" : avgHijackScore < 60 ? "medium" : "low",
       trendScore: Math.round(avgEngagement * 10),
       hijackOpportunity: Math.round(avgHijackScore),
+    }
+  }
+
+  /**
+   * Transform internal API response to YouTubeVideo
+   */
+  private transformApiVideo(video: any): YouTubeVideo {
+    const views = parseInt(video.views || "0")
+    const likes = parseInt(video.likes || "0")
+    const comments = parseInt(video.comments || "0")
+    const publishedAt = video.publishedAt || new Date().toISOString()
+    const publishedDate = new Date(publishedAt)
+    const daysOld = Math.floor(
+      (Date.now() - publishedDate.getTime()) / (1000 * 60 * 60 * 24)
+    )
+    const duration = parseYouTubeDuration(video.duration || "PT0S")
+    const engagement = views > 0 ? ((likes + comments) / views) * 100 : 0
+    const viewsPerDay = daysOld > 0 ? views / daysOld : views
+    const subscribers = parseInt(video.channelSubs || "0")
+
+    return {
+      id: video.id,
+      videoId: video.id,
+      title: video.title || "",
+      description: video.description || "",
+      channel: {
+        id: video.channelId || "",
+        name: video.channelName || "Unknown Channel",
+        url: video.channelId ? `https://youtube.com/channel/${video.channelId}` : "",
+        subscribers,
+        subscribersFormatted: formatNumber(subscribers),
+      },
+      thumbnail: {
+        url: video.thumbnail || "",
+        width: 0,
+        height: 0,
+      },
+      stats: { views, likes, comments, engagement },
+      duration: duration.formatted,
+      durationSeconds: duration.seconds,
+      publishedAt,
+      publishedDate,
+      url: video.url || `https://youtube.com/watch?v=${video.id}`,
+      tags: video.tags || [],
+      hijackScore: calculateYouTubeHijackScore({
+        views,
+        likes,
+        comments,
+        daysOld,
+        subscriberCount: subscribers,
+      }),
+      viralPotential: calculateYouTubeViralPotential(engagement, viewsPerDay),
+      contentAge: getYouTubeContentAge(publishedDate),
     }
   }
 

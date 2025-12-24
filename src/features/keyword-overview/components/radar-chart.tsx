@@ -14,7 +14,7 @@ export function RadarChart({ axes = RADAR_AXES }: RadarChartProps) {
   const polygonPoints = points.map((p) => `${p.x},${p.y}`).join(" ")
 
   return (
-    <svg viewBox="0 0 160 160" className="w-full h-36">
+    <svg viewBox="0 0 160 160" className="w-full h-36" role="img" aria-label="Search intent profile radar chart">
       <defs>
         <linearGradient id="radarFill" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="rgba(16,185,129,0.3)" />
@@ -69,7 +69,7 @@ export function RadarChart({ axes = RADAR_AXES }: RadarChartProps) {
             y={pos.y} 
             textAnchor="middle" 
             dominantBaseline="middle" 
-            className="fill-slate-400 text-[8px]"
+            className="fill-muted-foreground text-[8px]"
           >
             {axis.label}
           </text>

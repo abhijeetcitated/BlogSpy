@@ -1,7 +1,7 @@
 /**
  * VIDEO HIJACK - Refactored Main Component
  * 
- * Original: 1653 lines → Refactored: ~350 lines
+ * Original: 1653 lines -> Refactored: ~350 lines
  * 
  * Components Used:
  * - VideoSearchBox: Search input with mode toggle
@@ -18,6 +18,7 @@
 "use client"
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -52,8 +53,6 @@ import {
   YouTubeResultCard,
   TikTokResultCard,
   VideoStatsPanel,
-  VideoSuggestionPanel,
-  VideoResultsSidebar,
 } from "./components"
 
 // Types
@@ -61,6 +60,13 @@ import type { VideoResult, TikTokResult, SortOption } from "./types/video-search
 
 // Constants
 import { ITEMS_PER_PAGE } from "./utils/helpers"
+
+const VideoResultsSidebar = dynamic(
+  () => import("./components/VideoResultsSidebar").then((mod) => mod.VideoResultsSidebar)
+)
+const VideoSuggestionPanel = dynamic(
+  () => import("./components/VideoSuggestionPanel").then((mod) => mod.VideoSuggestionPanel)
+)
 
 export function VideoHijackContentRefactored() {
   const {
@@ -167,10 +173,10 @@ export function VideoHijackContentRefactored() {
                   <span className="font-medium text-foreground">YouTube Data</span>
                 </div>
                 <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Video views, likes, comments</li>
-                  <li>• Channel subscribers</li>
-                  <li>• Video duration & publish date</li>
-                  <li>• Search volume indicators</li>
+                  <li>- Video views, likes, comments</li>
+                  <li>- Channel subscribers</li>
+                  <li>- Video duration & publish date</li>
+                  <li>- Search volume indicators</li>
                 </ul>
               </div>
               <div className="p-4 rounded-xl bg-background border border-border text-left">
@@ -179,10 +185,10 @@ export function VideoHijackContentRefactored() {
                   <span className="font-medium text-foreground">TikTok Data</span>
                 </div>
                 <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Video views, likes, shares</li>
-                  <li>• Creator followers</li>
-                  <li>• Trending hashtags</li>
-                  <li>• Engagement rates</li>
+                  <li>- Video views, likes, shares</li>
+                  <li>- Creator followers</li>
+                  <li>- Trending hashtags</li>
+                  <li>- Engagement rates</li>
                 </ul>
               </div>
             </div>

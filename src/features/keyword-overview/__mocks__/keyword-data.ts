@@ -132,3 +132,54 @@ export const MOCK_SERP_RESULTS: SERPResult[] = [
     isWeak: false,
   },
 ]
+
+// ============================================
+// DYNAMIC MOCK DATA GENERATOR
+// ============================================
+
+/**
+ * Generate mock data based on keyword
+ * In production, replace this with actual API call
+ */
+export function generateMockDataForKeyword(keyword: string) {
+  // Generate deterministic but varied data based on keyword hash
+  const hash = keyword.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  
+  // Volume variations based on keyword
+  const volumeMultiplier = (hash % 10) + 1
+  const volume = `${volumeMultiplier * 10}K`
+  
+  // KD based on keyword length (longer = harder)
+  const kd = Math.min(95, 30 + keyword.length * 3 + (hash % 20))
+  const kdLabel = kd < 30 ? "Easy" : kd < 60 ? "Medium" : kd < 80 ? "Hard" : "Very Hard"
+  
+  // CPC variations
+  const cpc = `$${((hash % 50) / 10 + 1).toFixed(2)}`
+  
+  // GEO Score
+  const geoScore = 40 + (hash % 50)
+  
+  const metrics = {
+    keyword,
+    volume,
+    kd,
+    kdLabel,
+    cpc,
+    geoScore,
+  }
+  
+  const geoComponents = {
+    citationFreshness: 10 + (hash % 15),
+    authorityWeakness: 12 + (hash % 13),
+    mediaGap: 8 + (hash % 17),
+    textQuality: 10 + (hash % 15),
+  }
+  
+  // Generate SERP results with keyword in titles
+  const serpResults = MOCK_SERP_RESULTS.map(result => ({
+    ...result,
+    title: result.title.replace("AI Agents", keyword).replace("AI Agent", keyword),
+  }))
+  
+  return { metrics, geoComponents, serpResults }
+}

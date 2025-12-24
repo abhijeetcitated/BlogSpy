@@ -13,23 +13,23 @@ export function SERPTable({ results }: SERPTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-slate-800">
-            <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+          <tr className="border-b border-border">
+            <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Rank
             </th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               URL
             </th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Authority
             </th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Backlinks
             </th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Word Count
             </th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">
+            <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Type
             </th>
           </tr>
@@ -38,7 +38,7 @@ export function SERPTable({ results }: SERPTableProps) {
           {results.map((result) => (
             <tr
               key={result.rank}
-              className={`border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors ${
+              className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${
                 result.isWeak ? "bg-emerald-500/5" : ""
               }`}
             >
@@ -46,8 +46,8 @@ export function SERPTable({ results }: SERPTableProps) {
                 <span
                   className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
                     result.rank <= 3
-                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                      : "bg-slate-800 text-slate-400"
+                      ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {result.rank}
@@ -55,10 +55,10 @@ export function SERPTable({ results }: SERPTableProps) {
               </td>
               <td className="py-3 px-4">
                 <div className="flex flex-col">
-                  <span className="text-sm text-white font-medium truncate max-w-xs">
+                  <span className="text-sm text-foreground font-medium truncate max-w-xs">
                     {result.title}
                   </span>
-                  <span className="text-xs text-slate-500 flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground/70 flex items-center gap-1">
                     {result.domain}
                     <ExternalLink className="w-3 h-3" />
                   </span>
@@ -70,10 +70,10 @@ export function SERPTable({ results }: SERPTableProps) {
                 </span>
               </td>
               <td className="py-3 px-4">
-                <span className="text-sm text-slate-300">{result.backlinks}</span>
+                <span className="text-sm text-foreground/80">{result.backlinks}</span>
               </td>
               <td className="py-3 px-4">
-                <span className="text-sm text-slate-300">{result.wordCount.toLocaleString()}</span>
+                <span className="text-sm text-foreground/80">{result.wordCount.toLocaleString()}</span>
               </td>
               <td className="py-3 px-4">
                 <span

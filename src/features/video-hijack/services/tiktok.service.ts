@@ -16,10 +16,10 @@ import type { ViralPotential } from "../types/common.types"
 
 // API Endpoints (via internal API routes)
 const TIKTOK_API = {
-  SEARCH: "/api/v1/video-hijack/tiktok/search",
-  VIDEO: "/api/v1/video-hijack/tiktok/video",
-  HASHTAG: "/api/v1/video-hijack/tiktok/hashtag",
-  TRENDING: "/api/v1/video-hijack/tiktok/trending",
+  SEARCH: "/api/video-hijack/tiktok/search",
+  VIDEO: "/api/video-hijack/tiktok/video",
+  HASHTAG: "/api/video-hijack/tiktok/hashtag",
+  TRENDING: "/api/video-hijack/tiktok/trending",
 }
 
 // ============================================
@@ -161,17 +161,11 @@ function transformTikTokVideo(raw: TikTokRawVideo): TikTokVideo {
 // ============================================
 
 class TikTokService {
-  private apiKey: string | null = null
-
-  constructor() {
-    this.apiKey = process.env.NEXT_PUBLIC_TIKTOK_API_KEY || null
-  }
-
   /**
    * Check if API key is configured
    */
   isConfigured(): boolean {
-    return !!this.apiKey
+    return true
   }
 
   /**

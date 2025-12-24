@@ -24,6 +24,7 @@ import { YouTubeResultCard } from "./YouTubeResultCard"
 import type { YouTubeVideoResult } from "../../types/youtube.types"
 import type { SortOption } from "../../types/common.types"
 import { youtubeService } from "../../services"
+import { getPublishTimestamp } from "../../utils/common.utils"
 
 interface YouTubeResultsListProps {
   results: YouTubeVideoResult[]
@@ -54,7 +55,7 @@ export function YouTubeResultsList({ results, isLoading, searchQuery }: YouTubeR
       case "engagement":
         return b.engagementRate - a.engagementRate
       case "recent":
-        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+        return getPublishTimestamp(b.publishedAt) - getPublishTimestamp(a.publishedAt)
       case "likes":
         return b.likes - a.likes
       default:

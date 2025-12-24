@@ -9,5 +9,8 @@
 
 export const API_ROUTES = {
   YOUTUBE: "/api/video-hijack/youtube",
-  TIKTOK: "/api/video-hijack/tiktok",
+  TIKTOK_SEARCH: "/api/video-hijack/tiktok/search",
+  TIKTOK_VIDEO: "/api/video-hijack/tiktok/video",
+  TIKTOK_HASHTAG: "/api/video-hijack/tiktok/hashtag",
+  TIKTOK_TRENDING: "/api/video-hijack/tiktok/trending",
 } as const

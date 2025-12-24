@@ -1,50 +1,30 @@
 // Video Hijack Helper Functions
 
-import { ArrowUp, ArrowDown, Minus } from "lucide-react"
 import {
   EvergreenIcon,
   SeasonalIcon,
   BoltIcon,
   ChartIcon,
 } from "@/components/icons/platform-icons"
+import {
+  formatViews,
+  getCompetitionColor,
+  getHijackScoreColor,
+  getHijackScoreBg,
+  getVolumeTrendIcon,
+  ITEMS_PER_PAGE,
+} from "./common.utils"
 
 /**
- * Format view count to human readable format
+ * Shared helpers re-exported for backward compatibility
  */
-export function formatViews(views: number): string {
-  if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`
-  if (views >= 1000) return `${(views / 1000).toFixed(1)}K`
-  return views.toString()
-}
-
-/**
- * Get competition badge color classes
- */
-export function getCompetitionColor(competition: string): string {
-  switch (competition) {
-    case "low": return "text-emerald-500 bg-emerald-500/10 border-emerald-500/30"
-    case "medium": return "text-amber-500 bg-amber-500/10 border-amber-500/30"
-    case "high": return "text-red-500 bg-red-500/10 border-red-500/30"
-    default: return "text-muted-foreground"
-  }
-}
-
-/**
- * Get hijack score text color
- */
-export function getHijackScoreColor(score: number): string {
-  if (score >= 80) return "text-emerald-500"
-  if (score >= 60) return "text-amber-500"
-  return "text-red-500"
-}
-
-/**
- * Get hijack score background color
- */
-export function getHijackScoreBg(score: number): string {
-  if (score >= 80) return "bg-emerald-500"
-  if (score >= 60) return "bg-amber-500"
-  return "bg-red-500"
+export {
+  formatViews,
+  getCompetitionColor,
+  getHijackScoreColor,
+  getHijackScoreBg,
+  getVolumeTrendIcon,
+  ITEMS_PER_PAGE,
 }
 
 /**
@@ -82,17 +62,3 @@ export function getSeasonalityIcon(seasonality: string): React.ReactNode {
     default: return <ChartIcon size={24} className="text-muted-foreground" />
   }
 }
-
-/**
- * Get volume trend icon and color
- */
-export function getVolumeTrendIcon(trend: string): { icon: typeof ArrowUp; color: string } {
-  switch (trend) {
-    case "up": return { icon: ArrowUp, color: "text-emerald-500" }
-    case "down": return { icon: ArrowDown, color: "text-red-500" }
-    default: return { icon: Minus, color: "text-muted-foreground" }
-  }
-}
-
-// Items per page constant
-export const ITEMS_PER_PAGE = 10

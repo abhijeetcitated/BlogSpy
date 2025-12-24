@@ -23,6 +23,7 @@ import { TikTokResultCard } from "./TikTokResultCard"
 import type { TikTokVideoResult } from "../../types/tiktok.types"
 import type { SortOption } from "../../types/common.types"
 import { tiktokService } from "../../services"
+import { getPublishTimestamp } from "../../utils/common.utils"
 
 interface TikTokResultsListProps {
   results: TikTokVideoResult[]
@@ -53,7 +54,7 @@ export function TikTokResultsList({ results, isLoading, searchQuery }: TikTokRes
       case "engagement":
         return b.engagementRate - a.engagementRate
       case "recent":
-        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+        return getPublishTimestamp(b.publishedAt) - getPublishTimestamp(a.publishedAt)
       case "likes":
         return b.likes - a.likes
       default:

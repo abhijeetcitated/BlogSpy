@@ -1,14 +1,38 @@
-// Video Search & Results Types
+import type {
+  SearchMode,
+  Platform,
+  SortOption,
+  ViralPotential,
+  ContentAge,
+  Seasonality,
+  VolumeTrend,
+  Competition,
+  Difficulty,
+  ContentTypeDistribution,
+  AudienceAgeDistribution,
+  TopChannel,
+  KeywordStats,
+  VideoSuggestion,
+} from "./common.types"
 
-export type SearchMode = "domain" | "keyword"
-export type Platform = "youtube" | "tiktok"
-export type SortOption = "views" | "engagement" | "recent" | "hijackScore"
-export type ViralPotential = "low" | "medium" | "high"
-export type ContentAge = "fresh" | "aging" | "outdated"
-export type Seasonality = "evergreen" | "seasonal" | "trending"
-export type VolumeTrend = "up" | "stable" | "down"
-export type Competition = "low" | "medium" | "high"
-export type Difficulty = "easy" | "medium" | "hard"
+export type {
+  SearchMode,
+  Platform,
+  SortOption,
+  ViralPotential,
+  ContentAge,
+  Seasonality,
+  VolumeTrend,
+  Competition,
+  Difficulty,
+  ContentTypeDistribution,
+  AudienceAgeDistribution,
+  TopChannel,
+  KeywordStats,
+  VideoSuggestion,
+} from "./common.types"
+
+// Video Search & Results Types (refactored)
 
 export interface VideoResult {
   id: string
@@ -48,51 +72,4 @@ export interface TikTokResult {
   hijackScore: number
   viralPotential: ViralPotential
   soundTrending: boolean
-}
-
-export interface ContentTypeDistribution {
-  type: string
-  percentage: number
-}
-
-export interface AudienceAgeDistribution {
-  range: string
-  percentage: number
-}
-
-export interface TopChannel {
-  name: string
-  videos: number
-}
-
-export interface KeywordStats {
-  keyword: string
-  platform: Platform
-  totalVideos: number
-  totalViews: number
-  avgViews: number
-  avgEngagement: number
-  topChannels: TopChannel[]
-  trendScore: number
-  competition: Competition
-  hijackOpportunity: number
-  monetizationScore: number
-  seasonality: Seasonality
-  avgVideoLength: string
-  bestUploadDay: string
-  bestUploadTime: string
-  searchVolume: number
-  volumeTrend: VolumeTrend
-  contentTypes: ContentTypeDistribution[]
-  audienceAge: AudienceAgeDistribution[]
-}
-
-export interface VideoSuggestion {
-  titleFormats: string[]
-  recommendedTags: string[]
-  recommendedHashtags: string[]
-  optimalLength: { youtube: string; tiktok: string }
-  contentGaps: string[]
-  bestTimeToPost: string
-  difficulty: Difficulty
 }

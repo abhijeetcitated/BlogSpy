@@ -9,7 +9,7 @@ interface WorldMapProps {
 
 export function WorldMap({ countries = MAP_COUNTRIES }: WorldMapProps) {
   return (
-    <svg viewBox="0 0 400 180" className="w-full h-32">
+    <svg viewBox="0 0 400 180" className="w-full h-32" role="img" aria-label="World map showing global search interest">
       {/* Simplified world map outline */}
       <defs>
         <filter id="glow">

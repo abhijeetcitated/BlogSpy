@@ -38,7 +38,7 @@ export function CommunitySourceCard({
   const decayLevel = getCommunityDecayLevel(source.ageInDays)
 
   return (
-    <Card className={cn("bg-slate-800/50 border-slate-700", className)}>
+    <Card className={cn("bg-card border-border", className)}>
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
           {/* Platform Icon */}
@@ -66,7 +66,7 @@ export function CommunitySourceCard({
               )}
             </div>
 
-            <h4 className="mt-2 text-sm font-medium text-slate-200 line-clamp-2">
+            <h4 className="mt-2 text-sm font-medium text-foreground line-clamp-2">
               {source.title}
             </h4>
 
@@ -77,7 +77,7 @@ export function CommunitySourceCard({
             )}
 
             {/* Stats Row */}
-            <div className="flex items-center gap-4 mt-3 text-xs text-slate-400">
+            <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
                 {formatAge(source.ageInDays)}

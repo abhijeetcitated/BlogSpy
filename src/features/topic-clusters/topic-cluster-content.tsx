@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation"
 import { 
   Upload, Trash2, Search, Filter, ArrowUpDown, ArrowUp, ArrowDown,
   Sparkles, Plus, X, ChevronDown, ChevronUp,
-  TrendingUp, TrendingDown, Minus, CheckSquare, Square,
+  TrendingUp, TrendingDown, Minus, CheckSquare, Square, Check,
   Wand2, BarChart3, Target, Scissors, Flame,
   Video, MessageSquare, Star, ShoppingCart, Image, Map,
-  ExternalLink, Link2, Eye, MousePointer, Zap, Layers, DollarSign, MousePointer2, RefreshCw, CheckCircle2, Clock
+  ExternalLink, Link2, Eye, MousePointer, Zap, Layers, DollarSign, MousePointer2, RefreshCw, CheckCircle2, Clock,
+  FileText, HelpCircle, ImageIcon, Globe
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button } from "@/components/ui/button"
 
 // ============================================
 // TYPES - Advanced Schema
@@ -302,8 +305,7 @@ export function TopicClusterContent() {
   // State
   const [keywords, setKeywords] = useState<Keyword[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [sortField, setSortField] = useState<SortField>("volume")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
+  // Sort states moved to filter section
   const [showFilters, setShowFilters] = useState(false)
   const [showManualInput, setShowManualInput] = useState(false)
   const [manualText, setManualText] = useState("")
@@ -328,9 +330,40 @@ export function TopicClusterContent() {
   const [volumeMax, setVolumeMax] = useState("")
   const [kdMin, setKdMin] = useState("")
   const [kdMax, setKdMax] = useState("")
-  const [intentFilter, setIntentFilter] = useState<string>("all")
-  const [sourceFilter, setSourceFilter] = useState<string>("all")
-  const [serpFilter, setSerpFilter] = useState<string>("all")
+  const [intentFilters, setIntentFilters] = useState<string[]>([])
+  const [sourceFilters, setSourceFilters] = useState<string[]>([])
+  const [serpFilters, setSerpFilters] = useState<string[]>([])
+  const [sortField, setSortFieldState] = useState<SortField>("volume")
+  const [sortDirection, setSortDirectionState] = useState<SortDirection>("desc")
+  
+  // Temp states for pending filter selections (before Apply)
+  const [tempVolumeMin, setTempVolumeMin] = useState("")
+  const [tempVolumeMax, setTempVolumeMax] = useState("")
+  const [tempKdMin, setTempKdMin] = useState("")
+  const [tempKdMax, setTempKdMax] = useState("")
+  const [tempIntentFilters, setTempIntentFilters] = useState<string[]>([])
+  const [tempSourceFilters, setTempSourceFilters] = useState<string[]>([])
+  const [tempSerpFilters, setTempSerpFilters] = useState<string[]>([])
+  const [tempSortField, setTempSortField] = useState<SortField>("volume")
+  const [tempSortDirection, setTempSortDirection] = useState<SortDirection>("desc")
+  
+  // Filter popover open states
+  const [volumeOpen, setVolumeOpen] = useState(false)
+  const [kdOpen, setKdOpen] = useState(false)
+  const [intentOpen, setIntentOpen] = useState(false)
+  const [sourceOpen, setSourceOpen] = useState(false)
+  const [serpOpen, setSerpOpen] = useState(false)
+  const [sortOpen, setSortOpen] = useState(false)
+  
+  // Predefined sources (features that can import keywords)
+  const KEYWORD_SOURCES = [
+    { id: "keyword-magic", label: "Keyword Magic", Icon: Wand2, color: "text-purple-500" },
+    { id: "competitor-gap", label: "Competitor Gap", Icon: Target, color: "text-red-500" },
+    { id: "content-roadmap", label: "Content Roadmap", Icon: Layers, color: "text-blue-500" },
+    { id: "rank-tracker", label: "Rank Tracker", Icon: TrendingUp, color: "text-emerald-500" },
+    { id: "snippet-stealer", label: "Snippet Stealer", Icon: Scissors, color: "text-amber-500" },
+    { id: "trend-spotter", label: "Trend Spotter", Icon: Zap, color: "text-yellow-500" },
+  ]
   
   // Credits System
   const [credits, setCredits] = useState(450)
@@ -387,11 +420,38 @@ export function TopicClusterContent() {
   // Sorting
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc")
+      setSortDirectionState(prev => prev === "asc" ? "desc" : "asc")
     } else {
-      setSortField(field)
-      setSortDirection("desc")
+      setSortFieldState(field)
+      setSortDirectionState("desc")
     }
+  }
+  
+  // Sync temp states when popover opens
+  const syncTempVolume = () => { setTempVolumeMin(volumeMin); setTempVolumeMax(volumeMax) }
+  const syncTempKd = () => { setTempKdMin(kdMin); setTempKdMax(kdMax) }
+  const syncTempIntent = () => { setTempIntentFilters([...intentFilters]) }
+  const syncTempSource = () => { setTempSourceFilters([...sourceFilters]) }
+  const syncTempSerp = () => { setTempSerpFilters([...serpFilters]) }
+  const syncTempSort = () => { setTempSortField(sortField); setTempSortDirection(sortDirection) }
+  
+  // Apply handlers
+  const applyVolumeFilter = () => { setVolumeMin(tempVolumeMin); setVolumeMax(tempVolumeMax); setVolumeOpen(false) }
+  const applyKdFilter = () => { setKdMin(tempKdMin); setKdMax(tempKdMax); setKdOpen(false) }
+  const applyIntentFilter = () => { setIntentFilters([...tempIntentFilters]); setIntentOpen(false) }
+  const applySourceFilter = () => { setSourceFilters([...tempSourceFilters]); setSourceOpen(false) }
+  const applySerpFilter = () => { setSerpFilters([...tempSerpFilters]); setSerpOpen(false) }
+  const applySortFilter = () => { setSortFieldState(tempSortField); setSortDirectionState(tempSortDirection); setSortOpen(false) }
+  
+  // Toggle helpers for multi-select
+  const toggleTempIntent = (value: string) => {
+    setTempIntentFilters(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])
+  }
+  const toggleTempSource = (value: string) => {
+    setTempSourceFilters(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])
+  }
+  const toggleTempSerp = (value: string) => {
+    setTempSerpFilters(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value])
   }
   
   // Selection
@@ -421,9 +481,9 @@ export function TopicClusterContent() {
     if (volumeMax) result = result.filter(k => (k.volume ?? Infinity) <= parseInt(volumeMax))
     if (kdMin) result = result.filter(k => (k.kd ?? 0) >= parseInt(kdMin))
     if (kdMax) result = result.filter(k => (k.kd ?? Infinity) <= parseInt(kdMax))
-    if (intentFilter !== "all") result = result.filter(k => k.intent === intentFilter)
-    if (sourceFilter !== "all") result = result.filter(k => k.source === sourceFilter)
-    if (serpFilter !== "all") result = result.filter(k => k.serpFeatures.includes(serpFilter as SerpFeature))
+    if (intentFilters.length > 0) result = result.filter(k => k.intent && intentFilters.includes(k.intent))
+    if (sourceFilters.length > 0) result = result.filter(k => sourceFilters.some(sf => k.source.toLowerCase().includes(sf.toLowerCase())))
+    if (serpFilters.length > 0) result = result.filter(k => k.serpFeatures.some(f => serpFilters.includes(f)))
     
     result.sort((a, b) => {
       // Special handling for priorityScore - calculate on the fly
@@ -445,7 +505,7 @@ export function TopicClusterContent() {
     })
     
     return result
-  }, [keywords, searchQuery, volumeMin, volumeMax, kdMin, kdMax, intentFilter, sourceFilter, serpFilter, sortField, sortDirection])
+  }, [keywords, searchQuery, volumeMin, volumeMax, kdMin, kdMax, intentFilters, sourceFilters, serpFilters, sortField, sortDirection])
   
   // Add manual keywords
   const handleAddManual = () => {
@@ -721,91 +781,114 @@ export function TopicClusterContent() {
   const uniqueSources = useMemo(() => [...new Set(keywords.map(k => k.source))], [keywords])
 
   return (
-    <div className="min-h-full p-0 transition-colors">
-      <div className="max-w-[1800px] mx-auto space-y-3 sm:space-y-4">
+    <div className="min-h-full transition-colors">
+      <div className="max-w-[1800px] mx-auto space-y-4 px-3 sm:px-4 md:px-6 py-4">
         
-        {/* HEADER */}
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4">
-            <div>
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 dark:text-white">Topic Cluster Builder</h1>
-              <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm mt-0.5 sm:mt-1">Import keywords from various sources and build optimized content clusters</p>
-            </div>
-            
-            {/* Action buttons - right aligned on desktop */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              {/* Credit Badge */}
-              <div className="flex items-center gap-1.5 sm:gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full">
-                <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 fill-amber-500" />
-                <span className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-400">{credits} <span className="hidden sm:inline">Refresh </span>Credits</span>
-                <button onClick={() => setShowCreditModal(true)} className="ml-0.5 sm:ml-1 p-0.5 hover:bg-amber-100 dark:hover:bg-amber-800 rounded-full transition-colors" title="Buy Credits">
-                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 dark:text-amber-400" />
-                </button>
-              </div>
-
-              {selectedCount > 0 && (
-                <button
-                  onClick={handleDeleteSelected}
-                  className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-red-500/10 text-red-500 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors text-xs sm:text-sm"
-                >
-                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Delete</span> ({selectedCount})
-                </button>
-              )}
-              
-              {/* MASTER BUTTON - Generate Clusters */}
-              {keywords.length >= 5 && (
-                <button
-                  onClick={handleGenerateClusters}
-                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-xs sm:text-sm font-semibold shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Generate Clusters</span>
-                  <span className="sm:hidden">Generate</span> ({keywords.length})
-                </button>
-              )}
-            </div>
+        {/* Credit Badge Row */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: Credit Badge */}
+          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-2 rounded-lg sm:rounded-full shrink-0">
+            <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+            <span className="text-sm font-medium text-amber-700 dark:text-amber-400">{credits} Credits</span>
+            <button onClick={() => setShowCreditModal(true)} className="ml-1 p-0.5 hover:bg-amber-100 dark:hover:bg-amber-800 rounded-full transition-colors" title="Buy Credits">
+              <Plus className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+            </button>
           </div>
         </div>
         
+        {/* Action Buttons Row */}
+        {(selectedCount > 0 || keywords.length >= 5) && (
+          <div className="flex items-center justify-between sm:justify-end gap-3">
+            {/* Delete button - left on mobile, next to Generate on desktop */}
+            {selectedCount > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-500 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors text-sm font-medium min-w-[120px]"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete ({selectedCount})</span>
+              </button>
+            )}
+            
+            {/* Generate Clusters button - right on mobile, next to Delete on desktop */}
+            {keywords.length >= 5 && (
+              <button
+                onClick={handleGenerateClusters}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-sm font-semibold shadow-lg shadow-orange-500/25"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Generate Clusters ({keywords.length})</span>
+              </button>
+            )}
+          </div>
+        )}
+        
         {/* IMPORT SOURCES */}
-        <div className="space-y-2">
-          <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider block">Import from:</span>
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <div className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800">
+          <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-3 block">Import from:</span>
+          
+          {/* Mobile/Tablet: Grid 2 columns */}
+          <div className="grid grid-cols-2 gap-2 md:hidden">
             {IMPORT_SOURCES.map(source => (
               <button
                 key={source.id}
                 onClick={() => handleImport(source.id)}
-                className={cn("flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border text-[10px] sm:text-xs font-medium transition-all", source.color)}
+                className={cn("flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border text-xs font-medium transition-all shadow-sm hover:shadow", source.color)}
               >
-                <source.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden xs:inline">{source.label}</span>
-                <span className="xs:hidden">{source.label.split(" ")[0]}</span>
+                <source.icon className="w-4 h-4" />
+                <span>{source.label.split(" ")[0]}</span>
               </button>
             ))}
             <button
               onClick={() => setShowManualInput(!showManualInput)}
               className={cn(
-                "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border text-[10px] sm:text-xs font-medium transition-all",
+                "flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border text-xs font-medium transition-all shadow-sm hover:shadow",
                 showManualInput 
                   ? "bg-orange-500 text-white border-orange-500"
-                  : "bg-transparent text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600"
+                  : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:border-orange-400 dark:hover:border-orange-600"
               )}
             >
-              <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden xs:inline">Add Manual</span>
-              <span className="xs:hidden">Manual</span>
+              <Plus className="w-4 h-4" />
+              <span>Manual</span>
             </button>
+          </div>
+          
+          {/* Desktop: Horizontal scroll */}
+          <div className="hidden md:block overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+            <div className="flex items-center gap-2.5 min-w-max">
+              {IMPORT_SOURCES.map(source => (
+                <button
+                  key={source.id}
+                  onClick={() => handleImport(source.id)}
+                  className={cn("flex items-center gap-2 px-3.5 py-2.5 rounded-lg border text-xs font-medium transition-all whitespace-nowrap shadow-sm hover:shadow", source.color)}
+                >
+                  <source.icon className="w-4 h-4" />
+                  <span>{source.label.split(" ")[0]}</span>
+                </button>
+              ))}
+              <button
+                onClick={() => setShowManualInput(!showManualInput)}
+                className={cn(
+                  "flex items-center gap-2 px-3.5 py-2.5 rounded-lg border text-xs font-medium transition-all whitespace-nowrap shadow-sm hover:shadow",
+                  showManualInput 
+                    ? "bg-orange-500 text-white border-orange-500"
+                    : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:border-orange-400 dark:hover:border-orange-600"
+                )}
+              >
+                <Plus className="w-4 h-4" />
+                <span>Manual</span>
+              </button>
+            </div>
           </div>
         </div>
         
         {/* MANUAL INPUT */}
         {showManualInput && (
-          <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4">
-            <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
+          <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 bg-white dark:bg-zinc-900/50">
+            <div className="flex items-start justify-between mb-3 gap-2">
               <div className="min-w-0">
-                <h3 className="text-xs sm:text-sm font-medium text-zinc-900 dark:text-white">Add Keywords Manually</h3>
-                <p className="text-[10px] sm:text-xs text-zinc-500 mt-0.5 line-clamp-2 sm:line-clamp-none">One keyword per line. For bulk: keyword[TAB]volume[TAB]kd[TAB]cpc</p>
+                <h3 className="text-sm font-medium text-zinc-900 dark:text-white">Add Keywords Manually</h3>
+                <p className="text-xs text-zinc-500 mt-1">One keyword per line. For bulk: keyword[TAB]volume[TAB]kd[TAB]cpc</p>
               </div>
               <button onClick={() => setShowManualInput(false)} className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white shrink-0">
                 <X className="w-4 h-4" />
@@ -815,15 +898,15 @@ export function TopicClusterContent() {
               value={manualText}
               onChange={e => setManualText(e.target.value)}
               placeholder="seo tools&#10;keyword research&#10;backlink checker"
-              className="w-full h-20 sm:h-24 bg-transparent border border-zinc-300 dark:border-zinc-700 rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-orange-500/50 resize-none"
+              className="w-full h-24 bg-transparent border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-orange-500/50 resize-none"
             />
-            <div className="flex justify-end mt-2 sm:mt-3">
+            <div className="flex justify-end mt-3">
               <button
                 onClick={handleAddManual}
                 disabled={!manualText.trim()}
-                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-xs sm:text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium disabled:opacity-50"
               >
-                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Plus className="w-4 h-4" />
                 Add Keywords
               </button>
             </div>
@@ -831,152 +914,442 @@ export function TopicClusterContent() {
         )}
         
         {/* TOOLBAR */}
-        <div className="flex flex-col gap-3 sm:gap-4">
-          {/* Search, Filters, Columns - Single Row on Desktop */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-            {/* Left side: Search + Stats */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search keywords..."
-                  className="w-full bg-transparent border border-zinc-300 dark:border-zinc-800 rounded-lg pl-8 sm:pl-9 pr-3 sm:pr-4 py-1.5 sm:py-2 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-orange-500/50"
-                />
-              </div>
-              
-              {/* Stats */}
-              <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-zinc-500">
-                <span><strong className="text-zinc-900 dark:text-white">{keywords.length}</strong> total</span>
-                <span><strong className="text-zinc-900 dark:text-white">{filteredKeywords.length}</strong> shown</span>
-                <span><strong className="text-orange-500">{selectedCount}</strong> selected</span>
-              </div>
+        <div className="bg-white dark:bg-zinc-900/50 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 space-y-4">
+          {/* Search Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search keywords..."
+                className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-orange-500/50 focus:bg-white dark:focus:bg-zinc-800"
+              />
             </div>
             
-            {/* Right side: Action buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Filter toggle */}
+            {/* Filter toggle & Refresh */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={cn(
-                  "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg border text-xs sm:text-sm transition-all",
+                  "flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all",
                   showFilters
                     ? "bg-orange-500/10 text-orange-500 border-orange-500/30"
-                    : "bg-transparent text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-800 hover:border-zinc-400"
+                    : "bg-zinc-50 dark:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-orange-400"
                 )}
               >
-                <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Filters</span>
-                {showFilters ? <ChevronUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> : <ChevronDown className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                <Filter className="w-4 h-4" />
+                <span>Filters</span>
+                {showFilters ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
               </button>
 
               {/* Refresh Selected */}
               {selectedCount > 0 && (
                 <button
                   onClick={() => handleBulkRefresh(selectedCount)}
-                  className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg border bg-orange-50 dark:bg-orange-900/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/20 transition-all text-xs sm:text-sm font-medium"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg border bg-orange-50 dark:bg-orange-900/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/20 transition-all text-sm font-medium"
                   title={`Update metrics for ${selectedCount} selected keywords`}
                 >
-                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Refresh Selected</span> ({selectedCount})
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Refresh ({selectedCount})</span>
                 </button>
               )}
-              
-
             </div>
           </div>
+          
+          {/* Stats Row */}
+          <div className="flex items-center gap-4 text-sm text-zinc-500 px-1">
+            <span><strong className="text-zinc-900 dark:text-white">{keywords.length}</strong> total</span>
+            <span>•</span>
+            <span><strong className="text-zinc-900 dark:text-white">{filteredKeywords.length}</strong> shown</span>
+            <span>•</span>
+            <span><strong className="text-orange-500">{selectedCount}</strong> selected</span>
+          </div>
+          
+          {/* FILTERS - Inside toolbar card */}
+          {showFilters && (
+            <div className="pt-3 border-t border-zinc-200 dark:border-zinc-700">
+              <div className="overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+                <div className="flex items-center gap-2 min-w-max">
+                  {/* Volume Filter */}
+                  <Popover open={volumeOpen} onOpenChange={(open) => { setVolumeOpen(open); if (open) syncTempVolume(); }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "h-9 gap-1.5 bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 text-sm px-3",
+                          (volumeMin || volumeMax) && "border-orange-500/50 bg-orange-500/5"
+                        )}
+                      >
+                        <BarChart3 className="h-4 w-4 text-orange-400" />
+                        Vol
+                        {(volumeMin || volumeMax) && (
+                          <span className="ml-1 h-5 px-1.5 bg-orange-500/20 text-orange-500 rounded text-xs flex items-center">1</span>
+                        )}
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-3" align="start">
+                      <div className="space-y-3">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Presets</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            { label: "0-100", min: "0", max: "100" },
+                            { label: "100-1K", min: "100", max: "1000" },
+                            { label: "1K-10K", min: "1000", max: "10000" },
+                            { label: "10K+", min: "10000", max: "" },
+                          ].map(preset => (
+                            <button
+                              key={preset.label}
+                              onClick={() => { setTempVolumeMin(preset.min); setTempVolumeMax(preset.max); }}
+                              className={cn(
+                                "px-2.5 py-1 rounded text-xs font-medium transition-colors",
+                                tempVolumeMin === preset.min && tempVolumeMax === preset.max
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                              )}
+                            >
+                              {preset.label}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-2">Custom Range</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={tempVolumeMin}
+                            onChange={e => setTempVolumeMin(e.target.value)}
+                            placeholder="From"
+                            className="w-full h-8 bg-background border border-input rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          />
+                          <span className="text-muted-foreground">—</span>
+                          <input
+                            type="number"
+                            value={tempVolumeMax}
+                            onChange={e => setTempVolumeMax(e.target.value)}
+                      placeholder="To"
+                      className="w-full h-8 bg-background border border-input rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                  </div>
+                  <Button onClick={applyVolumeFilter} className="w-full h-8 bg-orange-500 hover:bg-orange-600 text-white">
+                    Apply
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+                  {/* KD Filter */}
+                  <Popover open={kdOpen} onOpenChange={(open) => { setKdOpen(open); if (open) syncTempKd(); }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "h-9 gap-1.5 bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 text-sm px-3",
+                          (kdMin || kdMax) && "border-orange-500/50 bg-orange-500/5"
+                        )}
+                      >
+                        <Target className="h-4 w-4 text-orange-400" />
+                        KD
+                        {(kdMin || kdMax) && (
+                          <span className="ml-1 h-5 px-1.5 bg-orange-500/20 text-orange-500 rounded text-xs flex items-center">1</span>
+                        )}
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+              <PopoverContent className="w-[280px] p-3" align="start">
+                <div className="space-y-3">
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Difficulty Levels</div>
+                  <div className="space-y-1">
+                    {[
+                      { label: "Easy", range: "0-30", min: "0", max: "30", color: "bg-emerald-500" },
+                      { label: "Medium", range: "31-60", min: "31", max: "60", color: "bg-amber-500" },
+                      { label: "Hard", range: "61-100", min: "61", max: "100", color: "bg-red-500" },
+                    ].map(level => (
+                      <button
+                        key={level.label}
+                        onClick={() => { setTempKdMin(level.min); setTempKdMax(level.max); }}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors hover:bg-muted/50",
+                          tempKdMin === level.min && tempKdMax === level.max && "bg-muted/50"
+                        )}
+                      >
+                        <span className={cn("w-2.5 h-2.5 rounded-full", level.color)} />
+                        <span className="flex-1 text-left">{level.label}</span>
+                        <span className="text-xs text-muted-foreground">{level.range}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-2">Custom Range</div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={tempKdMin}
+                      onChange={e => setTempKdMin(e.target.value)}
+                      placeholder="Min"
+                      className="w-full h-8 bg-background border border-input rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                    <span className="text-muted-foreground">—</span>
+                    <input
+                      type="number"
+                      value={tempKdMax}
+                      onChange={e => setTempKdMax(e.target.value)}
+                      placeholder="Max"
+                      className="w-full h-8 bg-background border border-input rounded-md px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                  </div>
+                  <Button onClick={applyKdFilter} className="w-full h-8 bg-orange-500 hover:bg-orange-600 text-white">
+                    Apply
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+                  {/* Intent Filter - Multi-select with checkboxes */}
+                  <Popover open={intentOpen} onOpenChange={(open) => { setIntentOpen(open); if (open) syncTempIntent(); }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "h-9 gap-1.5 bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 text-sm px-3",
+                          intentFilters.length > 0 && "border-orange-500/50 bg-orange-500/5"
+                        )}
+                      >
+                        <MousePointer className="h-4 w-4 text-orange-400" />
+                        Intent
+                        {intentFilters.length > 0 && (
+                          <span className="ml-1 h-5 px-1.5 bg-orange-500/20 text-orange-500 rounded text-xs flex items-center">{intentFilters.length}</span>
+                        )}
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+              <PopoverContent className="w-[240px] p-3" align="start">
+                <div className="space-y-2">
+                  {[
+                    { value: "informational", label: "Informational", short: "INFO", color: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30" },
+                    { value: "commercial", label: "Commercial", short: "COMM", color: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30" },
+                    { value: "transactional", label: "Transactional", short: "TRAN", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
+                    { value: "navigational", label: "Navigational", short: "NAVI", color: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30" },
+                  ].map(intent => (
+                    <button
+                      key={intent.value}
+                      onClick={() => toggleTempIntent(intent.value)}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors hover:bg-muted/50"
+                    >
+                      <div className={cn(
+                        "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+                        tempIntentFilters.includes(intent.value) 
+                          ? "bg-orange-500 border-orange-500" 
+                          : "border-input"
+                      )}>
+                        {tempIntentFilters.includes(intent.value) && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <span className={cn("px-2 py-0.5 rounded text-[10px] font-medium border", intent.color)}>
+                        {intent.short}
+                      </span>
+                      <span className="flex-1 text-left">{intent.label}</span>
+                    </button>
+                  ))}
+                  <Button onClick={applyIntentFilter} className="w-full h-8 mt-2 bg-orange-500 hover:bg-orange-600 text-white">
+                    Apply
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+                  {/* Source Filter - Multi-select with checkboxes and predefined sources */}
+                  <Popover open={sourceOpen} onOpenChange={(open) => { setSourceOpen(open); if (open) syncTempSource(); }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "h-9 gap-1.5 bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 text-sm px-3",
+                          sourceFilters.length > 0 && "border-orange-500/50 bg-orange-500/5"
+                        )}
+                      >
+                        <Globe className="h-4 w-4 text-orange-400" />
+                        Source
+                        {sourceFilters.length > 0 && (
+                          <span className="ml-1 h-5 px-1.5 bg-orange-500/20 text-orange-500 rounded text-xs flex items-center">{sourceFilters.length}</span>
+                        )}
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+              <PopoverContent className="w-[260px] p-3" align="start">
+                <div className="space-y-2">
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Keyword Sources</div>
+                  {KEYWORD_SOURCES.map(source => (
+                    <button
+                      key={source.id}
+                      onClick={() => toggleTempSource(source.id)}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors hover:bg-muted/50"
+                    >
+                      <div className={cn(
+                        "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+                        tempSourceFilters.includes(source.id) 
+                          ? "bg-orange-500 border-orange-500" 
+                          : "border-input"
+                      )}>
+                        {tempSourceFilters.includes(source.id) && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <source.Icon className={cn("h-4 w-4", source.color)} />
+                      <span className="flex-1 text-left">{source.label}</span>
+                    </button>
+                  ))}
+                  <Button onClick={applySourceFilter} className="w-full h-8 mt-2 bg-orange-500 hover:bg-orange-600 text-white">
+                    Apply
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+                  {/* SERP Filter - Multi-select with checkboxes */}
+                  <Popover open={serpOpen} onOpenChange={(open) => { setSerpOpen(open); if (open) syncTempSerp(); }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "h-9 gap-1.5 bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 text-sm px-3",
+                          serpFilters.length > 0 && "border-orange-500/50 bg-orange-500/5"
+                        )}
+                      >
+                        <FileText className="h-4 w-4 text-orange-400" />
+                        SERP
+                        {serpFilters.length > 0 && (
+                          <span className="ml-1 h-5 px-1.5 bg-orange-500/20 text-orange-500 rounded text-xs flex items-center">{serpFilters.length}</span>
+                        )}
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+              <PopoverContent className="w-[260px] p-3" align="start">
+                <div className="space-y-2">
+                  {[
+                    { value: "featured_snippet", label: "Featured Snippet", Icon: FileText, color: "text-amber-500" },
+                    { value: "paa", label: "People Also Ask", Icon: HelpCircle, color: "text-purple-500" },
+                    { value: "video", label: "Video Results", Icon: Video, color: "text-red-500" },
+                    { value: "images", label: "Image Pack", Icon: ImageIcon, color: "text-emerald-500" },
+                    { value: "shopping", label: "Shopping", Icon: ShoppingCart, color: "text-blue-500" },
+                  ].map(serp => (
+                    <button
+                      key={serp.value}
+                      onClick={() => toggleTempSerp(serp.value)}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors hover:bg-muted/50"
+                    >
+                      <div className={cn(
+                        "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+                        tempSerpFilters.includes(serp.value) 
+                          ? "bg-orange-500 border-orange-500" 
+                          : "border-input"
+                      )}>
+                        {tempSerpFilters.includes(serp.value) && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                      <serp.Icon className={cn("h-4 w-4", serp.color)} />
+                      <span className="flex-1 text-left">{serp.label}</span>
+                    </button>
+                  ))}
+                  <Button onClick={applySerpFilter} className="w-full h-8 mt-2 bg-orange-500 hover:bg-orange-600 text-white">
+                    Apply
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+                  {/* Sort By - with Apply */}
+                  <Popover open={sortOpen} onOpenChange={(open) => { setSortOpen(open); if (open) syncTempSort(); }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 gap-1.5 bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 text-sm px-3"
+                      >
+                        <ArrowUpDown className="h-4 w-4 text-orange-400" />
+                        Sort
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+              <PopoverContent className="w-[220px] p-3" align="start">
+                <div className="space-y-2">
+                  {[
+                    { value: "volume", label: "Volume", Icon: BarChart3, color: "text-blue-500" },
+                    { value: "kd", label: "Keyword Difficulty", Icon: Target, color: "text-red-500" },
+                    { value: "cpc", label: "CPC", Icon: DollarSign, color: "text-emerald-500" },
+                    { value: "priorityScore", label: "Priority Score", Icon: Flame, color: "text-orange-500" },
+                    { value: "source", label: "Source", Icon: Globe, color: "text-purple-500" },
+                    { value: "lastUpdated", label: "Last Updated", Icon: Clock, color: "text-amber-500" },
+                  ].map(sort => (
+                    <button
+                      key={sort.value}
+                      onClick={() => { setTempSortField(sort.value as SortField); }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors hover:bg-muted/50",
+                        tempSortField === sort.value && "bg-muted/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "h-4 w-4 rounded-full border flex items-center justify-center transition-colors",
+                        tempSortField === sort.value 
+                          ? "bg-orange-500 border-orange-500" 
+                          : "border-input"
+                      )}>
+                        {tempSortField === sort.value && <div className="h-2 w-2 rounded-full bg-white" />}
+                      </div>
+                      <sort.Icon className={cn("h-3.5 w-3.5", sort.color)} />
+                      <span className="flex-1 text-left">{sort.label}</span>
+                    </button>
+                  ))}
+                  <div className="flex gap-2 pt-2 border-t border-border mt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setTempSortDirection(tempSortDirection === "asc" ? "desc" : "asc")}
+                      className="flex-1 h-8"
+                    >
+                      {tempSortDirection === "asc" ? <ArrowUp className="h-3.5 w-3.5 mr-1" /> : <ArrowDown className="h-3.5 w-3.5 mr-1" />}
+                      {tempSortDirection === "asc" ? "Asc" : "Desc"}
+                    </Button>
+                  </div>
+                  <Button onClick={applySortFilter} className="w-full h-8 bg-orange-500 hover:bg-orange-600 text-white">
+                    Apply
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+                  {/* Clear Filters */}
+                  {(volumeMin || volumeMax || kdMin || kdMax || intentFilters.length > 0 || sourceFilters.length > 0 || serpFilters.length > 0) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setVolumeMin("")
+                        setVolumeMax("")
+                        setKdMin("")
+                        setKdMax("")
+                        setIntentFilters([])
+                        setSourceFilters([])
+                        setSerpFilters([])
+                        setSortFieldState("volume")
+                        setSortDirectionState("desc")
+                      }}
+                      className="h-9 gap-1.5 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
-        {/* FILTERS */}
-        {showFilters && (
-          <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
-            <div>
-              <label className="text-[10px] sm:text-xs text-zinc-500 mb-1 sm:mb-1.5 block">Volume</label>
-              <div className="flex items-center gap-0.5 sm:gap-1">
-                <input type="number" value={volumeMin} onChange={e => setVolumeMin(e.target.value)} placeholder="Min"
-                  className="w-full bg-transparent border border-zinc-300 dark:border-zinc-700 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500/50" />
-                <span className="text-zinc-400 text-[10px]">-</span>
-                <input type="number" value={volumeMax} onChange={e => setVolumeMax(e.target.value)} placeholder="Max"
-                  className="w-full bg-transparent border border-zinc-300 dark:border-zinc-700 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500/50" />
-              </div>
-            </div>
-            
-            <div>
-              <label className="text-[10px] sm:text-xs text-zinc-500 mb-1 sm:mb-1.5 block">KD</label>
-              <div className="flex items-center gap-0.5 sm:gap-1">
-                <input type="number" value={kdMin} onChange={e => setKdMin(e.target.value)} placeholder="Min"
-                  className="w-full bg-transparent border border-zinc-300 dark:border-zinc-700 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500/50" />
-                <span className="text-zinc-400 text-[10px]">-</span>
-                <input type="number" value={kdMax} onChange={e => setKdMax(e.target.value)} placeholder="Max"
-                  className="w-full bg-transparent border border-zinc-300 dark:border-zinc-700 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500/50" />
-              </div>
-            </div>
-            
-            <div>
-              <label className="text-[10px] sm:text-xs text-zinc-500 mb-1 sm:mb-1.5 block">Intent</label>
-              <select value={intentFilter} onChange={e => setIntentFilter(e.target.value)}
-                className="w-full bg-transparent border border-zinc-300 dark:border-zinc-700 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-zinc-900 dark:text-white focus:outline-none">
-                <option value="all">All</option>
-                <option value="informational">Info</option>
-                <option value="transactional">Trans</option>
-                <option value="commercial">Comm</option>
-                <option value="navigational">Nav</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="text-[10px] sm:text-xs text-zinc-500 mb-1 sm:mb-1.5 block">Source</label>
-              <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}
-                className="w-full bg-transparent border border-zinc-300 dark:border-zinc-700 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-zinc-900 dark:text-white focus:outline-none">
-                <option value="all">All</option>
-                {uniqueSources.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            
-            <div>
-              <label className="text-[10px] sm:text-xs text-zinc-500 mb-1 sm:mb-1.5 block">SERP</label>
-              <select value={serpFilter} onChange={e => setSerpFilter(e.target.value)}
-                className="w-full bg-transparent border border-zinc-300 dark:border-zinc-700 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-zinc-900 dark:text-white focus:outline-none">
-                <option value="all">All</option>
-                <option value="featured_snippet">Featured</option>
-                <option value="paa">PAA</option>
-                <option value="video">Video</option>
-                <option value="images">Images</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="text-[10px] sm:text-xs text-zinc-500 mb-1 sm:mb-1.5 flex items-center gap-1">
-                Sort By
-                <span className="text-orange-500" title="Quick sort option">⚡</span>
-              </label>
-              <select 
-                value={sortField} 
-                onChange={e => { setSortField(e.target.value as SortField); setSortDirection("desc") }}
-                className="w-full bg-transparent border border-zinc-300 dark:border-zinc-700 rounded px-1.5 sm:px-2 py-1 sm:py-1.5 text-[10px] sm:text-xs text-zinc-900 dark:text-white focus:outline-none"
-              >
-                <option value="volume">Volume</option>
-                <option value="kd">KD</option>
-                <option value="cpc">CPC</option>
-                <option value="priorityScore">🔥 Priority</option>
-                <option value="source">Source</option>
-                <option value="lastUpdated">Updated</option>
-              </select>
-            </div>
-            
-            <div className="flex items-end col-span-2 md:col-span-1">
-              <button onClick={() => { setVolumeMin(""); setVolumeMax(""); setKdMin(""); setKdMax(""); setIntentFilter("all"); setSourceFilter("all"); setSerpFilter("all"); setSortField("volume"); setSortDirection("desc") }}
-                className="text-[10px] sm:text-xs text-zinc-500 hover:text-orange-500 transition-colors">
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        )}
-        
         {/* TABLE - Desktop */}
-        <div className="hidden md:block border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+        <div className="hidden md:block border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-white dark:bg-zinc-900/50">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -1155,7 +1528,7 @@ export function TopicClusterContent() {
         </div>
         
         {/* MOBILE CARDS VIEW */}
-        <div className="md:hidden space-y-2">
+        <div className="md:hidden space-y-3">
           {filteredKeywords.length === 0 ? (
             <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 text-center">
               <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800/50 flex items-center justify-center mx-auto mb-3">
@@ -1169,75 +1542,132 @@ export function TopicClusterContent() {
               <div
                 key={kw.id}
                 className={cn(
-                  "border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 transition-colors",
-                  kw.isSelected ? "bg-orange-50 dark:bg-orange-500/5 border-orange-200 dark:border-orange-800" : ""
+                  "border rounded-xl overflow-hidden transition-all",
+                  kw.isSelected 
+                    ? "border-orange-400 dark:border-orange-600 bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-zinc-900 shadow-lg shadow-orange-500/10" 
+                    : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                 )}
               >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                {/* Card Header */}
+                <div className="p-3 pb-2">
+                  <div className="flex items-start gap-3">
+                    {/* Checkbox */}
                     <button
                       onClick={() => handleSelectOne(kw.id)}
-                      className="mt-0.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white shrink-0"
+                      className="mt-1 shrink-0"
                     >
-                      {kw.isSelected ? <CheckSquare className="w-4 h-4 text-orange-500" /> : <Square className="w-4 h-4" />}
+                      {kw.isSelected ? (
+                        <div className="w-5 h-5 rounded bg-orange-500 flex items-center justify-center">
+                          <Check className="w-3.5 h-3.5 text-white" />
+                        </div>
+                      ) : (
+                        <div className="w-5 h-5 rounded border-2 border-zinc-300 dark:border-zinc-600" />
+                      )}
                     </button>
-                    <div className="min-w-0">
-                      <h4 className="text-sm font-medium text-zinc-900 dark:text-white truncate">{kw.keyword}</h4>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <InlinePositionBadge position={kw.position ?? null} change={kw.positionChange ?? null} />
+                    
+                    {/* Keyword Info */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-base font-semibold text-zinc-900 dark:text-white leading-tight">{kw.keyword}</h4>
+                      <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         <StatusBadge keyword={kw} />
                         {kw.intent && (
-                          <span className={cn("inline-flex px-1.5 py-0.5 rounded text-[9px] uppercase font-medium border", INTENT_CONFIG[kw.intent].color)}>
+                          <span className={cn("inline-flex px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border", INTENT_CONFIG[kw.intent].color)}>
                             {INTENT_CONFIG[kw.intent].short}
+                          </span>
+                        )}
+                        {kw.hasFeaturedSnippet && (
+                          <span title="Featured Snippet Opportunity" className="text-yellow-500">
+                            <Zap className="w-3.5 h-3.5" />
                           </span>
                         )}
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {kw.isRefreshing ? (
-                      <RefreshCw className="w-3.5 h-3.5 text-orange-500 animate-spin" />
-                    ) : (
-                      <button
-                        onClick={() => handleRefresh(kw.id)}
-                        className="p-1 text-zinc-400 hover:text-orange-500 transition-colors"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                    
+                    {/* Refresh Button - Same behavior as desktop */}
+                    <div className="shrink-0 flex flex-col items-center">
+                      {kw.isRefreshing ? (
+                        <div className="w-8 h-8 flex items-center justify-center">
+                          <RefreshCw className="w-4 h-4 text-orange-500 animate-spin" />
+                        </div>
+                      ) : (
+                        <>
+                          {kw.lastUpdated && new Date().getTime() - kw.lastUpdated.getTime() < 3000 ? (
+                            <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 animate-in fade-in zoom-in duration-300 px-2 py-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span className="text-[10px] font-medium">Just now</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleRefresh(kw.id)}
+                              className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </button>
+                          )}
+                          {kw.lastUpdated && new Date().getTime() - kw.lastUpdated.getTime() >= 3000 && (
+                            <span className={cn(
+                              "text-[9px] mt-0.5",
+                              (new Date().getTime() - kw.lastUpdated.getTime()) > 30 * 24 * 60 * 60 * 1000 
+                                ? "text-red-500 font-medium" 
+                                : "text-zinc-400"
+                            )}>
+                              {getRelativeTime(kw.lastUpdated)}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-1.5">
-                    <div className="text-[10px] text-zinc-500 uppercase">Vol</div>
-                    <div className="text-xs font-semibold text-zinc-900 dark:text-white">
+                {/* Metrics Grid */}
+                <div className="grid grid-cols-3 gap-px bg-zinc-200 dark:bg-zinc-700">
+                  {/* Volume */}
+                  <div className="bg-zinc-50 dark:bg-zinc-800/80 px-3 py-2.5 text-center">
+                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-medium">VOL</div>
+                    <div className="text-sm font-bold text-zinc-900 dark:text-white mt-0.5">
                       {kw.volume !== null ? kw.volume.toLocaleString() : "—"}
                     </div>
                   </div>
-                  <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-1.5">
-                    <div className="text-[10px] text-zinc-500 uppercase">KD</div>
+                  
+                  {/* KD */}
+                  <div className="bg-zinc-50 dark:bg-zinc-800/80 px-3 py-2.5 text-center">
+                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-medium">KD</div>
                     <div className={cn(
-                      "text-xs font-semibold",
+                      "text-sm font-bold mt-0.5",
                       kw.kd !== null
-                        ? kw.kd <= 30 ? "text-emerald-600 dark:text-emerald-400"
-                          : kw.kd <= 60 ? "text-amber-600 dark:text-amber-400"
-                          : "text-red-600 dark:text-red-400"
+                        ? kw.kd <= 30 ? "text-emerald-500"
+                          : kw.kd <= 60 ? "text-amber-500"
+                          : "text-red-500"
                         : "text-zinc-400"
                     )}>
                       {kw.kd !== null ? `${kw.kd}%` : "—"}
                     </div>
                   </div>
-                  <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-1.5">
-                    <div className="text-[10px] text-zinc-500 uppercase">CPC</div>
-                    <div className="text-xs font-semibold text-zinc-900 dark:text-white">
+                  
+                  {/* CPC */}
+                  <div className="bg-zinc-50 dark:bg-zinc-800/80 px-3 py-2.5 text-center">
+                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-medium">CPC</div>
+                    <div className="text-sm font-bold text-zinc-900 dark:text-white mt-0.5">
                       {kw.cpc !== null ? `$${kw.cpc.toFixed(2)}` : "—"}
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                  <SourceBadge source={kw.source} sourceTag={kw.sourceTag} />
+                {/* Card Footer */}
+                <div className="px-3 py-2.5 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/30">
+                  {/* Source with "from:" prefix */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-zinc-400">from:</span>
+                    <SourceBadge source={kw.source} sourceTag={kw.sourceTag} />
+                  </div>
+                  
+                  {/* SERP Features - Center */}
+                  {kw.serpFeatures && kw.serpFeatures.length > 0 && (
+                    <SerpFeatureIcons features={kw.serpFeatures} />
+                  )}
+                  
+                  {/* Trend - Right */}
                   <TrendBadge trend={kw.trend} percent={kw.trendPercent} />
                 </div>
               </div>

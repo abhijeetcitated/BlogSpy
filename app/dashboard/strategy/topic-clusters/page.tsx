@@ -211,30 +211,38 @@ export default function TopicClustersPage() {
   // ============================================
   if (selectedProjectId && selectedProject) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full -m-3 sm:-m-4 md:-m-6">
         {/* Header with Back Button */}
-        <div className="border-b bg-background/95 backdrop-blur px-6 py-4">
-          <div className="flex items-center gap-4">
+        <div className="border-b bg-background/95 backdrop-blur px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+          {/* Mobile: Stack vertically, Desktop: Row */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            {/* Back Button - Always on left */}
             <Button 
               variant="ghost" 
               size="sm"
               onClick={() => setSelectedProjectId(null)}
-              className="gap-2"
+              className="gap-2 w-fit"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Projects
             </Button>
-            <div className="h-6 w-px bg-border" />
-            <div>
-              <h1 className="text-lg font-semibold flex items-center gap-2">
-                <Layers className="h-5 w-5 text-primary" />
+            
+            {/* Divider - Hidden on mobile */}
+            <div className="hidden sm:block h-6 w-px bg-border" />
+            
+            {/* Title & Description */}
+            <div className="flex-1">
+              <h1 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                <Layers className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 {selectedProject.name}
               </h1>
               {selectedProject.description && (
-                <p className="text-sm text-muted-foreground">{selectedProject.description}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{selectedProject.description}</p>
               )}
             </div>
-            <Badge variant={selectedProject.status === "clustered" ? "default" : "secondary"} className="ml-auto">
+            
+            {/* Badge - Right on desktop, below title on mobile */}
+            <Badge variant={selectedProject.status === "clustered" ? "default" : "secondary"} className="w-fit">
               {selectedProject.status === "clustered" ? "Clustered" : "Draft"}
             </Badge>
           </div>
@@ -557,6 +565,8 @@ export default function TopicClustersPage() {
     </ErrorBoundary>
   )
 }
+
+
 
 
 

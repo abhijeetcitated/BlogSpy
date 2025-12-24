@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import {
   Loader2,
@@ -67,6 +67,7 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip"
+import { escapeCsvValue, getPublishTimestamp } from "./utils/common.utils"
 
 // ============================================
 // Types
@@ -222,7 +223,7 @@ function generateMockTikTokResults(keyword: string): TikTokResult[] {
     
     return {
       id: `tt-${i}`,
-      description: `${keyword} tips you NEED to know 🔥 #${keyword.replace(/\s+/g, "")} #viral #tips`,
+      description: `${keyword} tips you need to know #${keyword.replace(/\s+/g, "")} #viral #tips`,
       creator: creator.name,
       creatorUrl: `https://tiktok.com/@${creator.name}`,
       followers: creator.followers,
@@ -406,10 +407,20 @@ const ITEMS_PER_PAGE = 10
 // ============================================
 
 export function VideoHijackContent() {
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // Search state
   const [searchMode, setSearchMode] = useState<SearchMode>("keyword")
   const [searchInput, setSearchInput] = useState("")
   const [searchedQuery, setSearchedQuery] = useState("")
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Platform state
   const [platform, setPlatform] = useState<Platform>("youtube")
@@ -434,7 +445,10 @@ export function VideoHijackContent() {
       case "hijackScore": return sorted.sort((a, b) => b.hijackScore - a.hijackScore)
       case "views": return sorted.sort((a, b) => b.views - a.views)
       case "engagement": return sorted.sort((a, b) => b.engagement - a.engagement)
-      case "recent": return sorted
+      case "recent":
+        return sorted.sort(
+          (a, b) => getPublishTimestamp(b.publishedAt) - getPublishTimestamp(a.publishedAt)
+        )
       default: return sorted
     }
   }, [youtubeResults, sortBy])
@@ -445,7 +459,10 @@ export function VideoHijackContent() {
       case "hijackScore": return sorted.sort((a, b) => b.hijackScore - a.hijackScore)
       case "views": return sorted.sort((a, b) => b.views - a.views)
       case "engagement": return sorted.sort((a, b) => b.engagement - a.engagement)
-      case "recent": return sorted
+      case "recent":
+        return sorted.sort(
+          (a, b) => getPublishTimestamp(b.publishedAt) - getPublishTimestamp(a.publishedAt)
+        )
       default: return sorted
     }
   }, [tiktokResults, sortBy])
@@ -474,11 +491,14 @@ export function VideoHijackContent() {
 
     setIsLoading(true)
     setHasSearched(false)
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
 
     // TODO: Replace with actual API calls
     // YouTube Data API v3: Search, Videos, Channels endpoints
     // TikTok API: Video search, hashtag search
-    setTimeout(() => {
+    searchTimeoutRef.current = setTimeout(() => {
       const query = searchInput.trim()
       setSearchedQuery(query)
       setYoutubeResults(generateMockYouTubeResults(query))
@@ -506,26 +526,26 @@ export function VideoHijackContent() {
       ? [
           ["Title", "Channel", "Views", "Likes", "Comments", "Engagement %", "Duration", "URL"].join(","),
           ...youtubeResults.map(v => [
-            `"${v.title}"`,
-            v.channel,
-            v.views,
-            v.likes,
-            v.comments,
-            v.engagement.toFixed(2),
-            v.duration,
-            v.videoUrl,
+            escapeCsvValue(v.title),
+            escapeCsvValue(v.channel),
+            escapeCsvValue(v.views),
+            escapeCsvValue(v.likes),
+            escapeCsvValue(v.comments),
+            escapeCsvValue(v.engagement.toFixed(2)),
+            escapeCsvValue(v.duration),
+            escapeCsvValue(v.videoUrl),
           ].join(",")),
         ].join("\n")
       : [
           ["Description", "Creator", "Views", "Likes", "Shares", "Engagement %", "URL"].join(","),
           ...tiktokResults.map(v => [
-            `"${v.description.slice(0, 50)}..."`,
-            v.creator,
-            v.views,
-            v.likes,
-            v.shares,
-            v.engagement.toFixed(2),
-            v.videoUrl,
+            escapeCsvValue(`${v.description.slice(0, 50)}...`),
+            escapeCsvValue(v.creator),
+            escapeCsvValue(v.views),
+            escapeCsvValue(v.likes),
+            escapeCsvValue(v.shares),
+            escapeCsvValue(v.engagement.toFixed(2)),
+            escapeCsvValue(v.videoUrl),
           ].join(",")),
         ].join("\n")
 
@@ -541,8 +561,14 @@ export function VideoHijackContent() {
   }, [platform, youtubeResults, tiktokResults, searchedQuery])
 
   const handleCopy = (text: string) => {
+    if (!navigator?.clipboard) {
+      toast.error("Clipboard not available")
+      return
+    }
+
     navigator.clipboard.writeText(text)
-    toast.success("Copied!")
+      .then(() => toast.success("Copied!"))
+      .catch(() => toast.error("Copy failed"))
   }
 
   // ============================================
@@ -697,10 +723,10 @@ export function VideoHijackContent() {
                   <span className="font-medium text-foreground">YouTube Data</span>
                 </div>
                 <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Video views, likes, comments</li>
-                  <li>• Channel subscribers</li>
-                  <li>• Video duration & publish date</li>
-                  <li>• Search volume indicators</li>
+                  <li>- Video views, likes, comments</li>
+                  <li>- Channel subscribers</li>
+                  <li>- Video duration & publish date</li>
+                  <li>- Search volume indicators</li>
                 </ul>
               </div>
               <div className="p-4 rounded-xl bg-background border border-border text-left">
@@ -709,10 +735,10 @@ export function VideoHijackContent() {
                   <span className="font-medium text-foreground">TikTok Data</span>
                 </div>
                 <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Video views, likes, shares</li>
-                  <li>• Creator followers</li>
-                  <li>• Trending hashtags</li>
-                  <li>• Engagement rates</li>
+                  <li>- Video views, likes, shares</li>
+                  <li>- Creator followers</li>
+                  <li>- Trending hashtags</li>
+                  <li>- Engagement rates</li>
                 </ul>
               </div>
             </div>
@@ -1064,12 +1090,12 @@ export function VideoHijackContent() {
                               <SubscribersIcon size={12} className="sm:w-3.5 sm:h-3.5" />
                               {video.channel} ({video.subscribers})
                             </span>
-                            <span className="hidden xs:inline">•</span>
+                            <span className="hidden xs:inline">|</span>
                             <span className="flex items-center gap-1">
                               <DurationIcon size={12} className="sm:w-3.5 sm:h-3.5" />
                               {video.duration}
                             </span>
-                            <span className="hidden xs:inline">•</span>
+                            <span className="hidden xs:inline">|</span>
                             <span>{video.publishedAt}</span>
                           </div>
                           
@@ -1160,7 +1186,7 @@ export function VideoHijackContent() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 rounded-md hover:bg-red-500/10 hover:text-red-500"
-                                onClick={() => window.open(video.videoUrl, "_blank")}
+                                onClick={() => window.open(video.videoUrl, "_blank", "noopener,noreferrer")}
                               >
                                 <ExternalLinkIcon size={14} />
                               </Button>
@@ -1248,12 +1274,12 @@ export function VideoHijackContent() {
                               <SubscribersIcon size={12} className="sm:w-3.5 sm:h-3.5" />
                               @{video.creator} ({video.followers})
                             </span>
-                            <span className="hidden xs:inline">•</span>
+                            <span className="hidden xs:inline">|</span>
                             <span className="flex items-center gap-1">
                               <DurationIcon size={12} className="sm:w-3.5 sm:h-3.5" />
                               {video.duration}
                             </span>
-                            <span className="hidden xs:inline">•</span>
+                            <span className="hidden xs:inline">|</span>
                             <span>{video.publishedAt}</span>
                           </div>
                           
@@ -1344,7 +1370,7 @@ export function VideoHijackContent() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 rounded-md hover:bg-cyan-500/10 hover:text-cyan-500"
-                                onClick={() => window.open(video.videoUrl, "_blank")}
+                                onClick={() => window.open(video.videoUrl, "_blank", "noopener,noreferrer")}
                               >
                                 <ExternalLinkIcon size={14} />
                               </Button>
@@ -1456,7 +1482,7 @@ export function VideoHijackContent() {
                       "First 24-48 hours engagement is crucial",
                     ].map((tip, i) => (
                       <div key={i} className="text-xs text-muted-foreground flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-                        <span className="text-amber-500 mt-0.5">💡</span>
+                        <span className="text-amber-500 mt-0.5">!</span>
                         {tip}
                       </div>
                     ))}

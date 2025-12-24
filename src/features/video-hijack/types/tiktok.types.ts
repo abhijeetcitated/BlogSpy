@@ -124,9 +124,14 @@ export interface TikTokRawVideo {
   }
   video: {
     duration: number
+    cover?: string
+    originCover?: string
+    playAddr?: {
+      urlList: string[]
+    }
   }
   createTime: number
-  music: {
+  music?: {
     id: string
     title: string
     authorName: string

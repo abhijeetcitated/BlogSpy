@@ -23,14 +23,22 @@ interface TikTokKeywordCardProps {
 
 export function TikTokKeywordCard({ keyword }: TikTokKeywordCardProps) {
   const handleCopy = () => {
+    if (!navigator?.clipboard) {
+      toast.error("Clipboard not available")
+      return
+    }
+
     navigator.clipboard.writeText(keyword.keyword)
-    toast.success("Copied!", {
-      description: `"${keyword.keyword}" copied to clipboard`,
-    })
+      .then(() => {
+        toast.success("Copied!", {
+          description: `"${keyword.keyword}" copied to clipboard`,
+        })
+      })
+      .catch(() => toast.error("Copy failed"))
   }
 
   const handleViewOnTikTok = () => {
-    window.open(`https://www.tiktok.com/search?q=${encodeURIComponent(keyword.keyword)}`, "_blank")
+    window.open(`https://www.tiktok.com/search?q=${encodeURIComponent(keyword.keyword)}`, "_blank", "noopener,noreferrer")
   }
 
   return (
@@ -147,16 +155,16 @@ export function TikTokKeywordCard({ keyword }: TikTokKeywordCardProps) {
               <div 
                 key={video.id} 
                 className="flex items-center gap-2 p-2 rounded-lg border border-border/50 bg-background/50 cursor-pointer hover:border-border"
-                onClick={() => window.open(`https://www.tiktok.com/@${video.creator}`, "_blank")}
+                onClick={() => window.open(`https://www.tiktok.com/@${video.creator}`, "_blank", "noopener,noreferrer")}
               >
                 <span className="text-xs text-muted-foreground w-4 font-medium">#{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-foreground truncate">{video.title}</p>
                   <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                     <span>@{video.creator}</span>
-                    <span>•</span>
+                    <span>|</span>
                     <span>{(video.views / 1000).toFixed(0)}K views</span>
-                    <span>•</span>
+                    <span>|</span>
                     <span>{(video.likes / 1000).toFixed(0)}K likes</span>
                   </div>
                 </div>

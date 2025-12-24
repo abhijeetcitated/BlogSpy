@@ -1,23 +1,26 @@
-// Keyword Overview Feature - Barrel Export
+// ============================================
+// KEYWORD OVERVIEW FEATURE - BARREL EXPORT
+// ============================================
+
+// Main Component
 export { KeywordOverviewContent } from "./keyword-overview-content"
 
-// Types
+// Skeleton & Error Components
+export { KeywordOverviewSkeleton, KeywordOverviewError } from "./components"
+
+// Types (Public API)
 export type { 
   DeviceView,
-  Country,
-  RadarAxis,
-  SeasonalityData,
+  KeywordMetrics,
   SERPResult,
-  GlobalVolumeData,
-  KeywordMetrics
+  GlobalVolumeData
 } from "./types"
 
-// Components
+// ============================================
+// INTERNAL COMPONENTS (Not recommended for external use)
+// Use KeywordOverviewContent instead
+// ============================================
 export {
-  WorldMap,
-  RadarChart,
-  SeasonalityChart,
-  TrendAreaChart,
   SERPTable,
   KeywordHeader,
   SearchTrendsCard,
@@ -32,26 +35,29 @@ export {
   DecayOpportunityCard
 } from "./components"
 
-// Constants
+// ============================================
+// INTERNAL: Chart Components (Used by above components)
+// ============================================
 export {
-  MAP_COUNTRIES,
-  RADAR_AXES,
-  SEASONALITY_DATA,
-  TREND_DATA,
-  GLOBAL_VOLUMES,
+  WorldMap,
+  RadarChart,
+  SeasonalityChart,
+  TrendAreaChart
+} from "./components"
+
+// ============================================
+// INTERNAL: Constants (For testing/customization)
+// ============================================
+export {
   CHART_DIMENSIONS,
   KD_THRESHOLDS,
   DA_THRESHOLDS
 } from "./constants"
 
-// Utils
+// ============================================
+// INTERNAL: Utils (For testing)
+// ============================================
 export {
-  calculateRadarPoints,
-  calculateAxisEndpoint,
-  calculateLabelPosition,
-  calculateTrendChartPaths,
-  getPeakMonth,
-  getBarHeight,
   getDAColorClass,
   getTypeBadgeClasses,
   getPixelRankMessage,
@@ -59,3 +65,4 @@ export {
   getDecayMessage,
   getContentAgeLabel
 } from "./utils/overview-utils"
+

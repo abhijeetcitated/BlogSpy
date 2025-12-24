@@ -30,10 +30,71 @@ export function formatViews(views: number): string {
 }
 
 /**
+ * Parse publish date string to timestamp for sorting.
+ * Supports ISO dates and relative strings (e.g., "2 months ago", "5d ago").
+ */
+export function getPublishTimestamp(publishedAt: string): number {
+  if (!publishedAt) return 0
+
+  const parsed = Date.parse(publishedAt)
+  if (!Number.isNaN(parsed)) return parsed
+
+  const normalized = publishedAt.trim().toLowerCase()
+  const longMatch = normalized.match(
+    /^(\d+)\s*(minute|hour|day|week|month|year)s?\s*ago$/
+  )
+  const shortMatch = normalized.match(/^(\d+)\s*(m|h|d|w|mo|y)\s*ago$/)
+
+  const unitsInMs: Record<string, number> = {
+    minute: 60 * 1000,
+    hour: 60 * 60 * 1000,
+    day: 24 * 60 * 60 * 1000,
+    week: 7 * 24 * 60 * 60 * 1000,
+    month: 30 * 24 * 60 * 60 * 1000,
+    year: 365 * 24 * 60 * 60 * 1000,
+  }
+
+  if (longMatch) {
+    const value = parseInt(longMatch[1], 10)
+    const unit = longMatch[2]
+    return Date.now() - value * unitsInMs[unit]
+  }
+
+  if (shortMatch) {
+    const value = parseInt(shortMatch[1], 10)
+    const unitMap: Record<string, keyof typeof unitsInMs> = {
+      m: "minute",
+      h: "hour",
+      d: "day",
+      w: "week",
+      mo: "month",
+      y: "year",
+    }
+    const unit = unitMap[shortMatch[2]]
+    return Date.now() - value * unitsInMs[unit]
+  }
+
+  return 0
+}
+
+/**
+ * Escape CSV values safely.
+ */
+export function escapeCsvValue(value: string | number | null | undefined): string {
+  const stringValue = String(value ?? "")
+  if (/[",\n]/.test(stringValue)) {
+    return `"${stringValue.replace(/"/g, "\"\"")}"`
+  }
+  return stringValue
+}
+
+/**
  * Format date to relative time (e.g., "2 days ago", "3 months ago")
  */
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString)
+  const timestamp = getPublishTimestamp(dateString)
+  if (!timestamp) return "Unknown"
+  const date = new Date(timestamp)
   const now = new Date()
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
@@ -49,7 +110,9 @@ export function formatDate(dateString: string): string {
  * Format date to short format (e.g., "Jan 15, 2024")
  */
 export function formatDateShort(dateString: string): string {
-  const date = new Date(dateString)
+  const timestamp = getPublishTimestamp(dateString)
+  if (!timestamp) return "Unknown"
+  const date = new Date(timestamp)
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",

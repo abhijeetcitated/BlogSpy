@@ -4,7 +4,7 @@
 
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import type { YouTubeVideoResult } from "../types/youtube.types"
 import type { SortOption, KeywordStats } from "../types/common.types"
@@ -12,7 +12,7 @@ import {
   generateMockYouTubeResults,
   generateKeywordStats,
 } from "../utils/mock-generators"
-import { ITEMS_PER_PAGE } from "../utils/common.utils"
+import { ITEMS_PER_PAGE, escapeCsvValue, getPublishTimestamp } from "../utils/common.utils"
 
 export interface UseYouTubeSearchResult {
   // State
@@ -42,6 +42,16 @@ export interface UseYouTubeSearchResult {
 }
 
 export function useYouTubeSearch(): UseYouTubeSearchResult {
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Search state
   const [searchInput, setSearchInput] = useState("")
   const [searchedQuery, setSearchedQuery] = useState("")
@@ -70,7 +80,7 @@ export function useYouTubeSearch(): UseYouTubeSearchResult {
         return sorted.sort((a, b) => b.engagement - a.engagement)
       case "recent":
         return sorted.sort(
-          (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+          (a, b) => getPublishTimestamp(b.publishedAt) - getPublishTimestamp(a.publishedAt)
         )
       default:
         return sorted
@@ -95,12 +105,15 @@ export function useYouTubeSearch(): UseYouTubeSearchResult {
     
     setIsLoading(true)
     setHasSearched(false)
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
     
     // TODO: Replace with actual YouTube API call
     // import { youtubeService } from "../services"
     // const videos = await youtubeService.searchVideos(query)
     
-    setTimeout(() => {
+    searchTimeoutRef.current = setTimeout(() => {
       const mockResults = generateMockYouTubeResults(query)
       const mockStats = generateKeywordStats(query, "youtube")
       
@@ -159,15 +172,15 @@ export function useYouTubeSearch(): UseYouTubeSearchResult {
     const csv = [
       ["Title", "Channel", "Views", "Likes", "Comments", "Engagement %", "Hijack Score", "Duration", "URL"].join(","),
       ...results.map(v => [
-        `"${v.title.replace(/"/g, '""')}"`,
-        v.channel,
-        v.views,
-        v.likes,
-        v.comments,
-        v.engagement.toFixed(2),
-        v.hijackScore,
-        v.duration,
-        v.videoUrl,
+        escapeCsvValue(v.title),
+        escapeCsvValue(v.channel),
+        escapeCsvValue(v.views),
+        escapeCsvValue(v.likes),
+        escapeCsvValue(v.comments),
+        escapeCsvValue(v.engagement.toFixed(2)),
+        escapeCsvValue(v.hijackScore),
+        escapeCsvValue(v.duration),
+        escapeCsvValue(v.videoUrl),
       ].join(",")),
     ].join("\n")
     
@@ -184,12 +197,21 @@ export function useYouTubeSearch(): UseYouTubeSearchResult {
   
   // Copy handler
   const handleCopy = useCallback((text: string) => {
+    if (!navigator?.clipboard) {
+      toast.error("Clipboard not available")
+      return
+    }
+
     navigator.clipboard.writeText(text)
-    toast.success("Copied!")
+      .then(() => toast.success("Copied!"))
+      .catch(() => toast.error("Copy failed"))
   }, [])
   
   // Reset handler
   const reset = useCallback(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
     setSearchInput("")
     setSearchedQuery("")
     setResults([])

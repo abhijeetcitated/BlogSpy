@@ -87,7 +87,7 @@ export function generateMockTikTokResults(keyword: string): TikTokResult[] {
 
     return {
       id: `tt-${i}`,
-      description: `${keyword} tips you NEED to know 🔥 #${keyword.replace(/\s+/g, "")} #viral #tips`,
+      description: `${keyword} tips you need to know #${keyword.replace(/\s+/g, "")} #viral #tips`,
       creator: creator.name,
       creatorUrl: `https://tiktok.com/@${creator.name}`,
       followers: creator.followers,

@@ -38,7 +38,7 @@ export function AIOverviewCard({
       )}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-400" />
+            <Sparkles className="h-5 w-5 text-purple-500 dark:text-purple-400" />
             <span className="text-sm font-medium">AI Overview</span>
           </div>
           <AIOpportunityBadge 
@@ -60,13 +60,13 @@ export function AIOverviewCard({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Weak Sources</span>
-            <span className={weakSources.length > 0 ? "text-amber-400" : "text-slate-400"}>
+            <span className={weakSources.length > 0 ? "text-amber-500 dark:text-amber-400" : "text-muted-foreground"}>
               {weakSources.length} found
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Missing Entities</span>
-            <span className={missingEntities.length > 0 ? "text-amber-400" : "text-emerald-400"}>
+            <span className={missingEntities.length > 0 ? "text-amber-500 dark:text-amber-400" : "text-emerald-500 dark:text-emerald-400"}>
               {missingEntities.length}
             </span>
           </div>
@@ -74,7 +74,7 @@ export function AIOverviewCard({
 
         {analysis.recommendations.length > 0 && (
           <div className="mt-3 pt-3 border-t border-border/30">
-            <p className="text-xs text-purple-300">
+            <p className="text-xs text-purple-600 dark:text-purple-300">
               💡 {analysis.recommendations[0].title}
             </p>
           </div>
@@ -86,7 +86,7 @@ export function AIOverviewCard({
   return (
     <div className={cn(
       "rounded-xl border overflow-hidden",
-      "bg-gradient-to-br from-slate-900/80 to-purple-900/20 border-purple-500/30",
+      "bg-card dark:bg-gradient-to-br dark:from-card/80 dark:to-purple-900/20 border-purple-500/30",
       className
     )}>
       {/* Header */}
@@ -94,7 +94,7 @@ export function AIOverviewCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-purple-500/20">
-              <Sparkles className="h-5 w-5 text-purple-400" />
+              <Sparkles className="h-5 w-5 text-purple-500 dark:text-purple-400" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-foreground">AI Overview Analysis</h3>
@@ -119,26 +119,26 @@ export function AIOverviewCard({
       <div className="p-4 space-y-6">
         {/* Stats Row */}
         <div className="grid grid-cols-4 gap-4">
-          <div className="text-center p-3 rounded-lg bg-slate-800/50">
+          <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-2xl font-bold text-foreground">{analysis.citationCount}</p>
             <p className="text-xs text-muted-foreground">Citations</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-slate-800/50">
-            <p className="text-2xl font-bold text-amber-400">{weakSources.length}</p>
+          <div className="text-center p-3 rounded-lg bg-muted/50">
+            <p className="text-2xl font-bold text-amber-500 dark:text-amber-400">{weakSources.length}</p>
             <p className="text-xs text-muted-foreground">Weak Sources</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-slate-800/50">
+          <div className="text-center p-3 rounded-lg bg-muted/50">
             <p className="text-2xl font-bold text-foreground">{analysis.entities.length}</p>
             <p className="text-xs text-muted-foreground">Entities</p>
           </div>
-          <div className="text-center p-3 rounded-lg bg-slate-800/50">
-            <p className="text-2xl font-bold text-purple-400">{analysis.yourContent.contentMatchScore}%</p>
+          <div className="text-center p-3 rounded-lg bg-muted/50">
+            <p className="text-2xl font-bold text-purple-500 dark:text-purple-400">{analysis.yourContent.contentMatchScore}%</p>
             <p className="text-xs text-muted-foreground">Match Score</p>
           </div>
         </div>
 
         {/* AI Answer Snippet */}
-        <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700">
+        <div className="p-3 rounded-lg bg-muted/30 border border-border">
           <p className="text-xs text-muted-foreground mb-1">AI Overview Answer:</p>
           <p className="text-sm text-foreground italic">"{analysis.answerSnippet}"</p>
           <p className="text-xs text-muted-foreground mt-1">
@@ -149,7 +149,7 @@ export function AIOverviewCard({
         {/* Entities */}
         <div>
           <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-            <Target className="h-4 w-4 text-purple-400" />
+            <Target className="h-4 w-4 text-purple-500 dark:text-purple-400" />
             Key Entities
           </h4>
           <EntityGrid entities={analysis.entities} />
@@ -159,7 +159,7 @@ export function AIOverviewCard({
         {analysis.recommendations.length > 0 && (
           <div>
             <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-amber-400" />
+              <Lightbulb className="h-4 w-4 text-amber-500 dark:text-amber-400" />
               Top Recommendation
             </h4>
             <RecommendationCard recommendation={analysis.recommendations[0]} />

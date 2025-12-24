@@ -63,11 +63,11 @@ export function RecommendationCard({
         <div className="flex items-start gap-3">
           <div className={cn(
             "p-2 rounded-lg",
-            recommendation.priority <= 2 ? "bg-amber-500/20" : "bg-slate-700"
+            recommendation.priority <= 2 ? "bg-amber-500/20" : "bg-muted"
           )}>
             <Icon className={cn(
               "h-4 w-4",
-              recommendation.priority <= 2 ? "text-amber-400" : "text-slate-400"
+              recommendation.priority <= 2 ? "text-amber-500 dark:text-amber-400" : "text-muted-foreground"
             )} />
           </div>
           
@@ -106,8 +106,8 @@ export function RecommendationCard({
             </div>
 
             {recommendation.example && (
-              <div className="mt-2 p-2 rounded bg-slate-800/50 border border-slate-700">
-                <p className="text-[11px] text-slate-400 font-mono">
+              <div className="mt-2 p-2 rounded bg-muted/50 border border-border">
+                <p className="text-[11px] text-muted-foreground font-mono">
                   {recommendation.example}
                 </p>
               </div>

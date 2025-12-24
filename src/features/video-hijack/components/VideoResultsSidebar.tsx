@@ -77,7 +77,7 @@ export function VideoResultsSidebar({
             "First 24-48h engagement is crucial",
           ].map((tip, i) => (
             <div key={i} className="text-[10px] sm:text-xs text-muted-foreground flex items-start gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg bg-muted/30">
-              <span className="text-amber-500 mt-0.5">💡</span>
+              <span className="text-amber-500 mt-0.5">!</span>
               <span className="line-clamp-2">{tip}</span>
             </div>
           ))}

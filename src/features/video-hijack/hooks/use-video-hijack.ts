@@ -7,7 +7,7 @@
 
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import type {
   SearchMode,
@@ -24,7 +24,7 @@ import {
   generateKeywordStats,
   generateVideoSuggestion,
 } from "../utils/mock-generators"
-import { ITEMS_PER_PAGE } from "../utils/common.utils"
+import { ITEMS_PER_PAGE, escapeCsvValue, getPublishTimestamp } from "../utils/common.utils"
 
 export interface UseVideoHijackResult {
   // Search state
@@ -63,6 +63,16 @@ export interface UseVideoHijackResult {
 }
 
 export function useVideoHijack(): UseVideoHijackResult {
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Search state
   const [searchMode, setSearchMode] = useState<SearchMode>("keyword")
   const [searchInput, setSearchInput] = useState("")
@@ -96,7 +106,10 @@ export function useVideoHijack(): UseVideoHijackResult {
       case "hijackScore": return sorted.sort((a, b) => b.hijackScore - a.hijackScore)
       case "views": return sorted.sort((a, b) => b.views - a.views)
       case "engagement": return sorted.sort((a, b) => b.engagement - a.engagement)
-      case "recent": return sorted
+      case "recent":
+        return sorted.sort(
+          (a, b) => getPublishTimestamp(b.publishedAt) - getPublishTimestamp(a.publishedAt)
+        )
       default: return sorted
     }
   }, [youtubeResults, sortBy])
@@ -108,7 +121,10 @@ export function useVideoHijack(): UseVideoHijackResult {
       case "hijackScore": return sorted.sort((a, b) => b.hijackScore - a.hijackScore)
       case "views": return sorted.sort((a, b) => b.views - a.views)
       case "engagement": return sorted.sort((a, b) => b.engagement - a.engagement)
-      case "recent": return sorted
+      case "recent":
+        return sorted.sort(
+          (a, b) => getPublishTimestamp(b.publishedAt) - getPublishTimestamp(a.publishedAt)
+        )
       default: return sorted
     }
   }, [tiktokResults, sortBy])
@@ -136,6 +152,9 @@ export function useVideoHijack(): UseVideoHijackResult {
     
     setIsLoading(true)
     setHasSearched(false)
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
     
     // TODO: Replace with actual API calls
     // import { youtubeService, tiktokService } from "../services"
@@ -144,7 +163,7 @@ export function useVideoHijack(): UseVideoHijackResult {
     //   tiktokService.searchVideos(query)
     // ])
     
-    setTimeout(() => {
+    searchTimeoutRef.current = setTimeout(() => {
       const query = searchInput.trim()
       
       // Generate mock results
@@ -256,26 +275,26 @@ export function useVideoHijack(): UseVideoHijackResult {
       ? [
           ["Title", "Channel", "Views", "Likes", "Comments", "Engagement %", "Duration", "URL"].join(","),
           ...youtubeResults.map(v => [
-            `"${v.title}"`,
-            v.channel,
-            v.views,
-            v.likes,
-            v.comments,
-            v.engagement.toFixed(2),
-            v.duration,
-            v.videoUrl,
+            escapeCsvValue(v.title),
+            escapeCsvValue(v.channel),
+            escapeCsvValue(v.views),
+            escapeCsvValue(v.likes),
+            escapeCsvValue(v.comments),
+            escapeCsvValue(v.engagement.toFixed(2)),
+            escapeCsvValue(v.duration),
+            escapeCsvValue(v.videoUrl),
           ].join(",")),
         ].join("\n")
       : [
           ["Description", "Creator", "Views", "Likes", "Shares", "Engagement %", "URL"].join(","),
           ...tiktokResults.map(v => [
-            `"${v.description.slice(0, 50)}..."`,
-            v.creator,
-            v.views,
-            v.likes,
-            v.shares,
-            v.engagement.toFixed(2),
-            v.videoUrl,
+            escapeCsvValue(`${v.description.slice(0, 50)}...`),
+            escapeCsvValue(v.creator),
+            escapeCsvValue(v.views),
+            escapeCsvValue(v.likes),
+            escapeCsvValue(v.shares),
+            escapeCsvValue(v.engagement.toFixed(2)),
+            escapeCsvValue(v.videoUrl),
           ].join(",")),
         ].join("\n")
     
@@ -292,12 +311,21 @@ export function useVideoHijack(): UseVideoHijackResult {
   
   // Copy handler
   const handleCopy = useCallback((text: string) => {
+    if (!navigator?.clipboard) {
+      toast.error("Clipboard not available")
+      return
+    }
+
     navigator.clipboard.writeText(text)
-    toast.success("Copied!")
+      .then(() => toast.success("Copied!"))
+      .catch(() => toast.error("Copy failed"))
   }, [])
   
   // Reset handler
   const reset = useCallback(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
     setSearchInput("")
     setSearchedQuery("")
     setYoutubeResults([])

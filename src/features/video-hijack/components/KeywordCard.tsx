@@ -42,21 +42,29 @@ export function KeywordCard({ keyword }: KeywordCardProps) {
   const TrendIcon = keyword.trend === "up" ? TrendingUp : keyword.trend === "down" ? TrendingDown : Minus
 
   const handleCopy = () => {
+    if (!navigator?.clipboard) {
+      toast.error("Clipboard not available")
+      return
+    }
+
     navigator.clipboard.writeText(keyword.keyword)
-    toast.success("Copied!", {
-      description: `"${keyword.keyword}" copied to clipboard`,
-    })
+      .then(() => {
+        toast.success("Copied!", {
+          description: `"${keyword.keyword}" copied to clipboard`,
+        })
+      })
+      .catch(() => toast.error("Copy failed"))
   }
 
   const handleViewSERP = () => {
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(keyword.keyword)}`, "_blank")
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(keyword.keyword)}`, "_blank", "noopener,noreferrer")
   }
 
   const handleViewVideo = (videoUrl?: string) => {
     if (videoUrl) {
-      window.open(videoUrl, "_blank")
+      window.open(videoUrl, "_blank", "noopener,noreferrer")
     } else {
-      window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(keyword.keyword)}`, "_blank")
+      window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(keyword.keyword)}`, "_blank", "noopener,noreferrer")
     }
   }
 
@@ -209,9 +217,9 @@ export function KeywordCard({ keyword }: KeywordCardProps) {
                           <div className="text-sm font-medium text-foreground truncate">{video.title}</div>
                           <div className="text-xs text-muted-foreground flex items-center gap-2">
                             <span className={getPlatformColor(video.platform)}>{video.channel}</span>
-                            <span>•</span>
+                            <span>|</span>
                             <span>{formatViews(video.views)} views</span>
-                            <span>•</span>
+                            <span>|</span>
                             <span>{video.duration}</span>
                           </div>
                         </div>

@@ -50,20 +50,20 @@ export function CitationSourceCard({ source, className }: CitationSourceCardProp
       "flex items-start gap-3 p-3 rounded-lg border transition-colors",
       source.isWeakSource 
         ? "bg-amber-500/10 border-amber-500/30 hover:border-amber-500/50" 
-        : "bg-slate-800/50 border-slate-700 hover:border-slate-600",
+        : "bg-card border-border hover:border-border/80",
       className
     )}>
       {/* Position & Icon */}
       <div className="flex flex-col items-center gap-1">
         <span className={cn(
           "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-          source.isWeakSource ? "bg-amber-500/30 text-amber-300" : "bg-slate-700 text-slate-300"
+          source.isWeakSource ? "bg-amber-500/30 text-amber-600 dark:text-amber-300" : "bg-muted text-muted-foreground"
         )}>
           {source.position}
         </span>
         <Icon className={cn(
           "h-4 w-4",
-          source.isWeakSource ? "text-amber-400" : "text-slate-400"
+          source.isWeakSource ? "text-amber-500 dark:text-amber-400" : "text-muted-foreground"
         )} />
       </div>
 

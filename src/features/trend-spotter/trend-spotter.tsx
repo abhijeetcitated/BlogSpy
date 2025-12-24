@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { 
   Search, 
+  Loader2,
   Monitor, 
   Youtube, 
   Newspaper, 
@@ -40,16 +41,42 @@ const platforms = [
   { value: "shopping", label: "Shopping", icon: ShoppingBag, iconColor: "text-orange-400" },
 ]
 
+type PlatformValue = (typeof platforms)[number]["value"]
+
 export function TrendSpotter() {
   // Main search state
   const [searchQuery, setSearchQuery] = useState("AI Agents")
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null)
-  const [selectedPlatform, setSelectedPlatform] = useState("web")
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformValue>("web")
   const [selectedTimeframe, setSelectedTimeframe] = useState("30d")
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const analyzeTimerRef = useRef<NodeJS.Timeout | null>(null)
   
   // Geographic section state (cascading)
   const [geoCountryCode, setGeoCountryCode] = useState<string | null>("IN")
   const [geoCity, setGeoCity] = useState<string | null>(null)
+
+  const handleAnalyze = useCallback(() => {
+    if (!searchQuery.trim()) return
+
+    if (analyzeTimerRef.current) {
+      clearTimeout(analyzeTimerRef.current)
+    }
+
+    setIsAnalyzing(true)
+    analyzeTimerRef.current = setTimeout(() => {
+      setIsAnalyzing(false)
+      analyzeTimerRef.current = null
+    }, 900)
+  }, [searchQuery])
+
+  useEffect(() => {
+    return () => {
+      if (analyzeTimerRef.current) {
+        clearTimeout(analyzeTimerRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div className="min-h-full space-y-4 md:space-y-6">
@@ -125,6 +152,7 @@ export function TrendSpotter() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Enter a keyword..."
+            aria-label="Search keyword"
             className="pl-10 h-10 sm:h-11 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-amber-500/50 focus:ring-amber-500/20"
           />
         </div>
@@ -138,16 +166,17 @@ export function TrendSpotter() {
           />
         </div>
 
-        {/* Platform Toggle Pills - Hidden on mobile, shown on tablet+ */}
-        <div className="hidden md:flex items-center rounded-lg border border-border bg-card p-1 order-4 sm:order-3">
+        {/* Platform Toggle Pills */}
+        <div className="flex w-full sm:w-auto flex-wrap md:flex-nowrap items-center rounded-lg border border-border bg-card p-1 order-4 sm:order-3 gap-1 md:gap-0">
           {platforms.map((platform) => {
             const isActive = selectedPlatform === platform.value
             return (
               <button
                 key={platform.value}
                 onClick={() => setSelectedPlatform(platform.value)}
+                aria-pressed={isActive}
                 className={cn(
-                  "flex items-center gap-1.5 px-2 lg:px-3 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-all border",
+                  "flex flex-1 md:flex-initial items-center justify-center gap-1.5 px-2 lg:px-3 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-all border",
                   isActive
                     ? "bg-amber-500/20 text-amber-400 border-amber-500/50"
                     : "text-muted-foreground hover:text-foreground border-transparent"
@@ -171,6 +200,7 @@ export function TrendSpotter() {
             <button
               key={tf}
               onClick={() => setSelectedTimeframe(tf.toLowerCase())}
+              aria-pressed={selectedTimeframe === tf.toLowerCase()}
               className={cn(
                 "px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all",
                 selectedTimeframe === tf.toLowerCase()
@@ -187,9 +217,22 @@ export function TrendSpotter() {
         </div>
 
         {/* Analyze Button */}
-        <Button className="h-10 sm:h-11 px-4 sm:px-6 bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-semibold shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40 order-2 sm:order-5 flex-1 sm:flex-none">
-          <Zap className="h-4 w-4 mr-1 sm:mr-2" />
-          <span className="sm:inline">Analyze</span>
+        <Button
+          onClick={handleAnalyze}
+          disabled={isAnalyzing || !searchQuery.trim()}
+          className="h-10 sm:h-11 px-4 sm:px-6 bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-semibold shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40 order-2 sm:order-5 flex-1 sm:flex-none"
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-1 sm:mr-2 animate-spin" />
+              <span className="sm:inline">Analyzing...</span>
+            </>
+          ) : (
+            <>
+              <Zap className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="sm:inline">Analyze</span>
+            </>
+          )}
         </Button>
       </div>
 

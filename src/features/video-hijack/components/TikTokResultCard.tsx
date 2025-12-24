@@ -67,7 +67,7 @@ export function TikTokResultCard({ video, rank, onCopy }: TikTokResultCardProps)
             <p className="font-medium text-xs sm:text-sm text-foreground line-clamp-2">{video.description}</p>
             <div className="flex items-center gap-1 mt-0.5 text-[10px] sm:text-xs text-muted-foreground">
               <span className="truncate max-w-[80px] sm:max-w-[120px]">@{video.creator}</span>
-              <span>•</span>
+              <span>|</span>
               <span>{video.duration}</span>
             </div>
             {/* Badges */}
@@ -77,7 +77,7 @@ export function TikTokResultCard({ video, rank, onCopy }: TikTokResultCardProps)
               </Badge>
               {video.soundTrending && (
                 <Badge className="text-[9px] sm:text-[10px] px-1 py-0 bg-pink-500/10 text-pink-500">
-                  🎵 Trend
+                  Trend
                 </Badge>
               )}
             </div>
@@ -97,7 +97,7 @@ export function TikTokResultCard({ video, rank, onCopy }: TikTokResultCardProps)
               variant="ghost"
               size="icon"
               className="h-6 w-6 sm:h-7 sm:w-7"
-              onClick={() => window.open(video.videoUrl, "_blank")}
+              onClick={() => window.open(video.videoUrl, "_blank", "noopener,noreferrer")}
             >
               <ExternalLinkIcon size={12} />
             </Button>

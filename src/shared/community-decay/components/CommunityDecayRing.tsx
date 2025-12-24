@@ -50,7 +50,7 @@ export function CommunityDecayRing({
           fill="none"
           stroke="currentColor"
           strokeWidth={config.stroke}
-          className="text-slate-700"
+          className="text-muted"
         />
         {/* Progress circle */}
         <circle
@@ -72,7 +72,7 @@ export function CommunityDecayRing({
             {score}
           </span>
           {size !== "sm" && (
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
               Decay
             </span>
           )}

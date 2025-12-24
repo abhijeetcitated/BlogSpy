@@ -33,10 +33,10 @@ export interface CommunityDecayCardProps {
 // Opportunity style
 const getOpportunityStyle = (level: string) => {
   switch (level) {
-    case "excellent": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-    case "high": return "text-green-400 bg-green-500/10 border-green-500/20"
-    case "moderate": return "text-amber-400 bg-amber-500/10 border-amber-500/20"
-    default: return "text-slate-400 bg-slate-500/10 border-slate-500/20"
+    case "excellent": return "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+    case "high": return "text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20"
+    case "moderate": return "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20"
+    default: return "text-muted-foreground bg-muted/50 border-border"
   }
 }
 
@@ -48,14 +48,14 @@ export function CommunityDecayCard({
 }: CommunityDecayCardProps) {
   if (!analysis.hasCommunityContent) {
     return (
-      <Card className={cn("bg-slate-800/50 border-slate-700", className)}>
+      <Card className={cn("bg-card border-border", className)}>
         <CardContent className="p-6">
-          <div className="flex items-center gap-4 text-slate-400">
-            <div className="p-3 bg-slate-700/50 rounded-full">
+          <div className="flex items-center gap-4 text-muted-foreground">
+            <div className="p-3 bg-muted rounded-full">
               <Flame className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-slate-300">No Community Content</h3>
+              <h3 className="text-lg font-semibold text-foreground/80">No Community Content</h3>
               <p className="text-sm">No Reddit, Quora, or other UGC found in SERP</p>
             </div>
           </div>
@@ -67,27 +67,27 @@ export function CommunityDecayCard({
   const { decayScore, avgContentAge, maxContentAge, communityCountInTop10, bestOpportunity, communitySources, recommendations, opportunityLevel } = analysis
 
   return (
-    <Card className={cn("bg-slate-800/50 border-slate-700 overflow-hidden", className)}>
+    <Card className={cn("bg-card border-border overflow-hidden", className)}>
       {/* Header with gradient based on opportunity */}
       <div className={cn(
-        "relative p-4 border-b border-slate-700",
+        "relative p-4 border-b border-border",
         opportunityLevel === "excellent" || opportunityLevel === "high"
           ? "bg-gradient-to-r from-orange-500/10 via-red-500/10 to-amber-500/10"
-          : "bg-slate-800/50"
+          : "bg-muted/30"
       )}>
         <div className="flex items-center gap-4">
           <CommunityDecayRing score={decayScore} size="lg" />
           
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-bold text-slate-100">Community Decay Analysis</h3>
+              <h3 className="text-lg font-bold text-foreground">Community Decay Analysis</h3>
               <Badge className={cn(getOpportunityStyle(opportunityLevel))}>
                 <Zap className="h-3 w-3 mr-1" />
                 {opportunityLevel.charAt(0).toUpperCase() + opportunityLevel.slice(1)} Opportunity
               </Badge>
             </div>
             
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               {communityCountInTop10} community source{communityCountInTop10 !== 1 ? "s" : ""} in top 10
               {" • "}
               Avg age: {formatAge(avgContentAge)}
@@ -99,21 +99,21 @@ export function CommunityDecayCard({
       <CardContent className="p-4 space-y-4">
         {/* Stats Grid */}
         <div className="grid grid-cols-4 gap-3">
-          <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-            <div className="text-xs text-slate-400 mb-1">Decay Score</div>
-            <div className="text-xl font-bold text-orange-400">{decayScore}</div>
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <div className="text-xs text-muted-foreground mb-1">Decay Score</div>
+            <div className="text-xl font-bold text-orange-500 dark:text-orange-400">{decayScore}</div>
           </div>
-          <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-            <div className="text-xs text-slate-400 mb-1">Avg Age</div>
-            <div className="text-xl font-bold">{formatAge(avgContentAge)}</div>
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <div className="text-xs text-muted-foreground mb-1">Avg Age</div>
+            <div className="text-xl font-bold text-foreground">{formatAge(avgContentAge)}</div>
           </div>
-          <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-            <div className="text-xs text-slate-400 mb-1">Max Age</div>
-            <div className="text-xl font-bold text-red-400">{formatAge(maxContentAge)}</div>
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <div className="text-xs text-muted-foreground mb-1">Max Age</div>
+            <div className="text-xl font-bold text-red-500 dark:text-red-400">{formatAge(maxContentAge)}</div>
           </div>
-          <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-            <div className="text-xs text-slate-400 mb-1">Sources</div>
-            <div className="text-xl font-bold">{communityCountInTop10}</div>
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <div className="text-xs text-muted-foreground mb-1">Sources</div>
+            <div className="text-xl font-bold text-foreground">{communityCountInTop10}</div>
           </div>
         </div>
 
@@ -130,9 +130,9 @@ export function CommunityDecayCard({
                 ageInDays={bestOpportunity.ageInDays}
                 rank={bestOpportunity.rankPosition}
               />
-              <div className="flex-1 text-sm text-slate-300">
-                <p className="line-clamp-1">{bestOpportunity.title}</p>
-                <p className="text-slate-400 text-xs mt-1">
+            <div className="flex-1 text-sm text-foreground/80">
+              <p className="line-clamp-1">{bestOpportunity.title}</p>
+              <p className="text-muted-foreground text-xs mt-1">
                   {bestOpportunity.engagement.upvotes?.toLocaleString() || 0} upvotes
                   {bestOpportunity.qualityScore && (
                     <span className="ml-2">Quality: {bestOpportunity.qualityScore}%</span>
@@ -146,7 +146,7 @@ export function CommunityDecayCard({
         {/* Community Sources */}
         {showSources && communitySources.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
               Community Sources in SERP
             </h4>
@@ -161,15 +161,15 @@ export function CommunityDecayCard({
         {/* Recommendations */}
         {showRecommendations && recommendations.length > 0 && (
           <div>
-            <h4 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-400" />
+            <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-500 dark:text-amber-400" />
               Recommendations
             </h4>
             <div className="space-y-2">
               {recommendations.slice(0, 3).map((rec) => (
                 <div
                   key={rec.id}
-                  className="flex items-start gap-3 bg-slate-900/50 rounded-lg p-3"
+                  className="flex items-start gap-3 bg-muted/50 rounded-lg p-3"
                 >
                   <div className={cn(
                     "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
@@ -180,8 +180,8 @@ export function CommunityDecayCard({
                     {rec.priority}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h5 className="text-sm font-medium text-slate-200">{rec.title}</h5>
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                    <h5 className="text-sm font-medium text-foreground">{rec.title}</h5>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                       {rec.description}
                     </p>
                     <div className="flex items-center gap-2 mt-2">

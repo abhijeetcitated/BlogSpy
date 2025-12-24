@@ -184,7 +184,7 @@ export function TikTokResultCard({ video, isSelected, onSelect }: TikTokResultCa
             className="h-6 sm:h-7 px-2 text-[10px] sm:text-xs hover:bg-[#ff0050]/10 hover:text-[#ff0050]"
             onClick={(e) => {
               e.stopPropagation()
-              window.open(video.url, "_blank")
+              window.open(video.url, "_blank", "noopener,noreferrer")
             }}
           >
             <ExternalLinkIcon size={10} className="mr-1 sm:w-3 sm:h-3" />

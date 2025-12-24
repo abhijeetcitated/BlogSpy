@@ -11,7 +11,7 @@ export function TrendAreaChart({ data = TREND_DATA }: TrendAreaChartProps) {
   const { points, linePath, areaPath, width, height } = calculateTrendChartPaths(data)
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-28">
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-28" role="img" aria-label="Search trend over time">
       <defs>
         <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="rgba(16,185,129,0.4)" />

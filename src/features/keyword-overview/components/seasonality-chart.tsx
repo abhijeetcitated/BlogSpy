@@ -24,11 +24,11 @@ export function SeasonalityChart({ data = SEASONALITY_DATA }: SeasonalityChartPr
               className={`w-full rounded-t transition-all ${
                 isPeak
                   ? "bg-gradient-to-t from-amber-500 to-amber-400 shadow-lg shadow-amber-500/30"
-                  : "bg-slate-700 hover:bg-slate-600"
+                  : "bg-muted hover:bg-accent"
               }`}
               style={{ height: `${height}%` }}
             />
-            <span className={`text-[9px] mt-1 ${isPeak ? "text-amber-400 font-semibold" : "text-slate-500"}`}>
+            <span className={`text-[9px] mt-1 ${isPeak ? "text-amber-500 dark:text-amber-400 font-semibold" : "text-muted-foreground/70"}`}>
               {month}
             </span>
           </div>

@@ -68,7 +68,7 @@ export function YouTubeResultCard({ video, rank, onCopy }: YouTubeResultCardProp
             <h3 className="font-medium text-xs sm:text-sm text-foreground line-clamp-2">{video.title}</h3>
             <div className="flex items-center gap-1 mt-0.5 text-[10px] sm:text-xs text-muted-foreground">
               <span className="truncate max-w-[80px] sm:max-w-[120px]">{video.channel}</span>
-              <span>•</span>
+              <span>|</span>
               <span>{video.duration}</span>
             </div>
             {/* Badges */}
@@ -96,7 +96,7 @@ export function YouTubeResultCard({ video, rank, onCopy }: YouTubeResultCardProp
               variant="ghost"
               size="icon"
               className="h-6 w-6 sm:h-7 sm:w-7"
-              onClick={() => window.open(video.videoUrl, "_blank")}
+              onClick={() => window.open(video.videoUrl, "_blank", "noopener,noreferrer")}
             >
               <ExternalLinkIcon size={12} />
             </Button>

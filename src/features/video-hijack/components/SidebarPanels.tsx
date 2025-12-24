@@ -66,7 +66,7 @@ export function DominantChannels({ channels }: DominantChannelsProps) {
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-foreground truncate">{channel.channel}</div>
               <div className="text-xs text-muted-foreground">
-                {channel.count} keywords • Avg pos {channel.avgPosition}
+                {channel.count} keywords | Avg pos {channel.avgPosition}
               </div>
             </div>
           </div>
@@ -88,7 +88,7 @@ export function QuickTips() {
       <div className="space-y-2">
         {VIDEO_SEO_TIPS.map((tip, i) => (
           <div key={i} className="text-xs text-muted-foreground flex items-start gap-2 p-2 rounded-lg bg-muted/30">
-            <span className="text-yellow-500 mt-0.5">💡</span>
+            <span className="text-yellow-500 mt-0.5">!</span>
             {tip}
           </div>
         ))}

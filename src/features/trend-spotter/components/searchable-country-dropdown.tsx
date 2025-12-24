@@ -18,12 +18,14 @@ interface SearchableCountryDropdownProps {
   value: string | null
   onChange: (countryCode: string | null) => void
   triggerClassName?: string
+  triggerAriaLabel?: string
 }
 
 export function SearchableCountryDropdown({ 
   value, 
   onChange, 
-  triggerClassName 
+  triggerClassName,
+  triggerAriaLabel = "Select country"
 }: SearchableCountryDropdownProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -47,6 +49,7 @@ export function SearchableCountryDropdown({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          aria-label={triggerAriaLabel}
           className={cn(
             "h-11 gap-2 bg-card border-border text-foreground justify-between hover:bg-muted",
             triggerClassName
