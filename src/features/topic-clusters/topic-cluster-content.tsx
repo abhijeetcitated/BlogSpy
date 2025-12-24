@@ -8,7 +8,7 @@ import {
   TrendingUp, TrendingDown, Minus, CheckSquare, Square,
   Wand2, BarChart3, Target, Scissors, Flame,
   Video, MessageSquare, Star, ShoppingCart, Image, Map,
-  ExternalLink, Link2, Eye, MousePointer, Zap, Layout, Layers, DollarSign, MousePointer2, RefreshCw, CheckCircle2, Clock
+  ExternalLink, Link2, Eye, MousePointer, Zap, Layers, DollarSign, MousePointer2, RefreshCw, CheckCircle2, Clock
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -306,9 +306,7 @@ export function TopicClusterContent() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const [showFilters, setShowFilters] = useState(false)
   const [showManualInput, setShowManualInput] = useState(false)
-  const [showColumnMenu, setShowColumnMenu] = useState(false)
   const [manualText, setManualText] = useState("")
-  const [columnOverrides, setColumnOverrides] = useState<Record<string, boolean>>({})
   
   // NEW: Side Panel for keyword details
   const [selectedKeyword, setSelectedKeyword] = useState<Keyword | null>(null)
@@ -380,40 +378,7 @@ export function TopicClusterContent() {
     }
   }
 
-  // Check which columns have data (Smart Visibility + User Overrides)
-  const columnVisibility = useMemo(() => {
-    const hasData = {
-      trafficPotential: keywords.some(k => k.trafficPotential !== null),
-      clicks: keywords.some(k => k.clicks !== null),
-      position: keywords.some(k => k.position !== null),
-      serpFeatures: keywords.some(k => k.serpFeatures.length > 0),
-      parentTopic: keywords.some(k => k.parentTopic !== null),
-      intent: keywords.some(k => k.intent !== null),
-      trend: keywords.some(k => k.trend !== null),
-      cpc: keywords.some(k => k.cpc !== null),
-    }
-    
-    return {
-      trafficPotential: columnOverrides.trafficPotential ?? hasData.trafficPotential,
-      clicks: columnOverrides.clicks ?? hasData.clicks,
-      position: columnOverrides.position ?? hasData.position,
-      serpFeatures: columnOverrides.serpFeatures ?? hasData.serpFeatures,
-      parentTopic: columnOverrides.parentTopic ?? hasData.parentTopic,
-      intent: columnOverrides.intent ?? hasData.intent,
-      trend: columnOverrides.trend ?? hasData.trend,
-      cpc: columnOverrides.cpc ?? hasData.cpc,
-    }
-  }, [keywords, columnOverrides])
-  
-  const toggleColumn = (key: string) => {
-    setColumnOverrides(prev => {
-      // If currently undefined (smart), set to opposite of smart
-      // If currently true/false, toggle
-      const currentSmart = keywords.some(k => k[key as keyof Keyword] !== null)
-      const currentVal = prev[key] ?? currentSmart
-      return { ...prev, [key]: !currentVal }
-    })
-  }
+
 
   const updateBusinessPotential = (id: string, value: BusinessPotential) => {
     setKeywords(prev => prev.map(k => k.id === id ? { ...k, businessPotential: value } : k))
@@ -919,49 +884,7 @@ export function TopicClusterContent() {
                 </button>
               )}
               
-              {/* Column toggle */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowColumnMenu(!showColumnMenu)}
-                  className={cn(
-                    "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg border text-xs sm:text-sm transition-all",
-                    showColumnMenu
-                      ? "bg-orange-500/10 text-orange-500 border-orange-500/30"
-                      : "bg-transparent text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-800 hover:border-zinc-400"
-                  )}
-                >
-                  <Layout className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Columns</span>
-                </button>
-                
-                {showColumnMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl p-2 z-50">
-                    <div className="text-xs font-medium text-zinc-500 px-2 py-1 mb-1">Toggle Columns</div>
-                    {[
-                      { id: "trafficPotential", label: "Traffic Potential" },
-                      { id: "clicks", label: "Clicks" },
-                      { id: "position", label: "Position" },
-                      { id: "kd", label: "Keyword Difficulty" },
-                      { id: "cpc", label: "CPC" },
-                      { id: "intent", label: "Intent" },
-                      { id: "serpFeatures", label: "SERP Features" },
-                      { id: "trend", label: "Trend" },
-                      { id: "parentTopic", label: "Parent Topic" },
-                    ].map(col => (
-                      <button
-                        key={col.id}
-                        onClick={() => toggleColumn(col.id)}
-                        className="flex items-center justify-between w-full px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
-                      >
-                        <span>{col.label}</span>
-                        {columnVisibility[col.id as keyof typeof columnVisibility] && (
-                          <CheckSquare className="w-3.5 h-3.5 text-orange-500" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+
             </div>
           </div>
         </div>
