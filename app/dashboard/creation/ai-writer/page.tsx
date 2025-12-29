@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect } from "react"
+import { Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-// Redirect to the main AI Writer route which has proper layout
-export default function AIWriterRedirectPage() {
+// Inner component that uses useSearchParams
+function AIWriterRedirect() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
@@ -21,6 +21,19 @@ export default function AIWriterRedirectPage() {
         Loading AI Writer...
       </div>
     </div>
+  )
+}
+
+// Wrapper with Suspense boundary for useSearchParams
+export default function AIWriterRedirectPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    }>
+      <AIWriterRedirect />
+    </Suspense>
   )
 }
 
