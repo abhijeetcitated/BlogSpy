@@ -50,7 +50,7 @@ export const PLATFORM_CONFIG: Record<SearchPlatform, PlatformConfig> = {
     color: "#DE5833",
     bgColor: "bg-orange-500/10",
     creditCost: 1,
-    apiSource: "Serper.dev",
+    apiSource: "DataForSEO",
     description: "Privacy-focused search engine (0.5% market share)",
   },
 }

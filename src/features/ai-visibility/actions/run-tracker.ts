@@ -3,7 +3,7 @@
  * 📊 RUN TRACKER - Server Action for Google AIO & Rankings
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
- * Next.js Server Action to track Google rankings via Serper.dev
+ * Next.js Server Action to track Google rankings via DataForSEO
  * 
  * Usage:
  * ```tsx
@@ -18,15 +18,16 @@ import { createTrackerService } from "../services/tracker.service"
 import type { GoogleAIOResult, RankingResult, CitationResult } from "../types"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// GET API KEY (from env)
+// GET API CREDENTIALS (from env)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-function getSerperApiKey(): string {
-  const apiKey = process.env.SERPER_API_KEY
-  if (!apiKey) {
-    throw new Error("SERPER_API_KEY not configured")
+function getDataForSEOCredentials(): { login: string; password: string } {
+  const login = process.env.DATAFORSEO_LOGIN
+  const password = process.env.DATAFORSEO_PASSWORD
+  if (!login || !password) {
+    throw new Error("DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD not configured")
   }
-  return apiKey
+  return { login, password }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -41,8 +42,8 @@ export async function checkGoogleAIO(
   query: string
 ): Promise<GoogleAIOResult> {
   try {
-    const apiKey = getSerperApiKey()
-    const trackerService = createTrackerService(apiKey, brandDomain)
+    const credentials = getDataForSEOCredentials()
+    const trackerService = createTrackerService(credentials, brandDomain)
     return await trackerService.checkGoogleAIO(query)
   } catch (error) {
     console.error("[checkGoogleAIO] Error:", error)
@@ -58,8 +59,8 @@ export async function getRanking(
   query: string
 ): Promise<RankingResult> {
   try {
-    const apiKey = getSerperApiKey()
-    const trackerService = createTrackerService(apiKey, brandDomain)
+    const credentials = getDataForSEOCredentials()
+    const trackerService = createTrackerService(credentials, brandDomain)
     return await trackerService.getRanking(query)
   } catch (error) {
     console.error("[getRanking] Error:", error)
@@ -75,8 +76,8 @@ export async function getRankings(
   queries: string[]
 ): Promise<RankingResult[]> {
   try {
-    const apiKey = getSerperApiKey()
-    const trackerService = createTrackerService(apiKey, brandDomain)
+    const credentials = getDataForSEOCredentials()
+    const trackerService = createTrackerService(credentials, brandDomain)
     return await trackerService.getRankings(queries)
   } catch (error) {
     console.error("[getRankings] Error:", error)
@@ -92,8 +93,8 @@ export async function checkCitations(
   queries: string[]
 ): Promise<CitationResult[]> {
   try {
-    const apiKey = getSerperApiKey()
-    const trackerService = createTrackerService(apiKey, brandDomain)
+    const credentials = getDataForSEOCredentials()
+    const trackerService = createTrackerService(credentials, brandDomain)
     return await trackerService.checkCitations(queries)
   } catch (error) {
     console.error("[checkCitations] Error:", error)
@@ -110,8 +111,8 @@ export async function checkSiriReadiness(
   applebotAllowed: boolean
 ): Promise<{ status: "ready" | "at-risk" | "not-ready"; score: number }> {
   try {
-    const apiKey = getSerperApiKey()
-    const trackerService = createTrackerService(apiKey, brandDomain)
+    const credentials = getDataForSEOCredentials()
+    const trackerService = createTrackerService(credentials, brandDomain)
     return await trackerService.calculateSiriReadiness(query, applebotAllowed)
   } catch (error) {
     console.error("[checkSiriReadiness] Error:", error)

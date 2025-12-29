@@ -11,7 +11,7 @@
  * - Claude (via OpenRouter - anthropic/claude-3-haiku)
  * - Perplexity (via OpenRouter - perplexity/sonar)
  * - Gemini (via OpenRouter - google/gemini-flash-1.5)
- * - Google AIO (via Serper.dev API)
+ * - Google AIO (via DataForSEO SERP API)
  * 
  * @example
  * ```ts
@@ -33,6 +33,7 @@
  */
 
 import { openrouter, MODELS, type OpenRouterModel } from "@/src/lib/ai/openrouter"
+import { DATAFORSEO } from "@/constants/api-endpoints"
 import type { 
   AIPlatform, 
   VisibilityCheckResult, 
@@ -86,7 +87,7 @@ const PLATFORM_MODEL_MAP: Record<AIPlatform, OpenRouterModel | null> = {
   "claude": MODELS.CLAUDE_3_HAIKU,
   "perplexity": MODELS.PERPLEXITY_SONAR,
   "gemini": MODELS.GEMINI_FLASH,
-  "google-aio": null, // Uses Serper.dev API, not OpenRouter
+  "google-aio": null, // Uses DataForSEO SERP API, not OpenRouter
   "searchgpt": MODELS.GPT4O_MINI, // Simulated via GPT-4
   "apple-siri": null, // Readiness check only, no API
 }
@@ -350,57 +351,68 @@ async function queryOpenRouterPlatform(
 }
 
 /**
- * Query Google AIO via Serper.dev API
+ * Query Google AIO via DataForSEO SERP API
  */
 async function queryGoogleAIO(
   query: string
 ): Promise<{ success: boolean; response?: string; error?: string }> {
-  const apiKey = process.env.SERPER_API_KEY
+  const login = process.env.DATAFORSEO_LOGIN
+  const password = process.env.DATAFORSEO_PASSWORD
   
-  if (!apiKey) {
-    return { success: false, error: "SERPER_API_KEY not configured" }
+  if (!login || !password) {
+    return { success: false, error: "DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD not configured" }
   }
   
   try {
-    const response = await fetch("https://google.serper.dev/search", {
+    const authHeader = `Basic ${Buffer.from(`${login}:${password}`).toString("base64")}`
+    
+    const response = await fetch(`${DATAFORSEO.BASE_URL}${DATAFORSEO.SERP.GOOGLE_ORGANIC}`, {
       method: "POST",
       headers: {
-        "X-API-KEY": apiKey,
+        "Authorization": authHeader,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        q: query,
-        gl: "us",
-        hl: "en",
-      }),
+      body: JSON.stringify([{
+        keyword: query,
+        location_code: 2840,
+        language_code: "en",
+        depth: 10,
+      }]),
     })
     
     if (!response.ok) {
-      return { success: false, error: `Serper API error: ${response.status}` }
+      return { success: false, error: `DataForSEO API error: ${response.status}` }
     }
     
     const data = await response.json()
     
-    // Extract AI Overview / Featured Snippet
+    // Extract AI Overview / Featured Snippet from DataForSEO response
     let aiResponse = ""
     
-    if (data.answerBox) {
-      aiResponse += data.answerBox.answer || data.answerBox.snippet || ""
-    }
-    
-    if (data.knowledgeGraph) {
-      if (data.knowledgeGraph.description) {
-        aiResponse += "\n" + data.knowledgeGraph.description
-      }
-    }
-    
-    // Also include top organic results as "mentioned"
-    if (data.organic && Array.isArray(data.organic)) {
-      const topResults = data.organic.slice(0, 5)
-      for (const result of topResults) {
-        aiResponse += `\n${result.title} - ${result.link}`
-        if (result.snippet) {
-          aiResponse += ` - ${result.snippet}`
+    if (data.status_code === 20000 && data.tasks?.[0]?.result?.[0]?.items) {
+      const items = data.tasks[0].result[0].items
+      
+      for (const item of items) {
+        // AI Overview item type
+        if (item.type === "ai_overview") {
+          aiResponse += item.text || item.description || ""
+        }
+        // Featured Snippet
+        else if (item.type === "featured_snippet") {
+          aiResponse += "\\n" + (item.description || item.text || "")
+        }
+        // Knowledge Graph
+        else if (item.type === "knowledge_graph") {
+          if (item.description) {
+            aiResponse += "\\n" + item.description
+          }
+        }
+        // Include top organic results as "mentioned"
+        else if (item.type === "organic" && item.rank_absolute && item.rank_absolute <= 5) {
+          aiResponse += `\\n${item.title} - ${item.url}`
+          if (item.description) {
+            aiResponse += ` - ${item.description}`
+          }
         }
       }
     }

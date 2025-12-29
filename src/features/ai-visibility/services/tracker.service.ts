@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 📊 TRACKER SERVICE - Google AIO & Rankings via Serper.dev
+ * 📊 TRACKER SERVICE - Google AIO & Rankings via DataForSEO
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
  * This service handles:
@@ -8,54 +8,119 @@
  * - Search rankings tracking
  * - Citation extraction from search results
  * 
+ * Uses DataForSEO SERP API for:
+ * - AI Overviews (ai_overview item type)
+ * - Featured Snippets (featured_snippet item type)
+ * - Knowledge Graph (knowledge_graph item type)
+ * - Organic Rankings
+ * 
  * @see _INTEGRATION_GUIDE.ts for full architecture
  */
 
 import { GoogleAIOResult, RankingResult, CitationResult } from "../types"
+import { DATAFORSEO } from "@/constants/api-endpoints"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TRACKER SERVICE CLASS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 export class TrackerService {
-  private apiKey: string
+  private login: string
+  private password: string
   private brandDomain: string
 
-  constructor(apiKey: string, brandDomain: string) {
-    this.apiKey = apiKey
+  constructor(credentials: { login: string; password: string }, brandDomain: string) {
+    this.login = credentials.login
+    this.password = credentials.password
     this.brandDomain = brandDomain
       .replace(/^https?:\/\//, "")
       .replace(/\/$/, "")
   }
 
   /**
-   * Search Google via Serper.dev
+   * Get authorization header for DataForSEO
    */
-  private async search(query: string): Promise<SerperResponse> {
+  private getAuthHeader(): string {
+    return `Basic ${Buffer.from(`${this.login}:${this.password}`).toString("base64")}`
+  }
+
+  /**
+   * Search Google via DataForSEO SERP API
+   */
+  private async search(query: string): Promise<DataForSEOResponse> {
     try {
-      const response = await fetch("https://google.serper.dev/search", {
+      const response = await fetch(`${DATAFORSEO.BASE_URL}${DATAFORSEO.SERP.GOOGLE_ORGANIC}`, {
         method: "POST",
         headers: {
-          "X-API-KEY": this.apiKey,
+          "Authorization": this.getAuthHeader(),
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          q: query,
-          gl: "us", // United States
-          hl: "en", // English
-          num: 10, // Top 10 results
-        }),
+        body: JSON.stringify([{
+          keyword: query,
+          location_code: 2840, // United States
+          language_code: "en",
+          depth: 10,
+        }]),
       })
 
       if (!response.ok) {
-        throw new Error(`Serper API error: ${response.status}`)
+        throw new Error(`DataForSEO API error: ${response.status}`)
       }
 
-      return response.json()
+      const data = await response.json()
+      
+      // DataForSEO returns nested structure
+      if (data.status_code === 20000 && data.tasks?.[0]?.result?.[0]) {
+        return this.transformDataForSEOResponse(data.tasks[0].result[0])
+      }
+      
+      return { organic: [] }
     } catch (error) {
-      console.error("Serper search error:", error)
+      console.error("DataForSEO search error:", error)
       return { organic: [] }
     }
+  }
+
+  /**
+   * Transform DataForSEO response to our internal format
+   */
+  private transformDataForSEOResponse(result: DataForSEOResult): DataForSEOResponse {
+    const response: DataForSEOResponse = { organic: [] }
+    
+    if (!result.items) return response
+    
+    for (const item of result.items) {
+      switch (item.type) {
+        case "organic":
+          response.organic.push({
+            title: item.title || "",
+            link: item.url || "",
+            snippet: item.description || "",
+            position: item.rank_absolute,
+          })
+          break
+        case "ai_overview":
+          response.aiOverview = item.text || item.description || ""
+          break
+        case "featured_snippet":
+          response.answerBox = {
+            title: item.title,
+            answer: item.description || item.text,
+            snippet: item.description,
+            source: item.url,
+          }
+          break
+        case "knowledge_graph":
+          response.knowledgeGraph = {
+            title: item.title,
+            description: item.description,
+            type: item.sub_type,
+          }
+          break
+      }
+    }
+    
+    return response
   }
 
   /**
@@ -239,10 +304,10 @@ export class TrackerService {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// TYPES (Serper Response)
+// TYPES (DataForSEO Response)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-interface SerperResponse {
+interface DataForSEOResponse {
   organic: Array<{
     title: string
     link: string
@@ -263,13 +328,35 @@ interface SerperResponse {
   aiOverview?: string
 }
 
+// DataForSEO raw API response types
+interface DataForSEOResult {
+  keyword: string
+  se_domain: string
+  location_code: number
+  language_code: string
+  items_count: number
+  items: DataForSEOItem[]
+}
+
+interface DataForSEOItem {
+  type: "organic" | "featured_snippet" | "knowledge_graph" | "ai_overview" | string
+  rank_group?: number
+  rank_absolute?: number
+  title?: string
+  description?: string
+  text?: string
+  url?: string
+  domain?: string
+  sub_type?: string
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // FACTORY EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 export function createTrackerService(
-  apiKey: string,
+  credentials: { login: string; password: string },
   brandDomain: string
 ): TrackerService {
-  return new TrackerService(apiKey, brandDomain)
+  return new TrackerService(credentials, brandDomain)
 }
