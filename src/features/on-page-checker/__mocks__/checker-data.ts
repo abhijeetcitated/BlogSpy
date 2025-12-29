@@ -79,7 +79,6 @@ export const MOCK_ISSUES: IssuesData = {
       element: "<script type='application/ld+json'>",
       impact: "Medium",
       canAiFix: false,
-      schemaType: "missing",
     },
   ],
   passed: [

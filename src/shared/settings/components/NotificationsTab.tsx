@@ -92,7 +92,7 @@ export function NotificationsTab({ notifications, onNotificationChange }: Notifi
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-foreground text-base">{section.title}</CardTitle>
-                    {section.badge && (
+                    {"badge" in section && section.badge && (
                       <Badge variant="outline" className="border-purple-500/30 text-purple-400 bg-purple-500/10 text-xs">
                         {section.badge}
                       </Badge>

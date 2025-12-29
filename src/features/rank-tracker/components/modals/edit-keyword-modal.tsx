@@ -46,7 +46,7 @@ export function EditKeywordModal({
   useEffect(() => {
     if (keyword) {
       setEditKeywordText(keyword.keyword)
-      setEditKeywordCountry(keyword.country)
+      setEditKeywordCountry(keyword.country || "US")
     }
   }, [keyword])
 

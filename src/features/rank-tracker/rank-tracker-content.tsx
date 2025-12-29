@@ -362,7 +362,7 @@ export function RankTrackerContent() {
   const openEditModal = useCallback((keyword: RankData) => {
     setEditingKeyword(keyword)
     setEditKeywordText(keyword.keyword)
-    setEditKeywordCountry(keyword.country)
+    setEditKeywordCountry(keyword.country || "US")
   }, [])
 
   // Save edited keyword

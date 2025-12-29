@@ -48,7 +48,7 @@ export interface RankData {
   lastUpdated: string
   aiOverview: AIOverviewStatus
   pixelRank?: import("@/types/pixel.types").PixelRankScore
-  country: string // Country code (e.g., "US", "IN", "worldwide")
+  country?: string // Country code (e.g., "US", "IN", "worldwide") - optional for mock data
 }
 
 /**
