@@ -2,10 +2,27 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { AuthProvider } from "@/contexts/auth-context"
+import { UserProvider } from "@/contexts/user-context"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+// Geist - Vercel's premium sans-serif font
+// Used for: UI text, buttons, labels, body copy
+const geistSans = Geist({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-geist-sans",
+  weight: ["400", "500", "600", "700"],
+})
+
+// Geist Mono - Vercel's premium monospace font  
+// Used for: Numbers, metrics, code, technical data
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-geist-mono",
+  weight: ["400", "500", "600"],
+})
 
 // Updated metadata for BlogSpy SEO Dashboard
 export const metadata: Metadata = {
@@ -58,9 +75,13 @@ export default function RootLayout({
   return (
     // <CHANGE> Added dark class by default for dark mode theme
     // suppressHydrationWarning added to fix browser extension (Grammarly) hydration mismatch
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`font-sans antialiased`} suppressHydrationWarning>
-        {children}
+    <html lang="en" className={`dark ${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <AuthProvider>
+          <UserProvider>
+            {children}
+          </UserProvider>
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

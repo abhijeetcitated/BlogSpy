@@ -13,7 +13,7 @@
 
 "use client"
 
-import { useReducer, useCallback, useMemo } from "react"
+import { useReducer, useMemo } from "react"
 import type { RankData, FilterTab, SortField, SortDirection, SearchPlatform } from "../types"
 import type { AlertSettingsState } from "../components/modals"
 

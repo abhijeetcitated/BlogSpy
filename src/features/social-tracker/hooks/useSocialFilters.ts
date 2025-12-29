@@ -22,7 +22,7 @@
 
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { useDebounce } from "@/hooks/use-debounce"
 import { SOCIAL_TRACKER_DEFAULTS, DEFAULT_SOCIAL_PLATFORM } from "../constants"
 import type { SocialKeyword, SocialPlatform } from "../types"

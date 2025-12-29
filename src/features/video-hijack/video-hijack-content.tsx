@@ -359,12 +359,6 @@ function getHijackScoreColor(score: number) {
   return "text-red-500"
 }
 
-function getHijackScoreBg(score: number) {
-  if (score >= 80) return "bg-emerald-500"
-  if (score >= 60) return "bg-amber-500"
-  return "bg-red-500"
-}
-
 function getViralPotentialColor(potential: string) {
   switch (potential) {
     case "high": return "text-emerald-500 bg-emerald-500/10"

@@ -199,7 +199,9 @@ export function useEditorState(options: UseEditorStateOptions = {}): UseEditorSt
   // ========================================
   // SAVE CONTENT
   // ========================================
-  const saveContent = useCallback(async (editor: Editor, isAutoSave = false) => {
+  // Note: isAutoSave parameter reserved for future analytics tracking
+  const saveContent = useCallback(async (editor: Editor, isAutoSave?: boolean) => {
+    void isAutoSave // Silence unused warning - will be used for analytics
     const content = editor.getHTML()
     if (!content.trim()) return
     

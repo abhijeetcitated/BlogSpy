@@ -41,7 +41,8 @@ export const exportService = {
 // HELPER FUNCTIONS
 // ============================================
 
-function generateCSV(keywords: Keyword[], options: ExportOptions): Blob {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function generateCSV(keywords: Keyword[], _options: ExportOptions): Blob {
   const headers = [
     "Keyword",
     "Volume",

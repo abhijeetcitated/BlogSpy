@@ -50,7 +50,7 @@ import { PixelRankBadge } from "@/components/ui/pixel-rank-badge"
 import { generateMockPixelRank } from "@/lib/pixel-calculator"
 
 // Feature imports
-import { PLATFORM_CONFIG, DEFAULT_PLATFORM, DEBOUNCE_MS } from "./constants"
+import { PLATFORM_CONFIG, DEBOUNCE_MS } from "./constants"
 import { calculateStats, getTopWinners, getTopLosers, filterByTab, filterBySearch, sortData, convertToRankData } from "./utils"
 import {
   AIOverviewBadge,
@@ -72,8 +72,8 @@ import {
   RankTrackerErrorBoundary,
 } from "./components"
 import { useRankTrackerState, useRankTrackerOps, useDebounce } from "./hooks"
-import { generatePlatformStats, getCountryStats } from "./__mocks__/multi-platform-data"
-import type { RankData, SortField } from "./types"
+import { generatePlatformStats, getCountryStats, MOCK_MULTI_PLATFORM_DATA } from "./__mocks__/multi-platform-data"
+import type { SortField } from "./types"
 
 // Lazy load modals for code splitting
 const AddKeywordsModal = lazy(() => import("./components/modals/add-keywords-modal").then(m => ({ default: m.AddKeywordsModal })))
@@ -90,6 +90,24 @@ const ModalLoader = () => (
   </div>
 )
 
+// Sort icon component - defined outside to prevent recreation on each render
+interface SortIconProps {
+  field: SortField
+  currentField: SortField | null
+  direction: "asc" | "desc"
+}
+
+const SortIcon = ({ field, currentField, direction }: SortIconProps) => {
+  if (currentField !== field) {
+    return <ArrowUpDown className="h-3 w-3 text-muted-foreground/60" />
+  }
+  return direction === "asc" ? (
+    <ArrowUp className="h-3 w-3 text-emerald-400" />
+  ) : (
+    <ArrowDown className="h-3 w-3 text-emerald-400" />
+  )
+}
+
 // ============================================
 // MAIN COMPONENT
 // ============================================
@@ -103,10 +121,9 @@ export function RankTrackerContent() {
 
   // TODO: Replace with real API data fetch
   // For now, using mock data - will be replaced when backend is ready
-  const [multiPlatformData, setMultiPlatformData] = useMemo(() => {
+  const multiPlatformData = useMemo(() => {
     // This is a placeholder - in production, this comes from API
-    const { MOCK_MULTI_PLATFORM_DATA } = require("./__mocks__/multi-platform-data")
-    return [MOCK_MULTI_PLATFORM_DATA, () => {}]
+    return MOCK_MULTI_PLATFORM_DATA
   }, [])
 
   // Operations hook with service layer
@@ -188,18 +205,6 @@ export function RankTrackerContent() {
       return () => clearInterval(interval)
     }
   }, [state.autoRefreshInterval, ops])
-
-  // Sort icon component
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (state.sortField !== field) {
-      return <ArrowUpDown className="h-3 w-3 text-muted-foreground/60" />
-    }
-    return state.sortDirection === "asc" ? (
-      <ArrowUp className="h-3 w-3 text-emerald-400" />
-    ) : (
-      <ArrowDown className="h-3 w-3 text-emerald-400" />
-    )
-  }
 
   return (
     <RankTrackerErrorBoundary>
@@ -407,7 +412,7 @@ export function RankTrackerContent() {
                               onClick={() => handleSort("keyword")}
                               className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
                             >
-                              Keyword <SortIcon field="keyword" />
+                              Keyword <SortIcon field="keyword" currentField={state.sortField} direction={state.sortDirection} />
                             </button>
                           </th>
                           <th className="px-4 py-3 text-center">
@@ -415,7 +420,7 @@ export function RankTrackerContent() {
                               onClick={() => handleSort("rank")}
                               className="flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
                             >
-                              Rank <SortIcon field="rank" />
+                              Rank <SortIcon field="rank" currentField={state.sortField} direction={state.sortDirection} />
                             </button>
                           </th>
                           <th className="px-4 py-3 text-center">
@@ -423,7 +428,7 @@ export function RankTrackerContent() {
                               onClick={() => handleSort("change")}
                               className="flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
                             >
-                              Change <SortIcon field="change" />
+                              Change <SortIcon field="change" currentField={state.sortField} direction={state.sortDirection} />
                             </button>
                           </th>
                           <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -437,7 +442,7 @@ export function RankTrackerContent() {
                               onClick={() => handleSort("volume")}
                               className="flex items-center justify-end gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors w-full"
                             >
-                              Volume <SortIcon field="volume" />
+                              Volume <SortIcon field="volume" currentField={state.sortField} direction={state.sortDirection} />
                             </button>
                           </th>
                           <th className="px-4 py-3 w-24 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">

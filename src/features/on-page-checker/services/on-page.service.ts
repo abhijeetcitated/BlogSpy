@@ -108,6 +108,7 @@ class OnPageService {
   /**
    * Perform a full on-page SEO scan
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async scan(
     request: ScanRequest,
     _onProgress?: (progress: number) => void

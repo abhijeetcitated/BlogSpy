@@ -21,7 +21,8 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react"
 // import { useAuth } from "@clerk/nextjs"
 import type { Notification, NotificationGroup } from "../types"
 import { NOTIFICATION_SETTINGS } from "../constants"
-import { notificationsService } from "../services"
+// notificationsService imported but not used yet - for future real API integration
+// import { notificationsService } from "../services"
 import { MOCK_NOTIFICATIONS, getUnreadCount as getMockUnreadCount } from "../__mocks__"
 
 // ============================================
@@ -56,7 +57,8 @@ const useAuth = () => ({ userId: null as string | null, isLoaded: true })
 
 export function useNotifications(): UseNotificationsReturn {
   // Clerk auth - Fix D
-  const { userId, isLoaded: isAuthLoaded } = useAuth()
+  // userId will be used when API is connected
+  const { isLoaded: isAuthLoaded } = useAuth()
   
   // State - Fix A (error state added)
   const [state, setState] = useState<UseNotificationsState>({
@@ -133,7 +135,7 @@ export function useNotifications(): UseNotificationsReturn {
         error: error instanceof Error ? error.message : "Failed to load notifications",
       }))
     }
-  }, [userId])
+  }, []) // userId will be used when API is connected
 
   // ============================================
   // INITIAL LOAD & AUTO-REFRESH
@@ -228,7 +230,7 @@ export function useNotifications(): UseNotificationsReturn {
 
       // API call (when ready)
       // await notificationsService.markAsRead(userId || "anonymous", id)
-    } catch (error) {
+    } catch {
       // Revert on error
       if (isMountedRef.current) {
         setState(prev => ({
@@ -248,7 +250,7 @@ export function useNotifications(): UseNotificationsReturn {
 
       // API call (when ready)
       // await notificationsService.markAllAsRead(userId || "anonymous")
-    } catch (error) {
+    } catch {
       if (isMountedRef.current) {
         setState(prev => ({
           ...prev,
@@ -270,7 +272,7 @@ export function useNotifications(): UseNotificationsReturn {
 
       // API call (when ready)
       // await notificationsService.dismissNotification(userId || "anonymous", id)
-    } catch (error) {
+    } catch {
       // Revert on error
       if (isMountedRef.current) {
         setState(prev => ({
@@ -293,7 +295,7 @@ export function useNotifications(): UseNotificationsReturn {
 
       // API call (when ready)
       // await notificationsService.clearAllNotifications(userId || "anonymous")
-    } catch (error) {
+    } catch {
       if (isMountedRef.current) {
         setState(prev => ({
           ...prev,

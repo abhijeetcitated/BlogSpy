@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { keyword, videoIds } = body
+    const { keyword } = body
 
     if (!keyword) {
       return NextResponse.json(

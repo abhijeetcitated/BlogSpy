@@ -4,7 +4,7 @@
  */
 
 import { mockStore, generateId, getCurrentTimestamp, delay } from "../__mocks__/credit-mock-store"
-import type { CreditBalance, CreditTransactionType, BalanceResponse } from "../types/credit.types"
+import type { CreditBalance, BalanceResponse } from "../types/credit.types"
 
 class BalanceService {
   private static instance: BalanceService

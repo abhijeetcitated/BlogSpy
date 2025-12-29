@@ -6,22 +6,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  ZapIcon,
-  ViewsIcon,
-  LikeIcon,
-  ShareIcon,
-  SubscribersIcon,
-  DurationIcon,
-  HashtagIcon,
   CopyIcon,
   ExternalLinkIcon,
-  SoundIcon,
-  FlameIcon,
 } from "@/components/icons/platform-icons"
 import type { TikTokResult } from "../types/video-search.types"
 import {

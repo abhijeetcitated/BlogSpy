@@ -42,12 +42,13 @@ class PurchaseService {
 
       let credits = request.credits
       let amount = request.amount
-      let packageName = "Custom"
+      // packageName kept for future logging/analytics
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const packageName = pkg?.name ?? "Custom"
 
       if (pkg) {
         credits = pkg.credits
         amount = pkg.price
-        packageName = pkg.name
       }
 
       // Apply promo code if provided

@@ -95,6 +95,7 @@ function validateArticle(
   if (!data.datePublished) errors.push({ field: "datePublished", message: "Publication date is required" })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateFAQ(
   data: Record<string, unknown>,
   errors: ValidationError[],
@@ -105,6 +106,7 @@ function validateFAQ(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateHowTo(
   data: Record<string, unknown>,
   errors: ValidationError[],
@@ -150,6 +152,7 @@ function validateReview(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateLocalBusiness(
   data: Record<string, unknown>,
   errors: ValidationError[],
@@ -162,6 +165,7 @@ function validateLocalBusiness(
   if (!data.telephone) errors.push({ field: "telephone", message: "Phone number is required" })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateEvent(
   data: Record<string, unknown>,
   errors: ValidationError[],
@@ -173,6 +177,7 @@ function validateEvent(
   if (!data.locationName) errors.push({ field: "locationName", message: "Venue name is required" })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function validateOrganization(
   data: Record<string, unknown>,
   errors: ValidationError[],

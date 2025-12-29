@@ -25,14 +25,15 @@ import type {
   CreditValidationResult,
   CreditUsageStats,
   TransactionType,
-  TransactionStatus,
+  // TransactionStatus - will be used when API is connected
 } from "../types/credits.types"
 
 // Import from split modules
 import { CREDIT_PLANS, getPlans, getPlan, calculateCustomPrice, suggestPlan } from "./credit-plans"
 import { promoCodeService } from "./promo-codes.service"
 import { creditTransactionService } from "./credit-transactions.service"
-import { BLOGSPY_API_CONFIG } from "../config"
+// BLOGSPY_API_CONFIG - will be used when API is connected
+// import { BLOGSPY_API_CONFIG } from "../config"
 
 // ============================================
 // IN-MEMORY STORAGE (Replace with DB)
@@ -139,12 +140,12 @@ class CreditService {
       }
 
       // Apply promo code if provided
-      let discount = 0
+      let discountAmount = 0
       let bonusCredits = 0
       if (promoCode) {
         const promoResult = await promoCodeService.applyPromoCode(promoCode, price, planId)
         if (promoResult.isValid) {
-          discount = promoResult.discountAmount
+          discountAmount = promoResult.discountAmount
           bonusCredits = promoResult.bonusCredits
           price = promoResult.finalPrice
         }
@@ -180,7 +181,7 @@ class CreditService {
         amount: totalCreditsToAdd,
         balanceBefore: balance.availableCredits - totalCreditsToAdd,
         balanceAfter: balance.availableCredits,
-        description: `Purchased ${credits} credits${bonusCredits ? ` + ${bonusCredits} bonus` : ""} (${planId} plan)`,
+        description: `Purchased ${credits} credits${bonusCredits ? ` + ${bonusCredits} bonus` : ""}${discountAmount ? ` (saved ₹${discountAmount})` : ""} (${planId} plan)`,
         status: "completed",
         metadata: {
           planId,

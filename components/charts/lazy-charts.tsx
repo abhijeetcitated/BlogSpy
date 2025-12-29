@@ -1,8 +1,6 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { Skeleton } from "@/components/ui/skeleton"
-import { type ComponentProps } from "react"
 
 // Loading placeholder for charts
 function ChartLoading({ height = 300 }: { height?: number }) {

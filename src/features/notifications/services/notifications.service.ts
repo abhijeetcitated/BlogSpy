@@ -162,9 +162,10 @@ class NotificationsService {
    * Subscribe to real-time notifications (WebSocket/SSE)
    * TODO: Implement with Supabase Realtime or similar
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   subscribeToNotifications(
     userId: string,
-    onNotification: (notification: Notification) => void
+    _onNotification: (notification: Notification) => void
   ): () => void {
     // Return unsubscribe function
     // In real implementation, this would set up WebSocket/SSE

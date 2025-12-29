@@ -1,20 +1,9 @@
 import type {
-  SearchMode,
-  Platform,
-  SortOption,
   ViralPotential,
   ContentAge,
-  Seasonality,
-  VolumeTrend,
-  Competition,
-  Difficulty,
-  ContentTypeDistribution,
-  AudienceAgeDistribution,
-  TopChannel,
-  KeywordStats,
-  VideoSuggestion,
 } from "./common.types"
 
+// Re-export common types for convenience
 export type {
   SearchMode,
   Platform,

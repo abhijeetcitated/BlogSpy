@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
-  Eye, 
-  TrendingUp, 
-  Target, 
-  Zap,
+  Shield,
+  AlertTriangle,
+  DollarSign,
+  Settings2,
   Search,
   Filter,
   ArrowUpRight,
@@ -19,6 +19,8 @@ import {
   Link2,
   Star,
   MessageSquare,
+  Info,
+  Zap,
 } from "lucide-react"
 import {
   Select,
@@ -27,10 +29,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { CitationCard } from "./CitationCard"
 import { PlatformBreakdown } from "./PlatformBreakdown"
 import { VisibilityTrendChart } from "./VisibilityTrendChart"
 import { QueryOpportunities } from "./QueryOpportunities"
+import { FactPricingGuard } from "./FactPricingGuard"
 import { 
   generateCitations, 
   calculateVisibilityStats, 
@@ -38,9 +47,21 @@ import {
   generateTrendData,
   analyzeQueries,
   getVisibilityTier,
+  calculateTrustMetrics,
 } from "../utils"
 import { AI_PLATFORMS, DATE_RANGE_OPTIONS, PlatformIcons } from "../constants"
-import type { AIPlatform, AIVisibilityFilters } from "../types"
+import type { AIPlatform, AIVisibilityFilters, HallucinationRisk } from "../types"
+
+// Helper to get risk color
+const getRiskColor = (risk: HallucinationRisk) => {
+  switch (risk) {
+    case 'low': return { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-400/30' }
+    case 'medium': return { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-400/30' }
+    case 'high': return { text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-400/30' }
+    case 'critical': return { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-400/30' }
+    default: return { text: 'text-muted-foreground', bg: 'bg-muted/10', border: 'border-muted/30' }
+  }
+}
 
 export function AIVisibilityDashboard() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -57,6 +78,7 @@ export function AIVisibilityDashboard() {
   const platformStats = useMemo(() => getPlatformStats(citations), [citations])
   const trendData = useMemo(() => generateTrendData(), [])
   const queryAnalysis = useMemo(() => analyzeQueries(citations), [citations])
+  const trustMetrics = useMemo(() => calculateTrustMetrics(citations), [citations])
 
   const filteredCitations = useMemo(() => {
     let filtered = [...citations]
@@ -80,125 +102,123 @@ export function AIVisibilityDashboard() {
     return filtered
   }, [citations, searchQuery, filters])
 
-  const visibilityTier = getVisibilityTier(stats.visibilityScore)
+  const riskColors = getRiskColor(trustMetrics.hallucinationRisk)
 
+  // NEW: CFO-focused stat cards (Trust Score, Hallucination Risk, Revenue at Risk, AI Readiness)
   const statCards = [
     {
-      title: "Total Citations",
-      value: stats.totalCitations,
-      change: stats.weekOverWeekChange,
-      changeLabel: "vs last week",
-      icon: Quote,
-      color: "text-cyan-400",
-      bgColor: "bg-cyan-500/10",
+      title: "Trust Score",
+      value: trustMetrics.trustScore,
+      suffix: "%",
+      description: "How accurate AI is about you",
+      icon: Shield,
+      color: trustMetrics.trustScore >= 80 ? "text-emerald-400" : trustMetrics.trustScore >= 60 ? "text-amber-400" : "text-red-400",
+      bgColor: trustMetrics.trustScore >= 80 ? "bg-emerald-500/10" : trustMetrics.trustScore >= 60 ? "bg-amber-500/10" : "bg-red-500/10",
+      tooltip: "Calculated as (Correct AI Answers / Total Checks) × 100",
     },
     {
-      title: "Visibility Score",
-      value: stats.visibilityScore,
-      suffix: "/100",
-      tier: visibilityTier.label,
-      tierColor: visibilityTier.color,
-      icon: Eye,
-      color: visibilityTier.color,
-      bgColor: visibilityTier.bg,
+      title: "Hallucination Risk",
+      value: trustMetrics.hallucinationRisk.toUpperCase(),
+      isStatus: true,
+      statusCount: trustMetrics.hallucinationCount,
+      description: trustMetrics.hallucinationCount > 0 ? `${trustMetrics.hallucinationCount} issue${trustMetrics.hallucinationCount > 1 ? 's' : ''} detected` : "No issues found",
+      icon: AlertTriangle,
+      color: riskColors.text,
+      bgColor: riskColors.bg,
+      tooltip: "AI is giving wrong information about your brand",
     },
     {
-      title: "Avg. Position",
-      value: stats.avgPosition,
-      description: "In AI responses",
-      icon: Target,
-      color: "text-amber-400",
-      bgColor: "bg-amber-500/10",
+      title: "Revenue at Risk",
+      value: trustMetrics.revenueAtRisk,
+      prefix: "$",
+      description: "If AI drops your citations",
+      icon: DollarSign,
+      color: "text-red-400",
+      bgColor: "bg-red-500/10",
+      tooltip: "Traffic value × Commercial intent keywords",
     },
     {
-      title: "Unique Queries",
-      value: stats.uniqueQueries,
-      change: stats.competitorComparison,
-      changeLabel: "above industry",
-      icon: MessageSquare,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/10",
+      title: "AI Readiness",
+      value: trustMetrics.aiReadinessScore,
+      suffix: "%",
+      description: "Technical optimization score",
+      icon: Settings2,
+      color: trustMetrics.aiReadinessScore >= 80 ? "text-emerald-400" : trustMetrics.aiReadinessScore >= 60 ? "text-amber-400" : "text-red-400",
+      bgColor: trustMetrics.aiReadinessScore >= 80 ? "bg-emerald-500/10" : trustMetrics.aiReadinessScore >= 60 ? "bg-amber-500/10" : "bg-red-500/10",
+      tooltip: "robots.txt + llms.txt + Schema markup score",
     },
   ]
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
-          <Bot className="h-6 w-6 sm:h-7 sm:w-7 text-cyan-400 flex-shrink-0" />
-          <span className="truncate">AI Visibility Tracker</span>
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          Track how AI chatbots cite and recommend your content
-        </p>
+      {/* Header with Credits Badge */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+            <Bot className="h-6 w-6 sm:h-7 sm:w-7 text-cyan-400 shrink-0" />
+            <span className="truncate">AI Visibility Tracker</span>
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            Track how AI Agents recommend & sell you.
+          </p>
+        </div>
+        {/* Credits Badge */}
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-linear-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 rounded-lg">
+          <Zap className="h-4 w-4 text-amber-400" />
+          <span className="text-sm font-medium text-amber-400">500</span>
+          <span className="text-xs text-muted-foreground">Credits</span>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        {statCards.map((stat, index) => (
-          <Card key={index} className="bg-card border-border">
-            <CardContent className="p-2.5 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-0 sm:items-start sm:justify-between">
-                <div className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${stat.bgColor}`}>
-                  <stat.icon className={`h-3.5 w-3.5 sm:h-5 sm:w-5 ${stat.color}`} />
+      {/* NEW: CFO Stats Grid - Trust Score, Hallucination Risk, Revenue at Risk, AI Readiness */}
+      <TooltipProvider>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          {statCards.map((stat, index) => (
+            <Card key={index} className="bg-card border-border relative overflow-hidden">
+              <CardContent className="p-2.5 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-0 sm:items-start sm:justify-between">
+                  <div className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${stat.bgColor}`}>
+                    <stat.icon className={`h-3.5 w-3.5 sm:h-5 sm:w-5 ${stat.color}`} />
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 absolute top-2 right-2 opacity-50 hover:opacity-100">
+                        <Info className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs max-w-[200px]">{stat.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <div className="flex-1 sm:hidden min-w-0">
+                    <div className="flex items-baseline gap-1">
+                      {stat.prefix && <span className="text-sm text-muted-foreground">{stat.prefix}</span>}
+                      <span className={`text-base font-bold ${stat.isStatus ? stat.color : 'text-foreground'}`}>
+                        {stat.value}
+                      </span>
+                      {stat.suffix && <span className="text-[10px] text-muted-foreground">{stat.suffix}</span>}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">{stat.title}</p>
+                  </div>
                 </div>
-                <div className="flex-1 sm:hidden min-w-0">
+                <div className="hidden sm:block mt-3">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-base font-bold text-foreground">
+                    {stat.prefix && <span className="text-lg text-muted-foreground">{stat.prefix}</span>}
+                    <span className={`text-2xl font-bold ${stat.isStatus ? stat.color : 'text-foreground'}`}>
                       {stat.value}
                     </span>
-                    {stat.suffix && (
-                      <span className="text-[10px] text-muted-foreground">{stat.suffix}</span>
-                    )}
+                    {stat.suffix && <span className="text-sm text-muted-foreground">{stat.suffix}</span>}
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate">{stat.title}</p>
-                </div>
-                {stat.change !== undefined && (
-                  <Badge 
-                    variant="outline" 
-                    className={`text-[10px] sm:text-xs px-1 sm:px-2 shrink-0 ${stat.change >= 0 
-                      ? "text-emerald-400 border-emerald-400/30" 
-                      : "text-red-400 border-red-400/30"
-                    }`}
-                  >
-                    <span className="hidden sm:inline-flex items-center">
-                      {stat.change >= 0 ? (
-                        <ArrowUpRight className="h-3 w-3 mr-0.5" />
-                      ) : (
-                        <ArrowDownRight className="h-3 w-3 mr-0.5" />
-                      )}
-                    </span>
-                    {stat.change >= 0 ? '+' : ''}{Math.abs(stat.change)}%
-                  </Badge>
-                )}
-                {stat.tier && (
-                  <Badge variant="outline" className={`text-[10px] sm:text-xs px-1 sm:px-2 shrink-0 ${stat.tierColor} border-current/30`}>
-                    {stat.tier}
-                  </Badge>
-                )}
-              </div>
-              <div className="hidden sm:block mt-3">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-bold text-foreground">
-                    {stat.value}
-                  </span>
-                  {stat.suffix && (
-                    <span className="text-sm text-muted-foreground">{stat.suffix}</span>
+                  <p className="text-sm text-muted-foreground truncate">{stat.title}</p>
+                  {stat.description && (
+                    <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground truncate">{stat.title}</p>
-                {stat.changeLabel && (
-                  <p className="text-xs text-muted-foreground mt-1">{stat.changeLabel}</p>
-                )}
-                {stat.description && (
-                  <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </TooltipProvider>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -209,6 +229,9 @@ export function AIVisibilityDashboard() {
           <PlatformBreakdown stats={platformStats} />
         </div>
       </div>
+
+      {/* 🛡️ Fact & Pricing Guard - Hallucination Defense Log (USP) */}
+      <FactPricingGuard />
 
       {/* Filters and Search */}
       <Card className="bg-card border-border">

@@ -40,7 +40,7 @@ export function usePromoCode(): UsePromoCodeReturn {
         setDiscount(response.data.discount)
         setMessage(response.data.message)
       }
-    } catch (err) {
+    } catch {
       setIsValid(false)
       setMessage("Failed to validate promo code")
     } finally {

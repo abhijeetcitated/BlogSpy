@@ -11,13 +11,6 @@ const TIKTOK_API_KEY = process.env.RAPIDAPI_KEY
 const TIKTOK_API_HOST = "tiktok-scraper7.p.rapidapi.com"
 const TIKTOK_API_BASE = `https://${TIKTOK_API_HOST}`
 
-interface TikTokSearchParams {
-  query: string
-  count?: number
-  cursor?: string
-  region?: string
-}
-
 /**
  * GET /api/video-hijack/tiktok
  * Search TikTok videos for a given keyword/hashtag

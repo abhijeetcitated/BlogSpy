@@ -1,25 +1,49 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { 
   ExternalLink, 
   Clock, 
   Quote,
-  ArrowUp,
   Users,
+  MoreVertical,
+  Flag,
+  Code2,
+  CheckCircle,
 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { AICitation } from "../types"
 import { AI_PLATFORMS, CITATION_TYPES, PlatformIcons } from "../constants"
-import { formatRelativeTime, getCitationTypeConfig } from "../utils"
+import { formatRelativeTime } from "../utils"
 
 interface CitationCardProps {
   citation: AICitation
 }
 
 export function CitationCard({ citation }: CitationCardProps) {
+  const [flagged, setFlagged] = useState(false)
   const platform = AI_PLATFORMS[citation.platform]
   const citationType = CITATION_TYPES[citation.citationType]
+
+  // Sentiment dot color
+  const getSentimentDot = () => {
+    switch (citation.sentiment) {
+      case 'positive':
+        return <span className="w-2 h-2 rounded-full bg-emerald-500" title="Positive" />
+      case 'negative':
+        return <span className="w-2 h-2 rounded-full bg-red-500" title="Negative" />
+      default:
+        return <span className="w-2 h-2 rounded-full bg-gray-400" title="Neutral" />
+    }
+  }
 
   return (
     <Card className="bg-card border-border hover:border-muted-foreground/30 transition-colors">
@@ -29,7 +53,7 @@ export function CitationCard({ citation }: CitationCardProps) {
           <div className="flex items-start justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Platform Icon */}
-              <div className={`p-1.5 sm:p-2 rounded-lg ${platform.bgColor} flex-shrink-0`}>
+              <div className="p-1.5 sm:p-2 shrink-0">
                 <span className={`${platform.color} [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-5 sm:[&>svg]:h-5`}>
                   {PlatformIcons[citation.platform] && 
                     PlatformIcons[citation.platform]()}
@@ -55,19 +79,56 @@ export function CitationCard({ citation }: CitationCardProps) {
               </div>
             </div>
 
-            {/* Citation Type Badge */}
-            <Badge 
-              variant="outline"
-              className={`flex-shrink-0 text-[10px] sm:text-xs px-1.5 sm:px-2 ${
-                citation.sentiment === 'positive' 
-                  ? "text-emerald-400 border-emerald-400/30"
-                  : citation.sentiment === 'negative'
-                  ? "text-red-400 border-red-400/30"
-                  : "text-muted-foreground border-muted-foreground/30"
-              }`}
-            >
-              <span className="hidden xs:inline">{citationType.icon}</span> {citationType.label}
-            </Badge>
+            {/* Sentiment Dot + Citation Type Badge + Actions */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Sentiment Indicator Dot */}
+              {getSentimentDot()}
+              
+              {/* Citation Type Badge */}
+              <Badge 
+                variant="outline"
+                className={`flex-shrink-0 text-[10px] sm:text-xs px-1.5 sm:px-2 ${
+                  citation.sentiment === 'positive' 
+                    ? "text-emerald-400 border-emerald-400/30"
+                    : citation.sentiment === 'negative'
+                    ? "text-red-400 border-red-400/30"
+                    : "text-muted-foreground border-muted-foreground/30"
+                }`}
+              >
+                <span className="hidden xs:inline">{citationType.icon}</span> {citationType.label}
+              </Badge>
+
+              {/* Actions Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem 
+                    onClick={() => setFlagged(!flagged)}
+                    className="text-xs cursor-pointer"
+                  >
+                    {flagged ? (
+                      <>
+                        <CheckCircle className="h-3.5 w-3.5 mr-2 text-emerald-500" />
+                        Flagged
+                      </>
+                    ) : (
+                      <>
+                        <Flag className="h-3.5 w-3.5 mr-2" />
+                        Flag as Error
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-xs cursor-pointer">
+                    <Code2 className="h-3.5 w-3.5 mr-2" />
+                    Fix Schema
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Query */}

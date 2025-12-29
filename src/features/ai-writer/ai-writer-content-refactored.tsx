@@ -15,7 +15,7 @@
 
 "use client"
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import { useState, useCallback, useMemo, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
@@ -30,7 +30,7 @@ import { History, FileText } from "lucide-react"
 import { Details, DetailsSummary } from "./extensions"
 
 // Types
-import type { NLPKeyword, EditorStats, AIAction, WriterContext } from "./types"
+import type { NLPKeyword, EditorStats, AIAction } from "./types"
 import type { WritingQueueItem } from "./components"
 
 // Constants & Mocks
@@ -39,14 +39,13 @@ import {
   CRITICAL_ISSUES_CONFIG,
   DEFAULT_EDITOR_STATS,
 } from "./constants"
-import { AI_GENERATED_CONTENT, INITIAL_EDITOR_CONTENT } from "./__mocks__"
+import { INITIAL_EDITOR_CONTENT } from "./__mocks__"
 
 // Utils
 import {
   analyzeEditorContent,
   updateNLPKeywordsUsage,
   calculateSEOScore,
-  generateSlug,
   parseWriterContext,
   getDemoContextForDev,
 } from "./utils"
@@ -135,13 +134,6 @@ function buildWritingQueue(): WritingQueueItem[] {
   return queue
 }
 
-function capitalizeWords(str: string): string {
-  return str
-    .split(" ")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ")
-}
-
 function generateTitleFromKeyword(keyword: string, intent: string): string {
   const capitalizedKeyword = keyword
     .split(" ")
@@ -192,11 +184,14 @@ export function AIWriterContentRefactored() {
   // ========================================
   // CREDITS STATE
   // ========================================
+  // TODO: Integrate with credits system when premium features are enabled
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [creditBalance, setCreditBalance] = useState(() => creditsService.getBalance())
   
   // ========================================
   // VERSION HISTORY STATE
   // ========================================
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [versions, setVersions] = useState<Array<{
     id: string
     timestamp: Date
@@ -335,7 +330,8 @@ export function AIWriterContentRefactored() {
   // ========================================
   // AI GENERATION HOOK
   // ========================================
-  const { isGenerating: isAIGenerating, progress: generationProgress, generateArticle, abort: abortGeneration } = useAIGeneration({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { isGenerating: isAIGenerating, progress: generationProgress, generateArticle, abort: _abortGeneration } = useAIGeneration({
     editor,
     showNotification,
     setTitle,

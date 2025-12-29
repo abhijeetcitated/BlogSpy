@@ -156,7 +156,7 @@ export function useAIGeneration(options: UseAIGenerationOptions): UseAIGeneratio
     // PILLAR ARTICLE GENERATION
     // ========================================
     if (context.contentType === "pillar" && context.pillarData) {
-      const { subKeywords, recommendedLength, recommendedHeadings } = context.pillarData
+      const { subKeywords } = context.pillarData
       const keyword = context.keyword
       const keywordCapitalized = capitalizeWords(keyword)
       const targetMinWords = 3000
@@ -301,7 +301,7 @@ export function useAIGeneration(options: UseAIGenerationOptions): UseAIGeneratio
       await typeContent(contentChunks, 8)
       
       if (!abortRef.current) {
-        showNotification(`✅ Pillar article generated! ${Math.max(targetMinWords, recommendedLength)}+ words 🚀`)
+        showNotification(`✅ Pillar article generated! ${targetMinWords}+ words 🚀`)
       }
     }
     

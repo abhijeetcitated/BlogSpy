@@ -36,9 +36,8 @@ export const PinterestKeywordCard = memo(function PinterestKeywordCard({
   
   const intentConfig = SOCIAL_INTENT_COLORS[keyword.socialIntent]
   const data = keyword.platforms.pinterest
-  
-  if (!data) return null
 
+  // Hooks must be called before any early returns
   const handleCopyKeyword = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(keyword.keyword)
@@ -57,6 +56,9 @@ export const PinterestKeywordCard = memo(function PinterestKeywordCard({
   const handleDelete = useCallback(() => {
     onDelete?.(keyword.id)
   }, [keyword.id, onDelete])
+  
+  // Early return after all hooks
+  if (!data) return null
 
   return (
     <Card className="bg-card border-border hover:border-red-500/30 transition-all group">

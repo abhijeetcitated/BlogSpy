@@ -39,7 +39,8 @@ import type { NewsPlatform, NewsSummary } from "./types"
 // Replace with: import { useAuth, useUser } from "@clerk/nextjs"
 // ============================================
 const useAuth = () => ({ userId: "mock-user-id" as string | null, isLoaded: true })
-const useUser = () => ({ user: { firstName: "User" } })
+// useUser mock available when needed:
+// const useUser = () => ({ user: { firstName: "User" } })
 
 // ============================================
 // LAZY LOADED COMPONENTS (Performance)
@@ -150,7 +151,8 @@ export function NewsTrackerContent() {
   // AUTH - Get real user ID from Clerk
   // ============================================
   const { userId, isLoaded: authLoaded } = useAuth()
-  const { user } = useUser()
+  // User object available for future use
+  // const { user } = useUser()
   
   // ============================================
   // HOOKS - Use actual hooks instead of localStorage
@@ -160,8 +162,7 @@ export function NewsTrackerContent() {
     isLoading: creditsLoading,
     error: creditsError,
     lowCredits,
-    validateCredits,
-    deductCredits,
+    // validateCredits and deductCredits available for future use
     fetchBalance,
   } = useCredits({ 
     userId: userId || "", 
@@ -172,11 +173,11 @@ export function NewsTrackerContent() {
     keywords,
     isTracking,
     error: trackingError,
-    trackKeyword,
+    // trackKeyword available for single keyword tracking
     trackMultiple,
     refreshKeyword,
     removeKeyword,
-    totalKeywords,
+    // totalKeywords available for limit display
     canTrack,
   } = useNewsTracker({ 
     userId: userId || "",
@@ -279,7 +280,7 @@ export function NewsTrackerContent() {
         return true
       }
       return false
-    } catch (err) {
+    } catch {
       toast.error("Failed to add keywords")
       return false
     }
@@ -309,7 +310,7 @@ export function NewsTrackerContent() {
           description: `Updated ${keywords.length} keywords`,
         })
       }
-    } catch (err) {
+    } catch {
       if (!isCancelled) {
         toast.error("Failed to refresh")
       }
@@ -334,7 +335,7 @@ export function NewsTrackerContent() {
     try {
       await refreshKeyword(keywordId)
       toast.success("Keyword refreshed")
-    } catch (err) {
+    } catch {
       toast.error("Failed to refresh keyword")
     } finally {
       setIsRefreshingKeyword(null)
@@ -375,7 +376,7 @@ export function NewsTrackerContent() {
       })
       toast.success("Alert saved")
       return true
-    } catch (err) {
+    } catch {
       toast.error("Failed to save alert")
       return false
     }

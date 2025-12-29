@@ -13,7 +13,6 @@ import {
 } from "recharts"
 import { TrendingUp } from "lucide-react"
 import { VisibilityTrendData } from "../types"
-import { AI_PLATFORMS } from "../constants"
 
 interface VisibilityTrendChartProps {
   data: VisibilityTrendData[]
@@ -46,40 +45,56 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="px-2 sm:px-6 pb-3 sm:pb-6">
-        <div className="h-[200px] sm:h-[280px]">
+      <CardContent className="px-1 sm:px-6 pb-3 sm:pb-6">
+        <div className="h-[180px] sm:h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
+            <AreaChart data={data} margin={{ top: 10, right: 5, left: -30, bottom: 0 }}>
               <defs>
+                {/* Google AI Overviews - Red (NEW) */}
+                <linearGradient id="googleAioGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
+                {/* ChatGPT - Green */}
                 <linearGradient id="chatgptGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="claudeGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                </linearGradient>
+                {/* Perplexity - Cyan */}
                 <linearGradient id="perplexityGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                 </linearGradient>
+                {/* Claude - Orange */}
+                <linearGradient id="claudeGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                </linearGradient>
+                {/* Gemini - Blue */}
                 <linearGradient id="geminiGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+                {/* Apple Siri - Pink */}
+                <linearGradient id="appleSiriGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ec4899" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis 
                 dataKey="date" 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'var(--color-muted-foreground)', fontSize: 10 }}
+                tick={{ fill: 'var(--color-muted-foreground)', fontSize: 9 }}
                 interval="preserveStartEnd"
+                tickMargin={4}
               />
               <YAxis 
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: 'var(--color-muted-foreground)', fontSize: 10 }}
-                width={30}
+                tick={{ fill: 'var(--color-muted-foreground)', fontSize: 9 }}
+                width={25}
+                tickMargin={2}
               />
               <Tooltip 
                 contentStyle={{
@@ -92,13 +107,31 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
                 labelStyle={{ color: 'var(--color-foreground)', fontWeight: 600 }}
               />
               <Legend 
-                wrapperStyle={{ paddingTop: '8px', fontSize: '10px' }}
-                iconSize={8}
+                wrapperStyle={{ 
+                  paddingTop: '8px', 
+                  paddingLeft: '30px',
+                }}
+                iconSize={6}
+                iconType="circle"
+                align="center"
+                layout="horizontal"
+                verticalAlign="bottom"
                 formatter={(value) => (
-                  <span style={{ color: 'var(--color-muted-foreground)', fontSize: '10px' }}>
+                  <span style={{ color: 'var(--color-muted-foreground)', fontSize: '9px', marginRight: '6px' }}>
                     {value}
                   </span>
                 )}
+              />
+              {/* Google AI Overviews - NEW */}
+              <Area
+                type="monotone"
+                dataKey="googleAio"
+                name="Google AIO"
+                stroke="#ef4444"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#googleAioGradient)"
+                stackId="1"
               />
               <Area
                 type="monotone"
@@ -108,16 +141,6 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#chatgptGradient)"
-                stackId="1"
-              />
-              <Area
-                type="monotone"
-                dataKey="claude"
-                name="Claude"
-                stroke="#f97316"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#claudeGradient)"
                 stackId="1"
               />
               <Area
@@ -132,12 +155,32 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
               />
               <Area
                 type="monotone"
+                dataKey="claude"
+                name="Claude"
+                stroke="#f97316"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#claudeGradient)"
+                stackId="1"
+              />
+              <Area
+                type="monotone"
                 dataKey="gemini"
                 name="Gemini"
                 stroke="#3b82f6"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#geminiGradient)"
+                stackId="1"
+              />
+              <Area
+                type="monotone"
+                dataKey="appleSiri"
+                name="Apple Siri"
+                stroke="#ec4899"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#appleSiriGradient)"
                 stackId="1"
               />
             </AreaChart>

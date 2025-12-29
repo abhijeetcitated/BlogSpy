@@ -5,7 +5,7 @@
 
 "use client"
 
-import { memo, useMemo, useState, useCallback, useRef, useEffect } from "react"
+import { memo, useMemo, useState, useRef, useEffect } from "react"
 import { SocialKeywordCard } from "./SocialKeywordCard"
 import { SOCIAL_TRACKER_DEFAULTS } from "../../constants"
 import type { SocialKeyword, SocialPlatform } from "../../types"

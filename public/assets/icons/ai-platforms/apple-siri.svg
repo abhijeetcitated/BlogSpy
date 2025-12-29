@@ -1,0 +1,17 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="siriGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B9D"/>
+      <stop offset="50%" stop-color="#C44FE2"/>
+      <stop offset="100%" stop-color="#6F7BF7"/>
+    </linearGradient>
+    <linearGradient id="siriGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#42E695"/>
+      <stop offset="50%" stop-color="#3BB2B8"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+  <circle cx="12" cy="12" r="10" stroke="url(#siriGrad1)" stroke-width="2" fill="none"/>
+  <circle cx="12" cy="12" r="6" stroke="url(#siriGrad2)" stroke-width="2" fill="none"/>
+  <circle cx="12" cy="12" r="2.5" fill="url(#siriGrad1)"/>
+</svg>

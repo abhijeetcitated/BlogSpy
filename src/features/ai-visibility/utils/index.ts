@@ -10,6 +10,8 @@ import {
   ContentVisibility,
   QueryAnalysis,
   CitationType,
+  TrustMetrics,
+  HallucinationRisk,
 } from "../types"
 import { 
   SAMPLE_CITATIONS, 
@@ -106,29 +108,32 @@ export function getPlatformStats(citations: AICitation[]): PlatformStats[] {
 }
 
 // Generate trend data for chart (deterministic to avoid hydration mismatch)
+// Updated: Added Google AIO data
 export function generateTrendData(): VisibilityTrendData[] {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   
   // Use deterministic seed-based values instead of Math.random()
   const seedValues = [
-    { chatgpt: 3, claude: 2, perplexity: 2, gemini: 1 },
-    { chatgpt: 4, claude: 2, perplexity: 3, gemini: 2 },
-    { chatgpt: 5, claude: 3, perplexity: 3, gemini: 2 },
-    { chatgpt: 5, claude: 3, perplexity: 4, gemini: 2 },
-    { chatgpt: 6, claude: 4, perplexity: 4, gemini: 3 },
-    { chatgpt: 7, claude: 4, perplexity: 5, gemini: 3 },
-    { chatgpt: 8, claude: 5, perplexity: 5, gemini: 4 },
+    { googleAio: 2, chatgpt: 3, perplexity: 2, claude: 2, gemini: 1, appleSiri: 1 },
+    { googleAio: 3, chatgpt: 4, perplexity: 3, claude: 2, gemini: 2, appleSiri: 1 },
+    { googleAio: 3, chatgpt: 5, perplexity: 3, claude: 3, gemini: 2, appleSiri: 2 },
+    { googleAio: 4, chatgpt: 5, perplexity: 4, claude: 3, gemini: 2, appleSiri: 2 },
+    { googleAio: 5, chatgpt: 6, perplexity: 4, claude: 4, gemini: 3, appleSiri: 2 },
+    { googleAio: 5, chatgpt: 7, perplexity: 5, claude: 4, gemini: 3, appleSiri: 3 },
+    { googleAio: 6, chatgpt: 8, perplexity: 5, claude: 5, gemini: 4, appleSiri: 3 },
   ]
   
   return days.map((day, index) => {
     const values = seedValues[index]
     return {
       date: day,
+      googleAio: values.googleAio,
       chatgpt: values.chatgpt,
-      claude: values.claude,
       perplexity: values.perplexity,
+      claude: values.claude,
       gemini: values.gemini,
-      total: values.chatgpt + values.claude + values.perplexity + values.gemini,
+      appleSiri: values.appleSiri,
+      total: values.googleAio + values.chatgpt + values.perplexity + values.claude + values.gemini + values.appleSiri,
     }
   })
 }
@@ -197,4 +202,47 @@ export function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
   return num.toString()
+}
+
+// NEW: Calculate Trust Metrics for CFO Header Cards
+export function calculateTrustMetrics(citations: AICitation[]): TrustMetrics {
+  // Demo values - in production, these would come from actual hallucination checks
+  const totalChecks = citations.length + 5 // Simulating additional checks
+  const correctAnswers = Math.floor(totalChecks * 0.85) // 85% accuracy demo
+  const hallucinationCount = 1 // Demo: 1 hallucination detected
+  
+  // Trust Score: (Correct AI Answers / Total Checks) × 100
+  const trustScore = Math.round((correctAnswers / totalChecks) * 100)
+  
+  // Hallucination Risk based on count and severity
+  let hallucinationRisk: HallucinationRisk = 'low'
+  if (hallucinationCount >= 3) hallucinationRisk = 'critical'
+  else if (hallucinationCount >= 2) hallucinationRisk = 'high'
+  else if (hallucinationCount >= 1) hallucinationRisk = 'medium'
+  
+  // Revenue at Risk: Traffic value from AI citations
+  // Formula: (Estimated monthly traffic from AI × Avg CPC × Commercial intent %)
+  const avgTrafficPerCitation = 150 // Demo value
+  const avgCPC = 0.5 // Demo value
+  const commercialIntentPercent = 0.4 // 40% of queries are commercial
+  const revenueAtRisk = Math.round(
+    citations.length * avgTrafficPerCitation * avgCPC * commercialIntentPercent
+  )
+  
+  // AI Readiness Score: Technical checks (demo values)
+  // In production: robots.txt + llms.txt + Schema + Speed
+  const robotsTxtScore = 25 // 25/25 points
+  const llmsTxtScore = 0 // 0/25 points (missing)
+  const schemaScore = 20 // 20/25 points
+  const speedScore = 23 // 23/25 points
+  const aiReadinessScore = robotsTxtScore + llmsTxtScore + schemaScore + speedScore // 68%
+  
+  return {
+    trustScore,
+    hallucinationRisk,
+    hallucinationCount,
+    revenueAtRisk,
+    aiReadinessScore,
+    lastChecked: new Date().toISOString(),
+  }
 }

@@ -47,5 +47,18 @@ export function useProfile() {
     displayName: profile?.name || 'User',
     email: profile?.email || '',
     plan: profile?.plan || 'FREE',
+    avatar: profile?.avatar || null,
+    initials: getInitials(profile?.name),
   };
+}
+
+// Get initials from name (e.g., "John Doe" → "JD")
+function getInitials(name?: string | null): string {
+  if (!name) return 'U';
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 }

@@ -6,22 +6,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  ZapIcon,
-  ViewsIcon,
-  LikeIcon,
-  CommentIcon,
-  SubscribersIcon,
-  DurationIcon,
-  TagIcon,
   CopyIcon,
   ExternalLinkIcon,
-  ClockIcon,
-  FlameIcon,
 } from "@/components/icons/platform-icons"
 import type { VideoResult } from "../types/video-search.types"
 import {

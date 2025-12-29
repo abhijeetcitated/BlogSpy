@@ -18,7 +18,6 @@ import {
   GridIcon,
   ListIcon,
   DownloadIcon,
-  FilterIcon,
 } from "@/components/icons/platform-icons"
 import { YouTubeResultCard } from "./YouTubeResultCard"
 import type { YouTubeVideoResult } from "../../types/youtube.types"

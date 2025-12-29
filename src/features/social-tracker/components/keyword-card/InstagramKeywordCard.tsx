@@ -38,9 +38,8 @@ export const InstagramKeywordCard = memo(function InstagramKeywordCard({
   
   const intentConfig = SOCIAL_INTENT_COLORS[keyword.socialIntent]
   const data = keyword.platforms.instagram
-  
-  if (!data) return null
 
+  // Hooks must be called before any early returns
   const handleCopyKeyword = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(keyword.keyword)
@@ -53,7 +52,7 @@ export const InstagramKeywordCard = memo(function InstagramKeywordCard({
   }, [keyword.keyword])
 
   const handleCopyHashtags = useCallback(async () => {
-    if (!data.topHashtags?.length) return
+    if (!data?.topHashtags?.length) return
     try {
       const hashtagsText = data.topHashtags.join(" ")
       await navigator.clipboard.writeText(hashtagsText)
@@ -63,7 +62,7 @@ export const InstagramKeywordCard = memo(function InstagramKeywordCard({
     } catch {
       toast.error("Failed to copy")
     }
-  }, [data.topHashtags])
+  }, [data])
 
   const handleCopySingleHashtag = useCallback(async (tag: string) => {
     try {
@@ -81,6 +80,9 @@ export const InstagramKeywordCard = memo(function InstagramKeywordCard({
   const handleDelete = useCallback(() => {
     onDelete?.(keyword.id)
   }, [keyword.id, onDelete])
+  
+  // Early return after all hooks
+  if (!data) return null
 
   // Calculate total saves
   const totalSaves = data.topPosts.reduce((sum, post) => sum + post.saves, 0)

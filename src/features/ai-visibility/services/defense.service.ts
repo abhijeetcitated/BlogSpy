@@ -1,0 +1,311 @@
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 🛡️ DEFENSE SERVICE - Hallucination Detection via OpenRouter
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 
+ * This service handles:
+ * - Querying AI models about your brand
+ * - Detecting hallucinations (wrong pricing, features, etc.)
+ * - Sentiment analysis of AI responses
+ * 
+ * @see _INTEGRATION_GUIDE.ts for full architecture
+ */
+
+import { HallucinationLog, PlatformVisibility, DefenseResult } from "../types"
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// OPENROUTER MODELS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+const OPENROUTER_MODELS = {
+  chatgpt: "openai/gpt-4o-mini",
+  claude: "anthropic/claude-3-haiku",
+  gemini: "google/gemini-flash-1.5",
+  perplexity: "perplexity/sonar",
+  judge: "openai/gpt-4o-mini", // For hallucination detection
+} as const
+
+type ModelKey = keyof typeof OPENROUTER_MODELS
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// DEFENSE SERVICE CLASS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+export class DefenseService {
+  private apiKey: string
+  private brandName: string
+  private brandFacts: BrandFacts
+
+  constructor(apiKey: string, brandName: string, brandFacts: BrandFacts) {
+    this.apiKey = apiKey
+    this.brandName = brandName
+    this.brandFacts = brandFacts
+  }
+
+  /**
+   * Run complete defense check across all platforms
+   */
+  async runDefenseCheck(): Promise<DefenseResult> {
+    const platforms: ModelKey[] = ["chatgpt", "claude", "gemini", "perplexity"]
+    
+    const results = await Promise.all(
+      platforms.map((platform) => this.checkPlatform(platform))
+    )
+
+    const logs = results.flat()
+    const errorCount = logs.filter((l) => l.status === "error").length
+    const outdatedCount = logs.filter((l) => l.status === "outdated").length
+
+    return {
+      timestamp: new Date().toISOString(),
+      logs,
+      summary: {
+        totalChecks: logs.length,
+        errors: errorCount,
+        outdated: outdatedCount,
+        accurate: logs.length - errorCount - outdatedCount,
+      },
+    }
+  }
+
+  /**
+   * Check a single platform for brand information
+   */
+  async checkPlatform(platform: ModelKey): Promise<HallucinationLog[]> {
+    const logs: HallucinationLog[] = []
+    const model = OPENROUTER_MODELS[platform]
+
+    // Query 1: What is [Brand]?
+    const brandResponse = await this.queryModel(
+      model,
+      `What do you know about ${this.brandName}? Tell me about their pricing, features, and what they do.`
+    )
+
+    // Check for hallucinations
+    const hallucinationCheck = await this.detectHallucinations(brandResponse, platform)
+    logs.push(...hallucinationCheck)
+
+    return logs
+  }
+
+  /**
+   * Query OpenRouter API
+   */
+  private async queryModel(model: string, prompt: string): Promise<string> {
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://blogspy.io",
+          "X-Title": "BlogSpy AI Visibility",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 500,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`OpenRouter API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data.choices[0]?.message?.content || ""
+    } catch (error) {
+      console.error("OpenRouter query error:", error)
+      return ""
+    }
+  }
+
+  /**
+   * Detect hallucinations in AI response
+   */
+  private async detectHallucinations(
+    response: string,
+    platform: ModelKey
+  ): Promise<HallucinationLog[]> {
+    const logs: HallucinationLog[] = []
+    const lowerResponse = response.toLowerCase()
+
+    // Check pricing
+    if (this.brandFacts.pricing) {
+      const pricingMentioned = this.extractPricing(response)
+      if (pricingMentioned && pricingMentioned !== this.brandFacts.pricing) {
+        logs.push({
+          id: `${platform}-pricing-${Date.now()}`,
+          platform,
+          type: "pricing",
+          status: "error",
+          message: "Pricing Error Detected",
+          detail: `AI says "${pricingMentioned}" but actual is "${this.brandFacts.pricing}"`,
+          timestamp: new Date().toISOString(),
+        })
+      } else if (pricingMentioned === this.brandFacts.pricing) {
+        logs.push({
+          id: `${platform}-pricing-${Date.now()}`,
+          platform,
+          type: "pricing",
+          status: "accurate",
+          message: "Pricing Accurate",
+          detail: `Correctly mentions ${this.brandFacts.pricing}`,
+          timestamp: new Date().toISOString(),
+        })
+      }
+    }
+
+    // Check company description
+    if (this.brandFacts.description) {
+      const hasCorrectDescription = lowerResponse.includes(
+        this.brandFacts.description.toLowerCase().slice(0, 50)
+      )
+      logs.push({
+        id: `${platform}-description-${Date.now()}`,
+        platform,
+        type: "fact",
+        status: hasCorrectDescription ? "accurate" : "outdated",
+        message: hasCorrectDescription ? "Description Accurate" : "Description May Be Outdated",
+        detail: hasCorrectDescription
+          ? "AI correctly describes your product"
+          : "AI description may need updating",
+        timestamp: new Date().toISOString(),
+      })
+    }
+
+    // Check features
+    if (this.brandFacts.features && this.brandFacts.features.length > 0) {
+      const missingFeatures = this.brandFacts.features.filter(
+        (f) => !lowerResponse.includes(f.toLowerCase())
+      )
+
+      if (missingFeatures.length > 0) {
+        logs.push({
+          id: `${platform}-features-${Date.now()}`,
+          platform,
+          type: "feature",
+          status: "outdated",
+          message: "Missing Features",
+          detail: `AI missing: ${missingFeatures.slice(0, 3).join(", ")}`,
+          timestamp: new Date().toISOString(),
+        })
+      } else {
+        logs.push({
+          id: `${platform}-features-${Date.now()}`,
+          platform,
+          type: "feature",
+          status: "accurate",
+          message: "Features Accurate",
+          detail: `All key features mentioned correctly`,
+          timestamp: new Date().toISOString(),
+        })
+      }
+    }
+
+    return logs
+  }
+
+  /**
+   * Extract pricing from AI response
+   */
+  private extractPricing(text: string): string | null {
+    // Match patterns like $29, $29/mo, $29/month, $29 per month
+    const priceRegex = /\$(\d+(?:\.\d{2})?)\s*(?:\/?\s*(?:mo|month|per month|monthly))?/gi
+    const match = text.match(priceRegex)
+    return match ? match[0] : null
+  }
+
+  /**
+   * Check visibility on a specific platform
+   */
+  async checkVisibility(platform: ModelKey, query: string): Promise<PlatformVisibility> {
+    const model = OPENROUTER_MODELS[platform]
+    const response = await this.queryModel(model, query)
+
+    const isMentioned =
+      response.toLowerCase().includes(this.brandName.toLowerCase()) ||
+      response.toLowerCase().includes(this.brandFacts.domain?.toLowerCase() || "")
+
+    // Analyze sentiment
+    const sentiment = await this.analyzeSentiment(response)
+
+    return {
+      platform,
+      query,
+      isCited: isMentioned,
+      response: response.slice(0, 500),
+      sentiment,
+      timestamp: new Date().toISOString(),
+    }
+  }
+
+  /**
+   * Simple sentiment analysis
+   */
+  private async analyzeSentiment(
+    text: string
+  ): Promise<"positive" | "negative" | "neutral"> {
+    const positiveWords = [
+      "best",
+      "recommend",
+      "excellent",
+      "great",
+      "top",
+      "leading",
+      "trusted",
+      "reliable",
+      "popular",
+    ]
+    const negativeWords = [
+      "avoid",
+      "poor",
+      "bad",
+      "issues",
+      "problems",
+      "worse",
+      "not recommended",
+      "outdated",
+    ]
+
+    const lowerText = text.toLowerCase()
+    let positiveScore = 0
+    let negativeScore = 0
+
+    positiveWords.forEach((word) => {
+      if (lowerText.includes(word)) positiveScore++
+    })
+    negativeWords.forEach((word) => {
+      if (lowerText.includes(word)) negativeScore++
+    })
+
+    if (positiveScore > negativeScore) return "positive"
+    if (negativeScore > positiveScore) return "negative"
+    return "neutral"
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+export interface BrandFacts {
+  domain?: string
+  description?: string
+  pricing?: string
+  features?: string[]
+  foundedYear?: number
+  teamSize?: number
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// FACTORY EXPORT
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+export function createDefenseService(
+  apiKey: string,
+  brandName: string,
+  brandFacts: BrandFacts
+): DefenseService {
+  return new DefenseService(apiKey, brandName, brandFacts)
+}

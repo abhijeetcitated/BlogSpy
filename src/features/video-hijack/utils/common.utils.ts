@@ -8,7 +8,6 @@ import type {
   VideoOpportunityLevel,
   VideoSerpPosition,
   SortByOption,
-  SortOrder,
   VideoROI,
   Competition,
   VolumeTrend,

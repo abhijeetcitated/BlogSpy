@@ -7,6 +7,8 @@ import {
   ArrowUp,
   ArrowDown,
   Zap,
+  ShoppingCart,
+  Brain,
 } from "lucide-react"
 import { QueryAnalysis } from "../types"
 import { AI_PLATFORMS, PlatformIcons } from "../constants"
@@ -15,11 +17,39 @@ interface QueryOpportunitiesProps {
   queries: QueryAnalysis[]
 }
 
+// Detect intent based on query keywords
+function detectIntent(query: string): 'buying' | 'learning' {
+  const buyingKeywords = [
+    'best', 'top', 'buy', 'price', 'pricing', 'cost', 'cheap', 'affordable',
+    'vs', 'versus', 'compare', 'comparison', 'alternative', 'review', 'reviews',
+    'recommend', 'should i', 'worth', 'deal', 'discount', 'coupon'
+  ]
+  const queryLower = query.toLowerCase()
+  return buyingKeywords.some(kw => queryLower.includes(kw)) ? 'buying' : 'learning'
+}
+
 export function QueryOpportunities({ queries }: QueryOpportunitiesProps) {
   const opportunityColors = {
     high: { text: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-400/30" },
     medium: { text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-400/30" },
     low: { text: "text-muted-foreground", bg: "bg-muted/30", border: "border-muted-foreground/30" },
+  }
+
+  const intentConfig = {
+    buying: {
+      icon: ShoppingCart,
+      label: "Buying",
+      color: "text-amber-400",
+      bgColor: "bg-amber-500/10",
+      borderColor: "border-amber-400/30",
+    },
+    learning: {
+      icon: Brain,
+      label: "Learning",
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-400/30",
+    },
   }
 
   return (
@@ -40,6 +70,9 @@ export function QueryOpportunities({ queries }: QueryOpportunitiesProps) {
           {queries.map((query, index) => {
             const colors = opportunityColors[query.opportunity]
             const positionDiff = query.competitorPosition - query.yourPosition
+            const intent = detectIntent(query.query)
+            const intentStyle = intentConfig[intent]
+            const IntentIcon = intentStyle.icon
             
             return (
               <div 
@@ -48,9 +81,19 @@ export function QueryOpportunities({ queries }: QueryOpportunitiesProps) {
               >
                 {/* Query - Full width on mobile */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 sm:truncate">
-                    "{query.query}"
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 sm:truncate">
+                      "{query.query}"
+                    </p>
+                    {/* Agent Intent Badge */}
+                    <Badge 
+                      variant="outline" 
+                      className={`${intentStyle.color} ${intentStyle.borderColor} ${intentStyle.bgColor} text-[9px] sm:text-[10px] px-1.5 py-0 h-4 shrink-0`}
+                    >
+                      <IntentIcon className="h-2.5 w-2.5 mr-0.5" />
+                      {intentStyle.label}
+                    </Badge>
+                  </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[10px] sm:text-xs text-muted-foreground">
                       Cited {query.frequency}x

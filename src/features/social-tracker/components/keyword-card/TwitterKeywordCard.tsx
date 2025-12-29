@@ -36,9 +36,8 @@ export const TwitterKeywordCard = memo(function TwitterKeywordCard({
   
   const intentConfig = SOCIAL_INTENT_COLORS[keyword.socialIntent]
   const data = keyword.platforms.twitter
-  
-  if (!data) return null
 
+  // Hooks must be called before any early returns
   const handleCopyKeyword = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(keyword.keyword)
@@ -57,6 +56,9 @@ export const TwitterKeywordCard = memo(function TwitterKeywordCard({
   const handleDelete = useCallback(() => {
     onDelete?.(keyword.id)
   }, [keyword.id, onDelete])
+  
+  // Early return after all hooks
+  if (!data) return null
 
   // Calculate total replies
   const totalReplies = data.topTweets.reduce((sum, tweet) => sum + tweet.replies, 0)

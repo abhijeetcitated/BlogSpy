@@ -84,7 +84,7 @@ export function useRankTrackerOps({
   closeBulkDelete,
   setEditingKeyword,
   clearSelection,
-  onDataUpdate,
+  // onDataUpdate - reserved for future use
 }: UseRankTrackerOpsParams) {
   /**
    * Refresh rankings data from API

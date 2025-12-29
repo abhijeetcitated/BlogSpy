@@ -3,7 +3,7 @@
  * Handles promo code and referral operations
  */
 
-import { mockStore, generateId, getCurrentTimestamp, delay } from "../__mocks__/credit-mock-store"
+import { mockStore, delay } from "../__mocks__/credit-mock-store"
 import { formatPrice } from "../config/pricing.config"
 import type { 
   CreditApiResponse,

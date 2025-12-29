@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import type { SettingsTab, NotificationSettings } from "./types"
 import { DEFAULT_NOTIFICATIONS } from "./constants"
@@ -9,25 +10,35 @@ import {
   GeneralTab,
   BillingTab,
   ApiKeysTab,
+  UsageTab,
   NotificationsTab,
 } from "./components"
 import { IntegrationsTab, AlertPreferencesTab } from "@/src/features/integrations/shared"
 
 export function SettingsContent() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("general")
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams.get("tab") as SettingsTab | null
+  const [activeTab, setActiveTab] = useState<SettingsTab>(tabFromUrl || "general")
   const [notifications, setNotifications] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS)
+
+  // Sync tab with URL params
+  useEffect(() => {
+    if (tabFromUrl && ["general", "billing", "api", "usage", "notifications", "integrations", "alerts"].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [tabFromUrl])
 
   const handleNotificationChange = (key: keyof NotificationSettings, value: boolean) => {
     setNotifications((prev) => ({ ...prev, [key]: value }))
   }
 
   return (
-    <div className="flex-1 p-6 bg-slate-950">
+    <div className="flex-1 p-6 bg-background">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-2xl font-semibold text-slate-100">Settings</h1>
-          <p className="text-sm text-slate-400 mt-1">Manage your account settings and preferences</p>
+          <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage your account settings and preferences</p>
         </div>
 
         {/* Tabbed Interface */}
@@ -44,6 +55,10 @@ export function SettingsContent() {
 
           <TabsContent value="api">
             <ApiKeysTab />
+          </TabsContent>
+
+          <TabsContent value="usage">
+            <UsageTab />
           </TabsContent>
 
           <TabsContent value="notifications">

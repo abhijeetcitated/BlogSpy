@@ -190,9 +190,10 @@ export const keywordResearchService = {
   /**
    * Get single keyword details
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getKeywordDetails(
     keyword: string,
-    country: string = "US"
+    _country: string = "US"
   ): Promise<APIKeyword> {
     await simulateNetworkDelay(500)
     
@@ -210,9 +211,10 @@ export const keywordResearchService = {
   /**
    * Get keyword history (for rank tracking)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getKeywordHistory(
     keyword: string,
-    country: string = "US",
+    _country: string = "US",
     days: number = 30
   ): Promise<{ date: string; rank: number; volume: number }[]> {
     await simulateNetworkDelay(500)

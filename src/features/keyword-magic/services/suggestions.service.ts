@@ -17,9 +17,10 @@ export const suggestionsService = {
   /**
    * Get keyword suggestions (autocomplete)
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getSuggestions(
     query: string,
-    country: string = "US",
+    _country: string = "US",
     limit: number = 10
   ): Promise<string[]> {
     // TODO: Replace with real API call
@@ -34,9 +35,10 @@ export const suggestionsService = {
   /**
    * Get trending keywords
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getTrendingKeywords(
-    country: string = "US",
-    category?: string,
+    _country: string = "US",
+    _category?: string,
     limit: number = 20
   ): Promise<APIKeyword[]> {
     // TODO: Replace with real API call

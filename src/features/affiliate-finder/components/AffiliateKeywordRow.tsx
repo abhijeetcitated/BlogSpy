@@ -18,7 +18,6 @@ import {
   Pencil,
   Copy,
   Check,
-  Globe,
   ExternalLink,
   Sparkles,
 } from "lucide-react"
