@@ -76,6 +76,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
 
       // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -118,6 +119,7 @@ export interface Database {
           metadata?: Json
           created_at?: string
         }
+        Relationships: []
       }
 
       // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -160,6 +162,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
 
       // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -196,6 +199,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
 
       // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -211,6 +215,7 @@ export interface Database {
           search_volume: number | null
           priority: "high" | "medium" | "low"
           status: "active" | "paused" | "archived"
+          last_results: Json | null
           last_checked_at: string | null
           created_at: string
           updated_at: string
@@ -224,6 +229,7 @@ export interface Database {
           search_volume?: number | null
           priority?: "high" | "medium" | "low"
           status?: "active" | "paused" | "archived"
+          last_results?: Json | null
           last_checked_at?: string | null
           created_at?: string
           updated_at?: string
@@ -237,10 +243,12 @@ export interface Database {
           search_volume?: number | null
           priority?: "high" | "medium" | "low"
           status?: "active" | "paused" | "archived"
+          last_results?: Json | null
           last_checked_at?: string | null
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
 
       // Add more tables here as you create them...

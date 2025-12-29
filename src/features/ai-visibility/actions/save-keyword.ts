@@ -10,6 +10,7 @@
 
 import { createServerClient } from "@/src/lib/supabase/server"
 import type { TrackedKeyword } from "../types"
+import type { Json } from "@/types/supabase"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -208,9 +209,13 @@ interface DbKeyword {
   config_id: string
   keyword: string
   category: string | null
-  last_results: Record<string, unknown> | null
+  search_volume: number | null
+  priority: "high" | "medium" | "low"
+  status: "active" | "paused" | "archived"
+  last_results: Json | null
   last_checked_at: string | null
   created_at: string
+  updated_at: string
 }
 
 function mapDbToKeyword(db: DbKeyword): TrackedKeyword {
@@ -220,7 +225,7 @@ function mapDbToKeyword(db: DbKeyword): TrackedKeyword {
     configId: db.config_id,
     keyword: db.keyword,
     category: db.category || undefined,
-    lastResults: db.last_results as TrackedKeyword["lastResults"],
+    lastResults: db.last_results as unknown as TrackedKeyword["lastResults"],
     lastCheckedAt: db.last_checked_at || undefined,
     createdAt: db.created_at,
   }

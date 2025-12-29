@@ -249,7 +249,7 @@ export async function deleteVisibilityConfig(
 interface DbConfig {
   id: string
   user_id: string
-  project_id: string
+  project_id: string | null
   tracked_domain: string
   brand_keywords: string[]
   competitor_domains: string[]
@@ -261,7 +261,7 @@ function mapDbToConfig(db: DbConfig): AIVisibilityConfig {
   return {
     id: db.id,
     userId: db.user_id,
-    projectId: db.project_id,
+    projectId: db.project_id || "default",
     trackedDomain: db.tracked_domain,
     brandKeywords: db.brand_keywords,
     competitorDomains: db.competitor_domains,
