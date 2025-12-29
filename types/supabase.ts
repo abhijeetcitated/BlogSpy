@@ -162,6 +162,84 @@ export interface Database {
         }
       }
 
+      // ═══════════════════════════════════════════════════════════════════════════════════════
+      // AI VISIBILITY CONFIGS
+      // ═══════════════════════════════════════════════════════════════════════════════════════
+      ai_visibility_configs: {
+        Row: {
+          id: string
+          user_id: string
+          project_id: string | null
+          tracked_domain: string
+          brand_keywords: string[]
+          competitor_domains: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          project_id?: string | null
+          tracked_domain: string
+          brand_keywords?: string[]
+          competitor_domains?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          project_id?: string | null
+          tracked_domain?: string
+          brand_keywords?: string[]
+          competitor_domains?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════════════════════
+      // AI VISIBILITY KEYWORDS
+      // ═══════════════════════════════════════════════════════════════════════════════════════
+      ai_visibility_keywords: {
+        Row: {
+          id: string
+          config_id: string
+          user_id: string
+          keyword: string
+          search_volume: number | null
+          priority: "high" | "medium" | "low"
+          status: "active" | "paused" | "archived"
+          last_checked_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          config_id: string
+          user_id: string
+          keyword: string
+          search_volume?: number | null
+          priority?: "high" | "medium" | "low"
+          status?: "active" | "paused" | "archived"
+          last_checked_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          config_id?: string
+          user_id?: string
+          keyword?: string
+          search_volume?: number | null
+          priority?: "high" | "medium" | "low"
+          status?: "active" | "paused" | "archived"
+          last_checked_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+
       // Add more tables here as you create them...
     }
     Views: {
@@ -218,3 +296,5 @@ export type Enums<T extends keyof Database["public"]["Enums"]> =
 export type UserCredits = Tables<"user_credits">
 export type CreditUsageHistory = Tables<"credit_usage_history">
 export type PlanLimits = Tables<"plan_limits">
+export type AIVisibilityConfig = Tables<"ai_visibility_configs">
+export type AIVisibilityKeyword = Tables<"ai_visibility_keywords">
