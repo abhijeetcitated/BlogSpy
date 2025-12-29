@@ -1,18 +1,25 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * AI VISIBILITY SERVICES - Barrel Export
+ * 📦 CORE LIBRARY - Global Barrel Export
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 
+ * Central export point for all core services.
+ * Import from here for quick access to all clients.
+ * 
+ * @example
+ * ```ts
+ * import { openrouter, dataforseo, lemonSqueezy } from "@/lib"
+ * ```
  */
 
-export { AuditService, createAuditService } from "./audit.service"
-export { DefenseService, createDefenseService, type BrandFacts } from "./defense.service"
-export { TrackerService, createTrackerService } from "./tracker.service"
-export {
-  checkCitationOnPlatform,
-  runFullVisibilityCheck,
-  quickPlatformCheck,
-  type PlatformCheckInput,
-  type PlatformCheckResult,
-  type FullVisibilityCheckInput,
-  type FullVisibilityCheckResult,
-} from "./citation.service"
+// Database (Supabase)
+export * from "./supabase"
+
+// AI (OpenRouter)
+export * from "./ai"
+
+// SEO Data (DataForSEO)
+export * from "./seo"
+
+// Payments (Lemon Squeezy)
+export * from "./payments"

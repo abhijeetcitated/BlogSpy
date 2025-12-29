@@ -1,18 +1,20 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * AI VISIBILITY SERVICES - Barrel Export
+ * 💳 PAYMENTS - Barrel Export
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  */
 
-export { AuditService, createAuditService } from "./audit.service"
-export { DefenseService, createDefenseService, type BrandFacts } from "./defense.service"
-export { TrackerService, createTrackerService } from "./tracker.service"
 export {
-  checkCitationOnPlatform,
-  runFullVisibilityCheck,
-  quickPlatformCheck,
-  type PlatformCheckInput,
-  type PlatformCheckResult,
-  type FullVisibilityCheckInput,
-  type FullVisibilityCheckResult,
-} from "./citation.service"
+  lemonSqueezy,
+  verifyWebhookSignature,
+  createCheckout,
+  getSubscription,
+  cancelSubscription,
+  resumeSubscription,
+  pauseSubscription,
+  getProducts,
+  getProductVariants,
+  type CreateCheckoutOptions,
+  type WebhookEventType,
+  type WebhookPayload,
+} from "./lemonsqueezy"

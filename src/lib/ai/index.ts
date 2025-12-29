@@ -1,18 +1,17 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * AI VISIBILITY SERVICES - Barrel Export
+ * 🧠 AI - Barrel Export
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  */
 
-export { AuditService, createAuditService } from "./audit.service"
-export { DefenseService, createDefenseService, type BrandFacts } from "./defense.service"
-export { TrackerService, createTrackerService } from "./tracker.service"
 export {
-  checkCitationOnPlatform,
-  runFullVisibilityCheck,
-  quickPlatformCheck,
-  type PlatformCheckInput,
-  type PlatformCheckResult,
-  type FullVisibilityCheckInput,
-  type FullVisibilityCheckResult,
-} from "./citation.service"
+  openrouter,
+  getOpenRouterClient,
+  chat,
+  MODELS,
+  DEFAULT_MODEL,
+  type OpenRouterModel,
+  type ChatCompletionMessage,
+  type ChatCompletionResponse,
+  type ChatCompletionStream,
+} from "./openrouter"

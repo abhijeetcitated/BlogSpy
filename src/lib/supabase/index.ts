@@ -1,18 +1,13 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * AI VISIBILITY SERVICES - Barrel Export
+ * 🗄️ SUPABASE - Barrel Export
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  */
 
-export { AuditService, createAuditService } from "./audit.service"
-export { DefenseService, createDefenseService, type BrandFacts } from "./defense.service"
-export { TrackerService, createTrackerService } from "./tracker.service"
-export {
-  checkCitationOnPlatform,
-  runFullVisibilityCheck,
-  quickPlatformCheck,
-  type PlatformCheckInput,
-  type PlatformCheckResult,
-  type FullVisibilityCheckInput,
-  type FullVisibilityCheckResult,
-} from "./citation.service"
+export { createBrowserClient, type SupabaseBrowserClient } from "./client"
+export { 
+  createServerClient, 
+  createAdminClient,
+  type SupabaseServerClient,
+  type SupabaseAdminClient 
+} from "./server"

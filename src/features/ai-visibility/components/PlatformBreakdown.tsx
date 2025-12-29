@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -10,6 +11,7 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react"
 import {
   Tooltip,
@@ -22,9 +24,11 @@ import { AI_PLATFORMS, PlatformIcons } from "../constants"
 
 interface PlatformBreakdownProps {
   stats: PlatformStats[]
+  isDemoMode?: boolean
+  onDemoActionClick?: () => void
 }
 
-export function PlatformBreakdown({ stats }: PlatformBreakdownProps) {
+export function PlatformBreakdown({ stats, isDemoMode, onDemoActionClick }: PlatformBreakdownProps) {
   const totalCitations = stats.reduce((sum, s) => sum + s.citations, 0)
 
   const renderPlatformIcon = (platformId: string, colorClass: string) => {
@@ -170,9 +174,16 @@ export function PlatformBreakdown({ stats }: PlatformBreakdownProps) {
 
         {/* Market Share Note */}
         <div className="pt-2 sm:pt-3 border-t border-border">
-          <p className="text-[10px] sm:text-xs text-muted-foreground">
+          <p className="text-[10px] sm:text-xs text-muted-foreground mb-3">
             Based on {totalCitations} citations across 8 AI platforms
           </p>
+          <Button 
+            className="w-full h-8 sm:h-9 text-xs sm:text-sm"
+            onClick={isDemoMode ? onDemoActionClick : undefined}
+          >
+            <RefreshCw className="h-3.5 w-3.5 mr-2" />
+            Run Full Scan (⚡ 5)
+          </Button>
         </div>
       </CardContent>
     </Card>

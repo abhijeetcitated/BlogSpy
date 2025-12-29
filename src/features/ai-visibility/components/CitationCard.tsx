@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,13 +12,14 @@ import {
   Users,
   MoreVertical,
   Flag,
-  Code2,
   CheckCircle,
+  Wrench,
 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AICitation } from "../types"
@@ -26,9 +28,12 @@ import { formatRelativeTime } from "../utils"
 
 interface CitationCardProps {
   citation: AICitation
+  isDemoMode?: boolean
+  onDemoActionClick?: () => void
 }
 
-export function CitationCard({ citation }: CitationCardProps) {
+export function CitationCard({ citation, isDemoMode, onDemoActionClick }: CitationCardProps) {
+  const router = useRouter()
   const [flagged, setFlagged] = useState(false)
   const platform = AI_PLATFORMS[citation.platform]
   const citationType = CITATION_TYPES[citation.citationType]
@@ -73,7 +78,7 @@ export function CitationCard({ citation }: CitationCardProps) {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground mt-0.5">
-                  <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                  <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0" />
                   <span className="truncate">{formatRelativeTime(citation.timestamp)}</span>
                 </div>
               </div>
@@ -87,7 +92,7 @@ export function CitationCard({ citation }: CitationCardProps) {
               {/* Citation Type Badge */}
               <Badge 
                 variant="outline"
-                className={`flex-shrink-0 text-[10px] sm:text-xs px-1.5 sm:px-2 ${
+                className={`shrink-0 text-[10px] sm:text-xs px-1.5 sm:px-2 ${
                   citation.sentiment === 'positive' 
                     ? "text-emerald-400 border-emerald-400/30"
                     : citation.sentiment === 'negative'
@@ -105,26 +110,36 @@ export function CitationCard({ citation }: CitationCardProps) {
                     <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem 
-                    onClick={() => setFlagged(!flagged)}
                     className="text-xs cursor-pointer"
+                    onClick={isDemoMode ? onDemoActionClick : undefined}
                   >
-                    {flagged ? (
-                      <>
-                        <CheckCircle className="h-3.5 w-3.5 mr-2 text-emerald-500" />
-                        Flagged
-                      </>
-                    ) : (
-                      <>
-                        <Flag className="h-3.5 w-3.5 mr-2" />
-                        Flag as Error
-                      </>
-                    )}
+                    <CheckCircle className="h-3.5 w-3.5 mr-2 text-emerald-500" />
+                    Verify Accuracy (⚡ 1)
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-xs cursor-pointer">
-                    <Code2 className="h-3.5 w-3.5 mr-2" />
-                    Fix Schema
+                  <DropdownMenuItem 
+                    className="text-xs cursor-pointer"
+                    onClick={() => window.open(citation.citedUrl, '_blank')}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 mr-2 text-blue-500" />
+                    View Source
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="text-xs cursor-pointer"
+                    onClick={isDemoMode ? onDemoActionClick : () => router.push('/dashboard/creation/schema-generator')}
+                  >
+                    <Wrench className="h-3.5 w-3.5 mr-2 text-violet-500" />
+                    Fix / Update Schema
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={isDemoMode ? onDemoActionClick : () => setFlagged(!flagged)}
+                    className="text-xs cursor-pointer text-amber-500 focus:text-amber-500"
+                  >
+                    <Flag className="h-3.5 w-3.5 mr-2" />
+                    Flag as Hallucination
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -142,7 +157,7 @@ export function CitationCard({ citation }: CitationCardProps) {
           {/* Context */}
           <div className="bg-muted/30 rounded-lg p-2.5 sm:p-3 border-l-2 border-primary/50">
             <div className="flex items-center gap-1 mb-0.5 sm:mb-1">
-              <Quote className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground flex-shrink-0" />
+              <Quote className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
               <p className="text-[10px] sm:text-xs text-muted-foreground">AI Response:</p>
             </div>
             <p className="text-xs sm:text-sm text-foreground/80 italic line-clamp-3 sm:line-clamp-none">
@@ -153,19 +168,19 @@ export function CitationCard({ citation }: CitationCardProps) {
           {/* Footer */}
           <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 pt-2 border-t border-border">
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0">Cited:</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">Cited:</span>
               <a 
                 href={citation.citedUrl}
                 className="text-[10px] sm:text-xs text-primary hover:underline flex items-center gap-1 truncate"
               >
                 <span className="truncate">{citation.citedTitle}</span>
-                <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0" />
               </a>
             </div>
 
             {citation.competitors.length > 0 && (
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground flex-shrink-0" />
+                <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
                 <span className="text-[10px] sm:text-xs text-muted-foreground truncate">
                   Also: {citation.competitors.slice(0, 2).join(", ")}
                 </span>

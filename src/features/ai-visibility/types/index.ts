@@ -274,3 +274,113 @@ export interface CitationResult {
   isCitedInAIO: boolean
   timestamp: string
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// AI VISIBILITY SETUP & CONFIG TYPES
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * User's AI Visibility configuration (One-time setup)
+ * Stored in database per user/project
+ */
+export interface AIVisibilityConfig {
+  id: string
+  userId: string
+  projectId?: string
+  
+  /** Primary domain to track (e.g., "techyatri.com") */
+  trackedDomain: string
+  
+  /** Brand name variations to search for in AI responses */
+  brandKeywords: string[]
+  
+  /** Competitor domains to compare against */
+  competitorDomains?: string[]
+  
+  /** Last time config was updated */
+  updatedAt: string
+  
+  /** When config was first created */
+  createdAt: string
+}
+
+/**
+ * Tracked keyword/query for visibility monitoring
+ */
+export interface TrackedKeyword {
+  id: string
+  userId: string
+  configId: string
+  
+  /** The keyword/question to track (e.g., "best seo tools 2025") */
+  keyword: string
+  
+  /** Category for organization */
+  category?: string
+  
+  /** Last visibility check results per platform */
+  lastResults?: Record<AIPlatform, VisibilityCheckResult>
+  
+  /** When this keyword was last checked */
+  lastCheckedAt?: string
+  
+  /** When this keyword was added */
+  createdAt: string
+}
+
+/**
+ * Result of a single visibility check on one platform
+ */
+export interface VisibilityCheckResult {
+  platform: AIPlatform
+  
+  /** Whether the brand/domain was mentioned */
+  isVisible: boolean
+  
+  /** Type of mention if visible */
+  mentionType?: 'brand-name' | 'domain-link' | 'both' | 'competitor-only'
+  
+  /** The actual AI response text */
+  aiResponse: string
+  
+  /** Extracted context where brand was mentioned */
+  mentionContext?: string
+  
+  /** Position in response (1st, 2nd, 3rd mention) */
+  mentionPosition?: number
+  
+  /** Sentiment of the mention */
+  sentiment?: 'positive' | 'neutral' | 'negative'
+  
+  /** Competitors mentioned in same response */
+  competitorsMentioned?: string[]
+  
+  /** Credits used for this check */
+  creditsUsed: number
+  
+  /** Timestamp of check */
+  checkedAt: string
+  
+  /** Error if check failed */
+  error?: string
+}
+
+/**
+ * Aggregated visibility stats for dashboard
+ */
+export interface VisibilityStats {
+  totalChecks: number
+  visibleCount: number
+  visibilityRate: number // percentage
+  platformBreakdown: Record<AIPlatform, {
+    checks: number
+    visible: number
+    rate: number
+  }>
+  topKeywords: Array<{
+    keyword: string
+    visibilityRate: number
+  }>
+  trend: VisibilityTrend
+}
+

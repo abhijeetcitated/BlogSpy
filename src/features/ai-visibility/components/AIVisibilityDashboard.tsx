@@ -63,7 +63,19 @@ const getRiskColor = (risk: HallucinationRisk) => {
   }
 }
 
-export function AIVisibilityDashboard() {
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// PROPS INTERFACE
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+interface AIVisibilityDashboardProps {
+  isDemoMode?: boolean
+  onDemoActionClick?: () => void
+}
+
+export function AIVisibilityDashboard({ 
+  isDemoMode = false,
+  onDemoActionClick 
+}: AIVisibilityDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [filters, setFilters] = useState<AIVisibilityFilters>({
     dateRange: "30d",
@@ -133,9 +145,10 @@ export function AIVisibilityDashboard() {
       prefix: "$",
       description: "If AI drops your citations",
       icon: DollarSign,
-      color: "text-red-400",
-      bgColor: "bg-red-500/10",
+      color: "text-red-500",
+      bgColor: "bg-red-500/15",
       tooltip: "Traffic value × Commercial intent keywords",
+      isWarning: true,
     },
     {
       title: "AI Readiness",
@@ -192,8 +205,8 @@ export function AIVisibilityDashboard() {
                   </Tooltip>
                   <div className="flex-1 sm:hidden min-w-0">
                     <div className="flex items-baseline gap-1">
-                      {stat.prefix && <span className="text-sm text-muted-foreground">{stat.prefix}</span>}
-                      <span className={`text-base font-bold ${stat.isStatus ? stat.color : 'text-foreground'}`}>
+                      {stat.prefix && <span className={`text-sm ${stat.isWarning ? stat.color : 'text-muted-foreground'}`}>{stat.prefix}</span>}
+                      <span className={`text-base font-bold ${stat.isStatus || stat.isWarning ? stat.color : 'text-foreground'}`}>
                         {stat.value}
                       </span>
                       {stat.suffix && <span className="text-[10px] text-muted-foreground">{stat.suffix}</span>}
@@ -203,8 +216,8 @@ export function AIVisibilityDashboard() {
                 </div>
                 <div className="hidden sm:block mt-3">
                   <div className="flex items-baseline gap-1">
-                    {stat.prefix && <span className="text-lg text-muted-foreground">{stat.prefix}</span>}
-                    <span className={`text-2xl font-bold ${stat.isStatus ? stat.color : 'text-foreground'}`}>
+                    {stat.prefix && <span className={`text-lg ${stat.isWarning ? stat.color : 'text-muted-foreground'}`}>{stat.prefix}</span>}
+                    <span className={`text-2xl font-bold ${stat.isStatus || stat.isWarning ? stat.color : 'text-foreground'}`}>
                       {stat.value}
                     </span>
                     {stat.suffix && <span className="text-sm text-muted-foreground">{stat.suffix}</span>}
@@ -226,7 +239,11 @@ export function AIVisibilityDashboard() {
           <VisibilityTrendChart data={trendData} />
         </div>
         <div className="order-2 lg:order-2">
-          <PlatformBreakdown stats={platformStats} />
+          <PlatformBreakdown 
+            stats={platformStats} 
+            isDemoMode={isDemoMode}
+            onDemoActionClick={onDemoActionClick}
+          />
         </div>
       </div>
 
@@ -293,7 +310,11 @@ export function AIVisibilityDashboard() {
       </Card>
 
       {/* Query Opportunities */}
-      <QueryOpportunities queries={queryAnalysis} />
+      <QueryOpportunities 
+        queries={queryAnalysis} 
+        isDemoMode={isDemoMode}
+        onDemoActionClick={onDemoActionClick}
+      />
 
       {/* Citations List */}
       <div>
@@ -307,7 +328,12 @@ export function AIVisibilityDashboard() {
         </div>
         <div className="space-y-2 sm:space-y-3">
           {filteredCitations.map((citation) => (
-            <CitationCard key={citation.id} citation={citation} />
+            <CitationCard 
+              key={citation.id} 
+              citation={citation} 
+              isDemoMode={isDemoMode}
+              onDemoActionClick={onDemoActionClick}
+            />
           ))}
         </div>
       </div>

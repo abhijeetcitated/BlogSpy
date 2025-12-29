@@ -1,20 +1,26 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { 
   Target,
   ArrowUp,
   ArrowDown,
+  ArrowUpRight,
   Zap,
   ShoppingCart,
   Brain,
+  Plus,
 } from "lucide-react"
 import { QueryAnalysis } from "../types"
 import { AI_PLATFORMS, PlatformIcons } from "../constants"
 
 interface QueryOpportunitiesProps {
   queries: QueryAnalysis[]
+  isDemoMode?: boolean
+  onDemoActionClick?: () => void
 }
 
 // Detect intent based on query keywords
@@ -28,7 +34,22 @@ function detectIntent(query: string): 'buying' | 'learning' {
   return buyingKeywords.some(kw => queryLower.includes(kw)) ? 'buying' : 'learning'
 }
 
-export function QueryOpportunities({ queries }: QueryOpportunitiesProps) {
+export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick }: QueryOpportunitiesProps) {
+  const router = useRouter()
+
+  // Navigate to AI Writer with pre-filled context for optimization
+  const handleOptimize = (query: string, intent: string) => {
+    // Use URLSearchParams for clean encoding
+    const params = new URLSearchParams({
+      topic: query,                      // Pre-fill the topic input
+      intent: intent.toLowerCase(),       // buying/learning intent
+      source: 'ai_visibility',            // Track where user came from
+      mode: 'seo_optimize'                // Trigger optimization mode in writer
+    })
+
+    router.push(`/dashboard/creation/ai-writer?${params.toString()}`)
+  }
+
   const opportunityColors = {
     high: { text: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-400/30" },
     medium: { text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-400/30" },
@@ -52,17 +73,67 @@ export function QueryOpportunities({ queries }: QueryOpportunitiesProps) {
     },
   }
 
+  // Empty State
+  if (queries.length === 0) {
+    return (
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-sm sm:text-base font-semibold text-foreground flex items-center gap-2">
+              <Zap className="h-4 w-4 text-amber-400 shrink-0" />
+              <span className="truncate">Query Opportunities</span>
+            </CardTitle>
+            <Badge variant="outline" className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap">
+              0 queries
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="px-3 sm:px-6 pb-6 sm:pb-8">
+          <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center">
+            <div className="p-3 rounded-full bg-muted/50 mb-4">
+              <Target className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+              No keywords tracked yet
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-sm mb-6">
+              Start tracking keywords to discover opportunities where your brand can appear in AI responses.
+            </p>
+            <Button 
+              size="lg" 
+              className="h-10 sm:h-11"
+              onClick={isDemoMode ? onDemoActionClick : undefined}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Track your first Keyword (⚡ 1)
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm sm:text-base font-semibold text-foreground flex items-center gap-2">
-            <Zap className="h-4 w-4 text-amber-400 flex-shrink-0" />
+            <Zap className="h-4 w-4 text-amber-400 shrink-0" />
             <span className="truncate">Query Opportunities</span>
           </CardTitle>
-          <Badge variant="outline" className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap">
-            {queries.length} queries
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap">
+              {queries.length} queries
+            </Badge>
+            <Button 
+              size="sm" 
+              className="h-7 sm:h-8 text-[10px] sm:text-xs bg-primary hover:bg-primary/90"
+              onClick={isDemoMode ? onDemoActionClick : undefined}
+            >
+              <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
+              Track Keyword (⚡ 1)
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
@@ -130,7 +201,7 @@ export function QueryOpportunities({ queries }: QueryOpportunitiesProps) {
                   </div>
 
                   {/* Competitor - Hidden on very small screens */}
-                  <div className="text-center hidden xs:block min-w-[60px] sm:min-w-[80px]">
+                  <div className="text-center hidden xs:block min-w-[60px] sm:min-w-20">
                     <p className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">
                       {query.topCompetitor}
                     </p>
@@ -139,14 +210,14 @@ export function QueryOpportunities({ queries }: QueryOpportunitiesProps) {
                     </span>
                   </div>
 
-                  {/* Opportunity Badge */}
-                  <Badge 
-                    variant="outline"
-                    className={`${colors.text} ${colors.border} min-w-[50px] sm:min-w-[70px] justify-center text-[10px] sm:text-xs px-1.5 sm:px-2`}
+                  {/* Optimize Button */}
+                  <Button 
+                    size="sm" 
+                    className="h-8 text-xs font-medium bg-amber-500 hover:bg-amber-600 text-black"
+                    onClick={() => handleOptimize(query.query, intent)}
                   >
-                    <Target className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-                    {query.opportunity}
-                  </Badge>
+                    Optimize <ArrowUpRight className="ml-1 h-3 w-3" />
+                  </Button>
                 </div>
               </div>
             )
