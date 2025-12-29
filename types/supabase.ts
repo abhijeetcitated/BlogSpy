@@ -207,6 +207,7 @@ export interface Database {
           config_id: string
           user_id: string
           keyword: string
+          category: string | null
           search_volume: number | null
           priority: "high" | "medium" | "low"
           status: "active" | "paused" | "archived"
@@ -219,6 +220,7 @@ export interface Database {
           config_id: string
           user_id: string
           keyword: string
+          category?: string | null
           search_volume?: number | null
           priority?: "high" | "medium" | "low"
           status?: "active" | "paused" | "archived"
@@ -231,6 +233,7 @@ export interface Database {
           config_id?: string
           user_id?: string
           keyword?: string
+          category?: string | null
           search_volume?: number | null
           priority?: "high" | "medium" | "low"
           status?: "active" | "paused" | "archived"
