@@ -145,20 +145,38 @@ export function getOpenRouterClient(): OpenAI {
 }
 
 /**
- * Global OpenRouter client instance.
+ * Global OpenRouter client getter.
  * Use this for all AI operations.
+ * 
+ * NOTE: This is a getter function (not a constant) to avoid
+ * env var validation at module load time during build.
  * 
  * @example
  * ```ts
- * import { openrouter } from "@/lib/ai/openrouter"
+ * import { getOpenRouter } from "@/lib/ai/openrouter"
  * 
- * const response = await openrouter.chat.completions.create({
+ * const response = await getOpenRouter().chat.completions.create({
  *   model: "openai/gpt-4o-mini",
  *   messages: [{ role: "user", content: "Hello!" }],
  * })
  * ```
  */
-export const openrouter = getOpenRouterClient()
+export function getOpenRouter(): OpenAI {
+  return getOpenRouterClient()
+}
+
+// Legacy export for backwards compatibility (lazy getter)
+export const openrouter = {
+  get chat() {
+    return getOpenRouterClient().chat
+  },
+  get completions() {
+    return getOpenRouterClient().completions
+  },
+  get models() {
+    return getOpenRouterClient().models
+  },
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // HELPER TYPES

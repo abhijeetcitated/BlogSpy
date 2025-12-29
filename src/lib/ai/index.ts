@@ -6,6 +6,7 @@
 
 export {
   openrouter,
+  getOpenRouter,
   getOpenRouterClient,
   chat,
   MODELS,
