@@ -28,6 +28,7 @@
 
 "use server"
 
+import { createServerClient } from "@/src/lib/supabase/server"
 import { 
   runFullVisibilityCheck, 
   quickPlatformCheck,
@@ -74,6 +75,17 @@ export async function runVisibilityCheck(
   input: RunVisibilityCheckInput
 ): Promise<VisibilityActionResponse<FullVisibilityCheckResult>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const { query, configId, platforms } = input
 
     if (!query || query.trim().length < 3) {
@@ -130,6 +142,17 @@ export async function checkPlatformNow(
   input: CheckPlatformInput
 ): Promise<VisibilityActionResponse<VisibilityCheckResult>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const { platform, query, configId } = input
 
     if (!query || query.trim().length < 3) {

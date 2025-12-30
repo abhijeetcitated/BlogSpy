@@ -29,7 +29,20 @@ interface DataForSEOCredentials {
   password: string
 }
 
+/**
+ * Check if mock mode is enabled.
+ * In mock mode, we don't need real credentials.
+ */
+function isMockMode(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+}
+
 function getDataForSEOCredentials(): DataForSEOCredentials {
+  // In mock mode, return dummy credentials (they won't be used)
+  if (isMockMode()) {
+    return { login: "mock", password: "mock" }
+  }
+
   const login = process.env.DATAFORSEO_LOGIN
   const password = process.env.DATAFORSEO_PASSWORD
 
@@ -177,19 +190,24 @@ export function getDataForSEOClient(): AxiosInstance {
 }
 
 /**
- * Global DataForSEO client instance.
+ * Global DataForSEO client instance (lazy initialized).
  * Use this for all SEO data operations.
+ * 
+ * NOTE: In mock mode, this client should NOT be used directly.
+ * Always check mock mode before making actual API calls.
  * 
  * @example
  * ```ts
- * import { dataforseo } from "@/lib/seo/dataforseo"
+ * import { getDataForSEOClient } from "@/lib/seo/dataforseo"
  * 
+ * const dataforseo = getDataForSEOClient()
  * const { data } = await dataforseo.post("/keywords_data/google/search_volume/live", [
  *   { keywords: ["seo tools"], location_code: 2840 }
  * ])
  * ```
  */
-export const dataforseo = getDataForSEOClient()
+// IMPORTANT: Do NOT eagerly initialize - use getDataForSEOClient() instead
+// export const dataforseo = getDataForSEOClient() // This throws in mock mode!
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // RESPONSE TYPES
@@ -268,7 +286,8 @@ export async function getKeywordSearchVolume(
   locationCode: number = 2840,
   languageCode: string = "en"
 ): Promise<KeywordDataResult[]> {
-  const response = await dataforseo.post<DataForSEOResponse<KeywordDataResult>>(
+  const client = getDataForSEOClient()
+  const response = await client.post<DataForSEOResponse<KeywordDataResult>>(
     DATAFORSEO_ENDPOINTS.KEYWORD_SEARCH_VOLUME,
     [{ keywords, location_code: locationCode, language_code: languageCode }]
   )
@@ -290,7 +309,8 @@ export async function getSerpResults(
   languageCode: string = "en",
   depth: number = 10
 ): Promise<SerpResultItem[]> {
-  const response = await dataforseo.post<DataForSEOResponse<{ items: SerpResultItem[] }>>(
+  const client = getDataForSEOClient()
+  const response = await client.post<DataForSEOResponse<{ items: SerpResultItem[] }>>(
     DATAFORSEO_ENDPOINTS.SERP_LIVE,
     [{
       keyword,

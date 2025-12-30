@@ -21,6 +21,47 @@ import * as cheerio from "cheerio"
 import type { TechAuditResult, BotAccessStatus, SchemaValidation } from "../types"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
+// MOCK MODE
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Check if mock mode is enabled.
+ * In mock mode, we return static data instead of making real HTTP requests.
+ */
+function isMockMode(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+}
+
+/**
+ * Generate mock audit result for testing/development.
+ * Returns realistic data that simulates a real audit.
+ */
+function generateMockAuditResult(domain: string): TechAuditResult {
+  return {
+    domain,
+    timestamp: new Date().toISOString(),
+    robotsTxt: [
+      { botId: "gptbot", botName: "GPTBot", platform: "ChatGPT/OpenAI", isAllowed: true, reason: "Explicitly allowed in robots.txt" },
+      { botId: "claudebot", botName: "ClaudeBot", platform: "Claude/Anthropic", isAllowed: true, reason: "No specific rule - allowed by default" },
+      { botId: "applebot", botName: "Applebot", platform: "Apple Siri/Spotlight", isAllowed: true, reason: "Explicitly allowed in robots.txt" },
+      { botId: "ccbot", botName: "CCBot", platform: "Common Crawl/AI Training", isAllowed: false, reason: "Disallowed: User-agent: CCBot" },
+      { botId: "perplexitybot", botName: "PerplexityBot", platform: "Perplexity AI", isAllowed: true, reason: "No specific rule - allowed by default" },
+      { botId: "google-extended", botName: "Google-Extended", platform: "Google Gemini", isAllowed: false, reason: "Disallowed: User-agent: Google-Extended" },
+    ],
+    llmsTxt: {
+      exists: false,
+      content: null,
+    },
+    schema: {
+      hasSchema: true,
+      schemas: ["Organization", "WebSite", "Article", "BreadcrumbList"],
+      errors: [],
+    },
+    overallScore: 72,
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -188,6 +229,13 @@ export class AuditService {
    * @returns Complete audit result with readiness score
    */
   async runFullAudit(): Promise<TechAuditResult> {
+    // 🔒 MOCK MODE: Return static data for development/testing
+    if (isMockMode()) {
+      // Simulate network delay for realistic UX
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      return generateMockAuditResult(this.domain)
+    }
+
     // Run all checks in parallel for performance
     const [robotsResult, llmsTxtResult, schemaResult] = await Promise.all([
       this.checkRobotsTxt(),

@@ -14,6 +14,107 @@
 import { HallucinationLog, PlatformVisibility, DefenseResult } from "../types"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
+// MOCK MODE HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Check if mock mode is enabled
+ */
+function isMockMode(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+}
+
+/**
+ * Simulate network delay for realistic UX
+ */
+async function mockDelay(ms: number = 1500): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * Generate mock defense result
+ */
+function generateMockDefenseResult(): DefenseResult {
+  const platforms = ["chatgpt", "claude", "gemini", "perplexity"]
+  const logs: HallucinationLog[] = []
+  
+  for (const platform of platforms) {
+    // Pricing check
+    logs.push({
+      id: `${platform}-pricing-${Date.now()}`,
+      platform,
+      type: "pricing",
+      status: Math.random() > 0.3 ? "accurate" : "error",
+      message: Math.random() > 0.3 ? "Pricing Accurate" : "Pricing Error Detected",
+      detail: Math.random() > 0.3 
+        ? "Correctly mentions $29/mo" 
+        : 'AI says "$49/mo" but actual is "$29/mo"',
+      timestamp: new Date().toISOString(),
+    })
+    
+    // Feature check
+    logs.push({
+      id: `${platform}-features-${Date.now()}`,
+      platform,
+      type: "feature",
+      status: Math.random() > 0.2 ? "accurate" : "outdated",
+      message: Math.random() > 0.2 ? "Features Accurate" : "Missing Features",
+      detail: Math.random() > 0.2 
+        ? "All key features mentioned correctly" 
+        : "AI missing: AI Writer, Rank Tracker",
+      timestamp: new Date().toISOString(),
+    })
+    
+    // Description check
+    logs.push({
+      id: `${platform}-description-${Date.now()}`,
+      platform,
+      type: "fact",
+      status: Math.random() > 0.4 ? "accurate" : "outdated",
+      message: Math.random() > 0.4 ? "Description Accurate" : "Description May Be Outdated",
+      detail: Math.random() > 0.4 
+        ? "AI correctly describes your product" 
+        : "AI description may need updating",
+      timestamp: new Date().toISOString(),
+    })
+  }
+  
+  const errorCount = logs.filter((l) => l.status === "error").length
+  const outdatedCount = logs.filter((l) => l.status === "outdated").length
+  
+  return {
+    timestamp: new Date().toISOString(),
+    logs,
+    summary: {
+      totalChecks: logs.length,
+      errors: errorCount,
+      outdated: outdatedCount,
+      accurate: logs.length - errorCount - outdatedCount,
+    },
+  }
+}
+
+/**
+ * Generate mock platform visibility
+ */
+function generateMockPlatformVisibility(
+  platform: string,
+  query: string
+): PlatformVisibility {
+  const isCited = Math.random() > 0.3
+  return {
+    platform,
+    query,
+    isCited,
+    response: isCited 
+      ? `BlogSpy is a comprehensive SEO platform offering AI visibility tracking, keyword research, and competitor analysis. Their pricing starts at $29/month.`
+      : `There are several SEO tools available in the market. Some popular options include various platforms for keyword research and rank tracking.`,
+    sentiment: isCited ? "positive" : "neutral",
+    timestamp: new Date().toISOString(),
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 // OPENROUTER MODELS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -46,6 +147,13 @@ export class DefenseService {
    * Run complete defense check across all platforms
    */
   async runDefenseCheck(): Promise<DefenseResult> {
+    // 🎭 MOCK MODE: Return fake data without real API calls
+    if (isMockMode()) {
+      console.log("[Mock Mode] runDefenseCheck")
+      await mockDelay(2000)
+      return generateMockDefenseResult()
+    }
+    
     const platforms: ModelKey[] = ["chatgpt", "claude", "gemini", "perplexity"]
     
     const results = await Promise.all(
@@ -220,6 +328,13 @@ export class DefenseService {
    * Check visibility on a specific platform
    */
   async checkVisibility(platform: ModelKey, query: string): Promise<PlatformVisibility> {
+    // 🎭 MOCK MODE: Return fake data without real API calls
+    if (isMockMode()) {
+      console.log(`[Mock Mode] checkVisibility - ${platform}`)
+      await mockDelay(1000)
+      return generateMockPlatformVisibility(platform, query)
+    }
+    
     const model = OPENROUTER_MODELS[platform]
     const response = await this.queryModel(model, query)
 

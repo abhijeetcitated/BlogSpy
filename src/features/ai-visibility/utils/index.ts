@@ -163,7 +163,7 @@ export function analyzeQueries(citations: AICitation[]): QueryAnalysis[] {
       platforms,
       yourPosition: Math.round(avgPos * 10) / 10,
       topCompetitor,
-      competitorPosition: Math.round((avgPos + Math.random()) * 10) / 10,
+      competitorPosition: Math.round((avgPos + 0.5) * 10) / 10,
       opportunity: opportunity as "high" | "medium" | "low",
     }
   }).sort((a, b) => b.frequency - a.frequency)

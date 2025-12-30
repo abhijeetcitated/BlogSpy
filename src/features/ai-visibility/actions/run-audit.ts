@@ -20,6 +20,7 @@
 
 "use server"
 
+import { createServerClient } from "@/src/lib/supabase/server"
 import { createAuditService } from "../services/audit.service"
 import type { TechAuditResult, BotAccessStatus, SchemaValidation } from "../types"
 
@@ -107,6 +108,17 @@ export async function runTechAudit(
   rawDomain: string
 ): Promise<AuditActionResponse<TechAuditResult>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     // Validate input
     const domain = validateAndNormalizeDomain(rawDomain)
     
@@ -160,6 +172,17 @@ export async function checkRobotsTxt(
   rawDomain: string
 ): Promise<AuditActionResponse<BotAccessStatus[]>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const domain = validateAndNormalizeDomain(rawDomain)
     
     if (!domain) {
@@ -193,6 +216,17 @@ export async function checkLlmsTxt(
   rawDomain: string
 ): Promise<AuditActionResponse<{ exists: boolean; content: string | null; location?: string | null }>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const domain = validateAndNormalizeDomain(rawDomain)
     
     if (!domain) {
@@ -226,6 +260,17 @@ export async function checkSchemaOrg(
   rawDomain: string
 ): Promise<AuditActionResponse<SchemaValidation>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const domain = validateAndNormalizeDomain(rawDomain)
     
     if (!domain) {

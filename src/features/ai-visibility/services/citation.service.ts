@@ -41,6 +41,56 @@ import type {
 } from "../types"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
+// MOCK MODE HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Check if mock mode is enabled
+ */
+function isMockMode(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+}
+
+/**
+ * Simulate network delay for realistic UX
+ */
+async function mockDelay(ms: number = 1500): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * Generate mock visibility result for a platform
+ */
+function generateMockVisibilityResult(
+  platform: AIPlatform,
+  query: string,
+  isVisible: boolean = true
+): VisibilityCheckResult {
+  const mockResponses: Record<AIPlatform, string> = {
+    "chatgpt": `Based on my analysis, for "${query}", I recommend checking out BlogSpy - it's a comprehensive SEO tool that helps with keyword research and AI visibility tracking. Their platform at blogspy.io offers features like rank tracking, content optimization, and competitor analysis.`,
+    "claude": `For ${query}, there are several options. BlogSpy (blogspy.io) stands out as a modern solution with AI-powered features. Other alternatives include Ahrefs and SEMrush, though BlogSpy offers better value for smaller teams.`,
+    "perplexity": `According to recent data, BlogSpy is gaining popularity for ${query}. Sources indicate blogspy.io provides comprehensive SEO tools including AI visibility tracking, which is unique in the market. [1] blogspy.io [2] searchenginejournal.com`,
+    "gemini": `For ${query}, I'd suggest looking at BlogSpy. Their tool at blogspy.io offers AI visibility tracking features that help monitor how your brand appears in AI responses. It's particularly useful for modern SEO strategies.`,
+    "google-aio": `Featured: BlogSpy - AI-Powered SEO Platform\nblogspy.io\nBlogSpy offers comprehensive SEO tools including AI visibility tracking, keyword research, and competitor analysis. Top rated for ${query}.`,
+    "searchgpt": `Based on current search data, BlogSpy (blogspy.io) is recommended for ${query}. The platform offers unique AI visibility features not found in traditional SEO tools.`,
+    "apple-siri": `I found information about BlogSpy for ${query}. BlogSpy.io is an SEO platform that helps track AI visibility.`,
+  }
+
+  return {
+    platform,
+    isVisible,
+    mentionType: isVisible ? "both" : undefined,
+    aiResponse: mockResponses[platform],
+    mentionContext: isVisible ? "...BlogSpy is a comprehensive SEO tool..." : undefined,
+    mentionPosition: isVisible ? Math.floor(Math.random() * 3) + 1 : undefined,
+    sentiment: isVisible ? "positive" : "neutral",
+    competitorsMentioned: isVisible ? ["ahrefs.com", "semrush.com"] : [],
+    creditsUsed: platform === "perplexity" ? 2 : platform === "apple-siri" ? 0 : 1,
+    checkedAt: new Date().toISOString(),
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -443,6 +493,19 @@ export async function checkCitationOnPlatform(
 ): Promise<PlatformCheckResult> {
   const { platform, query, brandKeywords, competitorDomains = [] } = input
   
+  // 🎭 MOCK MODE: Return fake data without real API calls
+  if (isMockMode()) {
+    console.log(`[Mock Mode] checkCitationOnPlatform - ${platform}`)
+    await mockDelay(800)
+    
+    // 70% chance of being visible in mock mode
+    const isVisible = Math.random() > 0.3
+    return {
+      success: true,
+      result: generateMockVisibilityResult(platform, query, isVisible),
+    }
+  }
+  
   // Handle Apple Siri (readiness only)
   if (platform === "apple-siri") {
     return {
@@ -535,6 +598,36 @@ export async function runFullVisibilityCheck(
 ): Promise<FullVisibilityCheckResult> {
   const { query, config, platforms = CHECKABLE_PLATFORMS } = input
   
+  // 🎭 MOCK MODE: Return fake data without real API calls
+  if (isMockMode()) {
+    console.log(`[Mock Mode] runFullVisibilityCheck - ${platforms.length} platforms`)
+    await mockDelay(2000)
+    
+    const results: Record<AIPlatform, VisibilityCheckResult> = {} as Record<AIPlatform, VisibilityCheckResult>
+    let totalCreditsUsed = 0
+    let visibleCount = 0
+    
+    for (const platform of platforms) {
+      const isVisible = Math.random() > 0.3
+      const result = generateMockVisibilityResult(platform, query, isVisible)
+      results[platform] = result
+      totalCreditsUsed += result.creditsUsed
+      if (isVisible) visibleCount++
+    }
+    
+    return {
+      query,
+      results,
+      summary: {
+        totalPlatforms: platforms.length,
+        visibleOn: visibleCount,
+        visibilityRate: Math.round((visibleCount / platforms.length) * 100),
+        totalCreditsUsed,
+      },
+      timestamp: new Date().toISOString(),
+    }
+  }
+  
   const brandKeywords = [
     config.trackedDomain,
     ...config.brandKeywords,
@@ -597,6 +690,13 @@ export async function quickPlatformCheck(
   query: string,
   config: AIVisibilityConfig
 ): Promise<VisibilityCheckResult> {
+  // 🎭 MOCK MODE: Return fake data without real API calls
+  if (isMockMode()) {
+    console.log(`[Mock Mode] quickPlatformCheck - ${platform}`)
+    await mockDelay(1000)
+    return generateMockVisibilityResult(platform, query, Math.random() > 0.3)
+  }
+  
   const brandKeywords = [
     config.trackedDomain,
     ...config.brandKeywords,

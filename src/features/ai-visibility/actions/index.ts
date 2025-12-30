@@ -50,3 +50,12 @@ export {
   type CheckPlatformInput,
   type VisibilityActionResponse,
 } from "./run-citation"
+
+export {
+  runFullScan,
+  getScanHistory,
+  getKeywordScanResult,
+  getCreditBalance,
+  type RunScanInput,
+  type RunScanResult,
+} from "./run-scan"

@@ -5,22 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { 
   Shield,
   AlertTriangle,
   DollarSign,
   Settings2,
   Search,
-  Filter,
-  ArrowUpRight,
-  ArrowDownRight,
   Bot,
-  Quote,
-  Link2,
-  Star,
-  MessageSquare,
   Info,
   Zap,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react"
 import {
   Select,
@@ -40,17 +37,19 @@ import { PlatformBreakdown } from "./PlatformBreakdown"
 import { VisibilityTrendChart } from "./VisibilityTrendChart"
 import { QueryOpportunities } from "./QueryOpportunities"
 import { FactPricingGuard } from "./FactPricingGuard"
+import { TechAuditWidget } from "./TechAuditWidget"
+import { HowItWorksCard } from "./HowItWorksCard"
+import type { FullScanResult } from "../services/scan.service"
 import { 
   generateCitations, 
   calculateVisibilityStats, 
   getPlatformStats, 
   generateTrendData,
   analyzeQueries,
-  getVisibilityTier,
   calculateTrustMetrics,
 } from "../utils"
 import { AI_PLATFORMS, DATE_RANGE_OPTIONS, PlatformIcons } from "../constants"
-import type { AIPlatform, AIVisibilityFilters, HallucinationRisk } from "../types"
+import type { AIPlatform, AIVisibilityFilters, HallucinationRisk, AICitation } from "../types"
 
 // Helper to get risk color
 const getRiskColor = (risk: HallucinationRisk) => {
@@ -64,17 +63,130 @@ const getRiskColor = (risk: HallucinationRisk) => {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
+// LOADING SKELETON COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between">
+        <div>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <Skeleton className="h-10 w-32" />
+      </div>
+      
+      {/* Stats Grid Skeleton */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="bg-card border-border">
+            <CardContent className="p-4">
+              <Skeleton className="h-10 w-10 rounded-lg mb-3" />
+              <Skeleton className="h-8 w-20 mb-2" />
+              <Skeleton className="h-4 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      {/* Charts Row Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <Card className="bg-card border-border">
+            <CardContent className="p-6">
+              <Skeleton className="h-[280px] w-full" />
+            </CardContent>
+          </Card>
+        </div>
+        <Card className="bg-card border-border">
+          <CardContent className="p-6">
+            <Skeleton className="h-[280px] w-full" />
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Citations Skeleton */}
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="bg-card border-border">
+            <CardContent className="p-4">
+              <Skeleton className="h-24 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// ERROR MESSAGE COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+function ErrorMessage({ 
+  message, 
+  onRetry 
+}: { 
+  message: string
+  onRetry?: () => void 
+}) {
+  return (
+    <Alert variant="destructive" className="my-8">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Error Loading Data</AlertTitle>
+      <AlertDescription className="flex items-center justify-between">
+        <span>{message}</span>
+        {onRetry && (
+          <Button variant="outline" size="sm" onClick={onRetry} className="ml-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        )}
+      </AlertDescription>
+    </Alert>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 // PROPS INTERFACE
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 interface AIVisibilityDashboardProps {
+  /** Real citations data - if not provided, uses demo data */
+  citations?: AICitation[]
+  /** Loading state for real data */
+  isLoading?: boolean
+  /** Error message if data fetch failed */
+  error?: string | null
+  /** Retry callback for error state */
+  onRetry?: () => void
+  /** Is viewing demo/sample data */
   isDemoMode?: boolean
+  /** Callback when user clicks action in demo mode */
   onDemoActionClick?: () => void
+  /** Handler to trigger a full scan */
+  onScan?: () => Promise<void>
+  /** Whether a scan is currently in progress */
+  isScanning?: boolean
+  /** Latest scan result for dynamic stats */
+  lastScanResult?: FullScanResult | null
+  /** Handler to open Add Keyword modal */
+  onAddKeyword?: () => void
 }
 
 export function AIVisibilityDashboard({ 
+  citations: propCitations,
+  isLoading = false,
+  error = null,
+  onRetry,
   isDemoMode = false,
-  onDemoActionClick 
+  onDemoActionClick,
+  onScan,
+  isScanning = false,
+  lastScanResult,
+  onAddKeyword,
 }: AIVisibilityDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [filters, setFilters] = useState<AIVisibilityFilters>({
@@ -85,12 +197,37 @@ export function AIVisibilityDashboard({
     sortOrder: "desc",
   })
 
-  const citations = useMemo(() => generateCitations(), [])
+  // Use prop citations if provided, otherwise generate demo data
+  const citations = useMemo(() => {
+    if (propCitations && propCitations.length > 0) {
+      return propCitations
+    }
+    // Fallback to demo data
+    return generateCitations()
+  }, [propCitations])
   const stats = useMemo(() => calculateVisibilityStats(citations), [citations])
   const platformStats = useMemo(() => getPlatformStats(citations), [citations])
   const trendData = useMemo(() => generateTrendData(), [])
   const queryAnalysis = useMemo(() => analyzeQueries(citations), [citations])
-  const trustMetrics = useMemo(() => calculateTrustMetrics(citations), [citations])
+  
+  // Calculate trust metrics - use lastScanResult if available for dynamic updates
+  const trustMetrics = useMemo(() => {
+    if (lastScanResult) {
+      // Calculate from real scan result
+      return {
+        trustScore: lastScanResult.overallScore,
+        hallucinationRisk: lastScanResult.overallScore >= 70 ? "low" as const : 
+                          lastScanResult.overallScore >= 50 ? "medium" as const : 
+                          lastScanResult.overallScore >= 30 ? "high" as const : "critical" as const,
+        hallucinationCount: lastScanResult.totalPlatforms - lastScanResult.visiblePlatforms,
+        revenueAtRisk: Math.round((100 - lastScanResult.overallScore) * 120), // $120 per % at risk
+        aiReadinessScore: lastScanResult.siri.status === "ready" ? 95 : 
+                         lastScanResult.siri.status === "at-risk" ? 65 : 35,
+        lastChecked: lastScanResult.timestamp,
+      }
+    }
+    return calculateTrustMetrics(citations)
+  }, [citations, lastScanResult])
 
   const filteredCitations = useMemo(() => {
     let filtered = [...citations]
@@ -161,6 +298,16 @@ export function AIVisibilityDashboard({
       tooltip: "robots.txt + llms.txt + Schema markup score",
     },
   ]
+
+  // Show loading skeleton
+  if (isLoading) {
+    return <DashboardSkeleton />
+  }
+
+  // Show error message
+  if (error) {
+    return <ErrorMessage message={error} onRetry={onRetry} />
+  }
 
   return (
     <div className="space-y-6">
@@ -235,14 +382,18 @@ export function AIVisibilityDashboard({
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        <div className="lg:col-span-2 order-1 lg:order-1">
+        <div className="lg:col-span-2 order-1 lg:order-1 space-y-4">
           <VisibilityTrendChart data={trendData} />
+          {/* How It Works - Credit Guide */}
+          <HowItWorksCard />
         </div>
         <div className="order-2 lg:order-2">
           <PlatformBreakdown 
             stats={platformStats} 
             isDemoMode={isDemoMode}
             onDemoActionClick={onDemoActionClick}
+            onScan={onScan}
+            isScanning={isScanning}
           />
         </div>
       </div>
@@ -250,71 +401,16 @@ export function AIVisibilityDashboard({
       {/* 🛡️ Fact & Pricing Guard - Hallucination Defense Log (USP) */}
       <FactPricingGuard />
 
-      {/* Filters and Search */}
-      <Card className="bg-card border-border">
-        <CardContent className="p-3 sm:p-4">
-          <div className="flex flex-col lg:flex-row gap-2">
-            <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search queries or content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-background w-full h-9"
-              />
-            </div>
-            <div className="flex flex-row gap-2">
-              <Select
-                value={filters.dateRange}
-                onValueChange={(value) => setFilters(f => ({ ...f, dateRange: value as AIVisibilityFilters['dateRange'] }))}
-              >
-                <SelectTrigger className="flex-1 lg:w-[130px] bg-background h-9 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DATE_RANGE_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={filters.platforms.length > 0 ? filters.platforms[0] : "all"}
-                onValueChange={(value) => setFilters(f => ({ 
-                  ...f, 
-                  platforms: value === "all" ? [] : [value as AIPlatform] 
-                }))}
-              >
-                <SelectTrigger className="flex-1 lg:w-[140px] bg-background h-9 text-sm">
-                  <SelectValue placeholder="All Platforms" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Platforms</SelectItem>
-                  {Object.values(AI_PLATFORMS).map(platform => {
-                    const IconRenderer = PlatformIcons[platform.id]
-                    return (
-                      <SelectItem key={platform.id} value={platform.id}>
-                        <span className="flex items-center gap-2">
-                          <span className={platform.color}>{IconRenderer && IconRenderer()}</span>
-                          {platform.name}
-                        </span>
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Query Opportunities */}
       <QueryOpportunities 
         queries={queryAnalysis} 
         isDemoMode={isDemoMode}
         onDemoActionClick={onDemoActionClick}
+        onAddKeyword={onAddKeyword}
       />
+
+      {/* Tech Audit Widget - AI Readiness Checker */}
+      <TechAuditWidget />
 
       {/* Citations List */}
       <div>
@@ -326,6 +422,66 @@ export function AIVisibilityDashboard({
             {filteredCitations.length} citations
           </Badge>
         </div>
+
+        {/* Filters and Search - For Recent Citations */}
+        <Card className="bg-card border-border mb-3 sm:mb-4">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col lg:flex-row gap-2">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search queries or content..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-background w-full h-9"
+                />
+              </div>
+              <div className="flex flex-row gap-2">
+                <Select
+                  value={filters.dateRange}
+                  onValueChange={(value) => setFilters(f => ({ ...f, dateRange: value as AIVisibilityFilters['dateRange'] }))}
+                >
+                  <SelectTrigger className="flex-1 lg:w-[130px] bg-background h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATE_RANGE_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={filters.platforms.length > 0 ? filters.platforms[0] : "all"}
+                  onValueChange={(value) => setFilters(f => ({ 
+                    ...f, 
+                    platforms: value === "all" ? [] : [value as AIPlatform] 
+                  }))}
+                >
+                  <SelectTrigger className="flex-1 lg:w-[140px] bg-background h-9 text-sm">
+                    <SelectValue placeholder="All Platforms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Platforms</SelectItem>
+                    {Object.values(AI_PLATFORMS).map(platform => {
+                      const IconRenderer = PlatformIcons[platform.id]
+                      return (
+                        <SelectItem key={platform.id} value={platform.id}>
+                          <span className="flex items-center gap-2">
+                            <span className={platform.color}>{IconRenderer && IconRenderer()}</span>
+                            {platform.name}
+                          </span>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="space-y-2 sm:space-y-3">
           {filteredCitations.map((citation) => (
             <CitationCard 

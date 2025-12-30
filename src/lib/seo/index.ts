@@ -5,7 +5,6 @@
  */
 
 export {
-  dataforseo,
   getDataForSEOClient,
   getKeywordSearchVolume,
   getSerpResults,

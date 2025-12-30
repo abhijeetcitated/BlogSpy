@@ -1,25 +1,18 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 📦 CORE LIBRARY - Global Barrel Export
+ * 📊 DATA - Barrel Export
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 
- * Central export point for all core services.
- * Import from here for quick access to all clients.
- * 
- * @example
- * ```ts
- * import { openrouter, getDataForSEOClient, lemonSqueezy } from "@/lib"
- * ```
  */
 
-// Database (Supabase)
-export * from "./supabase"
-
-// AI (OpenRouter)
-export * from "./ai"
-
-// SEO Data (DataForSEO)
-export * from "./seo"
-
-// Payments (Lemon Squeezy)
-export * from "./payments"
+export {
+  MOCK_SCAN_RESULTS,
+  MOCK_GOOGLE_RESULT,
+  MOCK_CHATGPT_RESULT,
+  MOCK_PERPLEXITY_RESULT,
+  MOCK_CLAUDE_RESULT,
+  MOCK_GEMINI_RESULT,
+  MOCK_SEARCHGPT_RESULT,
+  MOCK_SIRI_RESULT,
+  createMockScanResult,
+  mockScanDelay,
+} from "./mock-scan-results"

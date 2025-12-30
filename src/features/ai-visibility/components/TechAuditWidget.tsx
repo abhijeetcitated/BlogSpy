@@ -35,7 +35,8 @@ import {
   Code2,
   AlertCircle,
   ExternalLink,
-  Bot
+  Bot,
+  RotateCcw
 } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -78,22 +79,26 @@ function StatusIndicator({ passed, label }: { passed: boolean; label: string }) 
 
 /**
  * Score badge with color coding based on score value.
+ * Hero Metric style for maximum visual impact.
  */
 function ScoreBadge({ score }: { score: number }) {
   let colorClass = ""
   
   if (score >= 80) {
-    colorClass = "bg-green-500 hover:bg-green-600 text-white"
+    colorClass = "text-green-500"
   } else if (score >= 50) {
-    colorClass = "bg-yellow-500 hover:bg-yellow-600 text-white"
+    colorClass = "text-yellow-500"
   } else {
-    colorClass = "bg-red-500 hover:bg-red-600 text-white"
+    colorClass = "text-red-500"
   }
 
   return (
-    <Badge className={`text-lg px-4 py-1 ${colorClass}`}>
-      {score}% AI Ready
-    </Badge>
+    <div className="text-center">
+      <span className={`text-5xl font-extrabold tracking-tight ${colorClass}`}>
+        {score}%
+      </span>
+      <p className="text-xs text-muted-foreground mt-1">AI Ready</p>
+    </div>
   )
 }
 
@@ -342,6 +347,15 @@ export function TechAuditWidget({
     }
   }
 
+  /**
+   * Resets the widget to check a new domain.
+   */
+  const handleReset = () => {
+    setDomain("")
+    setResult(null)
+    setError(null)
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -412,13 +426,24 @@ export function TechAuditWidget({
         {/* Results Section */}
         {result && !isPending && (
           <div className="space-y-6">
-            {/* Score Header */}
+            {/* Score Header with Reset Button */}
             <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
               <div>
                 <p className="text-sm text-muted-foreground">AI Readiness Score</p>
                 <p className="text-2xl font-bold">{result.domain}</p>
               </div>
-              <ScoreBadge score={result.overallScore} />
+              <div className="flex items-center gap-3">
+                <ScoreBadge score={result.overallScore} />
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleReset}
+                  className="gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  🔄 Re-scan / Check Competitor
+                </Button>
+              </div>
             </div>
 
             <Separator />

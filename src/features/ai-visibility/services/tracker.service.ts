@@ -21,6 +21,72 @@ import { GoogleAIOResult, RankingResult, CitationResult } from "../types"
 import { DATAFORSEO } from "@/constants/api-endpoints"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
+// MOCK MODE HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Check if mock mode is enabled
+ */
+function isMockMode(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+}
+
+/**
+ * Simulate network delay for realistic UX
+ */
+async function mockDelay(ms: number = 1500): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * Generate mock Google AIO result
+ */
+function generateMockGoogleAIOResult(query: string, isVisible: boolean = true): GoogleAIOResult {
+  return {
+    query,
+    isVisible,
+    source: isVisible ? (Math.random() > 0.5 ? "ai_overview" : "answer_box") : null,
+    position: isVisible ? 0 : null,
+    context: isVisible 
+      ? `BlogSpy is a comprehensive SEO platform that helps businesses track their AI visibility across platforms like ChatGPT, Claude, and Perplexity. For "${query}", BlogSpy offers specialized tracking tools.`
+      : null,
+    timestamp: new Date().toISOString(),
+  }
+}
+
+/**
+ * Generate mock ranking result
+ */
+function generateMockRankingResult(query: string, brandDomain: string): RankingResult {
+  const position = Math.random() > 0.3 ? Math.floor(Math.random() * 10) + 1 : null
+  return {
+    query,
+    position,
+    url: position ? `https://${brandDomain}/blog/${query.toLowerCase().replace(/\s+/g, "-")}` : null,
+    title: position ? `${query} - Complete Guide | BlogSpy` : null,
+    snippet: position 
+      ? `Learn everything about ${query}. BlogSpy provides comprehensive tools for SEO and AI visibility tracking.`
+      : null,
+    timestamp: new Date().toISOString(),
+  }
+}
+
+/**
+ * Generate mock citation result
+ */
+function generateMockCitationResult(query: string): CitationResult {
+  const isVisible = Math.random() > 0.3
+  const position = Math.random() > 0.4 ? Math.floor(Math.random() * 10) + 1 : null
+  return {
+    query,
+    googleAIO: generateMockGoogleAIOResult(query, isVisible),
+    organicRank: position,
+    isCitedInAIO: isVisible,
+    timestamp: new Date().toISOString(),
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TRACKER SERVICE CLASS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -127,6 +193,13 @@ export class TrackerService {
    * Check if brand appears in Google AI Overview
    */
   async checkGoogleAIO(query: string): Promise<GoogleAIOResult> {
+    // 🎭 MOCK MODE: Return fake data without real API calls
+    if (isMockMode()) {
+      console.log(`[Mock Mode] checkGoogleAIO - ${query}`)
+      await mockDelay(1200)
+      return generateMockGoogleAIOResult(query, Math.random() > 0.3)
+    }
+    
     const data = await this.search(query)
 
     // Check Answer Box
@@ -192,6 +265,13 @@ export class TrackerService {
    * Get Google ranking for a query
    */
   async getRanking(query: string): Promise<RankingResult> {
+    // 🎭 MOCK MODE: Return fake data without real API calls
+    if (isMockMode()) {
+      console.log(`[Mock Mode] getRanking - ${query}`)
+      await mockDelay(1000)
+      return generateMockRankingResult(query, this.brandDomain)
+    }
+    
     const data = await this.search(query)
 
     const organicResults = data.organic || []
@@ -225,6 +305,13 @@ export class TrackerService {
    * Get multiple rankings at once
    */
   async getRankings(queries: string[]): Promise<RankingResult[]> {
+    // 🎭 MOCK MODE: Return fake data without real API calls
+    if (isMockMode()) {
+      console.log(`[Mock Mode] getRankings - ${queries.length} queries`)
+      await mockDelay(1500)
+      return queries.map((q) => generateMockRankingResult(q, this.brandDomain))
+    }
+    
     return Promise.all(queries.map((q) => this.getRanking(q)))
   }
 
@@ -232,6 +319,13 @@ export class TrackerService {
    * Check citations across multiple queries
    */
   async checkCitations(queries: string[]): Promise<CitationResult[]> {
+    // 🎭 MOCK MODE: Return fake data without real API calls
+    if (isMockMode()) {
+      console.log(`[Mock Mode] checkCitations - ${queries.length} queries`)
+      await mockDelay(2000)
+      return queries.map((q) => generateMockCitationResult(q))
+    }
+    
     const results: CitationResult[] = []
 
     for (const query of queries) {
@@ -278,6 +372,20 @@ export class TrackerService {
     query: string,
     applebotAllowed: boolean
   ): Promise<{ status: "ready" | "at-risk" | "not-ready"; score: number }> {
+    // 🎭 MOCK MODE: Return fake data without real API calls
+    if (isMockMode()) {
+      console.log(`[Mock Mode] calculateSiriReadiness - ${query}`)
+      await mockDelay(800)
+      
+      const mockScore = Math.floor(Math.random() * 100)
+      let status: "ready" | "at-risk" | "not-ready"
+      if (mockScore >= 70) status = "ready"
+      else if (mockScore >= 40) status = "at-risk"
+      else status = "not-ready"
+      
+      return { status, score: mockScore }
+    }
+    
     const ranking = await this.getRanking(query)
 
     let score = 0

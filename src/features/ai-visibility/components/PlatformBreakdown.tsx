@@ -12,6 +12,7 @@ import {
   CheckCircle,
   AlertTriangle,
   RefreshCw,
+  Loader2,
 } from "lucide-react"
 import {
   Tooltip,
@@ -26,9 +27,19 @@ interface PlatformBreakdownProps {
   stats: PlatformStats[]
   isDemoMode?: boolean
   onDemoActionClick?: () => void
+  /** Handler to trigger a full scan */
+  onScan?: () => Promise<void>
+  /** Whether a scan is currently in progress */
+  isScanning?: boolean
 }
 
-export function PlatformBreakdown({ stats, isDemoMode, onDemoActionClick }: PlatformBreakdownProps) {
+export function PlatformBreakdown({ 
+  stats, 
+  isDemoMode, 
+  onDemoActionClick,
+  onScan,
+  isScanning = false,
+}: PlatformBreakdownProps) {
   const totalCitations = stats.reduce((sum, s) => sum + s.citations, 0)
 
   const renderPlatformIcon = (platformId: string, colorClass: string) => {
@@ -179,10 +190,20 @@ export function PlatformBreakdown({ stats, isDemoMode, onDemoActionClick }: Plat
           </p>
           <Button 
             className="w-full h-8 sm:h-9 text-xs sm:text-sm"
-            onClick={isDemoMode ? onDemoActionClick : undefined}
+            onClick={isDemoMode ? onDemoActionClick : onScan}
+            disabled={isScanning}
           >
-            <RefreshCw className="h-3.5 w-3.5 mr-2" />
-            Run Full Scan (⚡ 5)
+            {isScanning ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+                Scanning...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                Run Full Scan (⚡ 5)
+              </>
+            )}
           </Button>
         </div>
       </CardContent>

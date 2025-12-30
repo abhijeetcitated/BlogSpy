@@ -21,6 +21,7 @@ interface QueryOpportunitiesProps {
   queries: QueryAnalysis[]
   isDemoMode?: boolean
   onDemoActionClick?: () => void
+  onAddKeyword?: () => void
 }
 
 // Detect intent based on query keywords
@@ -34,7 +35,7 @@ function detectIntent(query: string): 'buying' | 'learning' {
   return buyingKeywords.some(kw => queryLower.includes(kw)) ? 'buying' : 'learning'
 }
 
-export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick }: QueryOpportunitiesProps) {
+export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick, onAddKeyword }: QueryOpportunitiesProps) {
   const router = useRouter()
 
   // Navigate to AI Writer with pre-filled context for optimization
@@ -102,7 +103,7 @@ export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick }: Q
             <Button 
               size="lg" 
               className="h-10 sm:h-11"
-              onClick={isDemoMode ? onDemoActionClick : undefined}
+              onClick={isDemoMode ? onDemoActionClick : onAddKeyword}
             >
               <Plus className="h-4 w-4 mr-2" />
               Track your first Keyword (⚡ 1)
@@ -116,22 +117,24 @@ export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick }: Q
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-sm sm:text-base font-semibold text-foreground flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <CardTitle className="text-sm sm:text-base font-semibold text-foreground flex items-center gap-2 flex-1 min-w-0">
             <Zap className="h-4 w-4 text-amber-400 shrink-0" />
             <span className="truncate">Query Opportunities</span>
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap">
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge variant="outline" className="text-muted-foreground text-[10px] sm:text-xs whitespace-nowrap hidden sm:inline-flex">
               {queries.length} queries
             </Badge>
             <Button 
               size="sm" 
-              className="h-7 sm:h-8 text-[10px] sm:text-xs bg-primary hover:bg-primary/90"
-              onClick={isDemoMode ? onDemoActionClick : undefined}
+              className="h-7 sm:h-8 text-[10px] sm:text-xs bg-primary hover:bg-primary/90 whitespace-nowrap"
+              onClick={isDemoMode ? onDemoActionClick : onAddKeyword}
             >
               <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
-              Track Keyword (⚡ 1)
+              <span className="hidden xs:inline">Track Keyword</span>
+              <span className="xs:hidden">Track</span>
+              <span className="ml-1">(⚡ 1)</span>
             </Button>
           </div>
         </div>
@@ -148,12 +151,12 @@ export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick }: Q
             return (
               <div 
                 key={index}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-2.5 sm:p-3 rounded-lg bg-background/50 hover:bg-muted/30 transition-colors"
+                className="flex flex-col gap-2 p-2.5 sm:p-3 rounded-lg bg-background/50 hover:bg-muted/30 transition-colors"
               >
                 {/* Query - Full width on mobile */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 sm:truncate">
+                  <div className="flex items-start sm:items-center gap-2 flex-wrap">
+                    <p className="text-xs sm:text-sm font-medium text-foreground line-clamp-2 sm:truncate break-words">
                       "{query.query}"
                     </p>
                     {/* Agent Intent Badge */}
@@ -183,11 +186,11 @@ export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick }: Q
                   </div>
                 </div>
 
-                {/* Stats row on mobile */}
-                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
+                {/* Stats row - Always horizontal but wraps on mobile */}
+                <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
                   {/* Position */}
-                  <div className="text-center sm:text-center">
-                    <div className="flex items-center gap-0.5 sm:gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-0.5">
                       <span className="text-xs sm:text-sm font-semibold text-foreground">
                         #{query.yourPosition}
                       </span>
@@ -200,23 +203,16 @@ export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick }: Q
                     <span className="text-[10px] sm:text-xs text-muted-foreground">Your pos</span>
                   </div>
 
-                  {/* Competitor - Hidden on very small screens */}
-                  <div className="text-center hidden xs:block min-w-[60px] sm:min-w-20">
-                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate">
-                      {query.topCompetitor}
-                    </p>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">
-                      pos #{query.competitorPosition}
-                    </span>
-                  </div>
+                  {/* Spacer to push button right */}
+                  <div className="flex-1" />
 
-                  {/* Optimize Button */}
+                  {/* Optimize Button - Shrink on mobile */}
                   <Button 
                     size="sm" 
-                    className="h-8 text-xs font-medium bg-amber-500 hover:bg-amber-600 text-black"
+                    className="h-7 sm:h-8 text-[10px] sm:text-xs font-medium bg-amber-500 hover:bg-amber-600 text-black px-2 sm:px-3 shrink-0"
                     onClick={() => handleOptimize(query.query, intent)}
                   >
-                    Optimize <ArrowUpRight className="ml-1 h-3 w-3" />
+                    Optimize <ArrowUpRight className="ml-0.5 sm:ml-1 h-3 w-3" />
                   </Button>
                 </div>
               </div>

@@ -14,8 +14,19 @@
 
 "use server"
 
+import { createServerClient } from "@/src/lib/supabase/server"
 import { createTrackerService } from "../services/tracker.service"
 import type { GoogleAIOResult, RankingResult, CitationResult } from "../types"
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// RESPONSE TYPES
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+interface TrackerActionResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // GET API CREDENTIALS (from env)
@@ -40,14 +51,26 @@ function getDataForSEOCredentials(): { login: string; password: string } {
 export async function checkGoogleAIO(
   brandDomain: string,
   query: string
-): Promise<GoogleAIOResult> {
+): Promise<TrackerActionResponse<GoogleAIOResult>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const credentials = getDataForSEOCredentials()
     const trackerService = createTrackerService(credentials, brandDomain)
-    return await trackerService.checkGoogleAIO(query)
+    const result = await trackerService.checkGoogleAIO(query)
+    return { success: true, data: result }
   } catch (error) {
     console.error("[checkGoogleAIO] Error:", error)
-    throw new Error("Failed to check Google AIO")
+    return { success: false, error: "Failed to check Google AIO" }
   }
 }
 
@@ -57,14 +80,26 @@ export async function checkGoogleAIO(
 export async function getRanking(
   brandDomain: string,
   query: string
-): Promise<RankingResult> {
+): Promise<TrackerActionResponse<RankingResult>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const credentials = getDataForSEOCredentials()
     const trackerService = createTrackerService(credentials, brandDomain)
-    return await trackerService.getRanking(query)
+    const result = await trackerService.getRanking(query)
+    return { success: true, data: result }
   } catch (error) {
     console.error("[getRanking] Error:", error)
-    throw new Error("Failed to get ranking")
+    return { success: false, error: "Failed to get ranking" }
   }
 }
 
@@ -74,14 +109,26 @@ export async function getRanking(
 export async function getRankings(
   brandDomain: string,
   queries: string[]
-): Promise<RankingResult[]> {
+): Promise<TrackerActionResponse<RankingResult[]>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const credentials = getDataForSEOCredentials()
     const trackerService = createTrackerService(credentials, brandDomain)
-    return await trackerService.getRankings(queries)
+    const result = await trackerService.getRankings(queries)
+    return { success: true, data: result }
   } catch (error) {
     console.error("[getRankings] Error:", error)
-    throw new Error("Failed to get rankings")
+    return { success: false, error: "Failed to get rankings" }
   }
 }
 
@@ -91,14 +138,26 @@ export async function getRankings(
 export async function checkCitations(
   brandDomain: string,
   queries: string[]
-): Promise<CitationResult[]> {
+): Promise<TrackerActionResponse<CitationResult[]>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const credentials = getDataForSEOCredentials()
     const trackerService = createTrackerService(credentials, brandDomain)
-    return await trackerService.checkCitations(queries)
+    const result = await trackerService.checkCitations(queries)
+    return { success: true, data: result }
   } catch (error) {
     console.error("[checkCitations] Error:", error)
-    throw new Error("Failed to check citations")
+    return { success: false, error: "Failed to check citations" }
   }
 }
 
@@ -109,13 +168,25 @@ export async function checkSiriReadiness(
   brandDomain: string,
   query: string,
   applebotAllowed: boolean
-): Promise<{ status: "ready" | "at-risk" | "not-ready"; score: number }> {
+): Promise<TrackerActionResponse<{ status: "ready" | "at-risk" | "not-ready"; score: number }>> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const credentials = getDataForSEOCredentials()
     const trackerService = createTrackerService(credentials, brandDomain)
-    return await trackerService.calculateSiriReadiness(query, applebotAllowed)
+    const result = await trackerService.calculateSiriReadiness(query, applebotAllowed)
+    return { success: true, data: result }
   } catch (error) {
     console.error("[checkSiriReadiness] Error:", error)
-    throw new Error("Failed to check Siri readiness")
+    return { success: false, error: "Failed to check Siri readiness" }
   }
 }

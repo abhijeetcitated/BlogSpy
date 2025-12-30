@@ -17,6 +17,7 @@
 
 "use server"
 
+import { createServerClient } from "@/src/lib/supabase/server"
 import { createDefenseService, type BrandFacts } from "../services/defense.service"
 import type { DefenseResult, PlatformVisibility } from "../types"
 
@@ -57,18 +58,30 @@ function getOpenRouterApiKey(): string {
  */
 export async function runDefenseCheck(
   input: DefenseCheckInput
-): Promise<DefenseResult> {
+): Promise<{ success: boolean; data?: DefenseResult; error?: string }> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const apiKey = getOpenRouterApiKey()
     const defenseService = createDefenseService(
       apiKey,
       input.brandName,
       input.brandFacts
     )
-    return await defenseService.runDefenseCheck()
+    const result = await defenseService.runDefenseCheck()
+    return { success: true, data: result }
   } catch (error) {
     console.error("[runDefenseCheck] Error:", error)
-    throw new Error("Failed to run defense check")
+    return { success: false, error: "Failed to run defense check" }
   }
 }
 
@@ -77,18 +90,30 @@ export async function runDefenseCheck(
  */
 export async function checkPlatformVisibility(
   input: VisibilityCheckInput
-): Promise<PlatformVisibility> {
+): Promise<{ success: boolean; data?: PlatformVisibility; error?: string }> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const apiKey = getOpenRouterApiKey()
     const defenseService = createDefenseService(
       apiKey,
       input.brandName,
       input.brandFacts
     )
-    return await defenseService.checkVisibility(input.platform, input.query)
+    const result = await defenseService.checkVisibility(input.platform, input.query)
+    return { success: true, data: result }
   } catch (error) {
     console.error("[checkPlatformVisibility] Error:", error)
-    throw new Error("Failed to check platform visibility")
+    return { success: false, error: "Failed to check platform visibility" }
   }
 }
 
@@ -100,8 +125,19 @@ export async function batchCheckVisibility(input: {
   brandFacts: BrandFacts
   platform: "chatgpt" | "claude" | "gemini" | "perplexity"
   queries: string[]
-}): Promise<PlatformVisibility[]> {
+}): Promise<{ success: boolean; data?: PlatformVisibility[]; error?: string }> {
   try {
+    // 🔒 AUTH CHECK: Verify user is logged in
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return {
+        success: false,
+        error: "Unauthorized: Please login to use this feature.",
+      }
+    }
+
     const apiKey = getOpenRouterApiKey()
     const defenseService = createDefenseService(
       apiKey,
@@ -115,9 +151,9 @@ export async function batchCheckVisibility(input: {
       )
     )
     
-    return results
+    return { success: true, data: results }
   } catch (error) {
     console.error("[batchCheckVisibility] Error:", error)
-    throw new Error("Failed to batch check visibility")
+    return { success: false, error: "Failed to batch check visibility" }
   }
 }
