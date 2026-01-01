@@ -4,14 +4,15 @@ import { useState, useMemo, Fragment, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { 
   Upload, Trash2, Search, Filter, ArrowUpDown, ArrowUp, ArrowDown,
-  Sparkles, Plus, X, ChevronDown, ChevronUp,
+  Sparkles, Plus, X, ChevronDown, ChevronUp, ChevronRight,
   TrendingUp, TrendingDown, Minus, CheckSquare, Square, Check,
   Wand2, BarChart3, Target, Scissors, Flame,
   Video, MessageSquare, Star, ShoppingCart, Image, Map,
   ExternalLink, Link2, Eye, MousePointer, Zap, Layers, DollarSign, MousePointer2, RefreshCw, CheckCircle2, Clock,
-  FileText, HelpCircle, ImageIcon, Globe
+  FileText, HelpCircle, ImageIcon, Globe, FolderPlus, Folder, MoreHorizontal, Edit3, Copy
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 
@@ -70,6 +71,20 @@ interface Keyword {
 type SortField = "keyword" | "volume" | "kd" | "cpc" | "trafficPotential" | "position" | "clicks" | "wordCount" | "businessPotential" | "source" | "lastUpdated" | "priorityScore"
 type SortDirection = "asc" | "desc"
 type KeywordStatus = "new" | "update" | "optimize" | "ranking" | null
+
+// Project Interface
+interface Project {
+  id: string
+  name: string
+  description: string
+  keywordCount: number
+  totalVolume: number
+  avgKd: number
+  status: "draft" | "clustered" | "archived"
+  createdAt: Date
+  updatedAt: Date
+  color: string
+}
 
 // Status determination logic based on source and position
 const getKeywordStatus = (kw: Keyword): KeywordStatus => {
@@ -310,6 +325,43 @@ export function TopicClusterContent() {
   const [showManualInput, setShowManualInput] = useState(false)
   const [manualText, setManualText] = useState("")
   
+  // Import Modal State
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [pendingImportKeywords, setPendingImportKeywords] = useState<Keyword[]>([])
+  const [importStep, setImportStep] = useState<"choose" | "create" | "select">("choose")
+  const [newProjectName, setNewProjectName] = useState("")
+  const [newProjectDescription, setNewProjectDescription] = useState("")
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+  
+  // Projects State
+  const [projects, setProjects] = useState<Project[]>([
+    {
+      id: "proj_1",
+      name: "SEO Tools Content",
+      description: "All keywords related to SEO tools and software",
+      keywordCount: 24,
+      totalVolume: 45000,
+      avgKd: 42,
+      status: "clustered",
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      color: "purple"
+    },
+    {
+      id: "proj_2", 
+      name: "AI Writing Tools",
+      description: "Keywords for AI content generation",
+      keywordCount: 18,
+      totalVolume: 32000,
+      avgKd: 38,
+      status: "draft",
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      color: "blue"
+    }
+  ])
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null)
+  
   // NEW: Side Panel for keyword details
   const [selectedKeyword, setSelectedKeyword] = useState<Keyword | null>(null)
   const [showSidePanel, setShowSidePanel] = useState(false)
@@ -324,6 +376,177 @@ export function TopicClusterContent() {
     const timer = setInterval(() => setTick(t => t + 1), 60000)
     return () => clearInterval(timer)
   }, [])
+
+  // Check for keywords exported from Keyword Explorer
+  useEffect(() => {
+    const exportedData = localStorage.getItem('keyword-explorer-export')
+    const exportTime = localStorage.getItem('keyword-explorer-export-time')
+    
+    if (exportedData && exportTime) {
+      const exportDate = new Date(exportTime)
+      const now = new Date()
+      const diffMinutes = (now.getTime() - exportDate.getTime()) / (1000 * 60)
+      
+      // Only import if export is recent (within 5 minutes)
+      if (diffMinutes < 5) {
+        try {
+          const parsed = JSON.parse(exportedData)
+          const trends: Keyword["trend"][] = ["up", "down", "stable"]
+          
+          // Map short intent codes to full intent strings
+          const intentMap: Record<string, Keyword["intent"]> = {
+            'C': 'commercial',
+            'I': 'informational',
+            'T': 'transactional',
+            'N': 'navigational',
+            'commercial': 'commercial',
+            'informational': 'informational',
+            'transactional': 'transactional',
+            'navigational': 'navigational',
+          }
+          
+          const importedKeywords: Keyword[] = parsed.map((k: { 
+            keyword: string; 
+            volume?: number; 
+            difficulty?: number; 
+            cpc?: number; 
+            intent?: string | string[];
+            geoScore?: number;
+            serpFeatures?: string[];
+          }) => {
+            const volume = k.volume || Math.floor(Math.random() * 5000) + 100
+            const clickRate = Math.random() * 0.4 + 0.15
+            const calculatedClicks = Math.floor(volume * clickRate)
+            
+            // Parse intent - handle array or string format
+            let parsedIntent: Keyword["intent"] = null
+            if (k.intent) {
+              if (Array.isArray(k.intent) && k.intent.length > 0) {
+                parsedIntent = intentMap[k.intent[0]] || null
+              } else if (typeof k.intent === 'string') {
+                parsedIntent = intentMap[k.intent] || null
+              }
+            }
+            
+            return {
+              id: Math.random().toString(36).substring(2, 9),
+              keyword: k.keyword,
+              source: "Keyword Explorer",
+              sourceTag: "Imported",
+              isSelected: false,
+              volume: volume,
+              kd: k.difficulty || Math.floor(Math.random() * 80) + 10,
+              cpc: k.cpc || Math.random() * 5,
+              intent: parsedIntent,
+              trend: trends[Math.floor(Math.random() * 3)],
+              trendPercent: Math.floor(Math.random() * 30) - 10,
+              trafficPotential: Math.floor(volume * 1.2),
+              clicks: calculatedClicks,
+              cps: calculatedClicks / volume,
+              businessPotential: 0 as BusinessPotential,
+              position: null,
+              positionChange: null,
+              rankingUrl: null,
+              serpFeatures: (k.serpFeatures || []) as SerpFeature[],
+              hasFeaturedSnippet: false,
+              parentTopic: null,
+              wordCount: k.keyword.split(" ").length,
+              competition: null,
+              results: null,
+              lastUpdated: new Date(),
+            }
+          })
+          
+          // Store keywords and show import modal
+          setPendingImportKeywords(importedKeywords)
+          setShowImportModal(true)
+          
+          // Clear localStorage after reading
+          localStorage.removeItem('keyword-explorer-export')
+          localStorage.removeItem('keyword-explorer-export-time')
+        } catch (error) {
+          console.error('Failed to parse exported keywords:', error)
+          toast.error('Failed to import keywords')
+        }
+      } else {
+        // Clear old export data
+        localStorage.removeItem('keyword-explorer-export')
+        localStorage.removeItem('keyword-explorer-export-time')
+      }
+    }
+  }, [])
+
+  // Handle import confirmation
+  const handleConfirmImport = () => {
+    if (importStep === "create" && newProjectName.trim()) {
+      // Create new project
+      const newProject: Project = {
+        id: `proj_${Date.now()}`,
+        name: newProjectName.trim(),
+        description: newProjectDescription.trim(),
+        keywordCount: pendingImportKeywords.length,
+        totalVolume: pendingImportKeywords.reduce((acc, k) => acc + (k.volume || 0), 0),
+        avgKd: pendingImportKeywords.length > 0 
+          ? Math.round(pendingImportKeywords.reduce((acc, k) => acc + (k.kd || 0), 0) / pendingImportKeywords.length) 
+          : 0,
+        status: "draft",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        color: ["purple", "blue", "emerald", "amber", "pink", "cyan"][Math.floor(Math.random() * 6)]
+      }
+      setProjects(prev => [...prev, newProject])
+      
+      if (pendingImportKeywords.length > 0) {
+        setKeywords(prev => [...prev, ...pendingImportKeywords])
+        toast.success(`Created project "${newProject.name}" with ${pendingImportKeywords.length} keywords`, {
+          description: "Keywords are ready for clustering"
+        })
+      } else {
+        toast.success(`Created project "${newProject.name}"`, {
+          description: "Add keywords to start clustering"
+        })
+      }
+      setActiveProjectId(newProject.id)
+    } else if (importStep === "select" && selectedProjectId) {
+      // Add to existing project
+      const project = projects.find(p => p.id === selectedProjectId)
+      if (project) {
+        setProjects(prev => prev.map(p => 
+          p.id === selectedProjectId 
+            ? {
+                ...p,
+                keywordCount: p.keywordCount + pendingImportKeywords.length,
+                totalVolume: p.totalVolume + pendingImportKeywords.reduce((acc, k) => acc + (k.volume || 0), 0),
+                updatedAt: new Date()
+              }
+            : p
+        ))
+        setKeywords(prev => [...prev, ...pendingImportKeywords])
+        setActiveProjectId(selectedProjectId)
+        toast.success(`Added ${pendingImportKeywords.length} keywords to "${project.name}"`, {
+          description: "Keywords are ready for clustering"
+        })
+      }
+    }
+    
+    // Reset modal state
+    setPendingImportKeywords([])
+    setShowImportModal(false)
+    setImportStep("choose")
+    setNewProjectName("")
+    setNewProjectDescription("")
+    setSelectedProjectId(null)
+  }
+
+  // Handle import cancel
+  const handleCancelImport = () => {
+    setPendingImportKeywords([])
+    setShowImportModal(false)
+    setImportStep("choose")
+    setNewProjectName("")
+    setNewProjectDescription("")
+    setSelectedProjectId(null)
+  }
   
   // Filters
   const [volumeMin, setVolumeMin] = useState("")
@@ -658,6 +881,7 @@ export function TopicClusterContent() {
       <div className="flex items-center gap-0.5">
         {features.slice(0, 4).map(f => {
           const config = SERP_FEATURE_ICONS[f]
+          if (!config) return null
           return (
             <span key={f} title={config.label} className={cn("p-0.5", config.color)}>
               <config.icon className="w-3 h-3" />
@@ -674,6 +898,7 @@ export function TopicClusterContent() {
   // Source Badge with colors
   const SOURCE_COLORS: Record<string, { bg: string; text: string; tooltip: string }> = {
     "Keyword Magic": { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-600 dark:text-purple-400", tooltip: "Found via Keyword Magic Tool - Seed keyword expansion" },
+    "Keyword Explorer": { bg: "bg-indigo-100 dark:bg-indigo-900/30", text: "text-indigo-600 dark:text-indigo-400", tooltip: "Imported from Keyword Explorer - Researched keywords" },
     "Competitor Gap": { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600 dark:text-blue-400", tooltip: "Competitor is ranking, you are not - Gap opportunity!" },
     "Content Decay": { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-600 dark:text-amber-400", tooltip: "Your existing content is losing traffic - Needs refresh" },
     "Rank Tracker": { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-600 dark:text-emerald-400", tooltip: "You are already ranking for this keyword" },
@@ -699,12 +924,14 @@ export function TopicClusterContent() {
             sourceTag === "Weak" ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" :
             sourceTag === "Traffic Loss" ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" :
             sourceTag === "Breakout" ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" :
+            sourceTag === "Imported" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400" :
             "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
           )} title={
             sourceTag === "Missing" ? "You have no content for this - Create new!" :
             sourceTag === "Weak" ? "Your ranking is weak (11-50) - Improve content" :
             sourceTag === "Traffic Loss" ? "Lost traffic recently - Needs update" :
             sourceTag === "Breakout" ? "Trending up rapidly - Quick win!" :
+            sourceTag === "Imported" ? "Imported from Keyword Explorer" :
             sourceTag
           }>{sourceTag}</span>
         )}
@@ -1759,6 +1986,217 @@ export function TopicClusterContent() {
                 Credits never expire. Secure payment via Stripe.
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* IMPORT MODAL */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl w-full max-w-lg p-6 relative animate-in fade-in zoom-in duration-200">
+            <button 
+              onClick={handleCancelImport}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            {/* Choose Step */}
+            {importStep === "choose" && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FolderPlus className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">
+                    Import {pendingImportKeywords.length} Keywords
+                  </h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Keywords from Keyword Explorer are ready to import
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  <button
+                    onClick={() => setImportStep("create")}
+                    className="w-full flex items-center gap-4 p-4 bg-purple-50 dark:bg-purple-900/10 border-2 border-purple-200 dark:border-purple-800 rounded-xl hover:border-purple-400 dark:hover:border-purple-600 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center shrink-0">
+                      <FolderPlus className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-zinc-900 dark:text-white">Create New Project</div>
+                      <div className="text-sm text-zinc-500 dark:text-zinc-400">Start fresh with a new keyword project</div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-zinc-400 ml-auto" />
+                  </button>
+                  
+                  <button
+                    onClick={() => setImportStep("select")}
+                    disabled={projects.length === 0}
+                    className="w-full flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="w-10 h-10 bg-zinc-100 dark:bg-zinc-700 rounded-lg flex items-center justify-center shrink-0">
+                      <Folder className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-zinc-900 dark:text-white">Add to Existing Project</div>
+                      <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {projects.length > 0 ? `${projects.length} projects available` : 'No projects yet'}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-zinc-400 ml-auto" />
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Create Project Step */}
+            {importStep === "create" && (
+              <div className="space-y-6">
+                <div>
+                  <button
+                    onClick={() => setImportStep("choose")}
+                    className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-4"
+                  >
+                    <ChevronRight className="w-4 h-4 rotate-180" />
+                    Back
+                  </button>
+                  <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">
+                    Create New Project
+                  </h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Give your keyword project a name
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                      Project Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                      placeholder="e.g., SEO Tools Research"
+                      className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-zinc-900 dark:text-white placeholder:text-zinc-400"
+                      autoFocus
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                      Description (optional)
+                    </label>
+                    <textarea
+                      value={newProjectDescription}
+                      onChange={(e) => setNewProjectDescription(e.target.value)}
+                      placeholder="Brief description of this keyword project..."
+                      rows={3}
+                      className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-zinc-900 dark:text-white placeholder:text-zinc-400 resize-none"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCancelImport}
+                    className="flex-1 px-4 py-2.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmImport}
+                    disabled={!newProjectName.trim()}
+                    className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Create & Import {pendingImportKeywords.length} Keywords
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Select Project Step */}
+            {importStep === "select" && (
+              <div className="space-y-6">
+                <div>
+                  <button
+                    onClick={() => setImportStep("choose")}
+                    className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-4"
+                  >
+                    <ChevronRight className="w-4 h-4 rotate-180" />
+                    Back
+                  </button>
+                  <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">
+                    Select Project
+                  </h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Choose a project to add keywords to
+                  </p>
+                </div>
+                
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {projects.map((project) => (
+                    <button
+                      key={project.id}
+                      onClick={() => setSelectedProjectId(project.id)}
+                      className={cn(
+                        "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-colors text-left",
+                        selectedProjectId === project.id
+                          ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                          : "border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                        project.color === "purple" && "bg-purple-100 dark:bg-purple-800",
+                        project.color === "blue" && "bg-blue-100 dark:bg-blue-800",
+                        project.color === "emerald" && "bg-emerald-100 dark:bg-emerald-800",
+                        project.color === "amber" && "bg-amber-100 dark:bg-amber-800",
+                        project.color === "pink" && "bg-pink-100 dark:bg-pink-800",
+                        project.color === "cyan" && "bg-cyan-100 dark:bg-cyan-800"
+                      )}>
+                        <Folder className={cn(
+                          "w-5 h-5",
+                          project.color === "purple" && "text-purple-600 dark:text-purple-400",
+                          project.color === "blue" && "text-blue-600 dark:text-blue-400",
+                          project.color === "emerald" && "text-emerald-600 dark:text-emerald-400",
+                          project.color === "amber" && "text-amber-600 dark:text-amber-400",
+                          project.color === "pink" && "text-pink-600 dark:text-pink-400",
+                          project.color === "cyan" && "text-cyan-600 dark:text-cyan-400"
+                        )} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-zinc-900 dark:text-white truncate">{project.name}</div>
+                        <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                          {project.keywordCount} keywords • {project.totalVolume.toLocaleString()} total volume
+                        </div>
+                      </div>
+                      {selectedProjectId === project.id && (
+                        <Check className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCancelImport}
+                    className="flex-1 px-4 py-2.5 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmImport}
+                    disabled={!selectedProjectId}
+                    className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Add {pendingImportKeywords.length} Keywords
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

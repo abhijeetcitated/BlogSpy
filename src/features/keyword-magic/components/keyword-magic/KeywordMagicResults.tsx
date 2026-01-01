@@ -39,7 +39,7 @@ export function KeywordMagicResults({
 
       {/* Data Table - Sticky Card that fills viewport when scrolled */}
       <div 
-        className="sticky top-0 bg-card border border-border rounded-lg shadow-sm overflow-hidden" 
+        className="sticky top-0 bg-card border border-border rounded-lg shadow-sm no-horizontal-scroll w-full max-w-full" 
         style={{ height: 'calc(100vh - 6rem)' }}
       >
         {isSearching ? (

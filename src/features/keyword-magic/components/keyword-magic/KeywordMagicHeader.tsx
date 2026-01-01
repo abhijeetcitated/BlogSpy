@@ -47,7 +47,7 @@ export function KeywordMagicHeader({
         <div className="flex flex-col gap-3">
           {/* Title Row - with Country selector on right */}
           <div className="flex items-center justify-between">
-            <h1 className="text-lg sm:text-xl font-semibold text-foreground">Keyword Magic</h1>
+            <h1 className="text-lg sm:text-xl font-semibold text-foreground">Keyword Explorer</h1>
             {/* Single Country Selector - responsive */}
             <CountrySelector
               selectedCountry={selectedCountry}

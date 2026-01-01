@@ -210,6 +210,16 @@
   scrollbar-width: none;
 }
 
+/* Hide horizontal scrollbar only - keep vertical */
+.no-horizontal-scroll {
+  overflow-x: hidden !important;
+}
+
+.no-horizontal-scroll::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0 !important;
+}
+
 /* Tiptap Editor Styles */
 .tiptap {
   outline: none;

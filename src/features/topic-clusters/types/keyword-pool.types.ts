@@ -145,7 +145,7 @@ export interface KeywordSourceConfig {
 }
 
 export const KEYWORD_SOURCE_CONFIGS: KeywordSourceConfig[] = [
-  { type: "keyword-magic", label: "Keyword Magic", icon: "Wand2", color: "purple", description: "AI-powered keyword suggestions" },
+  { type: "keyword-explorer", label: "Keyword Explorer", icon: "Wand2", color: "purple", description: "AI-powered keyword suggestions" },
   { type: "competitor-gap", label: "Competitor Gap", icon: "Users", color: "blue", description: "Keywords competitors rank for" },
   { type: "content-decay", label: "Content Decay", icon: "TrendingDown", color: "red", description: "Declining keywords to refresh" },
   { type: "rank-tracker", label: "Rank Tracker", icon: "LineChart", color: "green", description: "Your tracked keywords" },

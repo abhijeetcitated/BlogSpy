@@ -5,7 +5,7 @@ import { KeywordMagicContent } from "@/components/features"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
 
 export const metadata = {
-  title: "Keyword Magic Demo - BlogSpy | Discover High-Value Keywords",
+  title: "Keyword Explorer Demo - BlogSpy | Discover High-Value Keywords",
   description: "Try our keyword research tool. Find thousands of keyword ideas with search volume, difficulty, and CPC data. Sign up for full access.",
 }
 
@@ -20,7 +20,7 @@ function KeywordMagicLoading() {
 export default function KeywordMagicDemoPage() {
   return (
     <DemoWrapper
-      featureName="Keyword Magic"
+      featureName="Keyword Explorer"
       featureDescription="Access unlimited keyword research with real-time data, competitor analysis, and export features."
       dashboardPath="/dashboard/research/keyword-magic"
     >

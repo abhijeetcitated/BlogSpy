@@ -1,7 +1,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar, TopNav } from "@/components/layout"
-// NEW: Using project-based Topic Cluster system
-import { TopicClusterManager } from "@/src/features/topic-clusters"
+import { TopicClusterContent } from "@/components/features"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
 
 export const metadata = {
@@ -21,7 +20,7 @@ export default function TopicClustersDemoPage() {
         <SidebarInset>
           <TopNav />
           <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col">
-            <TopicClusterManager userId="user_demo_123" />
+            <TopicClusterContent />
           </main>
         </SidebarInset>
       </SidebarProvider>

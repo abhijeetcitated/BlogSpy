@@ -20,6 +20,9 @@ export interface Keyword {
   cpc: number
   serpFeatures: SERPFeature[]
   geoScore?: number
+  // Refresh tracking
+  lastUpdated?: Date
+  isRefreshing?: boolean
   // Future API integration fields
   updatedAt?: string
   dataSource?: "dataforseo" | "semrush" | "mock"

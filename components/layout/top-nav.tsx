@@ -55,7 +55,7 @@ export function TopNav() {
           <span>Home</span>
         </Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        <span className="text-foreground font-medium">Keyword Magic</span>
+        <span className="text-foreground font-medium">Keyword Explorer</span>
       </nav>
 
       {/* Global Search - Hidden on mobile, use Command Palette instead */}

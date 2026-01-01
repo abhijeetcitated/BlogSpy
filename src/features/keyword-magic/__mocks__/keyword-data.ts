@@ -14,7 +14,8 @@ export const MOCK_KEYWORDS: Keyword[] = [
     weakSpot: { type: "reddit", rank: 7 },
     kd: 42,
     cpc: 4.2,
-    serpFeatures: ["video", "snippet"],
+    serpFeatures: ["video", "snippet", "ai_overview"],
+    geoScore: 78,
   },
   {
     id: 2,
@@ -26,6 +27,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 35,
     cpc: 2.8,
     serpFeatures: ["snippet", "faq"],
+    geoScore: 65,
   },
   {
     id: 3,
@@ -36,7 +38,8 @@ export const MOCK_KEYWORDS: Keyword[] = [
     weakSpot: { type: null },
     kd: 58,
     cpc: 3.5,
-    serpFeatures: ["shopping"],
+    serpFeatures: ["shopping", "ai_overview"],
+    geoScore: 82,
   },
   {
     id: 4,
@@ -47,7 +50,8 @@ export const MOCK_KEYWORDS: Keyword[] = [
     weakSpot: { type: "reddit", rank: 9 },
     kd: 28,
     cpc: 1.9,
-    serpFeatures: ["snippet", "faq"],
+    serpFeatures: ["snippet", "faq", "ai_overview"],
+    geoScore: 92,
   },
   {
     id: 5,
@@ -59,6 +63,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 62,
     cpc: 3.2,
     serpFeatures: ["video", "image"],
+    geoScore: 45,
   },
   {
     id: 6,
@@ -69,7 +74,8 @@ export const MOCK_KEYWORDS: Keyword[] = [
     weakSpot: { type: "quora", rank: 8 },
     kd: 45,
     cpc: 5.5,
-    serpFeatures: ["reviews"],
+    serpFeatures: ["reviews", "ai_overview"],
+    geoScore: 71,
   },
   {
     id: 7,
@@ -81,6 +87,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 52,
     cpc: 6.8,
     serpFeatures: ["reviews", "shopping"],
+    geoScore: 55,
   },
   {
     id: 8,
@@ -91,7 +98,8 @@ export const MOCK_KEYWORDS: Keyword[] = [
     weakSpot: { type: null },
     kd: 38,
     cpc: 4.2,
-    serpFeatures: ["video", "reviews"],
+    serpFeatures: ["video", "reviews", "ai_overview"],
+    geoScore: 88,
   },
   {
     id: 9,
@@ -103,6 +111,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 32,
     cpc: 3.8,
     serpFeatures: ["snippet"],
+    geoScore: 48,
   },
   {
     id: 10,
@@ -114,6 +123,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 55,
     cpc: 4.8,
     serpFeatures: ["reviews"],
+    geoScore: 35,
   },
   {
     id: 11,
@@ -125,6 +135,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 25,
     cpc: 1.5,
     serpFeatures: ["video", "snippet"],
+    geoScore: 52,
   },
   {
     id: 12,
@@ -136,6 +147,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 48,
     cpc: 7.2,
     serpFeatures: ["shopping", "reviews"],
+    geoScore: 42,
   },
   {
     id: 13,
@@ -146,7 +158,8 @@ export const MOCK_KEYWORDS: Keyword[] = [
     weakSpot: { type: "reddit", rank: 3 },
     kd: 18,
     cpc: 2.1,
-    serpFeatures: ["video", "snippet", "faq"],
+    serpFeatures: ["video", "snippet", "faq", "ai_overview"],
+    geoScore: 85,
   },
   {
     id: 14,
@@ -158,6 +171,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 68,
     cpc: 12.5,
     serpFeatures: ["shopping", "reviews"],
+    geoScore: 28,
   },
   {
     id: 15,
@@ -169,6 +183,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 41,
     cpc: 8.9,
     serpFeatures: ["shopping"],
+    geoScore: 38,
   },
   {
     id: 16,
@@ -179,7 +194,8 @@ export const MOCK_KEYWORDS: Keyword[] = [
     weakSpot: { type: "reddit", rank: 2 },
     kd: 22,
     cpc: 3.4,
-    serpFeatures: ["video", "snippet"],
+    serpFeatures: ["video", "snippet", "ai_overview"],
+    geoScore: 75,
   },
   {
     id: 17,
@@ -191,6 +207,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     kd: 72,
     cpc: 5.6,
     serpFeatures: ["video", "shopping", "reviews"],
+    geoScore: 32,
   },
   {
     id: 18,
@@ -201,6 +218,7 @@ export const MOCK_KEYWORDS: Keyword[] = [
     weakSpot: { type: "reddit", rank: 5 },
     kd: 35,
     cpc: 4.2,
-    serpFeatures: ["faq", "reviews"],
+    serpFeatures: ["faq", "reviews", "ai_overview"],
+    geoScore: 68,
   },
 ]

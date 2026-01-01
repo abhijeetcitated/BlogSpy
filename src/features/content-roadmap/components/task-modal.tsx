@@ -401,7 +401,7 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
                   className="gap-2 border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground rounded-lg"
                   disabled
                 >
-                  🔮 Keyword Magic
+                  🔮 Keyword Explorer
                 </Button>
                 <Button
                   variant="outline"

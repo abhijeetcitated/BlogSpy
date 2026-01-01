@@ -72,7 +72,7 @@ const projects = [
 ]
 
 const researchItems = [
-  { title: "Keyword Magic", icon: Search, href: "/dashboard/research/keyword-magic" },
+  { title: "Keyword Explorer", icon: Search, href: "/dashboard/research/keyword-magic" },
   { title: "Trend Spotter", icon: Flame, href: "/dashboard/research/trends", accentColor: "text-amber-500" },
   { title: "Competitor Gap", icon: Crosshair, href: "/dashboard/research/gap-analysis" },
   { title: "Affiliate Finder", icon: ShoppingCart, href: "/dashboard/research/affiliate-finder", accentColor: "text-purple-500" },

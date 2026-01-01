@@ -33,7 +33,7 @@ const plans = [
     icon: Sparkles,
     features: [
       "1,000 AI credits/month",
-      "Advanced keyword magic",
+      "Advanced keyword explorer",
       "Unlimited tracked keywords",
       "Daily rank updates",
       "Topic cluster strategy",

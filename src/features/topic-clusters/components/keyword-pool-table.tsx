@@ -104,7 +104,7 @@ type SortDirection = "asc" | "desc"
 // ============================================
 
 const IMPORT_SOURCES = [
-  { id: "keyword-magic", label: "Keyword Magic", icon: Wand2, color: "purple", route: "/keyword-magic" },
+  { id: "keyword-explorer", label: "Keyword Explorer", icon: Wand2, color: "purple", route: "/keyword-magic" },
   { id: "competitor-gap", label: "Competitor Gap", icon: BarChart3, color: "cyan", route: "/competitor-gap" },
   { id: "rank-tracker", label: "Rank Tracker", icon: Target, color: "green", route: "/rank-tracker" },
   { id: "content-decay", label: "Content Decay", icon: TrendingUp, color: "red", route: "/content-decay" },

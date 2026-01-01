@@ -9,13 +9,14 @@
 // - Cluster results view
 // - All modals and state
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useProjects, useProjectDetail, useProjectState } from "../hooks/use-project"
 import { ProjectList } from "./project-list"
 import { ProjectDetail } from "./project-detail"
 import { ClusterResults } from "./cluster-results"
 import { CreateProjectModal } from "./create-project-modal"
 import { AddKeywordsModal } from "./add-keywords-modal"
+import { ImportKeywordsModal } from "./import-keywords-modal"
 import { CreateProjectDto, AddKeywordDto } from "../types/project.types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
@@ -85,9 +86,67 @@ export function TopicClusterManager({ userId = "user_123" }: TopicClusterManager
     projectId: null
   })
 
+  // Import from Keyword Explorer state
+  const [importModalOpen, setImportModalOpen] = useState(false)
+  const [importedKeywords, setImportedKeywords] = useState<AddKeywordDto[]>([])
+
+  // Check for keywords exported from Keyword Explorer
+  useEffect(() => {
+    const exportedData = localStorage.getItem('keyword-explorer-export')
+    const exportTime = localStorage.getItem('keyword-explorer-export-time')
+    
+    if (exportedData && exportTime) {
+      // Check if export is recent (within last 5 minutes)
+      const exportDate = new Date(exportTime)
+      const now = new Date()
+      const diffMinutes = (now.getTime() - exportDate.getTime()) / (1000 * 60)
+      
+      if (diffMinutes < 5) {
+        try {
+          const parsed = JSON.parse(exportedData)
+          const keywords: AddKeywordDto[] = parsed.map((k: { keyword: string; volume?: number; difficulty?: number; cpc?: number; intent?: string }) => ({
+            keyword: k.keyword,
+            volume: k.volume,
+            kd: k.difficulty,
+            cpc: k.cpc,
+            intent: k.intent,
+            source: 'keyword_explorer' as const,
+            sourceTag: 'Keyword Explorer Import'
+          }))
+          
+          setImportedKeywords(keywords)
+          setImportModalOpen(true)
+          
+          // Clear localStorage after reading
+          localStorage.removeItem('keyword-explorer-export')
+          localStorage.removeItem('keyword-explorer-export-time')
+        } catch {
+          console.error('Failed to parse exported keywords')
+        }
+      } else {
+        // Clear old export data
+        localStorage.removeItem('keyword-explorer-export')
+        localStorage.removeItem('keyword-explorer-export-time')
+      }
+    }
+  }, [])
+
   // ============================================
   // HANDLERS
   // ============================================
+
+  // Handle import from Keyword Explorer
+  const handleImportKeywords = useCallback(async (keywords: AddKeywordDto[], projectId?: string) => {
+    // If project is selected, add to that project
+    if (projectId && selectedProjectId === projectId) {
+      const added = await addKeywordsBulk(keywords)
+      if (added.length > 0) {
+        toast.success(`Imported ${added.length} keyword${added.length > 1 ? 's' : ''} from Keyword Explorer`)
+      }
+    }
+    setImportModalOpen(false)
+    setImportedKeywords([])
+  }, [selectedProjectId, addKeywordsBulk])
 
   // Create project
   const handleCreateProject = useCallback(async (data: CreateProjectDto) => {
@@ -246,6 +305,26 @@ export function TopicClusterManager({ userId = "user_123" }: TopicClusterManager
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Import Keywords from Keyword Explorer Modal */}
+      <ImportKeywordsModal
+        open={importModalOpen}
+        onClose={() => {
+          setImportModalOpen(false)
+          setImportedKeywords([])
+        }}
+        keywords={importedKeywords}
+        projects={projects}
+        onImport={handleImportKeywords}
+        onCreateProject={async (data) => {
+          const newProject = await createProject(data)
+          if (newProject) {
+            toast.success("Project created!")
+            return newProject.id
+          }
+          return null
+        }}
+      />
     </div>
   )
 }

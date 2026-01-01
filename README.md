@@ -10,7 +10,7 @@
 ## ✨ Features
 
 ### 🔑 Keyword Research
-- **Keyword Magic** - Discover thousands of keyword ideas with volume, difficulty, CPC
+- **Keyword Explorer** - Discover thousands of keyword ideas with volume, difficulty, CPC
 - **Keyword Overview** - Deep dive into any keyword with SERP analysis
 - **Trend Spotter** - Find emerging topics before they peak
 

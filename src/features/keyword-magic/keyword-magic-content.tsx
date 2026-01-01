@@ -158,7 +158,7 @@ export function KeywordMagicContent() {
   // RENDER
   // ============================================
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full w-full max-w-full overflow-x-hidden">
       <KeywordMagicHeader
         selectedCountry={state.selectedCountry}
         countryOpen={state.countryOpen}

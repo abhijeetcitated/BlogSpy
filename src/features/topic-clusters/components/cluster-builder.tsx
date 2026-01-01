@@ -147,7 +147,7 @@ function StepIndicator({ currentStep, onStepClick }: {
 // ============================================
 
 const KEYWORD_SOURCES: { type: KeywordSourceType; label: string; icon: React.ReactNode; color: string }[] = [
-  { type: "keyword-magic", label: "Keyword Magic", icon: <Wand2 className="h-4 w-4" />, color: "purple" },
+  { type: "keyword-explorer", label: "Keyword Explorer", icon: <Wand2 className="h-4 w-4" />, color: "purple" },
   { type: "competitor-gap", label: "Competitor Gap", icon: <BarChart3 className="h-4 w-4" />, color: "cyan" },
   { type: "content-decay", label: "Content Decay", icon: <TrendingUp className="h-4 w-4" />, color: "red" },
   { type: "rank-tracker", label: "Rank Tracker", icon: <Target className="h-4 w-4" />, color: "green" },

@@ -10,7 +10,7 @@
 
 // Where keywords can come from
 export type KeywordSourceType = 
-  | "keyword-magic"      // From Keyword Magic tool
+  | "keyword-explorer"   // From Keyword Explorer tool
   | "competitor-gap"     // From Competitor Gap analysis
   | "content-decay"      // From Content Decay detection
   | "rank-tracker"       // From Rank Tracker

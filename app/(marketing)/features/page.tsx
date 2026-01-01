@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge"
 const features = [
   {
     icon: Search,
-    title: "Keyword Magic Tool",
+    title: "Keyword Explorer Tool",
     description: "Discover thousands of keyword opportunities with search volume, difficulty, and intent data.",
     highlights: ["10M+ keyword database", "Intent classification", "Competitor gaps"],
     color: "emerald",

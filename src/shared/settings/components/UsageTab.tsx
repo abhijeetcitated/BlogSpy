@@ -17,7 +17,7 @@ import { useCredits } from "@/hooks/use-user"
 
 // Feature credit costs
 const FEATURE_COSTS = [
-  { name: "Keyword Magic", credits: 5, icon: Zap, color: "text-emerald-400", bgColor: "bg-emerald-500/20" },
+  { name: "Keyword Explorer", credits: 5, icon: Zap, color: "text-emerald-400", bgColor: "bg-emerald-500/20" },
   { name: "AI Writer", credits: 25, icon: TrendingUp, color: "text-purple-400", bgColor: "bg-purple-500/20" },
   { name: "Rank Tracker", credits: 10, icon: BarChart3, color: "text-blue-400", bgColor: "bg-blue-500/20" },
   { name: "Trend Spotter", credits: 5, icon: TrendingUp, color: "text-amber-400", bgColor: "bg-amber-500/20" },
@@ -25,25 +25,25 @@ const FEATURE_COSTS = [
 
 // Mock usage history (will be replaced with real data from credit_usage_history table)
 const MOCK_USAGE_HISTORY = [
-  { date: "2024-12-26", feature: "Keyword Magic", credits: 15, queries: 3, status: "completed" },
+  { date: "2024-12-26", feature: "Keyword Explorer", credits: 15, queries: 3, status: "completed" },
   { date: "2024-12-25", feature: "AI Writer", credits: 50, queries: 2, status: "completed" },
   { date: "2024-12-24", feature: "Rank Tracker", credits: 20, queries: 2, status: "completed" },
-  { date: "2024-12-23", feature: "Keyword Magic", credits: 25, queries: 5, status: "completed" },
+  { date: "2024-12-23", feature: "Keyword Explorer", credits: 25, queries: 5, status: "completed" },
   { date: "2024-12-22", feature: "Trend Spotter", credits: 10, queries: 2, status: "completed" },
   { date: "2024-12-21", feature: "AI Writer", credits: 75, queries: 3, status: "completed" },
-  { date: "2024-12-20", feature: "Keyword Magic", credits: 10, queries: 2, status: "completed" },
+  { date: "2024-12-20", feature: "Keyword Explorer", credits: 10, queries: 2, status: "completed" },
   { date: "2024-12-19", feature: "Rank Tracker", credits: 30, queries: 3, status: "completed" },
 ]
 
 const FEATURE_ICON_MAP: Record<string, typeof Zap> = {
-  "Keyword Magic": Zap,
+  "Keyword Explorer": Zap,
   "AI Writer": TrendingUp,
   "Rank Tracker": BarChart3,
   "Trend Spotter": TrendingUp,
 }
 
 const FEATURE_COLOR_MAP: Record<string, string> = {
-  "Keyword Magic": "text-emerald-400",
+  "Keyword Explorer": "text-emerald-400",
   "AI Writer": "text-purple-400",
   "Rank Tracker": "text-blue-400",
   "Trend Spotter": "text-amber-400",
@@ -181,7 +181,7 @@ export function UsageTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Features</SelectItem>
-                  <SelectItem value="Keyword Magic">Keyword Magic</SelectItem>
+                  <SelectItem value="Keyword Explorer">Keyword Explorer</SelectItem>
                   <SelectItem value="AI Writer">AI Writer</SelectItem>
                   <SelectItem value="Rank Tracker">Rank Tracker</SelectItem>
                   <SelectItem value="Trend Spotter">Trend Spotter</SelectItem>

@@ -9,7 +9,7 @@ export type ProjectStatus = "draft" | "clustered" | "archived"
 // Keyword Source - Where the keyword came from
 export type KeywordSource = 
   | "manual"           // User typed manually
-  | "keyword_magic"    // Imported from Keyword Magic
+  | "keyword_explorer" // Imported from Keyword Explorer
   | "competitor_gap"   // From Competitor Gap Analysis
   | "content_decay"    // From Content Decay
   | "rank_tracker"     // From Rank Tracker
