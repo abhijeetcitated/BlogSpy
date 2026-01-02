@@ -4,6 +4,7 @@
 // KEYWORD MAGIC RESULTS - Page Section
 // ============================================
 // Contains the results table and empty states
+// Supports Guest Mode for PLG flow
 // ============================================
 
 import type { Keyword } from "../../types"
@@ -16,6 +17,7 @@ interface KeywordMagicResultsProps {
   activeFilterCount: number
   isSearching: boolean
   country?: string
+  isGuest?: boolean
 }
 
 export function KeywordMagicResults({
@@ -24,6 +26,7 @@ export function KeywordMagicResults({
   activeFilterCount,
   isSearching,
   country,
+  isGuest = false,
 }: KeywordMagicResultsProps) {
   // Loading state
   if (isSearching) {
@@ -81,6 +84,7 @@ export function KeywordMagicResults({
         <KeywordTable
           keywords={filteredKeywords}
           country={country}
+          isGuest={isGuest}
         />
       </div>
     </div>

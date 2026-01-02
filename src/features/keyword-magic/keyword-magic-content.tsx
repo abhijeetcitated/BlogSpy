@@ -5,12 +5,15 @@
 // ============================================
 // Uses Zustand for centralized state management
 // Split into smaller sub-components
+// Supports Guest Mode for PLG flow
 // ============================================
 
 import React, { useMemo, useCallback, useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { useDebounce } from "@/hooks/use-debounce"
+import { createBrowserClient } from "@supabase/ssr"
+import { AlertCircle, Sparkles } from "lucide-react"
 
 // Zustand store
 import { useKeywordStore, type KeywordFilters } from "./store"
@@ -70,6 +73,30 @@ function getActiveFilterCount(filters: {
 }
 
 export function KeywordMagicContent() {
+  // ============================================
+  // GUEST MODE CHECK (PLG Flow)
+  // ============================================
+  const [isGuest, setIsGuest] = useState(true) // Default to guest
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        
+        if (supabaseUrl && supabaseAnonKey) {
+          const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+          const { data: { user } } = await supabase.auth.getUser()
+          setIsGuest(!user)
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error)
+        setIsGuest(true)
+      }
+    }
+    checkAuth()
+  }, [])
+
   // ============================================
   // URL PARAMS (for sharing/bookmarking)
   // ============================================
@@ -211,6 +238,27 @@ export function KeywordMagicContent() {
   // ============================================
   return (
     <div className="flex flex-col h-full w-full max-w-full overflow-hidden">
+      {/* 🎭 DEMO MODE BANNER (PLG) */}
+      {isGuest && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-b border-amber-500/20 shrink-0">
+          <Sparkles className="h-4 w-4 text-amber-500" />
+          <span className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+            Demo Mode
+          </span>
+          <span className="text-xs text-muted-foreground">
+            — Viewing sample data. Sign up to unlock full features, export, and save your research.
+          </span>
+          <div className="ml-auto">
+            <a 
+              href="/register" 
+              className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline"
+            >
+              Create Free Account →
+            </a>
+          </div>
+        </div>
+      )}
+      
       <KeywordMagicHeader
         selectedCountry={selectedCountry}
         countryOpen={countryOpen}
@@ -258,6 +306,7 @@ export function KeywordMagicContent() {
         activeFilterCount={activeFilterCount}
         isSearching={loading.searching}
         country={selectedCountry?.code}
+        isGuest={isGuest}
       />
     </div>
   )

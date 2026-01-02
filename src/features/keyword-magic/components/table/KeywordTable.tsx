@@ -4,14 +4,16 @@
 // KEYWORD TABLE - Main Component (Streamlined 10 Columns)
 // ============================================
 // Refactored for better UX: 10 high-value columns
+// Supports Guest Mode - gates actions behind login
 // ============================================
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
-import { Download, Copy, Check, Share2 } from "lucide-react"
+import { Download, Copy, Check, Share2, Lock } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 import type { Keyword } from "../../types"
 import { MOCK_KEYWORDS } from "../../__mocks__/keyword-data"
@@ -27,6 +29,7 @@ export interface KeywordTableProps {
   country?: string
   onKeywordClick?: (keyword: Keyword) => void
   onSelectionChange?: (selectedIds: number[]) => void
+  isGuest?: boolean
 }
 
 const ITEMS_PER_PAGE = 20
@@ -35,8 +38,30 @@ export function KeywordTable({
   keywords: keywordsProp, 
   country = "US",
   onKeywordClick,
-  onSelectionChange 
+  onSelectionChange,
+  isGuest = false
 }: KeywordTableProps) {
+  // Router for navigation
+  const router = useRouter()
+  
+  // ============================================
+  // GUEST ACTION GUARD
+  // ============================================
+  const guardAction = useCallback((actionName: string, callback: () => void) => {
+    if (isGuest) {
+      toast.error(`Sign up to ${actionName}`, {
+        description: "Create a free account to unlock export, refresh, and more.",
+        action: {
+          label: "Sign Up Free",
+          onClick: () => router.push("/register"),
+        },
+        duration: 5000,
+      })
+      return
+    }
+    callback()
+  }, [isGuest, router])
+
   // Use state for keywords to allow refresh updates
   const [keywords, setKeywords] = useState<Keyword[]>(keywordsProp ?? MOCK_KEYWORDS)
   const data = keywords
@@ -73,61 +98,64 @@ export function KeywordTable({
 
   // Copy handler - copies selected keywords data to clipboard
   const handleCopy = useCallback(() => {
-    const keywordsToCopy = selectedRows.size > 0 
-      ? keywords.filter(k => selectedRows.has(k.id))
-      : []
-    
-    if (keywordsToCopy.length === 0) return
-    
-    // Format data as tab-separated for easy paste into Excel/Sheets
-    const header = "Keyword\tIntent\tVolume\tKD%\tCPC\tGEO\tSERP Features"
-    const rows = keywordsToCopy.map(k => {
-      const serpFeatures = k.serpFeatures?.join(', ') || '-'
-      return `${k.keyword}\t${k.intent || '-'}\t${k.volume}\t${k.kd}%\t$${k.cpc.toFixed(2)}\t${k.geoScore || '-'}\t${serpFeatures}`
+    guardAction("copy keywords", () => {
+      const keywordsToCopy = selectedRows.size > 0 
+        ? keywords.filter(k => selectedRows.has(k.id))
+        : []
+      
+      if (keywordsToCopy.length === 0) return
+      
+      // Format data as tab-separated for easy paste into Excel/Sheets
+      const header = "Keyword\tIntent\tVolume\tKD%\tCPC\tGEO\tSERP Features"
+      const rows = keywordsToCopy.map(k => {
+        const serpFeatures = k.serpFeatures?.join(', ') || '-'
+        return `${k.keyword}\t${k.intent || '-'}\t${k.volume}\t${k.kd}%\t$${k.cpc.toFixed(2)}\t${k.geoScore || '-'}\t${serpFeatures}`
+      })
+      
+      const copyText = [header, ...rows].join('\n')
+      
+      navigator.clipboard.writeText(copyText).then(() => {
+        setIsCopied(true)
+        copyTimerRef.current = setTimeout(() => setIsCopied(false), 2000)
+      })
     })
-    
-    const copyText = [header, ...rows].join('\n')
-    
-    navigator.clipboard.writeText(copyText).then(() => {
-      setIsCopied(true)
-      copyTimerRef.current = setTimeout(() => setIsCopied(false), 2000)
-    })
-  }, [selectedRows, keywords])
-
-  // Router for navigation
-  const router = useRouter()
+  }, [guardAction, selectedRows, keywords])
 
   // Export to Topic Cluster handler
   const handleExportToTopicCluster = useCallback(() => {
-    // Get keywords to export - selected ones or all
-    const keywordsToExport = selectedRows.size > 0 
-      ? keywords.filter(k => selectedRows.has(k.id))
-      : keywords
-    
-    // Store keywords in localStorage for Topic Cluster page to read
-    const exportData = keywordsToExport.map(k => ({
-      keyword: k.keyword,
-      volume: k.volume,
-      kd: k.kd,
-      cpc: k.cpc,
-      intent: k.intent,
-      geoScore: k.geoScore,
-      serpFeatures: k.serpFeatures
-    }))
-    
-    localStorage.setItem('keyword-explorer-export', JSON.stringify(exportData))
-    localStorage.setItem('keyword-explorer-export-time', new Date().toISOString())
-    
-    // Navigate to Topic Clusters page
-    router.push('/topic-clusters')
-  }, [selectedRows, keywords, router])
+    guardAction("export to Topic Clusters", () => {
+      // Get keywords to export - selected ones or all
+      const keywordsToExport = selectedRows.size > 0 
+        ? keywords.filter(k => selectedRows.has(k.id))
+        : keywords
+      
+      // Store keywords in localStorage for Topic Cluster page to read
+      const exportData = keywordsToExport.map(k => ({
+        keyword: k.keyword,
+        volume: k.volume,
+        kd: k.kd,
+        cpc: k.cpc,
+        intent: k.intent,
+        geoScore: k.geoScore,
+        serpFeatures: k.serpFeatures
+      }))
+      
+      localStorage.setItem('keyword-explorer-export', JSON.stringify(exportData))
+      localStorage.setItem('keyword-explorer-export-time', new Date().toISOString())
+      
+      // Navigate to Topic Clusters page
+      router.push('/topic-clusters')
+    })
+  }, [guardAction, selectedRows, keywords, router])
 
   // Export handler
   const handleExportCSV = useCallback(() => {
-    setIsExporting(true)
-    downloadKeywordsCSV(data, selectedRows)
-    exportTimerRef.current = setTimeout(() => setIsExporting(false), 500)
-  }, [data, selectedRows])
+    guardAction("export CSV", () => {
+      setIsExporting(true)
+      downloadKeywordsCSV(data, selectedRows)
+      exportTimerRef.current = setTimeout(() => setIsExporting(false), 500)
+    })
+  }, [guardAction, data, selectedRows])
 
   // Selection handlers
   const handleSelectAll = useCallback(() => {
@@ -159,26 +187,28 @@ export function KeywordTable({
     }
   }, [sortField, sortDirection])
 
-  // Refresh handler
+  // Refresh handler - GUARDED for guests
   const handleRefresh = useCallback((id: number) => {
-    // Set refreshing state
-    setKeywords(prev => prev.map(k => k.id === id ? { ...k, isRefreshing: true } : k))
-    
-    // Simulate API call - replace with actual API call later
-    setTimeout(() => {
-      setKeywords(prev => prev.map(k => 
-        k.id === id 
-          ? { 
-              ...k, 
-              isRefreshing: false, 
-              lastUpdated: new Date(),
-              // Mock: slightly change volume to show update
-              volume: k.volume + Math.floor(Math.random() * 100 - 50)
-            } 
-          : k
-      ))
-    }, 1500)
-  }, [])
+    guardAction("refresh keyword data", () => {
+      // Set refreshing state
+      setKeywords(prev => prev.map(k => k.id === id ? { ...k, isRefreshing: true } : k))
+      
+      // Simulate API call - replace with actual API call later
+      setTimeout(() => {
+        setKeywords(prev => prev.map(k => 
+          k.id === id 
+            ? { 
+                ...k, 
+                isRefreshing: false, 
+                lastUpdated: new Date(),
+                // Mock: slightly change volume to show update
+                volume: k.volume + Math.floor(Math.random() * 100 - 50)
+              } 
+            : k
+        ))
+      }, 1500)
+    })
+  }, [guardAction])
 
   // Sorted keywords
   const sortedKeywords = useMemo(() => {
@@ -223,6 +253,7 @@ export function KeywordTable({
                   </>
                 ) : (
                   <>
+                    {isGuest && <Lock className="h-3 w-3 text-muted-foreground" />}
                     <Copy className="h-3.5 w-3.5" />
                     Copy {selectedRows.size}
                   </>
@@ -236,6 +267,7 @@ export function KeywordTable({
               disabled={isExporting}
               className="h-7 gap-1.5 text-xs"
             >
+              {isGuest && <Lock className="h-3 w-3 text-muted-foreground" />}
               <Download className={cn("h-3.5 w-3.5", isExporting && "animate-pulse")} />
               {selectedRows.size > 0 ? `Export ${selectedRows.size} Selected` : 'Export All CSV'}
             </Button>
@@ -245,6 +277,7 @@ export function KeywordTable({
               onClick={handleExportToTopicCluster}
               className="h-7 gap-1.5 text-xs bg-violet-600 hover:bg-violet-700"
             >
+              {isGuest && <Lock className="h-3 w-3" />}
               <Share2 className="h-3.5 w-3.5" />
               {selectedRows.size > 0 ? `To Clusters (${selectedRows.size})` : 'To Topic Clusters'}
             </Button>
