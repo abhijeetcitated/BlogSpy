@@ -4,6 +4,8 @@
 // Common utilities for keyword API services
 // ============================================
 
+import "server-only"
+
 // Base API URL - configure in environment
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 

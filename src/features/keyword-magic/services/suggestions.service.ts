@@ -4,6 +4,8 @@
 // Handles keyword suggestions and trending
 // ============================================
 
+import "server-only"
+
 import type { APIKeyword } from "../types/api.types"
 import { MOCK_KEYWORDS } from "../__mocks__"
 import { simulateNetworkDelay } from "./api-base"

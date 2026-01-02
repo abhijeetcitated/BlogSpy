@@ -1,6 +1,10 @@
 // ============================================
 // KEYWORD MAGIC - Services Index
 // ============================================
+// 🛡️ Server-only: These services run only on the server
+// ============================================
+
+import "server-only"
 
 // API Base
 export { KeywordAPIError, simulateNetworkDelay, API_BASE_URL } from "./api-base"
@@ -40,4 +44,3 @@ export const keywordMagicAPI = {
   getSuggestions: suggestionsService.getSuggestions,
   getTrendingKeywords: suggestionsService.getTrendingKeywords,
 }
-

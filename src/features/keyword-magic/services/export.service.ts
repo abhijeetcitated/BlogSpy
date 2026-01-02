@@ -4,6 +4,8 @@
 // Handles keyword export functionality
 // ============================================
 
+import "server-only"
+
 import type { Keyword } from "../types"
 import type { ExportOptions } from "../types/api.types"
 

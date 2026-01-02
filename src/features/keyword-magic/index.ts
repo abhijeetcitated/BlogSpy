@@ -88,15 +88,26 @@ export {
   type KeywordMagicContextValue,
 } from "./providers"
 
-// State management (legacy reducer)
+// Zustand Store (replaces legacy reducer)
 export {
-  keywordMagicReducer,
-  createInitialState,
-  getActiveFilterCount,
-  DEFAULT_GEO_RANGE,
-  type KeywordMagicState,
-  type KeywordMagicAction,
-} from "./state"
+  useKeywordStore,
+  selectKeywords,
+  selectFilters,
+  selectSearch,
+  selectSort,
+  selectPagination,
+  selectLoading,
+  selectSelectedIds,
+  selectSelectedCount,
+  type KeywordState,
+  type KeywordFilters as StoreKeywordFilters,
+  type SearchState,
+  type LoadingState,
+  type SortConfig,
+  type SortField,
+  type SortDirection,
+  type PaginationConfig,
+} from "./store"
 
 // Hooks - Not exported from barrel to avoid Server Component issues
 // Import directly from "@/src/features/keyword-magic/hooks" when needed

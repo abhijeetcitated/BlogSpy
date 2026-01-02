@@ -2,10 +2,33 @@
 // KEYWORD MAGIC STORE - Extended Zustand Store
 // ============================================
 // Feature-specific store with all fields needed by keyword-magic-content
+// Replaces legacy useReducer implementation
 // ============================================
 
 import { create } from "zustand"
+import { devtools, persist } from "zustand/middleware"
 import type { Keyword, MatchType, BulkMode, Country, SERPFeature } from "../types"
+
+// ============================================
+// SORT CONFIG
+// ============================================
+export type SortField = "keyword" | "volume" | "kd" | "cpc" | "trend" | "geoScore"
+export type SortDirection = "asc" | "desc"
+
+export interface SortConfig {
+  field: SortField
+  direction: SortDirection
+}
+
+// ============================================
+// PAGINATION CONFIG
+// ============================================
+export interface PaginationConfig {
+  page: number
+  pageSize: number
+  total: number
+  hasMore: boolean
+}
 
 // ============================================
 // FILTER STATE INTERFACE
@@ -79,6 +102,18 @@ const DEFAULT_LOADING: LoadingState = {
   refreshing: false,
 }
 
+const DEFAULT_SORT: SortConfig = {
+  field: "volume",
+  direction: "desc",
+}
+
+const DEFAULT_PAGINATION: PaginationConfig = {
+  page: 1,
+  pageSize: 50,
+  total: 0,
+  hasMore: false,
+}
+
 // ============================================
 // STORE INTERFACE
 // ============================================
@@ -92,6 +127,12 @@ export interface KeywordState {
   
   // Filters
   filters: KeywordFilters
+  
+  // Sorting
+  sort: SortConfig
+  
+  // Pagination
+  pagination: PaginationConfig
   
   // Loading states
   loading: LoadingState
@@ -115,6 +156,19 @@ export interface KeywordState {
   // Data actions
   setKeywords: (keywords: Keyword[]) => void
   addKeywords: (keywords: Keyword[]) => void
+  updateKeyword: (id: number, updates: Partial<Keyword>) => void
+  removeKeyword: (id: number) => void
+  
+  // Sort actions
+  setSort: (field: SortField, direction?: SortDirection) => void
+  toggleSortDirection: () => void
+  
+  // Pagination actions
+  setPage: (page: number) => void
+  setPageSize: (size: number) => void
+  setPagination: (pagination: Partial<PaginationConfig>) => void
+  nextPage: () => void
+  prevPage: () => void
   
   // Selection actions
   selectKeyword: (id: number) => void
@@ -123,17 +177,22 @@ export interface KeywordState {
   selectAll: () => void
   deselectAll: () => void
   clearSelection: () => void
+  
+  // Reset actions
+  resetStore: () => void
 }
 
 // ============================================
 // ZUSTAND STORE
 // ============================================
-export const useKeywordStore = create<KeywordState>((set, get) => ({
+export const useKeywordStore = create<KeywordState>()((set, get) => ({
   // Initial state
   keywords: [],
   selectedIds: new Set(),
   search: DEFAULT_SEARCH,
   filters: DEFAULT_FILTERS,
+  sort: DEFAULT_SORT,
+  pagination: DEFAULT_PAGINATION,
   loading: DEFAULT_LOADING,
 
   // Search actions
@@ -191,6 +250,74 @@ export const useKeywordStore = create<KeywordState>((set, get) => ({
   
   addKeywords: (newKeywords) =>
     set((state) => ({ keywords: [...state.keywords, ...newKeywords] })),
+    
+  updateKeyword: (id, updates) =>
+    set((state) => ({
+      keywords: state.keywords.map((k) =>
+        k.id === id ? { ...k, ...updates } : k
+      ),
+    })),
+    
+  removeKeyword: (id) =>
+    set((state) => ({
+      keywords: state.keywords.filter((k) => k.id !== id),
+      selectedIds: (() => {
+        const newSet = new Set(state.selectedIds)
+        newSet.delete(id)
+        return newSet
+      })(),
+    })),
+
+  // Sort actions
+  setSort: (field, direction) =>
+    set((state) => ({
+      sort: {
+        field,
+        direction: direction ?? (state.sort.field === field 
+          ? (state.sort.direction === "asc" ? "desc" : "asc")
+          : "desc"),
+      },
+    })),
+    
+  toggleSortDirection: () =>
+    set((state) => ({
+      sort: {
+        ...state.sort,
+        direction: state.sort.direction === "asc" ? "desc" : "asc",
+      },
+    })),
+
+  // Pagination actions
+  setPage: (page) =>
+    set((state) => ({
+      pagination: { ...state.pagination, page },
+    })),
+    
+  setPageSize: (pageSize) =>
+    set((state) => ({
+      pagination: { ...state.pagination, pageSize, page: 1 },
+    })),
+    
+  setPagination: (newPagination) =>
+    set((state) => ({
+      pagination: { ...state.pagination, ...newPagination },
+    })),
+    
+  nextPage: () =>
+    set((state) => {
+      if (state.pagination.hasMore) {
+        return { pagination: { ...state.pagination, page: state.pagination.page + 1 } }
+      }
+      return state
+    }),
+    
+  prevPage: () =>
+    set((state) => {
+      if (state.pagination.page > 1) {
+        return { pagination: { ...state.pagination, page: state.pagination.page - 1 } }
+      }
+      return state
+    }),
 
   // Selection actions
   selectKeyword: (id) =>
@@ -226,4 +353,27 @@ export const useKeywordStore = create<KeywordState>((set, get) => ({
   deselectAll: () => set({ selectedIds: new Set() }),
   
   clearSelection: () => set({ selectedIds: new Set() }),
+  
+  // Reset actions
+  resetStore: () => set({
+    keywords: [],
+    selectedIds: new Set(),
+    search: DEFAULT_SEARCH,
+    filters: DEFAULT_FILTERS,
+    sort: DEFAULT_SORT,
+    pagination: DEFAULT_PAGINATION,
+    loading: DEFAULT_LOADING,
+  }),
 }))
+
+// ============================================
+// SELECTORS (for optimized re-renders)
+// ============================================
+export const selectKeywords = (state: KeywordState) => state.keywords
+export const selectFilters = (state: KeywordState) => state.filters
+export const selectSearch = (state: KeywordState) => state.search
+export const selectSort = (state: KeywordState) => state.sort
+export const selectPagination = (state: KeywordState) => state.pagination
+export const selectLoading = (state: KeywordState) => state.loading
+export const selectSelectedIds = (state: KeywordState) => state.selectedIds
+export const selectSelectedCount = (state: KeywordState) => state.selectedIds.size

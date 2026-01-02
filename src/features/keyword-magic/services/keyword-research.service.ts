@@ -4,6 +4,8 @@
 // Handles keyword research API calls
 // ============================================
 
+import "server-only"
+
 import type {
   KeywordResearchRequest,
   KeywordResearchResponse,
@@ -152,7 +154,43 @@ export const keywordResearchService = {
   async researchKeywords(
     request: KeywordResearchRequest
   ): Promise<KeywordResearchResponse> {
-    // TODO: Replace with real API call
+    // 🛡️ Mock Mode Check - Return mock data if enabled
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true") {
+      await simulateNetworkDelay()
+      
+      // Apply filters to mock data
+      let filtered = filterMockData(MOCK_KEYWORDS, request)
+      filtered = sortMockData(filtered, request.sortBy, request.sortOrder)
+      
+      const startIndex = (request.page - 1) * request.limit
+      const paginated = filtered.slice(startIndex, startIndex + request.limit)
+      
+      return {
+        success: true,
+        data: {
+          keywords: paginated.map(convertToAPIKeyword),
+          pagination: {
+            page: request.page,
+            limit: request.limit,
+            total: filtered.length,
+            totalPages: Math.ceil(filtered.length / request.limit),
+            hasMore: startIndex + request.limit < filtered.length,
+          },
+          meta: {
+            seedKeyword: request.seedKeyword,
+            country: request.country,
+            matchType: request.matchType,
+            creditsUsed: 0, // Mock mode doesn't use credits
+            generatedAt: new Date().toISOString(),
+          },
+        },
+      }
+    }
+    
+    // TODO: Real API call implementation
+    // const response = await fetch(`${API_BASE_URL}/keywords/research`, { ... })
+    
+    // Fallback to mock data during development
     await simulateNetworkDelay()
     
     // Apply filters to mock data

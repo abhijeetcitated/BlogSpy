@@ -4,6 +4,8 @@
 // Handles bulk keyword analysis API calls
 // ============================================
 
+import "server-only"
+
 import type {
   BulkAnalysisRequest,
   BulkAnalysisResponse,
