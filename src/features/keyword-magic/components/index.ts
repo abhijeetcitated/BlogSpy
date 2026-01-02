@@ -2,36 +2,89 @@
 // KEYWORD MAGIC - Components Barrel Export
 // ============================================
 
-export { CountrySelector } from "./country-selector"
-export { VolumeFilter } from "./volume-filter"
-export { KDFilter } from "./kd-filter"
-export { IntentFilter } from "./intent-filter"
-export { CPCFilter } from "./cpc-filter"
-export { GeoFilter } from "./geo-filter"
-export { WeakSpotFilter } from "./weak-spot-filter"
-export { SerpFilter } from "./serp-filter"
-export { TrendFilter } from "./trend-filter"
-export { IncludeExcludeFilter } from "./include-exclude-filter"
-export { MatchTypeToggle } from "./match-type-toggle"
-export { BulkModeToggle } from "./bulk-mode-toggle"
-export { BulkKeywordsInput } from "./bulk-keywords-input"
-export { KeywordTable } from "./KeywordTable"
-export { KeywordTableRow } from "./KeywordTableRow"
-export type { KeywordTableProps } from "./KeywordTable"
-
-// Table sub-components
+// ============================================
+// FILTERS
+// ============================================
 export { 
+  VolumeFilter, 
+  KDFilter, 
+  IntentFilter, 
+  CPCFilter, 
+  GeoFilter, 
+  WeakSpotFilter, 
+  SerpFilter, 
+  TrendFilter, 
+  IncludeExcludeFilter, 
+  MatchTypeToggle 
+} from "./filters"
+
+// ============================================
+// HEADER
+// ============================================
+export { CountrySelector, PageHeader, ResultsHeader } from "./header"
+
+// ============================================
+// SEARCH
+// ============================================
+export { BulkModeToggle, BulkKeywordsInput, SearchInput, SearchSuggestions } from "./search"
+
+// ============================================
+// TABLE
+// ============================================
+export { 
+  KeywordTable, 
+  KeywordTableRow,
   KeywordTableHeader, 
   KeywordTableFooter, 
   sortKeywords, 
   downloadKeywordsCSV,
-  generateKeywordCSV 
+  generateKeywordCSV,
+  // Action bar
+  ActionBar,
+  BulkActions,
+  SelectionInfo,
+  // Column components
+  CheckboxColumn,
+  CheckboxHeader,
+  KeywordColumn,
+  VolumeColumn,
+  KdColumn,
+  CpcColumn,
+  IntentColumn,
+  TrendColumn,
+  SerpColumn,
+  GeoColumn,
+  WeakSpotColumn,
+  RefreshColumn,
 } from "./table"
+export type { KeywordTableProps } from "./table"
 
-// Content sub-components
+// ============================================
+// MODALS
+// ============================================
+export { ExportModal, FilterPresetsModal, KeywordDetailsModal } from "./modals"
+
+// ============================================
+// PAGE SECTIONS
+// ============================================
 export {
   KeywordMagicHeader,
   KeywordMagicSearch,
   KeywordMagicFilters,
   KeywordMagicResults
-} from "./keyword-magic"
+} from "./page-sections"
+
+// ============================================
+// SHARED
+// ============================================
+export {
+  EmptyState,
+  NoSearchState,
+  NoResultsState,
+  ErrorState,
+  ErrorBoundary,
+  LoadingSkeleton,
+  TableLoadingSkeleton,
+  FilterLoadingSkeleton,
+  HeaderLoadingSkeleton,
+} from "./shared"

@@ -626,3 +626,40 @@ export function useCountrySelector(): UseCountrySelectorReturn {
     setSearchQuery,
   }
 }
+
+// ============================================
+// COMBINED KEYWORD MAGIC HOOK
+// ============================================
+// Legacy hook that combines all functionality
+// For new code, prefer using individual hooks
+
+export function useKeywordMagic() {
+  const filters = useKeywordFilters()
+  
+  // Construct filterState from individual filter values with required fields
+  const filterState = {
+    volumeRange: filters.volumeRange,
+    kdRange: filters.kdRange,
+    cpcRange: filters.cpcRange,
+    selectedIntents: filters.selectedIntents,
+    includeTerms: filters.includeTerms,
+    excludeTerms: filters.excludeTerms,
+    filterText: "", // Default empty filter text
+    matchType: "broad" as const, // Default match type
+  }
+  
+  const data = useKeywordData(filterState)
+  const bulk = useBulkAnalysis()
+  const country = useCountrySelector()
+
+  return {
+    // Filters
+    ...filters,
+    // Data
+    ...data,
+    // Bulk
+    ...bulk,
+    // Country
+    ...country,
+  }
+}

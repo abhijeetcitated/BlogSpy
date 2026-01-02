@@ -27,3 +27,5 @@ export {
   type UseCountrySelectorReturn,
 } from "./use-country-selector"
 
+// Legacy all-in-one hook (use more specific hooks when possible)
+export { useKeywordMagic } from "./use-keyword-magic"

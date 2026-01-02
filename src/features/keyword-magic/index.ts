@@ -69,7 +69,26 @@ export {
 // Services
 export { keywordMagicAPI, KeywordAPIError } from "./services"
 
-// State management
+// Config
+export {
+  FEATURE_CONFIG,
+  keywordMagicApiConfig,
+  getEndpoint,
+  buildApiUrl,
+  type FeatureConfig,
+  type KeywordMagicApiConfig,
+} from "./config"
+
+// Providers
+export {
+  KeywordMagicProvider,
+  useKeywordMagic,
+  type KeywordMagicState as ProviderState,
+  type KeywordMagicAction as ProviderAction,
+  type KeywordMagicContextValue,
+} from "./providers"
+
+// State management (legacy reducer)
 export {
   keywordMagicReducer,
   createInitialState,
@@ -94,16 +113,58 @@ export {
 
 // Components
 export {
+  // Page sections
+  KeywordMagicHeader,
+  KeywordMagicSearch,
+  KeywordMagicFilters,
+  KeywordMagicResults,
+  // Header
   CountrySelector,
+  PageHeader,
+  ResultsHeader,
+  // Search
+  BulkModeToggle,
+  BulkKeywordsInput,
+  SearchInput,
+  SearchSuggestions,
+  // Filters
   VolumeFilter,
   KDFilter,
   IntentFilter,
   CPCFilter,
+  GeoFilter,
+  WeakSpotFilter,
+  SerpFilter,
+  TrendFilter,
   IncludeExcludeFilter,
   MatchTypeToggle,
-  BulkModeToggle,
-  BulkKeywordsInput,
+  // Table
   KeywordTable,
+  KeywordTableRow,
+  KeywordTableHeader,
+  KeywordTableFooter,
+  ActionBar,
+  // Column components
+  CheckboxColumn,
+  CheckboxHeader,
+  KeywordColumn,
+  VolumeColumn,
+  KdColumn,
+  CpcColumn,
+  IntentColumn,
+  TrendColumn,
+  SerpColumn,
+  GeoColumn,
+  WeakSpotColumn,
+  RefreshColumn,
+  // Modals
+  ExportModal,
+  FilterPresetsModal,
+  KeywordDetailsModal,
+  // Shared
+  EmptyState,
+  ErrorBoundary,
+  LoadingSkeleton,
 } from "./components"
 
 // Additional types from components

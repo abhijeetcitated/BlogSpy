@@ -27,11 +27,11 @@ export default function KeywordMagicDemoPage() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <main className="flex-1 flex flex-col h-screen overflow-hidden">
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
             <Suspense fallback={<KeywordMagicLoading />}>
               <KeywordMagicContent />
             </Suspense>
-          </main>
+          </div>
         </SidebarInset>
       </SidebarProvider>
     </DemoWrapper>

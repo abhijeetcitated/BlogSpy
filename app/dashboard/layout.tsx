@@ -17,7 +17,7 @@ export default function DashboardLayout({
             <AppSidebar />
             <SidebarInset>
               <TopNav />
-              <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col">
+              <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
                 {children}
               </main>
             </SidebarInset>
@@ -27,6 +27,7 @@ export default function DashboardLayout({
     </AuthProvider>
   )
 }
+
 
 
 

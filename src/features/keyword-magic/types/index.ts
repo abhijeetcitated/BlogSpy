@@ -7,7 +7,7 @@ import type { CTRStealingFeature } from "@/types/rtv.types"
 /**
  * SERP Feature type - valid values for keyword SERP features
  */
-export type SERPFeature = CTRStealingFeature | "snippet" | "faq" | "reviews" | "image" | "video" | "shopping" | "ad"
+export type SERPFeature = CTRStealingFeature | "snippet" | "faq" | "reviews" | "image" | "video" | "shopping" | "ad" | "local" | "news"
 
 export interface Keyword {
   id: number
@@ -58,6 +58,23 @@ export interface VolumePreset {
 export type MatchType = "broad" | "phrase" | "exact" | "related" | "questions"
 export type BulkMode = "explore" | "bulk"
 
+// Sort types
+export type SortField = "keyword" | "volume" | "kd" | "cpc" | "trend" | "intent" | null
+export type SortDirection = "asc" | "desc"
+
+// Range types
+export type VolumeRange = [number, number]
+export type KDRange = [number, number]
+export type CPCRange = [number, number]
+
+// Pagination state
+export interface PaginationState {
+  page: number
+  pageSize: number
+  totalItems: number
+  totalPages: number
+}
+
 export interface FilterState {
   volumeRange: [number, number]
   kdRange: [number, number]
@@ -65,6 +82,8 @@ export interface FilterState {
   selectedIntents: string[]
   includeTerms: string[]
   excludeTerms: string[]
+  filterText?: string
+  searchText?: string
 }
 
 // Re-export API types

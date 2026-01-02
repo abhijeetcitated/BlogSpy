@@ -5,10 +5,8 @@
 // ============================================
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import type { SortField, SortDirection } from "../../constants/table-config"
 
 interface KeywordTableHeaderProps {
@@ -38,11 +36,11 @@ export function KeywordTableHeader({
   onSort,
 }: KeywordTableHeaderProps) {
   return (
-    <thead className="sticky top-0 z-30 bg-background">
+    <thead className="sticky top-0 z-10 bg-muted">
       {/* Column Headers */}
-      <tr className="border-b border-border bg-muted/95">
+      <tr className="border-b border-border">
         {/* 1. Checkbox */}
-        <th className="px-2 py-3 text-left font-medium bg-muted/95">
+        <th className="px-2 py-3 text-left font-medium bg-muted">
           <Checkbox 
             checked={selectAll} 
             onCheckedChange={onSelectAll} 
@@ -50,23 +48,23 @@ export function KeywordTableHeader({
           />
         </th>
         {/* 2. Keyword */}
-        <th className="pl-2 py-3 text-left font-medium bg-muted/95">Keyword</th>
+        <th className="pl-2 py-3 text-left font-medium bg-muted">Keyword</th>
         {/* 3. Intent */}
-        <th className="p-2 text-center font-medium">Intent</th>
+        <th className="p-2 text-center font-medium bg-muted">Intent</th>
         {/* 4. Volume */}
-        <th className="p-2 text-center font-medium">
+        <th className="p-2 text-center font-medium bg-muted">
           <button onClick={() => onSort("volume")} className="inline-flex items-center justify-center gap-1 hover:text-foreground transition-colors w-full">
             Volume <SortIcon field="volume" sortField={sortField} sortDirection={sortDirection} />
           </button>
         </th>
         {/* 5. Trend */}
-        <th className="p-2 text-center font-medium">
+        <th className="p-2 text-center font-medium bg-muted">
           <button onClick={() => onSort("trend")} className="inline-flex items-center justify-center gap-1 hover:text-foreground transition-colors w-full">
             Trend <SortIcon field="trend" sortField={sortField} sortDirection={sortDirection} />
           </button>
         </th>
         {/* 6. KD % */}
-        <th className="p-2 text-center font-medium">
+        <th className="p-2 text-center font-medium bg-muted">
           <Tooltip>
             <TooltipTrigger asChild>
               <button onClick={() => onSort("kd")} className="inline-flex items-center justify-center gap-1 hover:text-foreground transition-colors w-full">
@@ -80,13 +78,13 @@ export function KeywordTableHeader({
           </Tooltip>
         </th>
         {/* 7. CPC */}
-        <th className="p-2 text-center font-medium">
+        <th className="p-2 text-center font-medium bg-muted">
           <button onClick={() => onSort("cpc")} className="inline-flex items-center justify-center gap-1 hover:text-foreground transition-colors w-full">
             CPC <SortIcon field="cpc" sortField={sortField} sortDirection={sortDirection} />
           </button>
         </th>
         {/* 8. Weak Spot */}
-        <th className="p-2 text-center font-medium">
+        <th className="p-2 text-center font-medium bg-muted">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="cursor-default">Weak Spot</span>
@@ -98,7 +96,7 @@ export function KeywordTableHeader({
           </Tooltip>
         </th>
         {/* 9. GEO Score */}
-        <th className="p-2 text-center font-medium">
+        <th className="p-2 text-center font-medium bg-muted">
           <Tooltip>
             <TooltipTrigger asChild>
               <button onClick={() => onSort("geoScore")} className="inline-flex items-center justify-center gap-1 hover:text-foreground transition-colors w-full">
@@ -112,7 +110,7 @@ export function KeywordTableHeader({
           </Tooltip>
         </th>
         {/* 10. SERP Features */}
-        <th className="p-2 text-center font-medium">
+        <th className="p-2 text-center font-medium bg-muted">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="cursor-default">SERP</span>
@@ -124,7 +122,7 @@ export function KeywordTableHeader({
           </Tooltip>
         </th>
         {/* 11. Refresh */}
-        <th className="p-2 text-center font-medium">
+        <th className="p-2 text-center font-medium bg-muted">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="cursor-default">Refresh</span>
