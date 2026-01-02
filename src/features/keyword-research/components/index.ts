@@ -1,5 +1,5 @@
 // ============================================
-// KEYWORD MAGIC - Components Barrel Export
+// KEYWORD RESEARCH - Components Barrel Export
 // ============================================
 
 // ============================================
@@ -68,10 +68,10 @@ export { ExportModal, FilterPresetsModal, KeywordDetailsModal } from "./modals"
 // PAGE SECTIONS
 // ============================================
 export {
-  KeywordMagicHeader,
-  KeywordMagicSearch,
-  KeywordMagicFilters,
-  KeywordMagicResults
+  KeywordResearchHeader,
+  KeywordResearchSearch,
+  KeywordResearchFilters,
+  KeywordResearchResults
 } from "./page-sections"
 
 // ============================================

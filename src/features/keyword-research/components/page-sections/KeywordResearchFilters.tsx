@@ -1,7 +1,7 @@
 "use client"
 
 // ============================================
-// KEYWORD MAGIC - Filters Component (Zustand Version)
+// KEYWORD RESEARCH - Filters Component (Zustand Version)
 // ============================================
 // Migrated from legacy useReducer to Zustand store
 // ============================================
@@ -20,7 +20,7 @@ import {
   IncludeExcludeFilter,
 } from "../index"
 
-export function KeywordMagicFilters() {
+export function KeywordResearchFilters() {
   // Zustand store
   const filters = useKeywordStore((state) => state.filters)
   const setFilter = useKeywordStore((state) => state.setFilter)

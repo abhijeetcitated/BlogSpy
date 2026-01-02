@@ -1,7 +1,7 @@
 "use client"
 
 // ============================================
-// KEYWORD MAGIC HEADER - Page Section
+// KEYWORD RESEARCH HEADER - Page Section
 // ============================================
 // Contains country selector, mode toggle, match type, etc.
 // ============================================
@@ -12,7 +12,7 @@ import { POPULAR_COUNTRIES, ALL_COUNTRIES } from "../../constants"
 import { Button } from "@/components/ui/button"
 import { RotateCcw } from "lucide-react"
 
-interface KeywordMagicHeaderProps {
+interface KeywordResearchHeaderProps {
   selectedCountry: Country | null
   countryOpen: boolean
   onCountryOpenChange: (open: boolean) => void
@@ -25,7 +25,7 @@ interface KeywordMagicHeaderProps {
   onResetFilters: () => void
 }
 
-export function KeywordMagicHeader({
+export function KeywordResearchHeader({
   selectedCountry,
   countryOpen,
   onCountryOpenChange,
@@ -36,7 +36,7 @@ export function KeywordMagicHeader({
   onMatchTypeChange,
   activeFilterCount,
   onResetFilters,
-}: KeywordMagicHeaderProps) {
+}: KeywordResearchHeaderProps) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 py-3 sm:py-4 border-b border-border/50">
       {/* Left: Mode toggle and country selector */}

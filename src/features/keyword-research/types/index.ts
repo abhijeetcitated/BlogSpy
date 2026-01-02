@@ -1,5 +1,5 @@
 // ============================================
-// KEYWORD MAGIC - Type Definitions
+// KEYWORD RESEARCH - Type Definitions
 // ============================================
 
 import type { CTRStealingFeature } from "@/types/rtv.types"

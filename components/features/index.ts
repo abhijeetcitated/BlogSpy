@@ -22,9 +22,9 @@
 // └── pricing/            → Pricing & plans
 // ============================================
 
-// Keyword Magic (from src/features)
-export { KeywordMagicContent, KeywordTable } from "@/src/features/keyword-magic"
-export type { Keyword, KeywordTableProps } from "@/src/features/keyword-magic"
+// Keyword Research (from src/features)
+export { KeywordResearchContent, KeywordTable } from "@/src/features/keyword-research"
+export type { Keyword, KeywordTableProps } from "@/src/features/keyword-research"
 
 // Keyword Overview
 export { KeywordOverviewContent } from "./keyword-overview"

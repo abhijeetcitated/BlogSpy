@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { AppSidebar } from "@/components/layout"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { KeywordMagicContent } from "@/components/features"
+import { KeywordResearchContent } from "@/components/features"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
 
 export const metadata = {
@@ -9,7 +9,7 @@ export const metadata = {
   description: "Try our keyword research tool. Find thousands of keyword ideas with search volume, difficulty, and CPC data. Sign up for full access.",
 }
 
-function KeywordMagicLoading() {
+function KeywordResearchLoading() {
   return (
     <div className="flex items-center justify-center h-full">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -17,7 +17,7 @@ function KeywordMagicLoading() {
   )
 }
 
-export default function KeywordMagicDemoPage() {
+export default function KeywordResearchDemoPage() {
   return (
     <DemoWrapper
       featureName="Keyword Explorer"
@@ -28,8 +28,8 @@ export default function KeywordMagicDemoPage() {
         <AppSidebar />
         <SidebarInset>
           <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <Suspense fallback={<KeywordMagicLoading />}>
-              <KeywordMagicContent />
+            <Suspense fallback={<KeywordResearchLoading />}>
+              <KeywordResearchContent />
             </Suspense>
           </div>
         </SidebarInset>

@@ -1,7 +1,7 @@
 "use client"
 
 // ============================================
-// KEYWORD MAGIC RESULTS - Page Section
+// KEYWORD RESEARCH RESULTS - Page Section
 // ============================================
 // Contains the results table and empty states
 // Supports Guest Mode for PLG flow
@@ -11,7 +11,7 @@ import type { Keyword } from "../../types"
 import { KeywordTable } from "../table"
 import { Loader2, SearchX, Sparkles } from "lucide-react"
 
-interface KeywordMagicResultsProps {
+interface KeywordResearchResultsProps {
   filteredKeywords: Keyword[]
   filterText: string
   activeFilterCount: number
@@ -20,14 +20,14 @@ interface KeywordMagicResultsProps {
   isGuest?: boolean
 }
 
-export function KeywordMagicResults({
+export function KeywordResearchResults({
   filteredKeywords,
   filterText,
   activeFilterCount,
   isSearching,
   country,
   isGuest = false,
-}: KeywordMagicResultsProps) {
+}: KeywordResearchResultsProps) {
   // Loading state
   if (isSearching) {
     return (

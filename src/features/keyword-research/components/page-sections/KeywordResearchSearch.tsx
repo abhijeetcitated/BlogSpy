@@ -1,7 +1,7 @@
 "use client"
 
 // ============================================
-// KEYWORD MAGIC SEARCH - Page Section
+// KEYWORD RESEARCH SEARCH - Page Section
 // ============================================
 // Contains the main search input for filter text
 // ============================================
@@ -10,15 +10,15 @@ import { Search, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
-interface KeywordMagicSearchProps {
+interface KeywordResearchSearchProps {
   filterText: string
   onFilterTextChange: (text: string) => void
 }
 
-export function KeywordMagicSearch({
+export function KeywordResearchSearch({
   filterText,
   onFilterTextChange,
-}: KeywordMagicSearchProps) {
+}: KeywordResearchSearchProps) {
   return (
     <div className="relative flex-1 max-w-xl">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />

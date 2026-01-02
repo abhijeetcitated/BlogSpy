@@ -1,7 +1,7 @@
 "use client"
 
 // ============================================
-// KEYWORD MAGIC PROVIDER - Feature context provider
+// KEYWORD RESEARCH PROVIDER - Feature context provider
 // ============================================
 
 import { createContext, useContext, useReducer, type ReactNode } from "react"
@@ -11,7 +11,7 @@ import type { KeywordFilters } from "@/types/keyword.types"
 // Types
 // ============================================
 
-interface KeywordMagicState {
+interface KeywordResearchState {
   // Search state
   query: string
   isSearching: boolean
@@ -29,7 +29,7 @@ interface KeywordMagicState {
   selectedKeywordId: string | null
 }
 
-type KeywordMagicAction =
+type KeywordResearchAction =
   | { type: "SET_QUERY"; payload: string }
   | { type: "SET_SEARCHING"; payload: boolean }
   | { type: "SET_SEARCH_MODE"; payload: "single" | "bulk" }
@@ -40,7 +40,7 @@ type KeywordMagicAction =
   | { type: "SELECT_ALL"; payload: string[] }
   | { type: "CLEAR_SELECTION" }
   | { type: "TOGGLE_FILTER_PANEL" }
-  | { type: "SET_ACTIVE_MODAL"; payload: KeywordMagicState["activeModal"] }
+  | { type: "SET_ACTIVE_MODAL"; payload: KeywordResearchState["activeModal"] }
   | { type: "SET_SELECTED_KEYWORD_ID"; payload: string | null }
 
 // ============================================
@@ -58,7 +58,7 @@ const initialFilters: KeywordFilters = {
   hasWeakSpot: null,
 }
 
-const initialState: KeywordMagicState = {
+const initialState: KeywordResearchState = {
   query: "",
   isSearching: false,
   searchMode: "single",
@@ -73,10 +73,10 @@ const initialState: KeywordMagicState = {
 // Reducer
 // ============================================
 
-function keywordMagicReducer(
-  state: KeywordMagicState,
-  action: KeywordMagicAction
-): KeywordMagicState {
+function keywordResearchReducer(
+  state: KeywordResearchState,
+  action: KeywordResearchAction
+): KeywordResearchState {
   switch (action.type) {
     case "SET_QUERY":
       return { ...state, query: action.payload }
@@ -129,9 +129,9 @@ function keywordMagicReducer(
 // Context
 // ============================================
 
-interface KeywordMagicContextValue {
-  state: KeywordMagicState
-  dispatch: React.Dispatch<KeywordMagicAction>
+interface KeywordResearchContextValue {
+  state: KeywordResearchState
+  dispatch: React.Dispatch<KeywordResearchAction>
   // Convenience actions
   setQuery: (query: string) => void
   setFilters: (filters: Partial<KeywordFilters>) => void
@@ -139,31 +139,31 @@ interface KeywordMagicContextValue {
   toggleKeyword: (id: string) => void
   selectAll: (ids: string[]) => void
   clearSelection: () => void
-  openModal: (modal: KeywordMagicState["activeModal"]) => void
+  openModal: (modal: KeywordResearchState["activeModal"]) => void
   closeModal: () => void
 }
 
-const KeywordMagicContext = createContext<KeywordMagicContextValue | null>(null)
+const KeywordResearchContext = createContext<KeywordResearchContextValue | null>(null)
 
 // ============================================
 // Provider
 // ============================================
 
-interface KeywordMagicProviderProps {
+interface KeywordResearchProviderProps {
   children: ReactNode
   initialQuery?: string
 }
 
-export function KeywordMagicProvider({
+export function KeywordResearchProvider({
   children,
   initialQuery = "",
-}: KeywordMagicProviderProps) {
-  const [state, dispatch] = useReducer(keywordMagicReducer, {
+}: KeywordResearchProviderProps) {
+  const [state, dispatch] = useReducer(keywordResearchReducer, {
     ...initialState,
     query: initialQuery,
   })
 
-  const value: KeywordMagicContextValue = {
+  const value: KeywordResearchContextValue = {
     state,
     dispatch,
     setQuery: (query) => dispatch({ type: "SET_QUERY", payload: query }),
@@ -183,9 +183,9 @@ export function KeywordMagicProvider({
   }
 
   return (
-    <KeywordMagicContext.Provider value={value}>
+    <KeywordResearchContext.Provider value={value}>
       {children}
-    </KeywordMagicContext.Provider>
+    </KeywordResearchContext.Provider>
   )
 }
 
@@ -193,13 +193,13 @@ export function KeywordMagicProvider({
 // Hook
 // ============================================
 
-export function useKeywordMagic() {
-  const context = useContext(KeywordMagicContext)
+export function useKeywordResearch() {
+  const context = useContext(KeywordResearchContext)
   if (!context) {
-    throw new Error("useKeywordMagic must be used within a KeywordMagicProvider")
+    throw new Error("useKeywordResearch must be used within a KeywordResearchProvider")
   }
   return context
 }
 
 // Export types
-export type { KeywordMagicState, KeywordMagicAction, KeywordMagicContextValue }
+export type { KeywordResearchState, KeywordResearchAction, KeywordResearchContextValue }

@@ -1,10 +1,10 @@
-import { KeywordMagicContent } from "@/components/features"
+import { KeywordResearchContent } from "@/components/features"
 import { ErrorBoundary } from "@/components/common/error-boundary"
 
-export default function KeywordMagicPage() {
+export default function KeywordResearchPage() {
   return (
     <ErrorBoundary>
-      <KeywordMagicContent />
+      <KeywordResearchContent />
     </ErrorBoundary>
   )
 }

@@ -1,7 +1,7 @@
 // ============================================
-// KEYWORD MAGIC STORE - Extended Zustand Store
+// KEYWORD RESEARCH STORE - Extended Zustand Store
 // ============================================
-// Feature-specific store with all fields needed by keyword-magic-content
+// Feature-specific store with all fields needed by keyword-research-content
 // Replaces legacy useReducer implementation
 // ============================================
 

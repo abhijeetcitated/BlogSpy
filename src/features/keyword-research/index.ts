@@ -1,9 +1,9 @@
 // ============================================
-// KEYWORD MAGIC - Feature Barrel Export
+// KEYWORD RESEARCH - Feature Barrel Export
 // ============================================
 
 // Main component
-export { KeywordMagicContent } from "./keyword-magic-content"
+export { KeywordResearchContent } from "./keyword-research-content"
 
 // Types
 export type {
@@ -81,11 +81,11 @@ export {
 
 // Providers
 export {
-  KeywordMagicProvider,
-  useKeywordMagic,
-  type KeywordMagicState as ProviderState,
-  type KeywordMagicAction as ProviderAction,
-  type KeywordMagicContextValue,
+  KeywordResearchProvider,
+  useKeywordResearch,
+  type KeywordResearchState as ProviderState,
+  type KeywordResearchAction as ProviderAction,
+  type KeywordResearchContextValue,
 } from "./providers"
 
 // Zustand Store (replaces legacy reducer)
@@ -110,7 +110,7 @@ export {
 } from "./store"
 
 // Hooks - Not exported from barrel to avoid Server Component issues
-// Import directly from "@/src/features/keyword-magic/hooks" when needed
+// Import directly from "@/src/features/keyword-research/hooks" when needed
 // export {
 //   useKeywordFilters,
 //   useKeywordData,
@@ -125,10 +125,10 @@ export {
 // Components
 export {
   // Page sections
-  KeywordMagicHeader,
-  KeywordMagicSearch,
-  KeywordMagicFilters,
-  KeywordMagicResults,
+  KeywordResearchHeader,
+  KeywordResearchSearch,
+  KeywordResearchFilters,
+  KeywordResearchResults,
   // Header
   CountrySelector,
   PageHeader,

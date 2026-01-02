@@ -1,7 +1,7 @@
 "use client"
 
 // ============================================
-// KEYWORD MAGIC - Main Component (Zustand Version)
+// KEYWORD RESEARCH - Main Component (Zustand Version)
 // ============================================
 // Uses Zustand for centralized state management
 // Split into smaller sub-components
@@ -38,9 +38,9 @@ import {
 
 // Sub-components
 import {
-  KeywordMagicHeader,
-  KeywordMagicSearch,
-  KeywordMagicResults,
+  KeywordResearchHeader,
+  KeywordResearchSearch,
+  KeywordResearchResults,
 } from "./components/page-sections"
 
 // ============================================
@@ -72,7 +72,7 @@ function getActiveFilterCount(filters: {
   return count
 }
 
-export function KeywordMagicContent() {
+export function KeywordResearchContent() {
   // ============================================
   // GUEST MODE CHECK (PLG Flow)
   // ============================================
@@ -259,7 +259,7 @@ export function KeywordMagicContent() {
         </div>
       )}
       
-      <KeywordMagicHeader
+      <KeywordResearchHeader
         selectedCountry={selectedCountry}
         countryOpen={countryOpen}
         onCountryOpenChange={setCountryOpen}
@@ -280,13 +280,13 @@ export function KeywordMagicContent() {
         {search.mode === "explore" ? (
           <>
             {/* Row 1: Search Input */}
-            <KeywordMagicSearch
+            <KeywordResearchSearch
               filterText={filters.searchText}
               onFilterTextChange={(text: string) => setFilter("searchText", text)}
             />
 
             {/* Row 2: Filter Popovers */}
-            <KeywordMagicFiltersWrapper 
+            <KeywordResearchFiltersWrapper 
               filters={filters} 
               setFilter={setFilter}
             />
@@ -300,7 +300,7 @@ export function KeywordMagicContent() {
         )}
       </div>
 
-      <KeywordMagicResults
+      <KeywordResearchResults
         filteredKeywords={filteredKeywords}
         filterText={filters.searchText}
         activeFilterCount={activeFilterCount}
@@ -316,7 +316,7 @@ export function KeywordMagicContent() {
 // WRAPPER FOR FILTERS (with proper popover state management)
 // ============================================
 
-function KeywordMagicFiltersWrapper({ 
+function KeywordResearchFiltersWrapper({ 
   filters,
   setFilter 
 }: { 
