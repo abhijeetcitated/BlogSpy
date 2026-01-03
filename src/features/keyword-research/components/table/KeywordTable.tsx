@@ -21,8 +21,8 @@ import type { SortField, SortDirection } from "../../constants/table-config"
 import { KeywordTableRow } from "./KeywordTableRow"
 import { KeywordTableHeader } from "./KeywordTableHeader"
 import { KeywordTableFooter } from "./KeywordTableFooter"
-import { downloadKeywordsCSV } from "./export-utils"
-import { sortKeywords } from "./sorting-utils"
+import { downloadKeywordsCSV } from "../../utils/export-utils"
+import { sortKeywords } from "../../utils/sort-utils"
 
 export interface KeywordTableProps {
   keywords?: Keyword[]

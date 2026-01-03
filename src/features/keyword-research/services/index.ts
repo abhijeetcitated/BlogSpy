@@ -13,13 +13,13 @@ export { KeywordAPIError, simulateNetworkDelay, API_BASE_URL } from "./api-base"
 export { convertToAPIKeyword, generateMockAPIKeyword } from "./mock-utils"
 
 // Individual services
-export { keywordResearchService } from "./keyword-research.service"
+export { keywordResearchService } from "./keyword.service"
 export { bulkAnalysisService } from "./bulk-analysis.service"
 export { exportService } from "./export.service"
 export { suggestionsService } from "./suggestions.service"
 
 // Combined API (backward compatible)
-import { keywordResearchService } from "./keyword-research.service"
+import { keywordResearchService } from "./keyword.service"
 import { bulkAnalysisService } from "./bulk-analysis.service"
 import { exportService } from "./export.service"
 import { suggestionsService } from "./suggestions.service"

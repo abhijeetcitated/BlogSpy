@@ -178,3 +178,18 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     }
   }
 }
+
+/**
+ * Download keywords as CSV file (convenience wrapper)
+ * Compatible with the old export-utils API from table folder
+ */
+export function downloadKeywordsCSV(keywords: Keyword[], selectedIds?: Set<number>): void {
+  // Get data to export (selected rows or all)
+  const exportData = selectedIds && selectedIds.size > 0 
+    ? keywords.filter(k => selectedIds.has(k.id))
+    : keywords
+  
+  const csvContent = exportToCSV(exportData)
+  const filename = `blogspy-keywords-${new Date().toISOString().split('T')[0]}`
+  downloadExport(csvContent, filename, "csv")
+}

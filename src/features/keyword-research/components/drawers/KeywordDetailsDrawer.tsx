@@ -1,0 +1,211 @@
+// ============================================
+// KEYWORD DETAILS DRAWER - Main Sheet Component
+// ============================================
+// Displays detailed keyword information in a slide-out drawer
+// with tabs for Overview, Commerce, and Social data
+// ============================================
+
+"use client"
+
+import * as React from "react"
+import { X } from "lucide-react"
+import { cn } from "@/lib/utils"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+import { OverviewTab } from "./OverviewTab"
+import { CommerceTab } from "./CommerceTab"
+import { SocialTab } from "./SocialTab"
+
+import type { Keyword } from "../../types"
+
+// ============================================
+// TYPES
+// ============================================
+
+interface KeywordDetailsDrawerProps {
+  keyword: Keyword | null
+  isOpen: boolean
+  onClose: () => void
+  onWriteClick?: (keyword: Keyword) => void
+  onAnalyzeClick?: (keyword: Keyword) => void
+}
+
+// ============================================
+// COMPONENT
+// ============================================
+
+export function KeywordDetailsDrawer({
+  keyword,
+  isOpen,
+  onClose,
+  onWriteClick,
+  onAnalyzeClick,
+}: KeywordDetailsDrawerProps) {
+  const [activeTab, setActiveTab] = React.useState("overview")
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isLoading, _setIsLoading] = React.useState(false)
+
+  // Reset tab when drawer opens with new keyword
+  React.useEffect(() => {
+    if (isOpen) {
+      setActiveTab("overview")
+    }
+  }, [isOpen, keyword?.id])
+
+  if (!keyword) return null
+
+  // Format volume with commas
+  const formattedVolume = keyword.volume.toLocaleString()
+
+  // Get KD color
+  const getKdColor = (kd: number) => {
+    if (kd <= 14) return "text-emerald-500"
+    if (kd <= 29) return "text-green-500"
+    if (kd <= 49) return "text-yellow-500"
+    if (kd <= 69) return "text-orange-500"
+    if (kd <= 84) return "text-red-500"
+    return "text-red-600"
+  }
+
+  // Get intent badge variant
+  const getIntentVariant = (intent: string) => {
+    switch (intent.toLowerCase()) {
+      case "informational":
+        return "secondary"
+      case "commercial":
+        return "default"
+      case "transactional":
+        return "destructive"
+      case "navigational":
+        return "outline"
+      default:
+        return "secondary"
+    }
+  }
+
+  return (
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-[540px] p-0 bg-background border-border"
+      >
+        {/* Header */}
+        <SheetHeader className="px-6 py-4 border-b border-border bg-muted/30">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <SheetTitle className="text-lg font-semibold text-foreground truncate">
+                {keyword.keyword}
+              </SheetTitle>
+              <SheetDescription className="flex items-center gap-2 mt-1">
+                <span className="text-muted-foreground">
+                  Volume: <span className="text-foreground font-medium">{formattedVolume}</span>
+                </span>
+                <span className="text-muted-foreground">•</span>
+                <span className={cn("font-medium", getKdColor(keyword.kd))}>
+                  KD: {keyword.kd}%
+                </span>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-muted-foreground">
+                  CPC: <span className="text-foreground font-medium">${keyword.cpc.toFixed(2)}</span>
+                </span>
+              </SheetDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={onClose}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </div>
+
+          {/* Intent badges */}
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {keyword.intent.map((intent) => (
+              <Badge
+                key={intent}
+                variant={getIntentVariant(intent)}
+                className="text-xs"
+              >
+                {intent}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2 mt-4">
+            <Button
+              size="sm"
+              onClick={() => onWriteClick?.(keyword)}
+              className="flex-1"
+            >
+              ✍️ Write Content
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onAnalyzeClick?.(keyword)}
+              className="flex-1"
+            >
+              🔍 Analyze SERP
+            </Button>
+          </div>
+        </SheetHeader>
+
+        {/* Tabs */}
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex flex-col h-[calc(100vh-220px)]"
+        >
+          <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent px-6 h-11">
+            <TabsTrigger
+              value="overview"
+              className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger
+              value="commerce"
+              className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
+              Commerce
+            </TabsTrigger>
+            <TabsTrigger
+              value="social"
+              className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
+              Social
+            </TabsTrigger>
+          </TabsList>
+
+          <ScrollArea className="flex-1">
+            <TabsContent value="overview" className="m-0 p-6">
+                  <OverviewTab keyword={keyword} />
+                </TabsContent>
+                <TabsContent value="commerce" className="m-0 p-6">
+                  <CommerceTab keyword={keyword} />
+                </TabsContent>
+                <TabsContent value="social" className="m-0 p-6">
+                  <SocialTab keyword={keyword} />
+                </TabsContent>
+          </ScrollArea>
+        </Tabs>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+export default KeywordDetailsDrawer

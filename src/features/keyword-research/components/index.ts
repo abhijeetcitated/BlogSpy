@@ -36,9 +36,6 @@ export {
   KeywordTableRow,
   KeywordTableHeader, 
   KeywordTableFooter, 
-  sortKeywords, 
-  downloadKeywordsCSV,
-  generateKeywordCSV,
   // Action bar
   ActionBar,
   BulkActions,
@@ -56,8 +53,19 @@ export {
   GeoColumn,
   WeakSpotColumn,
   RefreshColumn,
+  ActionsColumn,
 } from "./table"
 export type { KeywordTableProps } from "./table"
+
+// ============================================
+// DRAWERS
+// ============================================
+export { 
+  KeywordDetailsDrawer,
+  OverviewTab,
+  CommerceTab,
+  SocialTab,
+} from "./drawers"
 
 // ============================================
 // MODALS
@@ -88,3 +96,15 @@ export {
   FilterLoadingSkeleton,
   HeaderLoadingSkeleton,
 } from "./shared"
+
+// ============================================
+// UTILITIES (re-export from utils folder)
+// ============================================
+export { sortKeywords } from "../utils/sort-utils"
+export { 
+  exportToCSV, 
+  exportToJSON, 
+  exportToTSV, 
+  downloadExport, 
+  copyToClipboard 
+} from "../utils/export-utils"
