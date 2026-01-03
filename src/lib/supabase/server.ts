@@ -28,17 +28,20 @@ function getSupabaseEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl) {
+  // During build time, return placeholder values to allow static generation
+  // These won't be used for actual API calls during build
+  if (!supabaseUrl || !supabaseAnonKey) {
+    if (process.env.NODE_ENV === "production" && typeof window === "undefined") {
+      // Build time - return placeholders for static generation
+      console.warn("[Supabase] Using placeholder values during build. Set env vars in Vercel.")
+      return {
+        supabaseUrl: "https://placeholder.supabase.co",
+        supabaseAnonKey: "placeholder-key",
+      }
+    }
+    
     throw new Error(
-      "❌ Missing NEXT_PUBLIC_SUPABASE_URL environment variable. " +
-      "Please add it to your .env.local file."
-    )
-  }
-
-  if (!supabaseAnonKey) {
-    throw new Error(
-      "❌ Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable. " +
-      "Please add it to your .env.local file."
+      "Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY"
     )
   }
 
