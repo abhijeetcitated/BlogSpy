@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { getSupabaseBrowserClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import type { DemoUser } from '@/types/user';
 import { getFeatureAccess, type FeatureAccess } from '@/lib/feature-access';
 
@@ -36,7 +36,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  // Check if Supabase is properly configured
+  const supabaseEnabled = useMemo(() => isSupabaseConfigured(), []);
+  const supabase = useMemo(() => supabaseEnabled ? getSupabaseBrowserClient() : null, [supabaseEnabled]);
 
   // Calculate feature access based on auth state
   const featureAccess = useMemo(() => {
@@ -58,6 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (demoUserData) {
           setUser(JSON.parse(demoUserData));
           setIsDemoMode(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Skip Supabase if not configured
+        if (!supabase) {
+          console.warn('[Auth] Supabase not configured. Using demo mode only.');
           setIsLoading(false);
           return;
         }
@@ -84,6 +93,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     getInitialSession();
+
+    // Skip subscription if Supabase not configured
+    if (!supabase) {
+      return;
+    }
 
     // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -113,6 +127,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    if (!supabase) {
+      return { success: false, error: 'Authentication not configured. Use demo mode.' };
+    }
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -155,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('demo_user');
       
       // Sign out from Supabase (if not in demo mode)
-      if (!isDemoMode && session) {
+      if (!isDemoMode && session && supabase) {
         const { error } = await supabase.auth.signOut();
         if (error) {
           console.error('Logout error:', error);
@@ -173,6 +190,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, isDemoMode, session]);
 
   const register = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    if (!supabase) {
+      return { success: false, error: 'Authentication not configured. Use demo mode.' };
+    }
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
