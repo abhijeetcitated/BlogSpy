@@ -1,94 +1,199 @@
 // ============================================
-// SAFE ACTION - Server Action Utilities
+// SAFE ACTION - Type-Safe Server Actions (2026 Enterprise)
 // ============================================
-// Provides type-safe server actions with Zod validation
-// Uses a simplified mock implementation until clerk is integrated
+// Uses next-safe-action v8 with:
+// - Zod validation
+// - Real Supabase authentication
+// - Upstash rate limiting
+// - Error handling
 // ============================================
 
+import "server-only"
+import { createSafeActionClient, DEFAULT_SERVER_ERROR_MESSAGE } from "next-safe-action"
 import { z } from "zod"
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
+import { createClient } from "@/lib/supabase/server"
+import { headers } from "next/headers"
 
-/**
- * Mock context type for authenticated actions
- */
-interface AuthContext {
+// ============================================
+// TYPES
+// ============================================
+
+export interface ActionContext {
   userId: string
+  email: string
+  role: "user" | "admin" | "moderator"
 }
 
-/**
- * Simple safe action client builder (mock implementation)
- * In production, replace with next-safe-action + Clerk integration
- */
-function createMockSafeActionClient(config?: { middleware?: () => Promise<AuthContext> }) {
-  return {
-    schema<T extends z.ZodType>(schema: T) {
-      return {
-        action<R>(handler: (args: { parsedInput: z.infer<T>; ctx: AuthContext }) => Promise<R>) {
-          return async (input: z.infer<T>): Promise<{ data?: R; serverError?: string }> => {
-            try {
-              // Validate input
-              const parseResult = schema.safeParse(input)
-              if (!parseResult.success) {
-                return { serverError: parseResult.error.message }
-              }
-              
-              // Run middleware if provided
-              let ctx: AuthContext = { userId: "mock-user-id" }
-              if (config?.middleware) {
-                try {
-                  ctx = await config.middleware()
-                } catch (error) {
-                  return { serverError: error instanceof Error ? error.message : "Unauthorized" }
-                }
-              }
-              
-              // Execute handler
-              const result = await handler({ parsedInput: parseResult.data, ctx })
-              return { data: result }
-            } catch (error) {
-              return { serverError: error instanceof Error ? error.message : "An error occurred" }
-            }
-          }
-        },
-      }
-    },
+// ============================================
+// RATE LIMITER (Upstash)
+// ============================================
+
+// Rate limiter instance - lazy initialized
+let ratelimit: Ratelimit | null = null
+
+function getRateLimiter(): Ratelimit | null {
+  // Skip rate limiting if Upstash is not configured
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null
   }
+
+  if (!ratelimit) {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(20, "10 s"), // 20 requests per 10 seconds
+      analytics: true,
+      prefix: "blogspy:ratelimit:",
+    })
+  }
+
+  return ratelimit
 }
 
-/**
- * Base action client without authentication
- */
-export const action = createMockSafeActionClient()
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
 
-/**
- * Authenticated action client - ensures user is logged in
- * TODO: Replace with real auth when Clerk is integrated
- */
-export const authAction = createMockSafeActionClient({
-  async middleware() {
-    // TODO: Replace with actual clerk auth
-    // const { userId } = await auth()
-    // if (!userId) throw new Error("Unauthorized")
+async function getClientIP(): Promise<string> {
+  const headersList = await headers()
+  const forwardedFor = headersList.get("x-forwarded-for")
+  const realIP = headersList.get("x-real-ip")
+  
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim()
+  }
+  
+  return realIP || "anonymous"
+}
+
+// ============================================
+// BASE ACTION CLIENT (Public - No Auth Required)
+// ============================================
+
+export const action = createSafeActionClient({
+  // Handle server errors
+  handleServerError: (error) => {
+    console.error("[SafeAction Error]:", error.message)
     
-    // Mock user for development
-    return { userId: "dev-user-123" }
+    // Don't expose internal errors to client
+    if (error.message.includes("NEXT_REDIRECT")) {
+      throw error // Let Next.js handle redirects
+    }
+    
+    return DEFAULT_SERVER_ERROR_MESSAGE
   },
 })
 
-/**
- * Admin action client - ensures user has admin role
- * TODO: Replace with real admin check when Clerk is integrated
- */
-export const adminAction = createMockSafeActionClient({
-  async middleware() {
-    // TODO: Replace with actual clerk auth
-    // const { userId, sessionClaims } = await auth()
-    // if (!userId) throw new Error("Unauthorized")
-    // if (sessionClaims?.metadata?.role !== "admin") throw new Error("Forbidden")
+// Alias for compatibility
+export const actionClient = action
+
+// ============================================
+// RATE LIMITED ACTION CLIENT
+// ============================================
+
+export const rateLimitedAction = action.use(async ({ next }) => {
+  const limiter = getRateLimiter()
+  
+  if (limiter) {
+    const ip = await getClientIP()
+    const { success, limit, remaining, reset } = await limiter.limit(ip)
     
-    // Mock admin for development
-    return { userId: "admin-user-123" }
-  },
+    if (!success) {
+      throw new Error(`Rate limit exceeded. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds.`)
+    }
+    
+    // Attach rate limit info to context
+    return next({
+      ctx: {
+        rateLimit: { limit, remaining, reset },
+      },
+    })
+  }
+  
+  return next({ ctx: {} })
 })
 
-// Re-export zod for convenience
+// ============================================
+// AUTHENTICATED ACTION CLIENT
+// ============================================
+
+export const authAction = action.use(async ({ next }) => {
+  // Get Supabase client
+  const supabase = await createClient()
+  
+  // Get current user
+  const { data: { user }, error } = await supabase.auth.getUser()
+  
+  if (error || !user) {
+    throw new Error("Authentication required")
+  }
+  
+  // Build context
+  const ctx: ActionContext = {
+    userId: user.id,
+    email: user.email || "",
+    role: (user.user_metadata?.role as ActionContext["role"]) || "user",
+  }
+  
+  return next({ ctx })
+})
+
+// ============================================
+// AUTHENTICATED + RATE LIMITED ACTION CLIENT
+// ============================================
+
+export const authRateLimitedAction = authAction.use(async ({ next, ctx }) => {
+  const limiter = getRateLimiter()
+  
+  if (limiter) {
+    // Rate limit by user ID for authenticated users
+    const { success, limit, remaining, reset } = await limiter.limit(`user:${ctx.userId}`)
+    
+    if (!success) {
+      throw new Error(`Rate limit exceeded. Try again in ${Math.ceil((reset - Date.now()) / 1000)} seconds.`)
+    }
+    
+    return next({
+      ctx: {
+        ...ctx,
+        rateLimit: { limit, remaining, reset },
+      },
+    })
+  }
+  
+  return next({ ctx })
+})
+
+// ============================================
+// ADMIN ACTION CLIENT
+// ============================================
+
+export const adminAction = authAction.use(async ({ next, ctx }) => {
+  if (ctx.role !== "admin") {
+    throw new Error("Admin access required")
+  }
+  
+  return next({ ctx })
+})
+
+// ============================================
+// CONVENIENCE EXPORTS
+// ============================================
+
+// Re-export zod for schema definitions
 export { z }
+
+// Schema helper for common patterns
+export const schemas = {
+  id: z.string().uuid(),
+  email: z.string().email(),
+  pagination: z.object({
+    page: z.number().int().min(1).default(1),
+    limit: z.number().int().min(1).max(100).default(20),
+  }),
+  dateRange: z.object({
+    from: z.string().datetime(),
+    to: z.string().datetime(),
+  }),
+}

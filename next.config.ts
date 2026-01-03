@@ -9,10 +9,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   // ============================================
-  // REACT COMPILER (Next.js 16.1+ top-level option)
+  // REACT COMPILER (Next.js 16.1+ - 2026 Enterprise)
   // ============================================
-  // Note: Requires babel-plugin-react-compiler to be installed
-  // Uncomment when ready: reactCompiler: true,
+  // Enables automatic memoization - no more useMemo/useCallback needed
+  reactCompiler: true,
 
   // ============================================
   // TURBOPACK (Next.js 16 default)
@@ -105,7 +105,7 @@ const nextConfig: NextConfig = {
   },
 
   // ============================================
-  // EXPERIMENTAL FEATURES
+  // EXPERIMENTAL FEATURES (2026 Enterprise Security)
   // ============================================
   experimental: {
     // Enable optimized package imports
@@ -115,7 +115,21 @@ const nextConfig: NextConfig = {
       "recharts",
       "date-fns",
     ],
+    // Enable React Taint API to prevent sensitive data leaks
+    taint: true,
+    // Server Actions CSRF Protection
+    serverActions: {
+      allowedOrigins: [
+        "localhost:3000",
+        "blogspy.com",
+        "www.blogspy.com",
+      ],
+    },
   },
+
+  // NOTE: cacheComponents (PPR) disabled - incompatible with
+  // route segment config `dynamic = 'force-dynamic'` used by cron jobs.
+  // Re-enable once cron routes are migrated to use 'use cache' directive.
 
   // ============================================
   // LOGGING (Development)
