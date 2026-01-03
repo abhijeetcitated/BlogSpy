@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AuthProvider } from "@/contexts/auth-context"
 import { UserProvider } from "@/contexts/user-context"
+import { QueryProvider } from "@/contexts/query-provider"
 import "./globals.css"
 
 // Geist - Vercel's premium sans-serif font
@@ -77,11 +78,13 @@ export default function RootLayout({
     // suppressHydrationWarning added to fix browser extension (Grammarly) hydration mismatch
     <html lang="en" className={`dark ${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <AuthProvider>
-          <UserProvider>
-            {children}
-          </UserProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <UserProvider>
+              {children}
+            </UserProvider>
+          </AuthProvider>
+        </QueryProvider>
         <Analytics />
       </body>
     </html>

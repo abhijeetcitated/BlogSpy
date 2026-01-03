@@ -6,7 +6,7 @@
 
 import { z } from "zod"
 import { authAction } from "@/lib/safe-action"
-import { keywordResearchService } from "../services/keyword-research.service"
+import { keywordResearchService } from "../services/keyword.service"
 import type { Keyword, MatchType } from "../types"
 
 // ============================================

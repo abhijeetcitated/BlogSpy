@@ -58,8 +58,22 @@ export interface VolumePreset {
 export type MatchType = "broad" | "phrase" | "exact" | "related" | "questions"
 export type BulkMode = "explore" | "bulk"
 
-// Sort types
-export type SortField = "keyword" | "volume" | "kd" | "cpc" | "trend" | "intent" | null
+// Sort types - Extended for all sortable columns
+export type SortField = 
+  | "keyword" 
+  | "volume" 
+  | "rtv"
+  | "kd" 
+  | "cpc" 
+  | "trend" 
+  | "intent"
+  | "geoScore" 
+  | "aioScore"
+  | "decayScore"
+  | "videoOpp"
+  | "commerceOpp"
+  | "socialOpp"
+  | null
 export type SortDirection = "asc" | "desc"
 
 // Range types

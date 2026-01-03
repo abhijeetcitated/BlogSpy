@@ -60,13 +60,13 @@ import { analyzeKeywords, type AnalysisOptions } from "../utils/cluster-analysis
 // ============================================
 const DEMO_KEYWORDS: SourceKeyword[] = [
   // Main pillar candidates
-  { id: "demo_1", keyword: "AI Writing Tools", volume: 45000, kd: 52, intent: "informational", source: "keyword-magic", addedAt: new Date() },
-  { id: "demo_2", keyword: "AI Content Strategy", volume: 28000, kd: 45, intent: "informational", source: "keyword-magic", addedAt: new Date() },
+  { id: "demo_1", keyword: "AI Writing Tools", volume: 45000, kd: 52, intent: "informational", source: "keyword-explorer", addedAt: new Date() },
+  { id: "demo_2", keyword: "AI Content Strategy", volume: 28000, kd: 45, intent: "informational", source: "keyword-explorer", addedAt: new Date() },
   
   // H2 level sub-keywords
   { id: "demo_3", keyword: "best ai writing software", volume: 8500, kd: 38, intent: "commercial", source: "competitor-gap", addedAt: new Date() },
   { id: "demo_4", keyword: "ai content generator tools", volume: 12000, kd: 42, intent: "commercial", source: "competitor-gap", addedAt: new Date() },
-  { id: "demo_5", keyword: "ai content planning", volume: 5200, kd: 35, intent: "informational", source: "keyword-magic", addedAt: new Date() },
+  { id: "demo_5", keyword: "ai content planning", volume: 5200, kd: 35, intent: "informational", source: "keyword-explorer", addedAt: new Date() },
   
   // H3 level sub-keywords
   { id: "demo_6", keyword: "automated content creation software", volume: 3100, kd: 28, intent: "commercial", source: "manual", addedAt: new Date() },
@@ -80,9 +80,9 @@ const DEMO_KEYWORDS: SourceKeyword[] = [
   
   // Cluster article candidates
   { id: "demo_12", keyword: "ChatGPT vs Jasper AI", volume: 18500, kd: 35, intent: "commercial", source: "competitor-gap", addedAt: new Date() },
-  { id: "demo_13", keyword: "AI Writing for E-commerce", volume: 8200, kd: 28, intent: "commercial", source: "keyword-magic", addedAt: new Date() },
+  { id: "demo_13", keyword: "AI Writing for E-commerce", volume: 8200, kd: 28, intent: "commercial", source: "keyword-explorer", addedAt: new Date() },
   { id: "demo_14", keyword: "Best AI Blog Writers 2025", volume: 12500, kd: 42, intent: "commercial", source: "trend-spotter", addedAt: new Date() },
-  { id: "demo_15", keyword: "AI Writing for SEO Content", volume: 9800, kd: 38, intent: "informational", source: "keyword-magic", addedAt: new Date() },
+  { id: "demo_15", keyword: "AI Writing for SEO Content", volume: 9800, kd: 38, intent: "informational", source: "keyword-explorer", addedAt: new Date() },
   { id: "demo_16", keyword: "AI Content Writing Pricing", volume: 4200, kd: 25, intent: "transactional", source: "competitor-gap", addedAt: new Date() },
   { id: "demo_17", keyword: "AI Writing for Beginners Guide", volume: 6500, kd: 22, intent: "informational", source: "content-decay", addedAt: new Date() },
   
@@ -309,7 +309,7 @@ function KeywordList({
   onClear: () => void
 }) {
   const sourceColors: Record<KeywordSourceType, string> = {
-    "keyword-magic": "text-purple-400",
+    "keyword-explorer": "text-purple-400",
     "competitor-gap": "text-cyan-400",
     "content-decay": "text-red-400",
     "rank-tracker": "text-emerald-400",

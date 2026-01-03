@@ -19,7 +19,7 @@ import type { Json } from "@/types/supabase"
 export interface AddKeywordInput {
   keyword: string
   category?: string
-  configId: string
+  configId?: string  // Optional for demo mode - will be auto-generated
 }
 
 export interface KeywordResponse<T = TrackedKeyword> {
@@ -51,12 +51,15 @@ export async function addTrackedKeyword(
       }
     }
 
+    // Use provided configId or generate one for demo mode
+    const configId = input.configId || `demo_${user.id}`
+
     // Check if keyword already exists for this config
     const { data: existing } = await supabase
       .from("ai_visibility_keywords")
       .select("id")
       .eq("user_id", user.id)
-      .eq("config_id", input.configId)
+      .eq("config_id", configId)
       .eq("keyword", input.keyword.toLowerCase())
       .single()
 
@@ -72,7 +75,7 @@ export async function addTrackedKeyword(
       .from("ai_visibility_keywords")
       .insert({
         user_id: user.id,
-        config_id: input.configId,
+        config_id: configId,
         keyword: input.keyword,
         category: input.category || null,
         created_at: new Date().toISOString(),

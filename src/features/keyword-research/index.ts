@@ -66,8 +66,9 @@ export {
   formatCPC,
 } from "./utils"
 
-// Services
-export { keywordMagicAPI, KeywordAPIError } from "./services"
+// ⚠️ Services are SERVER-ONLY
+// Import directly from "@/src/features/keyword-research/services" in Server Components
+// Do NOT re-export here to avoid "server-only" errors in Client Components
 
 // Config
 export {

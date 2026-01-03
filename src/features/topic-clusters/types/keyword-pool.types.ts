@@ -127,7 +127,7 @@ export interface KeywordCharacteristics {
 // ============================================
 
 export type KeywordSource = 
-  | "keyword-magic"
+  | "keyword-explorer"
   | "competitor-gap"
   | "content-decay"
   | "rank-tracker"

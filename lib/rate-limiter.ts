@@ -15,12 +15,12 @@ interface RateLimitEntry {
   resetTime: number
 }
 
-interface RateLimitConfig {
+export interface RateLimitConfig {
   maxRequests: number
   windowMs: number
 }
 
-interface RateLimitResult {
+export interface RateLimitResult {
   allowed: boolean
   remaining: number
   resetTime: number

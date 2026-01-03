@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   // ============================================
+  // REACT COMPILER (Next.js 16.1+ top-level option)
+  // ============================================
+  // Note: Requires babel-plugin-react-compiler to be installed
+  // Uncomment when ready: reactCompiler: true,
+
+  // ============================================
   // TURBOPACK (Next.js 16 default)
   // ============================================
   turbopack: {
@@ -70,6 +76,14 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.supabase.com wss://*.supabase.co https://api.dataforseo.com https://vercel.live; frame-ancestors 'self'; base-uri 'self'; form-action 'self';",
           },
         ],
       },
