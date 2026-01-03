@@ -182,7 +182,7 @@ const RevivalCard = forwardRef<HTMLDivElement, RevivalCardProps>(
             <Button
               onClick={onReviveWithAI}
               disabled={isReviving}
-              className="flex-1 sm:flex-none bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white gap-1.5 sm:gap-2 shadow-lg shadow-violet-900/40 h-8 sm:h-9 lg:h-10 text-xs sm:text-sm lg:text-base"
+              className="flex-1 sm:flex-none bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white gap-1.5 sm:gap-2 shadow-lg shadow-violet-900/40 h-8 sm:h-9 lg:h-10 text-xs sm:text-sm lg:text-base"
             >
               {isReviving ? (
                 <>

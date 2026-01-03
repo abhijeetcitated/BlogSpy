@@ -260,7 +260,7 @@ ${currentItem.links?.map(link =>
             <div className="flex items-center gap-2 mt-1">
               <div className="w-32 h-1.5 bg-card rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all" 
+                  className="h-full bg-linear-to-r from-orange-500 to-amber-500 transition-all" 
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -442,7 +442,7 @@ ${currentItem.links?.map(link =>
               <div className="p-4 border-t border-zinc-800 flex items-center justify-between">
                 <Button
                   size="lg"
-                  className="gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+                  className="gap-2 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
                   onClick={handleGenerate}
                   disabled={isGenerating}
                 >

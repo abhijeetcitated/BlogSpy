@@ -56,7 +56,7 @@ export function TaskCardSkeleton() {
 // Kanban Column Skeleton
 export function KanbanColumnSkeleton() {
   return (
-    <div className="flex-shrink-0 w-[320px] bg-muted/30 rounded-xl border border-border p-3">
+    <div className="shrink-0 w-[320px] bg-muted/30 rounded-xl border border-border p-3">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ export function EmptyState({ title, description, actionLabel, onAction }: EmptyS
       {actionLabel && onAction && (
         <button
           onClick={onAction}
-          className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg text-sm font-medium hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg shadow-emerald-500/25"
+          className="px-4 py-2 bg-linear-to-r from-emerald-500 to-teal-500 text-white rounded-lg text-sm font-medium hover:from-emerald-400 hover:to-teal-400 transition-all shadow-lg shadow-emerald-500/25"
         >
           {actionLabel}
         </button>

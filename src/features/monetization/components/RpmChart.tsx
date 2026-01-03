@@ -82,7 +82,7 @@ export function RpmChart({ niche, currentRpm }: RpmChartProps) {
         <div className="flex items-center justify-between text-xs sm:text-sm">
           <span className="text-muted-foreground">Your niche:</span>
           <span className="font-medium text-foreground flex items-center gap-2">
-            <span className="flex-shrink-0">{NicheIcons[niche.id]}</span>
+            <span className="shrink-0">{NicheIcons[niche.id]}</span>
             <span className="truncate max-w-[120px] sm:max-w-none">{niche.name}</span>
           </span>
         </div>

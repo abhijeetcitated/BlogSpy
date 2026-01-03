@@ -856,7 +856,7 @@ export function KeywordPoolTable({ onBuildCluster }: KeywordPoolTableProps) {
               size="lg"
               onClick={handleBuildCluster}
               disabled={selectedCount < 5}
-              className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+              className="gap-2 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
             >
               <Sparkles className="h-5 w-5" />
               Build Cluster ({selectedCount})

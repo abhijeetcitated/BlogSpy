@@ -132,7 +132,7 @@ export function SummaryCards({
         {/* Health Score */}
         <Card className={cn(
           "col-span-2 md:col-span-1 lg:col-span-1",
-          "bg-gradient-to-br from-card/80 to-card/40 dark:from-card/50 dark:to-card/20",
+          "bg-linear-to-br from-card/80 to-card/40 dark:from-card/50 dark:to-card/20",
           "border-border/50 dark:border-border/30"
         )}>
           <CardContent className="p-3 sm:p-4 flex flex-col items-center justify-center">
@@ -151,7 +151,7 @@ export function SummaryCards({
           label="Critical"
           value={analysis.issuesBySeverity.critical}
           valueColor="text-red-600 dark:text-red-400"
-          gradient="bg-gradient-to-br from-red-500 to-red-600"
+          gradient="bg-linear-to-br from-red-500 to-red-600"
         />
         
         {/* High Issues */}
@@ -162,7 +162,7 @@ export function SummaryCards({
           label="High"
           value={analysis.issuesBySeverity.high}
           valueColor="text-amber-600 dark:text-amber-400"
-          gradient="bg-gradient-to-br from-amber-500 to-orange-500"
+          gradient="bg-linear-to-br from-amber-500 to-orange-500"
         />
         
         {/* Traffic Loss */}
@@ -174,7 +174,7 @@ export function SummaryCards({
           value={`-${analysis.totalTrafficLoss.toLocaleString()}`}
           valueColor="text-red-600 dark:text-red-400"
           subtext="visits/month"
-          gradient="bg-gradient-to-br from-red-500 to-rose-500"
+          gradient="bg-linear-to-br from-red-500 to-rose-500"
         />
         
         {/* Potential Gain */}
@@ -186,7 +186,7 @@ export function SummaryCards({
           value={`+${analysis.totalPotentialGain.toLocaleString()}`}
           valueColor="text-emerald-600 dark:text-emerald-400"
           subtext="if all fixed"
-          gradient="bg-gradient-to-br from-emerald-500 to-green-500"
+          gradient="bg-linear-to-br from-emerald-500 to-green-500"
         />
       </div>
 

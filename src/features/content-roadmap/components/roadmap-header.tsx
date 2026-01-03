@@ -81,7 +81,7 @@ export function RoadmapHeader({
             {/* Auto-Prioritize Button */}
             <Button
               onClick={onAutoPrioritize}
-              className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25"
+              className="gap-2 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25"
             >
               <Zap className="h-4 w-4" />
               Auto-Prioritize

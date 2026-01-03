@@ -38,7 +38,7 @@ export function PageHeader({
           <div className="flex items-center gap-2.5">
             {/* Premium Icon */}
             <div className="relative">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500/20 via-cyan-500/20 to-emerald-500/10 dark:from-emerald-500/30 dark:via-cyan-500/20 dark:to-emerald-500/10 flex items-center justify-center ring-1 ring-emerald-500/20 dark:ring-emerald-500/30">
+              <div className="h-9 w-9 rounded-xl bg-linear-to-br from-emerald-500/20 via-cyan-500/20 to-emerald-500/10 dark:from-emerald-500/30 dark:via-cyan-500/20 dark:to-emerald-500/10 flex items-center justify-center ring-1 ring-emerald-500/20 dark:ring-emerald-500/30">
                 <Sparkles className="h-4.5 w-4.5 text-emerald-500 dark:text-emerald-400" />
               </div>
               <div className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -66,7 +66,7 @@ export function PageHeader({
           onClick={onNewScan}
           size="sm"
           className={cn(
-            "bg-gradient-to-r from-emerald-600 to-emerald-500",
+            "bg-linear-to-r from-emerald-600 to-emerald-500",
             "hover:from-emerald-500 hover:to-emerald-400",
             "text-white shadow-lg shadow-emerald-500/20",
             "dark:shadow-emerald-500/10",

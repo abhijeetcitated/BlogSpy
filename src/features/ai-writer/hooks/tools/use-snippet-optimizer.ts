@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useSnippetOptimizer Hook
  * 
  * Production-grade React hook for featured snippet optimization

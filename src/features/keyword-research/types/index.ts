@@ -3,6 +3,14 @@
 // ============================================
 
 import type { CTRStealingFeature } from "@/types/rtv.types"
+import type { 
+  SortDirection, 
+  Country as SharedCountry,
+  PaginationState as SharedPaginationState 
+} from "@/src/types/shared"
+
+// Re-export shared types for convenience
+export type { SortDirection } from "@/src/types/shared"
 
 /**
  * SERP Feature type - valid values for keyword SERP features
@@ -29,11 +37,8 @@ export interface Keyword {
   yourPosition?: number
 }
 
-export interface Country {
-  code: string
-  name: string
-  flag: string
-}
+// Use shared Country type
+export type Country = SharedCountry
 
 export interface KDLevel {
   label: string
@@ -58,8 +63,8 @@ export interface VolumePreset {
 export type MatchType = "broad" | "phrase" | "exact" | "related" | "questions"
 export type BulkMode = "explore" | "bulk"
 
-// Sort types - Extended for all sortable columns
-export type SortField = 
+// Sort types - Extended for all sortable columns (feature-specific)
+export type KeywordResearchSortField = 
   | "keyword" 
   | "volume" 
   | "rtv"
@@ -74,20 +79,17 @@ export type SortField =
   | "commerceOpp"
   | "socialOpp"
   | null
-export type SortDirection = "asc" | "desc"
+
+// Legacy alias for backward compatibility
+export type SortField = KeywordResearchSortField
 
 // Range types
 export type VolumeRange = [number, number]
 export type KDRange = [number, number]
 export type CPCRange = [number, number]
 
-// Pagination state
-export interface PaginationState {
-  page: number
-  pageSize: number
-  totalItems: number
-  totalPages: number
-}
+// Pagination state - use shared type
+export type PaginationState = SharedPaginationState
 
 export interface FilterState {
   volumeRange: [number, number]

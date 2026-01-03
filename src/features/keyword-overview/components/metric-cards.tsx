@@ -16,7 +16,7 @@ interface GEOScoreCardProps {
 
 export function GEOScoreCard({ score, components }: GEOScoreCardProps) {
   return (
-    <div className="bg-card dark:bg-gradient-to-br dark:from-card/80 dark:to-cyan-900/20 border border-cyan-500/30 rounded-xl p-5">
+    <div className="bg-card dark:bg-linear-to-br dark:from-card/80 dark:to-cyan-900/20 border border-cyan-500/30 rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Video className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />

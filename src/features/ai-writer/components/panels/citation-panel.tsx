@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // =============================================================================
 // CITATION PANEL - Production Level

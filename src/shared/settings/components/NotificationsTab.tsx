@@ -61,7 +61,7 @@ export function NotificationsTab({ notifications, onNotificationChange }: Notifi
   return (
     <div className="space-y-6">
       {/* Email Notification Header */}
-      <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+      <Card className="bg-linear-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-blue-500/20 flex items-center justify-center">

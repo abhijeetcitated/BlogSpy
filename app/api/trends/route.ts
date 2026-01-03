@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 
 // Mock trending topics
 const mockTrends = [
@@ -92,6 +93,10 @@ const generateTrendHistory = (baseVolume: number) => {
 
 // GET /api/trends - Get trending topics
 export async function GET(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get("category") || "all"
@@ -162,6 +167,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/trends - Analyze trend for keyword
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const body = await request.json()
     const { keyword, region = "global" } = body

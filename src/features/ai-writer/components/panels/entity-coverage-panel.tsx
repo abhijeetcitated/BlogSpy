@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Entity Coverage Panel Component
  * 
  * Comprehensive entity coverage analysis UI:
@@ -264,7 +264,7 @@ const EntityCard: React.FC<{
       <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <span className="capitalize">{ENTITY_TYPE_LABELS[entity.type]}</span>
-          <span>â€¢</span>
+          <span>•</span>
           <span>{entity.count} mentions</span>
         </div>
         <ImportanceBadge importance={entity.importance} />
@@ -539,7 +539,7 @@ const OverviewTab: React.FC<{
             </h4>
             <ul className="space-y-1">
               {summary.strengths.map((s, i) => (
-                <li key={i} className="text-sm text-muted-foreground">â€¢ {s}</li>
+                <li key={i} className="text-sm text-muted-foreground">• {s}</li>
               ))}
             </ul>
           </div>
@@ -553,7 +553,7 @@ const OverviewTab: React.FC<{
             </h4>
             <ul className="space-y-1">
               {summary.weaknesses.map((w, i) => (
-                <li key={i} className="text-sm text-muted-foreground">â€¢ {w}</li>
+                <li key={i} className="text-sm text-muted-foreground">• {w}</li>
               ))}
             </ul>
           </div>

@@ -52,9 +52,9 @@ export function GSCConnectionPrompt({ onContinueWithDemo }: GSCConnectionPromptP
     <div className="flex-1 bg-background">
       <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6 px-0">
         {/* Main Prompt Card */}
-        <Card className="border-red-500/40 bg-gradient-to-br from-red-500/10 via-orange-500/5 to-transparent shadow-lg shadow-red-500/10">
+        <Card className="border-red-500/40 bg-linear-to-br from-red-500/10 via-orange-500/5 to-transparent shadow-lg shadow-red-500/10">
           <CardHeader className="text-center pb-2">
-            <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center mb-4 shadow-lg shadow-red-500/20">
+            <div className="mx-auto w-16 h-16 rounded-full bg-linear-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center mb-4 shadow-lg shadow-red-500/20">
               <Search className="h-8 w-8 text-red-500" />
             </div>
             <CardTitle className="text-2xl">Connect Google Search Console</CardTitle>

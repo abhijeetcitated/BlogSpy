@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // SLASH COMMANDS MENU COMPONENT - Notion-style Command Palette
 // =============================================================================
 // Industry-standard slash commands UI like Notion, Linear, Craft
@@ -285,10 +285,10 @@ export function SlashCommandsMenu({
         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="px-1 rounded bg-muted">â†‘â†“</kbd> navigate
+              <kbd className="px-1 rounded bg-muted">↑↓</kbd> navigate
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1 rounded bg-muted">â†µ</kbd> select
+              <kbd className="px-1 rounded bg-muted">↵</kbd> select
             </span>
             <span className="flex items-center gap-1">
               <kbd className="px-1 rounded bg-muted">esc</kbd> close
@@ -417,7 +417,7 @@ function CommandItem({ command, isSelected, index, onClick }: CommandItemProps) 
       
       {command.shortcut && (
         <kbd className="px-1.5 py-0.5 text-[10px] rounded bg-muted text-muted-foreground">
-          {command.shortcut.replace('Mod', 'âŒ˜')}
+          {command.shortcut.replace('Mod', '⌘')}
         </kbd>
       )}
     </button>

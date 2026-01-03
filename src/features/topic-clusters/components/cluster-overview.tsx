@@ -57,11 +57,11 @@ export function ClusterOverview({ cluster }: ClusterOverviewProps) {
   return (
     <div className="space-y-6">
       {/* Main Overview Card */}
-      <Card className="p-6 bg-gradient-to-br from-purple-500/10 via-slate-900 to-cyan-500/10 border-purple-500/30">
+      <Card className="p-6 bg-linear-to-br from-purple-500/10 via-slate-900 to-cyan-500/10 border-purple-500/30">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20">
+              <div className="p-3 rounded-xl bg-linear-to-br from-purple-500/20 to-cyan-500/20">
                 <Link2 className="h-6 w-6 text-purple-400" />
               </div>
               <div>
@@ -73,7 +73,7 @@ export function ClusterOverview({ cluster }: ClusterOverviewProps) {
           
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg shadow-orange-500/25"
+            className="gap-2 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg shadow-orange-500/25"
             onClick={handleLoadCluster}
           >
             <Rocket className="h-5 w-5" />

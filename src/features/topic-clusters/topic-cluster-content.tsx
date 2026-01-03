@@ -1041,7 +1041,7 @@ export function TopicClusterContent() {
             {keywords.length >= 5 && (
               <button
                 onClick={handleGenerateClusters}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-sm font-semibold shadow-lg shadow-orange-500/25"
+                className="flex items-center gap-2 px-4 py-2.5 bg-linear-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all text-sm font-semibold shadow-lg shadow-orange-500/25"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Generate Clusters ({keywords.length})</span>
@@ -1771,7 +1771,7 @@ export function TopicClusterContent() {
                 className={cn(
                   "border rounded-xl overflow-hidden transition-all",
                   kw.isSelected 
-                    ? "border-orange-400 dark:border-orange-600 bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-zinc-900 shadow-lg shadow-orange-500/10" 
+                    ? "border-orange-400 dark:border-orange-600 bg-linear-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-zinc-900 shadow-lg shadow-orange-500/10" 
                     : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                 )}
               >

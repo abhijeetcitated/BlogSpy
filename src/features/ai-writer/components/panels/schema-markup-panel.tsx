@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Schema Markup Generator Panel
  * 
  * Production-grade UI component for generating and managing structured data
@@ -325,7 +325,7 @@ function SchemaCard({
             <div className="mt-2 space-y-1">
               {schema.validation.errors.map((error, idx) => (
                 <div key={idx} className="flex items-start gap-2 text-xs text-red-500">
-                  <AlertCircle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                  <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
                   <span>{error.message}</span>
                 </div>
               ))}
@@ -335,7 +335,7 @@ function SchemaCard({
             <div className="mt-2 space-y-1">
               {schema.validation.warnings.map((warning, idx) => (
                 <div key={idx} className="flex items-start gap-2 text-xs text-amber-500">
-                  <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                  <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
                   <span>{warning.message}</span>
                 </div>
               ))}

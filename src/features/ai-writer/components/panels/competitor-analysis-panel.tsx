@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // COMPETITOR ANALYSIS PANEL - Live SERP Analysis UI Component
 // =============================================================================
 // Industry-standard competitor analysis like Surfer SEO, Clearscope, Frase
@@ -435,7 +435,7 @@ interface PositionPredictionCardProps {
 
 function PositionPredictionCard({ prediction }: PositionPredictionCardProps) {
   return (
-    <div className="p-3 rounded-lg border bg-gradient-to-r from-blue-500/10 to-purple-500/10">
+    <div className="p-3 rounded-lg border bg-linear-to-r from-blue-500/10 to-purple-500/10">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Target className="h-4 w-4 text-blue-500" />
@@ -524,13 +524,13 @@ function CompetitorCard({ competitor, isExpanded, onToggle }: CompetitorCardProp
         
         <div className="flex items-center gap-2">
           <Badge variant={competitor.hasFAQ ? 'default' : 'secondary'} className="text-[10px]">
-            FAQ {competitor.hasFAQ ? 'âœ“' : 'âœ—'}
+            FAQ {competitor.hasFAQ ? '✓' : '✗'}
           </Badge>
           <Badge variant={competitor.hasTableOfContents ? 'default' : 'secondary'} className="text-[10px]">
-            ToC {competitor.hasTableOfContents ? 'âœ“' : 'âœ—'}
+            ToC {competitor.hasTableOfContents ? '✓' : '✗'}
           </Badge>
           <Badge variant={competitor.hasSchema ? 'default' : 'secondary'} className="text-[10px]">
-            Schema {competitor.hasSchema ? 'âœ“' : 'âœ—'}
+            Schema {competitor.hasSchema ? '✓' : '✗'}
           </Badge>
         </div>
         
@@ -670,7 +670,7 @@ function MissingTopicCard({ topic }: { topic: MissingTopic }) {
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate">{topic.topic}</p>
           <p className="text-[10px] text-muted-foreground">
-            {topic.competitorsCovering} competitors â€¢ ~{topic.suggestedWordCount} words
+            {topic.competitorsCovering} competitors • ~{topic.suggestedWordCount} words
           </p>
         </div>
         <Badge variant="outline" className={`text-[10px] ${priorityColor}`}>
@@ -739,7 +739,7 @@ function ComparisonView({ comparison }: ComparisonViewProps) {
   return (
     <div className="space-y-4">
       {/* Overall Score */}
-      <div className="text-center p-4 rounded-lg border bg-gradient-to-b from-muted/50">
+      <div className="text-center p-4 rounded-lg border bg-linear-to-b from-muted/50">
         <div className="relative inline-flex items-center justify-center">
           <svg className="w-24 h-24 transform -rotate-90">
             <circle

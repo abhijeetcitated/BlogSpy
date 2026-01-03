@@ -70,7 +70,7 @@ function PillarCard({
   const faqKeywords = pillar.subKeywords.filter(k => k.placement === "faq")
 
   return (
-    <Card className="overflow-hidden border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-transparent">
+    <Card className="overflow-hidden border-purple-500/30 bg-linear-to-r from-purple-500/5 to-transparent">
       {/* Header */}
       <div className="p-4 flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1">
@@ -339,7 +339,7 @@ export function ArticleListView({ cluster, onWriteArticle, onWriteAll }: Article
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="p-4 bg-gradient-to-r from-purple-500/10 via-slate-900 to-cyan-500/10 border-purple-500/30">
+      <Card className="p-4 bg-linear-to-r from-purple-500/10 via-slate-900 to-cyan-500/10 border-purple-500/30">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-foreground">{cluster.name}</h2>
@@ -359,7 +359,7 @@ export function ArticleListView({ cluster, onWriteArticle, onWriteAll }: Article
           
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg"
+            className="gap-2 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg"
             onClick={onWriteAll}
           >
             <Rocket className="h-5 w-5" />

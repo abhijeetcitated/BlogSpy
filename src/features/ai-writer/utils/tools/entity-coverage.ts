@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Entity Coverage Analysis Utilities
  * 
  * Functions for analyzing entity coverage in content:

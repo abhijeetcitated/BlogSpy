@@ -2,6 +2,11 @@
 // COMPETITOR GAP & FORUM INTEL - Type Definitions
 // ============================================
 
+import type { SortDirection as SharedSortDirection, TrendDirection as SharedTrendDirection } from "@/src/types/shared"
+
+// Re-export shared types
+export type SortDirection = SharedSortDirection
+
 // Weak spot types (re-exported for public API)
 export type { WeakSpotType, WeakSpotKeyword } from "./weak-spot.types"
 
@@ -20,19 +25,15 @@ export type GapType = "missing" | "weak" | "strong" | "shared" | "all"
 export type Intent = "commercial" | "informational" | "transactional" | "navigational"
 
 /**
- * Trend Direction
+ * Trend Direction - use shared type
  */
-export type TrendDirection = "rising" | "growing" | "stable" | "declining" | "falling"
+export type TrendDirection = SharedTrendDirection
 
 /**
- * Sorting Fields for Keywords Table
+ * Sorting Fields for Keywords Table (feature-specific)
  */
-export type SortField = "keyword" | "volume" | "kd" | "yourRank" | "competitorRank" | "trend" | "engagement" | "opportunity" | null
-
-/**
- * Sort Direction
- */
-export type SortDirection = "asc" | "desc"
+export type CompetitorGapSortField = "keyword" | "volume" | "kd" | "yourRank" | "competitorRank" | "trend" | "engagement" | "opportunity" | null
+export type SortField = CompetitorGapSortField
 
 /**
  * Forum Intel Source Platforms

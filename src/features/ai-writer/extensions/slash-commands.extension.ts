@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // SLASH COMMANDS TIPTAP EXTENSION
 // =============================================================================
 // Industry-standard TipTap extension for slash commands like Notion
@@ -358,7 +358,7 @@ function executeBlockInsert(editor: any, blockType: string) {
       // Insert a styled div for callout
       editor.chain().focus().insertContent({
         type: 'paragraph',
-        content: [{ type: 'text', text: 'ðŸ’¡ ' }]
+        content: [{ type: 'text', text: '💡 ' }]
       }).run();
       break;
     default:

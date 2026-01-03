@@ -45,12 +45,12 @@ export function NetworkComparison({ breakdown, recommendedNetworks, currentPagev
                 <tr key={item.adNetwork} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="py-2 sm:py-3 px-3 sm:px-4">
                     <div className="flex items-center gap-2">
-                      <span className="flex-shrink-0">
+                      <span className="shrink-0">
                         {network && NetworkIcons[network.id]}
                       </span>
                       <span className="font-medium text-foreground text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">{item.adNetwork}</span>
                       {index === 0 && (
-                        <span className="text-[10px] sm:text-xs bg-emerald-500/20 text-emerald-400 px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0">
+                        <span className="text-[10px] sm:text-xs bg-emerald-500/20 text-emerald-400 px-1.5 sm:px-2 py-0.5 rounded-full shrink-0">
                           Best
                         </span>
                       )}
@@ -79,7 +79,7 @@ export function NetworkComparison({ breakdown, recommendedNetworks, currentPagev
               <tr key={network.id} className="border-b border-border/50 opacity-60">
                 <td className="py-2 sm:py-3 px-3 sm:px-4">
                   <div className="flex items-center gap-2">
-                    <span className="flex-shrink-0">{NetworkIcons[network.id]}</span>
+                    <span className="shrink-0">{NetworkIcons[network.id]}</span>
                     <span className="font-medium text-foreground text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">{network.name}</span>
                   </div>
                 </td>

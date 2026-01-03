@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useSchemaGenerator Hook
  * 
  * Production-grade React hook for schema markup generation

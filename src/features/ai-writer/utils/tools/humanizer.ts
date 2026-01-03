@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Content Humanizer Utilities
  * 
  * Algorithms and functions for humanizing AI-generated content
@@ -1163,7 +1163,7 @@ export function exportHumanizationReport(
     if (includeMetrics) {
       output += 'METRICS:\n';
       output += '-'.repeat(30) + '\n';
-      output += `AI Score: ${analysis.metrics.originalAIScore}% â†’ ${analysis.metrics.humanizedAIScore}%\n`;
+      output += `AI Score: ${analysis.metrics.originalAIScore}% → ${analysis.metrics.humanizedAIScore}%\n`;
       output += `Quality: ${analysis.quality.overall}/100\n`;
       output += `Total Changes: ${analysis.metrics.totalChanges}\n\n`;
     }
@@ -1206,7 +1206,7 @@ export function exportHumanizationReport(
   if (includeChanges && analysis.changes.length > 0) {
     output += '## Changes Made\n\n';
     analysis.changes.forEach(change => {
-      output += `- **${change.type}**: "${change.original}" â†’ "${change.humanized}"\n`;
+      output += `- **${change.type}**: "${change.original}" → "${change.humanized}"\n`;
     });
     output += '\n';
   }
@@ -1226,7 +1226,7 @@ export function exportHumanizationReport(
   if (analysis.summary.warnings.length > 0) {
     output += '### Warnings\n\n';
     analysis.summary.warnings.forEach(warning => {
-      output += `- âš ï¸ ${warning}\n`;
+      output += `- ⚠️ ${warning}\n`;
     });
     output += '\n';
   }

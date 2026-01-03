@@ -94,7 +94,7 @@ export function ClusterInspector({ cluster, isOpen, onClose, onOpen }: ClusterIn
         <div className="p-3 sm:p-3.5 md:p-4 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
           <div className="flex items-center justify-between mb-1.5 sm:mb-2">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-violet-600 to-violet-500 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-linear-to-r from-violet-600 to-violet-500 animate-pulse" />
               <span className="text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-medium">Cluster Inspector</span>
             </div>
             <button

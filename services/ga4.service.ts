@@ -1,3 +1,5 @@
+import 'server-only';
+
 // @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**

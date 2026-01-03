@@ -115,7 +115,7 @@ export function PageHeader({
                   variant={action.variant || "default"}
                   onClick={action.onClick}
                   className={cn(
-                    action.variant === "default" && "bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white",
+                    action.variant === "default" && "bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white",
                     action.variant === "outline" && "border-slate-700 text-slate-300 hover:bg-slate-800"
                   )}
                 >

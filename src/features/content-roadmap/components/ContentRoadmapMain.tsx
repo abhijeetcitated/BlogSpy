@@ -191,7 +191,7 @@ export function ContentRoadmapMain(props: ContentRoadmapMainProps) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 mb-3 sm:mb-4">
           {/* Left: Title */}
           <div className="flex items-center gap-3">
-            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-linear-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
               <LayoutGrid className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
             </div>
             <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
@@ -224,7 +224,7 @@ export function ContentRoadmapMain(props: ContentRoadmapMainProps) {
               size="sm"
               onClick={onAutoPrioritize}
               disabled={autoPrioritizeLoading}
-              className="h-8 sm:h-9 px-2.5 sm:px-3 md:px-4 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-medium text-xs sm:text-sm shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40 hover:scale-[1.02] disabled:opacity-50"
+              className="h-8 sm:h-9 px-2.5 sm:px-3 md:px-4 gap-1.5 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-medium text-xs sm:text-sm shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40 hover:scale-[1.02] disabled:opacity-50"
               title="Auto-prioritize tasks"
             >
               <Zap className={cn("h-4 w-4", autoPrioritizeLoading && "animate-pulse")} />
@@ -234,7 +234,7 @@ export function ContentRoadmapMain(props: ContentRoadmapMainProps) {
               size="sm"
               onClick={onAddTask}
               disabled={createTaskLoading}
-              className="h-8 sm:h-9 px-2.5 sm:px-3 md:px-4 gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-medium text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 hover:scale-[1.02] disabled:opacity-50"
+              className="h-8 sm:h-9 px-2.5 sm:px-3 md:px-4 gap-1.5 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-medium text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 hover:scale-[1.02] disabled:opacity-50"
               title="Add new content"
             >
               <Plus className="h-4 w-4" />
@@ -246,7 +246,7 @@ export function ContentRoadmapMain(props: ContentRoadmapMainProps) {
         {/* Row 2: Search + View Toggle + Filters + Stats */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           {/* Left: Search */}
-          <div className="relative flex-shrink-0 w-full sm:w-auto">
+          <div className="relative shrink-0 w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search content..."
@@ -263,7 +263,7 @@ export function ContentRoadmapMain(props: ContentRoadmapMainProps) {
               variant="ghost"
               size="sm"
               className={cn(
-                "h-7 sm:h-8 px-2.5 sm:px-4 gap-1.5 sm:gap-2 rounded-md text-xs sm:text-sm font-medium transition-all flex-shrink-0",
+                "h-7 sm:h-8 px-2.5 sm:px-4 gap-1.5 sm:gap-2 rounded-md text-xs sm:text-sm font-medium transition-all shrink-0",
                 viewMode === "board"
                   ? "bg-accent text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -277,7 +277,7 @@ export function ContentRoadmapMain(props: ContentRoadmapMainProps) {
               variant="ghost"
               size="sm"
               className={cn(
-                "h-7 sm:h-8 px-2.5 sm:px-4 gap-1.5 sm:gap-2 rounded-md text-xs sm:text-sm font-medium transition-all flex-shrink-0",
+                "h-7 sm:h-8 px-2.5 sm:px-4 gap-1.5 sm:gap-2 rounded-md text-xs sm:text-sm font-medium transition-all shrink-0",
                 viewMode === "list"
                   ? "bg-accent text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -291,7 +291,7 @@ export function ContentRoadmapMain(props: ContentRoadmapMainProps) {
               variant="ghost"
               size="sm"
               className={cn(
-                "h-7 sm:h-8 px-2.5 sm:px-4 gap-1.5 sm:gap-2 rounded-md text-xs sm:text-sm font-medium transition-all flex-shrink-0",
+                "h-7 sm:h-8 px-2.5 sm:px-4 gap-1.5 sm:gap-2 rounded-md text-xs sm:text-sm font-medium transition-all shrink-0",
                 viewMode === "calendar"
                   ? "bg-accent text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"

@@ -29,7 +29,7 @@ export function SocialTrackerEmptyState({ type, searchQuery, onAddKeyword, onRet
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button
               onClick={onAddKeyword}
-              className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
+              className="bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Your First Keyword

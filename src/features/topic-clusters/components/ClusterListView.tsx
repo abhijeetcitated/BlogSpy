@@ -56,7 +56,7 @@ export function ClusterListView({ clusters, selectedCluster, onSelectCluster }: 
                 <div
                   className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shrink-0 transition-all ${
                     isSelected 
-                      ? "bg-gradient-to-r from-violet-600 to-violet-500 shadow-lg shadow-violet-500/30" 
+                      ? "bg-linear-to-r from-violet-600 to-violet-500 shadow-lg shadow-violet-500/30" 
                       : `bg-${kdColor}-500`
                   }`}
                 />

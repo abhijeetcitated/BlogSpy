@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Overview Visibility Utilities
  * 
  * Functions for analyzing and optimizing content for AI search overviews
@@ -514,7 +514,7 @@ function extractSnippetCandidates(text: string, query: string): SnippetCandidate
   }
   
   // Look for list-style snippets
-  const listMatch = text.match(/(?:^|\n)((?:\s*[-â€¢*\d.]+\s+[^\n]+\n?){3,})/);
+  const listMatch = text.match(/(?:^|\n)((?:\s*[-•*\d.]+\s+[^\n]+\n?){3,})/);
   if (listMatch) {
     const listSnippet = listMatch[1].trim();
     candidates.push({
@@ -613,7 +613,7 @@ function createFactors(
     description: 'Content has proper heading hierarchy',
     details: [`${structure.headingCount} headings found`],
     recommendations: !structure.headingHierarchy 
-      ? ['Use proper H1 â†’ H2 â†’ H3 hierarchy']
+      ? ['Use proper H1 → H2 → H3 hierarchy']
       : []
   });
   
@@ -1135,12 +1135,12 @@ export function exportAIOverviewReport(
   
   output += '### Strengths\n';
   analysis.summary.strengths.forEach(s => {
-    output += `- âœ… ${s}\n`;
+    output += `- ✅ ${s}\n`;
   });
   
   output += '\n### Areas for Improvement\n';
   analysis.summary.weaknesses.forEach(w => {
-    output += `- âš ï¸ ${w}\n`;
+    output += `- ⚠️ ${w}\n`;
   });
   
   if (includeSnippets && analysis.bestCandidate) {

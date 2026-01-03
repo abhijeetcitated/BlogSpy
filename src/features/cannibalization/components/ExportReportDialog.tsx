@@ -253,7 +253,7 @@ export function ExportReportDialog({
           <DialogTitle className="flex items-center gap-3 text-foreground">
             {/* Premium Icon */}
             <div className="relative">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-emerald-500/10 dark:from-emerald-500/30 dark:via-teal-500/20 dark:to-emerald-500/10 flex items-center justify-center ring-1 ring-emerald-500/20 dark:ring-emerald-500/30 shadow-lg shadow-emerald-500/10">
+              <div className="h-10 w-10 rounded-xl bg-linear-to-br from-emerald-500/20 via-teal-500/20 to-emerald-500/10 dark:from-emerald-500/30 dark:via-teal-500/20 dark:to-emerald-500/10 flex items-center justify-center ring-1 ring-emerald-500/20 dark:ring-emerald-500/30 shadow-lg shadow-emerald-500/10">
                 <FileDown className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-card" />
@@ -269,7 +269,7 @@ export function ExportReportDialog({
 
         <div className="space-y-5 py-4">
           {/* Export Summary */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/10 border border-border/50">
+          <div className="p-4 rounded-xl bg-linear-to-br from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/10 border border-border/50">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div className="space-y-1">
                 <div className="flex items-center justify-center gap-1.5">
@@ -429,7 +429,7 @@ export function ExportReportDialog({
             onClick={handleExport}
             disabled={isExporting || filteredIssues.length === 0}
             className={cn(
-              "bg-gradient-to-r from-emerald-600 to-emerald-500",
+              "bg-linear-to-r from-emerald-600 to-emerald-500",
               "hover:from-emerald-500 hover:to-emerald-400",
               "text-white shadow-lg shadow-emerald-500/20",
               "transition-all w-full sm:w-auto"

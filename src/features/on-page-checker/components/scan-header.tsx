@@ -115,7 +115,7 @@ export function ScanHeader({
         {/* Health Score Gauge */}
         {scanComplete && (
           <div className="flex items-center gap-3 sm:gap-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className={`relative w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-card shadow-xl ${scoreInfo.glow} flex-shrink-0`}>
+            <div className={`relative w-20 h-20 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-card shadow-xl ${scoreInfo.glow} shrink-0`}>
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle
                   cx="50"

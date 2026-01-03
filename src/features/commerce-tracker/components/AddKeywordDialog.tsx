@@ -136,7 +136,7 @@ export function AddKeywordDialog({ open, onOpenChange, onAdd }: AddKeywordDialog
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}
-            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+            className="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
           >
             {isSubmitting ? (
               <>

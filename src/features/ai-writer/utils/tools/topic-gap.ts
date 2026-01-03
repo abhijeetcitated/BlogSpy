@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Topic Gap Analysis Utilities
  * 
  * Functions for identifying content gaps vs competitors:

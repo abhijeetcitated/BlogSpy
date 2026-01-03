@@ -231,7 +231,7 @@ export function CalendarView({ tasks, onTaskClick, onAddTask }: CalendarViewProp
                   )}
                 >
                   <div className="flex items-center gap-0.5 sm:gap-1">
-                    <div className={cn("w-1.5 h-1.5 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0", STATUS_COLORS[task.status])} />
+                    <div className={cn("w-1.5 h-1.5 sm:w-1.5 sm:h-1.5 rounded-full shrink-0", STATUS_COLORS[task.status])} />
                     <span className="truncate">{task.title}</span>
                   </div>
                 </div>

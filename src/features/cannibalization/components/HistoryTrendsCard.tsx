@@ -111,7 +111,7 @@ export function HistoryTrendsCard({ history, className }: HistoryTrendsCardProps
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 dark:from-cyan-500/30 dark:to-emerald-500/30 flex items-center justify-center ring-1 ring-cyan-500/20">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-linear-to-br from-cyan-500/20 to-emerald-500/20 dark:from-cyan-500/30 dark:to-emerald-500/30 flex items-center justify-center ring-1 ring-cyan-500/20">
             <Activity className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
           </div>
           <h3 className="text-base sm:text-lg font-semibold text-foreground">
@@ -172,7 +172,7 @@ export function HistoryTrendsCard({ history, className }: HistoryTrendsCardProps
                 <div
                   className={cn(
                     "flex-1 rounded-t transition-all duration-300",
-                    "bg-gradient-to-t from-red-500/80 to-red-400/60",
+                    "bg-linear-to-t from-red-500/80 to-red-400/60",
                     "dark:from-red-600/80 dark:to-red-500/50",
                     "hover:from-red-500 hover:to-red-400"
                   )}
@@ -183,7 +183,7 @@ export function HistoryTrendsCard({ history, className }: HistoryTrendsCardProps
                 <div
                   className={cn(
                     "flex-1 rounded-t transition-all duration-300",
-                    "bg-gradient-to-t from-emerald-500/80 to-emerald-400/60",
+                    "bg-linear-to-t from-emerald-500/80 to-emerald-400/60",
                     "dark:from-emerald-600/80 dark:to-emerald-500/50",
                     "hover:from-emerald-500 hover:to-emerald-400"
                   )}
@@ -203,11 +203,11 @@ export function HistoryTrendsCard({ history, className }: HistoryTrendsCardProps
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border/50">
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-gradient-to-t from-red-500 to-red-400" />
+          <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-linear-to-t from-red-500 to-red-400" />
           <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Active Issues</span>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-gradient-to-t from-emerald-500 to-emerald-400" />
+          <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-linear-to-t from-emerald-500 to-emerald-400" />
           <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Fixed</span>
         </div>
       </div>
@@ -215,7 +215,7 @@ export function HistoryTrendsCard({ history, className }: HistoryTrendsCardProps
       {/* Insight */}
       <div className={cn(
         "mt-3 sm:mt-4 p-2.5 sm:p-3 rounded-xl",
-        "bg-gradient-to-r from-cyan-500/5 to-emerald-500/5",
+        "bg-linear-to-r from-cyan-500/5 to-emerald-500/5",
         "dark:from-cyan-500/10 dark:to-emerald-500/10",
         "border border-cyan-500/20 dark:border-cyan-500/30"
       )}>

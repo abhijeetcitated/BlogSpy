@@ -412,7 +412,7 @@ function AnalysisProgress({ progress, message }: { progress: number; message: st
       
       <div className="w-64 mx-auto bg-zinc-800 rounded-full h-2 overflow-hidden">
         <div 
-          className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-300"
+          className="h-full bg-linear-to-r from-orange-500 to-amber-500 transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -775,7 +775,7 @@ export function ClusterBuilder() {
                 size="lg"
                 onClick={handleAnalyze}
                 disabled={keywords.length < 5}
-                className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                className="gap-2 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
               >
                 <Sparkles className="h-5 w-5" />
                 Analyze & Build Cluster
@@ -802,7 +802,7 @@ export function ClusterBuilder() {
         {step === "review" && result && (
           <div className="max-w-5xl mx-auto space-y-6">
             {/* Summary Stats */}
-            <Card className="p-4 border-zinc-700 bg-gradient-to-r from-orange-500/10 to-amber-500/10">
+            <Card className="p-4 border-zinc-700 bg-linear-to-r from-orange-500/10 to-amber-500/10">
               <div className="flex items-center justify-between">
                 <div>
                   <Input
@@ -881,7 +881,7 @@ export function ClusterBuilder() {
               <Button
                 size="lg"
                 onClick={handleFinalize}
-                className="gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+                className="gap-2 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
               >
                 <Check className="h-5 w-5" />
                 Save Cluster

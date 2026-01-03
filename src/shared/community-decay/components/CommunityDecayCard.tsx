@@ -72,7 +72,7 @@ export function CommunityDecayCard({
       <div className={cn(
         "relative p-4 border-b border-border",
         opportunityLevel === "excellent" || opportunityLevel === "high"
-          ? "bg-gradient-to-r from-orange-500/10 via-red-500/10 to-amber-500/10"
+          ? "bg-linear-to-r from-orange-500/10 via-red-500/10 to-amber-500/10"
           : "bg-muted/30"
       )}>
         <div className="flex items-center gap-4">

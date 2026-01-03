@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Featured Snippet Optimizer Utilities
  * 
  * Production-grade utilities for analyzing and optimizing content

@@ -31,12 +31,12 @@ export function DecayAlertBanner({
     <div
       className={cn(
         "flex items-center gap-4 p-3 rounded-lg border",
-        "bg-gradient-to-r from-orange-500/10 via-red-500/10 to-amber-500/10",
+        "bg-linear-to-r from-orange-500/10 via-red-500/10 to-amber-500/10",
         "border-orange-500/20",
         className
       )}
     >
-      <div className="flex-shrink-0 p-2 bg-orange-500/20 rounded-full">
+      <div className="shrink-0 p-2 bg-orange-500/20 rounded-full">
         <Flame className="h-5 w-5 text-orange-400" />
       </div>
       
@@ -57,7 +57,7 @@ export function DecayAlertBanner({
       {onAction && (
         <button
           onClick={onAction}
-          className="flex-shrink-0 px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 
+          className="shrink-0 px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 
                      text-orange-300 rounded-md text-xs font-medium transition-colors"
         >
           View Details

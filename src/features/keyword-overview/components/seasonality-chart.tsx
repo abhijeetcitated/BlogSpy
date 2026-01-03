@@ -23,7 +23,7 @@ export function SeasonalityChart({ data = SEASONALITY_DATA }: SeasonalityChartPr
             <div
               className={`w-full rounded-t transition-all ${
                 isPeak
-                  ? "bg-gradient-to-t from-amber-500 to-amber-400 shadow-lg shadow-amber-500/30"
+                  ? "bg-linear-to-t from-amber-500 to-amber-400 shadow-lg shadow-amber-500/30"
                   : "bg-muted hover:bg-accent"
               }`}
               style={{ height: `${height}%` }}

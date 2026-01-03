@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Image Optimization Hook
  * 
  * React hook for managing image optimization state and operations:

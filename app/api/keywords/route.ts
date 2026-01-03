@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 
 // Mock keyword data
 const mockKeywords = [
@@ -66,6 +67,10 @@ const mockKeywords = [
 
 // GET /api/keywords - Get keywords list
 export async function GET(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q") || ""
@@ -122,6 +127,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/keywords - Analyze keyword
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const body = await request.json()
     const { keyword, location = "US", language = "en" } = body

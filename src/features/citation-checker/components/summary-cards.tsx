@@ -15,7 +15,7 @@ export function SummaryCards({ summary, domain, citationScore }: SummaryCardsPro
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Citation Score */}
-      <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+      <Card className="bg-linear-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
         <CardContent className="p-6 flex flex-col items-center justify-center">
           <CitationScoreRing score={citationScore} />
           <p className="text-sm text-muted-foreground mt-3 text-center">

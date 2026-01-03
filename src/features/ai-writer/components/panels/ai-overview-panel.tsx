@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Overview Visibility Panel Component
  * 
  * UI for analyzing content visibility in AI search overviews
@@ -272,7 +272,7 @@ function FactorCard({ factor }: FactorCardProps) {
               <ul className="text-sm text-muted-foreground space-y-1">
                 {factor.details.map((detail, index) => (
                   <li key={index} className="flex items-start gap-2">
-                    <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <Info className="h-3 w-3 mt-0.5 shrink-0" />
                     {detail}
                   </li>
                 ))}
@@ -286,7 +286,7 @@ function FactorCard({ factor }: FactorCardProps) {
               <ul className="text-sm space-y-1">
                 {factor.recommendations.map((rec, index) => (
                   <li key={index} className="flex items-start gap-2 text-primary">
-                    <Lightbulb className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <Lightbulb className="h-3 w-3 mt-0.5 shrink-0" />
                     {rec}
                   </li>
                 ))}
@@ -351,7 +351,7 @@ function SnippetCard({ snippet, isSelected, onSelect, onCopy }: SnippetCardProps
 
       {snippet.improvements.length > 0 && (
         <div className="text-xs text-yellow-600 flex items-start gap-1">
-          <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+          <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
           {snippet.improvements[0]}
         </div>
       )}
@@ -460,7 +460,7 @@ function OverviewTab({ aiOverview }: OverviewTabProps) {
     <ScrollArea className="h-[calc(100vh-350px)]">
       <div className="space-y-6 pr-4">
         {/* Score Section */}
-        <div className="flex items-center justify-center p-6 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg">
+        <div className="flex items-center justify-center p-6 bg-linear-to-br from-primary/5 to-primary/10 rounded-lg">
           <div className="text-center space-y-2">
             <ScoreRing score={analysis.overallScore} size="lg" />
             <VisibilityBadge level={analysis.visibilityLevel} />
@@ -492,7 +492,7 @@ function OverviewTab({ aiOverview }: OverviewTabProps) {
           </div>
           {analysis.detectedFormat !== analysis.recommendedFormat && (
             <div className="text-sm text-yellow-600 flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
               Consider restructuring content to match the recommended format
             </div>
           )}
@@ -530,7 +530,7 @@ function OverviewTab({ aiOverview }: OverviewTabProps) {
             <ul className="space-y-1">
               {summary.strengths.map((strength, index) => (
                 <li key={index} className="text-sm flex items-start gap-2">
-                  <CheckCircle className="h-3 w-3 mt-0.5 text-green-500 flex-shrink-0" />
+                  <CheckCircle className="h-3 w-3 mt-0.5 text-green-500 shrink-0" />
                   {strength}
                 </li>
               ))}
@@ -548,7 +548,7 @@ function OverviewTab({ aiOverview }: OverviewTabProps) {
             <ul className="space-y-1">
               {summary.weaknesses.map((weakness, index) => (
                 <li key={index} className="text-sm flex items-start gap-2">
-                  <XCircle className="h-3 w-3 mt-0.5 text-red-500 flex-shrink-0" />
+                  <XCircle className="h-3 w-3 mt-0.5 text-red-500 shrink-0" />
                   {weakness}
                 </li>
               ))}
@@ -566,7 +566,7 @@ function OverviewTab({ aiOverview }: OverviewTabProps) {
             <ul className="space-y-1">
               {summary.quickWins.map((win, index) => (
                 <li key={index} className="text-sm flex items-start gap-2">
-                  <Lightbulb className="h-3 w-3 mt-0.5 text-yellow-500 flex-shrink-0" />
+                  <Lightbulb className="h-3 w-3 mt-0.5 text-yellow-500 shrink-0" />
                   {win}
                 </li>
               ))}

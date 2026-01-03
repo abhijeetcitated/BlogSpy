@@ -117,7 +117,7 @@ export function DecayHistoryTrendsCard({ history, className }: DecayHistoryTrend
       {/* Header */}
       <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6">
         <div className="flex items-center gap-2 sm:gap-2.5">
-          <div className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 dark:from-violet-500/30 dark:to-fuchsia-500/30 flex items-center justify-center ring-1 ring-violet-500/20">
+          <div className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-xl bg-linear-to-br from-violet-500/20 to-fuchsia-500/20 dark:from-violet-500/30 dark:to-fuchsia-500/30 flex items-center justify-center ring-1 ring-violet-500/20">
             <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-violet-500 dark:text-violet-400" />
           </div>
           <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground">
@@ -175,7 +175,7 @@ export function DecayHistoryTrendsCard({ history, className }: DecayHistoryTrend
                 <div
                   className={cn(
                     "flex-1 rounded-t transition-all duration-300",
-                    "bg-gradient-to-t from-red-500/80 to-red-400/60",
+                    "bg-linear-to-t from-red-500/80 to-red-400/60",
                     "dark:from-red-600/80 dark:to-red-500/50",
                     "hover:from-red-500 hover:to-red-400"
                   )}
@@ -186,7 +186,7 @@ export function DecayHistoryTrendsCard({ history, className }: DecayHistoryTrend
                 <div
                   className={cn(
                     "flex-1 rounded-t transition-all duration-300",
-                    "bg-gradient-to-t from-amber-500/80 to-amber-400/60",
+                    "bg-linear-to-t from-amber-500/80 to-amber-400/60",
                     "dark:from-amber-600/80 dark:to-amber-500/50",
                     "hover:from-amber-500 hover:to-amber-400"
                   )}
@@ -197,7 +197,7 @@ export function DecayHistoryTrendsCard({ history, className }: DecayHistoryTrend
                 <div
                   className={cn(
                     "flex-1 rounded-t transition-all duration-300",
-                    "bg-gradient-to-t from-emerald-500/80 to-emerald-400/60",
+                    "bg-linear-to-t from-emerald-500/80 to-emerald-400/60",
                     "dark:from-emerald-600/80 dark:to-emerald-500/50",
                     "hover:from-emerald-500 hover:to-emerald-400"
                   )}
@@ -217,15 +217,15 @@ export function DecayHistoryTrendsCard({ history, className }: DecayHistoryTrend
       {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-6 mt-2 sm:mt-3 md:mt-4 pt-2 sm:pt-3 md:pt-4 border-t border-border/50">
         <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
-          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-gradient-to-t from-red-500 to-red-400" />
+          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-linear-to-t from-red-500 to-red-400" />
           <span className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground font-medium">Critical</span>
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
-          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-gradient-to-t from-amber-500 to-amber-400" />
+          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-linear-to-t from-amber-500 to-amber-400" />
           <span className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground font-medium">Watch</span>
         </div>
         <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
-          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-gradient-to-t from-emerald-500 to-emerald-400" />
+          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-sm bg-linear-to-t from-emerald-500 to-emerald-400" />
           <span className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground font-medium">Revived</span>
         </div>
       </div>
@@ -233,7 +233,7 @@ export function DecayHistoryTrendsCard({ history, className }: DecayHistoryTrend
       {/* Insight */}
       <div className={cn(
         "mt-2 sm:mt-3 md:mt-4 p-2 sm:p-2.5 md:p-3 rounded-xl",
-        "bg-gradient-to-r from-violet-500/5 to-fuchsia-500/5",
+        "bg-linear-to-r from-violet-500/5 to-fuchsia-500/5",
         "dark:from-violet-500/10 dark:to-fuchsia-500/10",
         "border border-violet-500/20 dark:border-violet-500/30"
       )}>

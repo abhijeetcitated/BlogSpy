@@ -62,13 +62,13 @@ export function IssueList({
       <div className={cn(
         "flex flex-col items-center justify-center py-12 sm:py-16 text-center",
         "rounded-xl",
-        "bg-gradient-to-br from-emerald-500/5 to-cyan-500/5",
+        "bg-linear-to-br from-emerald-500/5 to-cyan-500/5",
         "dark:from-emerald-500/10 dark:to-cyan-500/10",
         "border border-emerald-500/20 dark:border-emerald-500/30"
       )}>
         <div className={cn(
           "relative w-14 h-14 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mb-3 sm:mb-4",
-          "bg-gradient-to-br from-emerald-500/20 to-cyan-500/20",
+          "bg-linear-to-br from-emerald-500/20 to-cyan-500/20",
           "dark:from-emerald-500/30 dark:to-cyan-500/30"
         )}>
           <Shield className="h-7 w-7 sm:h-10 sm:w-10 text-emerald-500 dark:text-emerald-400" />

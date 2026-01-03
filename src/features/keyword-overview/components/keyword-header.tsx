@@ -43,7 +43,7 @@ export function KeywordHeader({ metrics, aiOverviewAnalysis }: KeywordHeaderProp
           <Plus className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
           Add to List
         </Button>
-        <Button size="sm" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/25 text-xs lg:text-sm">
+        <Button size="sm" className="bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/25 text-xs lg:text-sm">
           <PenTool className="w-3.5 h-3.5 lg:w-4 lg:h-4 mr-1.5 lg:mr-2" />
           Write Article
         </Button>

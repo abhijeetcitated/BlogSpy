@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Overview Visibility Hook
  * 
  * React hook for analyzing content visibility in AI search overviews

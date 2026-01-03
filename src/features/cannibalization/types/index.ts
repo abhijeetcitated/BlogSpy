@@ -1,5 +1,10 @@
 // Cannibalization Types
 
+import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+
+// Re-export shared types
+export type SortDirection = SharedSortDirection
+
 export type CannibalizationSeverity = "critical" | "high" | "medium" | "low"
 
 export type CannibalizationType = 
@@ -17,8 +22,9 @@ export type CannibalizationAction =
   | "noindex"
   | "reoptimize"
 
-export type SortField = "severity" | "trafficLoss" | "overlapScore" | "pages" | null
-export type SortDirection = "asc" | "desc"
+// Sort types (feature-specific)
+export type CannibalizationSortField = "severity" | "trafficLoss" | "overlapScore" | "pages" | null
+export type SortField = CannibalizationSortField
 export type FilterSeverity = "all" | CannibalizationSeverity
 
 export interface CannibalizingPage {

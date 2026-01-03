@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 /**
  * Image Optimization Panel Component
@@ -327,7 +327,7 @@ const ImageCard: React.FC<{
         <ImageThumbnail 
           src={image.src} 
           alt={image.alt}
-          className="w-16 h-16 flex-shrink-0"
+          className="w-16 h-16 shrink-0"
         />
         
         {/* Info */}
@@ -342,7 +342,7 @@ const ImageCard: React.FC<{
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <FormatBadge format={image.format} />
             {image.width && image.height && (
-              <span>{image.width}Ã—{image.height}</span>
+              <span>{image.width}×{image.height}</span>
             )}
             {image.issues.length > 0 && (
               <span className="text-orange-500">
@@ -518,7 +518,7 @@ const IssueCard: React.FC<{
       
       {issue.suggestedFix && (
         <div className="flex items-start gap-2 text-sm bg-muted/30 rounded p-2">
-          <Lightbulb className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+          <Lightbulb className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
           <span>{issue.suggestedFix}</span>
         </div>
       )}

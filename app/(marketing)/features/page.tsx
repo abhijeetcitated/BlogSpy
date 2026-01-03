@@ -106,7 +106,7 @@ export default function FeaturesPage() {
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
               Everything you need for{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">
                 SEO success
               </span>
             </h1>
@@ -116,7 +116,7 @@ export default function FeaturesPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/register">
-                <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
+                <Button size="lg" className="bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -153,7 +153,7 @@ export default function FeaturesPage() {
                   <ul className="space-y-2">
                     {feature.highlights.map((highlight, idx) => (
                       <li key={idx} className="flex items-center gap-2 text-sm text-slate-300">
-                        <Check className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                        <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                         {highlight}
                       </li>
                     ))}
@@ -194,7 +194,7 @@ export default function FeaturesPage() {
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center p-12 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-slate-800">
+          <div className="max-w-4xl mx-auto text-center p-12 rounded-2xl bg-linear-to-r from-emerald-500/10 to-cyan-500/10 border border-slate-800">
             <Sparkles className="h-12 w-12 text-emerald-400 mx-auto mb-6" />
             <h2 className="text-3xl font-bold text-white mb-4">
               Ready to grow your organic traffic?
@@ -203,7 +203,7 @@ export default function FeaturesPage() {
               Start your free trial today. No credit card required.
             </p>
             <Link href="/register">
-              <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
+              <Button size="lg" className="bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

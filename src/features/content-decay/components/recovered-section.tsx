@@ -11,7 +11,7 @@ interface RecoveredSectionProps {
 
 export function RecoveredSection({ articles }: RecoveredSectionProps) {
   return (
-    <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 dark:from-emerald-950/30 dark:to-emerald-950/10 border border-emerald-500/20 dark:border-emerald-900/30 overflow-hidden">
+    <div className="p-3 sm:p-4 rounded-xl bg-linear-to-r from-emerald-500/10 to-emerald-500/5 dark:from-emerald-950/30 dark:to-emerald-950/10 border border-emerald-500/20 dark:border-emerald-900/30 overflow-hidden">
       <div className="flex items-center gap-2 mb-2 sm:mb-3">
         <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
         <h2 className="font-semibold text-sm sm:text-base text-emerald-600 dark:text-emerald-400">Recently Revived</h2>

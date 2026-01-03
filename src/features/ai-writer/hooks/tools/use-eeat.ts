@@ -1,4 +1,4 @@
-﻿/**
+/**
  * E-E-A-T Analyzer Hook
  * 
  * React hook for managing E-E-A-T analysis state and operations:

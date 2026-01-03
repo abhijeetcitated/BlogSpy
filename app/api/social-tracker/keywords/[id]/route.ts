@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 
 // ============================================
 // GET /api/social-tracker/keywords/[id]
@@ -9,6 +10,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const { id } = await params
     
@@ -39,6 +44,10 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const { id } = await params
     const body = await request.json()
@@ -72,6 +81,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const { id } = await params
     

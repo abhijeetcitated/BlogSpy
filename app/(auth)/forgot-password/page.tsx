@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
       <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-xl shadow-2xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
               <CheckCircle className="h-6 w-6 text-white" />
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function ForgotPasswordPage() {
     <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-xl shadow-2xl">
       <CardHeader className="space-y-1 text-center">
         <div className="flex justify-center mb-4">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+          <div className="h-12 w-12 rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
         </div>
@@ -132,7 +132,7 @@ export default function ForgotPasswordPage() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium"
+            className="w-full bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium"
           >
             {isLoading ? (
               <>

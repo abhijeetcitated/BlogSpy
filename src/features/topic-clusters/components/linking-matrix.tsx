@@ -245,7 +245,7 @@ export function LinkingMatrix({
   return (
     <div className="space-y-4">
       {/* Cluster Overview Header */}
-      <Card className="p-4 bg-gradient-to-r from-purple-500/10 via-slate-800/50 to-cyan-500/10 border-purple-500/30">
+      <Card className="p-4 bg-linear-to-r from-purple-500/10 via-slate-800/50 to-cyan-500/10 border-purple-500/30">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-purple-500/20">

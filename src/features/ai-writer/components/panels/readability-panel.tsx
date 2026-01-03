@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // =============================================================================
 // READABILITY ANALYZER PANEL - Production Level
@@ -259,7 +259,7 @@ export function ReadabilityPanel({
             </div>
           </div>
           <CardDescription className="mt-1">
-            {analysis.words.total.toLocaleString()} words â€¢ {formatTime(analysis.readingTime.minutes, analysis.readingTime.seconds)} read
+            {analysis.words.total.toLocaleString()} words • {formatTime(analysis.readingTime.minutes, analysis.readingTime.seconds)} read
           </CardDescription>
         </CardHeader>
         
@@ -922,7 +922,7 @@ function RecommendationCard({
 
 function FleschScaleVisualization({ score }: { score: number }) {
   return (
-    <div className="relative h-6 rounded-full overflow-hidden bg-gradient-to-r from-red-500 via-yellow-500 to-green-500">
+    <div className="relative h-6 rounded-full overflow-hidden bg-linear-to-r from-red-500 via-yellow-500 to-green-500">
       <div
         className="absolute top-0 bottom-0 w-1 bg-white shadow-lg"
         style={{ left: `${score}%` }}
@@ -940,7 +940,7 @@ function SentenceDistributionChart({ distribution }: { distribution: { [key: str
   if (total === 0) return null;
   
   const categories = [
-    { key: '0-10', label: 'â‰¤10', color: 'bg-green-500' },
+    { key: '0-10', label: '≤10', color: 'bg-green-500' },
     { key: '11-15', label: '11-15', color: 'bg-emerald-500' },
     { key: '16-20', label: '16-20', color: 'bg-yellow-500' },
     { key: '21-25', label: '21-25', color: 'bg-orange-500' },

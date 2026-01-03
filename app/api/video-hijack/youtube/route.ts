@@ -5,6 +5,7 @@
 // ============================================
 
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 
 // YouTube API configuration
 // TODO: Set YOUTUBE_API_KEY in server env to enable live data.
@@ -25,6 +26,10 @@ interface YouTubeSearchParams {
  * Search YouTube videos for a given keyword (or fetch by videoId)
  */
 export async function GET(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const searchParams = request.nextUrl.searchParams
     const videoId = searchParams.get("videoId")

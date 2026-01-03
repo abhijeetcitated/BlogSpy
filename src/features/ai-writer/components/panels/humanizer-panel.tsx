@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Content Humanizer Panel Component
  * 
  * UI for humanizing AI-generated content
@@ -273,7 +273,7 @@ function ChangeCard({ change, isAccepted, onAccept, onReject }: ChangeCardProps)
         <span className="px-2 py-1 bg-red-500/10 text-red-600 rounded line-through">
           {change.original}
         </span>
-        <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
         <span className="px-2 py-1 bg-green-500/10 text-green-600 rounded">
           {change.humanized}
         </span>
@@ -523,7 +523,7 @@ function OverviewTab({ humanizer, onCopy }: OverviewTabProps) {
     <ScrollArea className="h-[calc(100vh-280px)]">
       <div className="space-y-6 pr-4">
         {/* Summary Section */}
-        <div className="p-4 border rounded-lg bg-gradient-to-br from-green-500/5 to-blue-500/5">
+        <div className="p-4 border rounded-lg bg-linear-to-br from-green-500/5 to-blue-500/5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -633,7 +633,7 @@ function OverviewTab({ humanizer, onCopy }: OverviewTabProps) {
             <ul className="space-y-1">
               {summary.improvements.map((improvement, index) => (
                 <li key={index} className="text-sm flex items-start gap-2">
-                  <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
                   {improvement}
                 </li>
               ))}
@@ -651,7 +651,7 @@ function OverviewTab({ humanizer, onCopy }: OverviewTabProps) {
             <ul className="space-y-1">
               {summary.warnings.map((warning, index) => (
                 <li key={index} className="text-sm flex items-start gap-2 text-yellow-600">
-                  <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                   {warning}
                 </li>
               ))}
@@ -933,7 +933,7 @@ export function HumanizerPanel({ content, onApply, trigger }: HumanizerPanelProp
           {/* Stats Bar */}
           {metrics && (
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Words: {metrics.originalWordCount} â†’ {metrics.humanizedWordCount}</span>
+              <span>Words: {metrics.originalWordCount} → {metrics.humanizedWordCount}</span>
               <span>Changes: {metrics.totalChanges}</span>
             </div>
           )}

@@ -69,18 +69,7 @@ export type {
   TrendsParams,
 } from "./trends.service"
 
-// GSC Service
-export { gscService } from "./gsc.service"
-export { GSCService } from "./gsc.service"
-
-// GA4 Service
-export { ga4Service } from "./ga4.service"
-export { GA4Service } from "./ga4.service"
-
-// Decay Detection Service
-export { decayDetectionService } from "./decay-detection.service"
-export { DecayDetectionService } from "./decay-detection.service"
-
-// Alerts Service
-export { alertsService } from "./alerts.service"
-export { AlertService } from "./alerts.service"
+// NOTE: Server-only services (gsc, ga4, decay-detection, alerts) 
+// should be imported directly in API routes, not through this barrel export
+// to prevent client bundle pollution with server-only code.
+// Import them directly: import { gscService } from '@/services/gsc.service'

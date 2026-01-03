@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Plagiarism Checker Panel Component
  * 
  * Comprehensive plagiarism detection and reporting UI
@@ -455,7 +455,7 @@ const OverviewTab: React.FC<{
           </p>
           {summary.actionRequired && (
             <p className="text-sm text-orange-600 mt-1">
-              âš ï¸ Action required - estimated fix time: {summary.estimatedFixTime} minutes
+              ⚠️ Action required - estimated fix time: {summary.estimatedFixTime} minutes
             </p>
           )}
         </div>
@@ -521,7 +521,7 @@ const OverviewTab: React.FC<{
             </h4>
             <ul className="space-y-1">
               {summary.criticalIssues.map((issue, i) => (
-                <li key={i} className="text-sm text-muted-foreground">â€¢ {issue}</li>
+                <li key={i} className="text-sm text-muted-foreground">• {issue}</li>
               ))}
             </ul>
           </div>
@@ -535,7 +535,7 @@ const OverviewTab: React.FC<{
             </h4>
             <ul className="space-y-1">
               {summary.positives.map((p, i) => (
-                <li key={i} className="text-sm text-muted-foreground">â€¢ {p}</li>
+                <li key={i} className="text-sm text-muted-foreground">• {p}</li>
               ))}
             </ul>
           </div>

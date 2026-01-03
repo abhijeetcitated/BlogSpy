@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // USE COMPETITOR ANALYSIS HOOK - Live SERP Analysis State Management
 // =============================================================================
 // Industry-standard competitor analysis hook with real-time gap detection

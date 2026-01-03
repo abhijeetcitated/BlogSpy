@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // =============================================================================
 // USE INTERNAL LINKING HOOK - Production Level

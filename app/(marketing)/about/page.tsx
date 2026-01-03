@@ -71,7 +71,7 @@ export default function AboutPage() {
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               BlogSpy
             </span>
           </Link>
@@ -95,7 +95,7 @@ export default function AboutPage() {
           <Badge className="mb-4" variant="secondary">About Us</Badge>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
             Empowering Content Creators to{' '}
-            <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               Dominate Search
             </span>
           </h1>
@@ -171,7 +171,7 @@ export default function AboutPage() {
             {team.map((member, index) => (
               <Card key={index}>
                 <CardContent className="pt-6 text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
+                  <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-500 to-cyan-500 mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
                     {member.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <h3 className="font-semibold">{member.name}</h3>

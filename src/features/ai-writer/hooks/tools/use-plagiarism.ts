@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Plagiarism Checker Hook
  * 
  * React hook for plagiarism detection and analysis

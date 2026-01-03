@@ -8,12 +8,14 @@
 import { create } from "zustand"
 import { devtools, persist } from "zustand/middleware"
 import type { Keyword, MatchType, BulkMode, Country, SERPFeature } from "../types"
+import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
 
 // ============================================
 // SORT CONFIG
 // ============================================
-export type SortField = "keyword" | "volume" | "kd" | "cpc" | "trend" | "geoScore"
-export type SortDirection = "asc" | "desc"
+export type KeywordResearchStoreSortField = "keyword" | "volume" | "kd" | "cpc" | "trend" | "geoScore"
+export type SortField = KeywordResearchStoreSortField
+export type SortDirection = SharedSortDirection
 
 export interface SortConfig {
   field: SortField

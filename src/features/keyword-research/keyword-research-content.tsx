@@ -240,7 +240,7 @@ export function KeywordResearchContent() {
     <div className="flex flex-col h-full w-full max-w-full overflow-hidden">
       {/* 🎭 DEMO MODE BANNER (PLG) */}
       {isGuest && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-b border-amber-500/20 shrink-0">
+        <div className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-b border-amber-500/20 shrink-0">
           <Sparkles className="h-4 w-4 text-amber-500" />
           <span className="text-sm text-amber-600 dark:text-amber-400 font-medium">
             Demo Mode

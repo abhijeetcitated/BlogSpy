@@ -166,7 +166,7 @@ export function OptimizationTab({
       </div>
 
       {/* Snippet Stealer Integration */}
-      <Card className="p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30">
+      <Card className="p-4 bg-linear-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30">
         <div className="flex items-start gap-3">
           <div className="p-2 rounded-lg bg-amber-500/20">
             <Trophy className="h-5 w-5 text-amber-400" />

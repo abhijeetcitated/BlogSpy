@@ -133,7 +133,7 @@ export function PricingModal() {
                     {/* Most Popular Badge */}
                     {plan.highlighted && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <span className="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-xs font-semibold whitespace-nowrap">
+                        <span className="px-3 py-1 rounded-full bg-linear-to-r from-emerald-500 to-cyan-500 text-white text-xs font-semibold whitespace-nowrap">
                           Most Popular
                         </span>
                       </div>
@@ -180,7 +180,7 @@ export function PricingModal() {
                       size="sm"
                       className={`w-full ${
                         plan.highlighted
-                          ? "bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+                          ? "bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
                           : "bg-secondary hover:bg-secondary/80 text-foreground"
                       }`}
                     >

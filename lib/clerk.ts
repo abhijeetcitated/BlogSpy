@@ -1,36 +1,62 @@
 /**
- * Clerk Authentication Helpers
- * Utility functions for Clerk authentication
+ * Server-side Authentication Helpers
+ * Utility functions for authentication using Supabase
  * 
- * NOTE: Currently using MOCK implementation
- * Real Clerk integration will be added later:
- * 1. npm install @clerk/nextjs
- * 2. Set up CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY in .env
- * 3. Replace mock functions with real Clerk imports
+ * These functions are used in Server Components and API routes
+ * to get the current authenticated user.
  */
 
-// Mock user for development
-const MOCK_USER = {
-  id: "user_demo_123",
-  email: "demo@blogspy.io",
-  firstName: "Demo",
-  lastName: "User",
-  imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=demo",
-  createdAt: new Date("2024-01-01"),
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+/**
+ * Create a Supabase client for server-side usage
+ * Uses cookies for session management
+ */
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // The `setAll` method was called from a Server Component.
+          // This can be ignored if you have middleware refreshing sessions.
+        }
+      },
+    },
+  });
 }
 
 /**
- * Get the current authenticated user's Clerk ID
+ * Get the current authenticated user's ID
  * Use in Server Components and API routes
- * 
- * TODO: Replace with real Clerk auth when installed:
- * import { auth } from "@clerk/nextjs/server"
- * const { userId } = await auth()
+ * Returns null if not authenticated
  */
 export async function getAuthUserId(): Promise<string | null> {
-  // Mock: Always return demo user ID
-  // In production: const { userId } = await auth(); return userId;
-  return MOCK_USER.id
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      return null;
+    }
+    
+    return user.id;
+  } catch (error) {
+    console.error('Error getting auth user:', error);
+    return null;
+  }
 }
 
 /**
@@ -38,45 +64,60 @@ export async function getAuthUserId(): Promise<string | null> {
  * Use in protected API routes
  */
 export async function requireAuth(): Promise<string> {
-  const userId = await getAuthUserId()
+  const userId = await getAuthUserId();
   
   if (!userId) {
-    throw new Error("Unauthorized: Authentication required")
+    throw new Error('Unauthorized: Authentication required');
   }
   
-  return userId
+  return userId;
 }
 
 /**
- * Get current user details from Clerk
- * 
- * TODO: Replace with real Clerk currentUser when installed:
- * import { currentUser } from "@clerk/nextjs/server"
- * const user = await currentUser()
+ * Get current user details from Supabase
+ * Returns the full user object or null if not authenticated
  */
 export async function getCurrentUser() {
-  // Mock: Return demo user
-  // In production: const user = await currentUser()
-  return {
-    id: MOCK_USER.id,
-    email: MOCK_USER.email,
-    name: `${MOCK_USER.firstName} ${MOCK_USER.lastName}`.trim(),
-    avatar: MOCK_USER.imageUrl,
-    createdAt: MOCK_USER.createdAt,
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      return null;
+    }
+    
+    return {
+      id: user.id,
+      email: user.email || '',
+      name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+      avatar: user.user_metadata?.avatar_url || null,
+      createdAt: new Date(user.created_at),
+    };
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
   }
 }
 
 /**
- * Check if user has a specific role (for future use)
- * 
- * TODO: Replace with real Clerk session claims when installed:
- * const { sessionClaims } = await auth()
+ * Check if user has a specific role
+ * Checks user_metadata for roles array
  */
 export async function hasRole(role: string): Promise<boolean> {
-  // Mock: Demo user has all roles
-  // In production: check sessionClaims.roles
-  const mockRoles = ["user", "pro"]
-  return mockRoles.includes(role)
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      return false;
+    }
+    
+    const userRoles = user.user_metadata?.roles || ['user'];
+    return userRoles.includes(role);
+  } catch (error) {
+    console.error('Error checking role:', error);
+    return false;
+  }
 }
 
 /**

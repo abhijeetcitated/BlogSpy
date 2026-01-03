@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 import type { SocialPlatform } from "@/src/features/social-tracker/types"
 
 // ============================================
@@ -7,6 +8,10 @@ import type { SocialPlatform } from "@/src/features/social-tracker/types"
 // ============================================
 
 export async function GET() {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     // TODO: Replace with real database/API call
     // const keywords = await db.socialKeywords.findMany({
@@ -48,6 +53,10 @@ interface AddKeywordBody {
 }
 
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const body: AddKeywordBody = await request.json()
     

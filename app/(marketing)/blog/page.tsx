@@ -105,7 +105,7 @@ export default function BlogPage() {
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               SEO insights for{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">
                 modern marketers
               </span>
             </h1>
@@ -152,7 +152,7 @@ export default function BlogPage() {
         <div className="container mx-auto px-4">
           <Card className="bg-slate-900/50 border-slate-800 overflow-hidden">
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="aspect-video md:aspect-auto bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
+              <div className="aspect-video md:aspect-auto bg-linear-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
                 <span className="text-6xl">📊</span>
               </div>
               <div className="p-6 md:p-8 flex flex-col justify-center">
@@ -182,7 +182,7 @@ export default function BlogPage() {
                   </span>
                 </div>
                 <Link href={`/blog/${featuredPost.slug}`}>
-                  <Button className="w-fit bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
+                  <Button className="w-fit bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
                     Read Article
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -243,7 +243,7 @@ export default function BlogPage() {
       {/* Newsletter CTA */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center p-8 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-slate-800">
+          <div className="max-w-2xl mx-auto text-center p-8 rounded-2xl bg-linear-to-r from-emerald-500/10 to-cyan-500/10 border border-slate-800">
             <h2 className="text-2xl font-bold text-white mb-4">
               Get SEO tips in your inbox
             </h2>
@@ -256,7 +256,7 @@ export default function BlogPage() {
                 placeholder="Enter your email"
                 className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500"
               />
-              <Button className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white whitespace-nowrap">
+              <Button className="bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white whitespace-nowrap">
                 Subscribe
               </Button>
             </div>

@@ -124,7 +124,7 @@ export function BulkActionsDialog({
           <DialogTitle className="flex items-center gap-3 text-foreground">
             {/* Premium Icon */}
             <div className="relative">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-cyan-500/10 dark:from-cyan-500/30 dark:via-blue-500/20 dark:to-cyan-500/10 flex items-center justify-center ring-1 ring-cyan-500/20 dark:ring-cyan-500/30 shadow-lg shadow-cyan-500/10">
+              <div className="h-10 w-10 rounded-xl bg-linear-to-br from-cyan-500/20 via-blue-500/20 to-cyan-500/10 dark:from-cyan-500/30 dark:via-blue-500/20 dark:to-cyan-500/10 flex items-center justify-center ring-1 ring-cyan-500/20 dark:ring-cyan-500/30 shadow-lg shadow-cyan-500/10">
                 <Layers className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
               </div>
               <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-cyan-500 ring-2 ring-card" />
@@ -140,7 +140,7 @@ export function BulkActionsDialog({
 
         <div className="flex-1 overflow-hidden py-4 space-y-4">
           {/* Summary Stats */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/10 border border-border/50">
+          <div className="p-4 rounded-xl bg-linear-to-br from-muted/50 to-muted/30 dark:from-muted/30 dark:to-muted/10 border border-border/50">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               <div className="space-y-1">
                 <div className="flex items-center justify-center gap-1.5">
@@ -200,7 +200,7 @@ export function BulkActionsDialog({
 
           {/* Progress Bar (when processing) */}
           {isProcessing && (
-            <div className="space-y-2 p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-500/20">
+            <div className="space-y-2 p-4 rounded-xl bg-linear-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/10 border border-cyan-500/20">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-cyan-500" />
@@ -274,7 +274,7 @@ export function BulkActionsDialog({
 
           {/* Action Breakdown */}
           {localSelected.length > 0 && (
-            <div className="p-4 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 border border-border/50">
+            <div className="p-4 rounded-xl bg-linear-to-br from-muted/40 to-muted/20 border border-border/50">
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
                 Recommended Actions Breakdown
               </h4>
@@ -324,7 +324,7 @@ export function BulkActionsDialog({
               onClick={() => handleBulkAction("fix")}
               disabled={isProcessing || localSelected.length === 0}
               className={cn(
-                "bg-gradient-to-r from-emerald-600 to-emerald-500",
+                "bg-linear-to-r from-emerald-600 to-emerald-500",
                 "hover:from-emerald-500 hover:to-emerald-400",
                 "text-white shadow-lg shadow-emerald-500/20",
                 "transition-all w-full sm:w-auto"

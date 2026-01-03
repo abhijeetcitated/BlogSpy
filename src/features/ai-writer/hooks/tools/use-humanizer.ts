@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Content Humanizer Hook
  * 
  * React hook for humanizing AI-generated content

@@ -2,10 +2,15 @@
 // WEAK SPOT TYPES
 // ============================================
 
+import type { SortDirection as SharedSortDirection, SearchIntent } from "@/src/types/shared"
+
+// Re-export shared types
+export type SortDirection = SharedSortDirection
+
 export type WeakSpotType = "reddit" | "quora" | "linkedin" | "medium" | "forum"
-export type Intent = "commercial" | "informational" | "transactional" | "navigational"
-export type SortField = "volume" | "kd" | "weakSpotRank" | "trafficPotential" | null
-export type SortDirection = "asc" | "desc"
+export type Intent = SearchIntent
+export type WeakSpotSortField = "volume" | "kd" | "weakSpotRank" | "trafficPotential" | null
+export type SortField = WeakSpotSortField
 
 export interface WeakSpotKeyword {
   id: string

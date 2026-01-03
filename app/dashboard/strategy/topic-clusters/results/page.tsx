@@ -94,7 +94,7 @@ function QuickWinBadge({ kd, volume }: { kd: number; volume: number }) {
   if (kd >= 35 || volume <= 500) return null
   
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[10px] font-bold shadow-sm animate-pulse">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-linear-to-r from-green-500 to-emerald-500 text-white text-[10px] font-bold shadow-sm animate-pulse">
       <Flame className="w-3 h-3" />
       Quick Win
     </span>
@@ -265,13 +265,13 @@ function PillarNode({
               {/* Dynamic AI Write Button */}
               <Button 
                 size="sm" 
-                className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-600 hover:via-orange-600 hover:to-red-600 text-white h-6 sm:h-7 gap-1 sm:gap-1.5 shrink-0 text-[10px] sm:text-xs font-semibold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300 hover:scale-105 group px-2 sm:px-3"
+                className="relative overflow-hidden bg-linear-to-r from-amber-500 via-orange-500 to-red-500 hover:from-amber-600 hover:via-orange-600 hover:to-red-600 text-white h-6 sm:h-7 gap-1 sm:gap-1.5 shrink-0 text-[10px] sm:text-xs font-semibold shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-300 hover:scale-105 group px-2 sm:px-3"
                 onClick={(e) => { e.stopPropagation(); onWriteClick(mainKeyword.keyword, "pillar", totalVolume, avgKd, keywordCluster.map(k => k.keyword), undefined, subpagesCount) }}
               >
                 <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:animate-pulse" />
                 <span className="hidden xs:inline">AI Write</span>
                 <span className="xs:hidden">Write</span>
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <span className="absolute inset-0 bg-linear-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               </Button>
             </div>
 
@@ -376,12 +376,12 @@ function SubpageNode({
               {/* Dynamic AI Write Button */}
               <Button 
                 size="sm" 
-                className="relative overflow-hidden bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white h-5 sm:h-6 gap-1 shrink-0 text-[9px] sm:text-[10px] font-semibold shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all duration-300 hover:scale-105 group px-1.5 sm:px-2"
+                className="relative overflow-hidden bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white h-5 sm:h-6 gap-1 shrink-0 text-[9px] sm:text-[10px] font-semibold shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all duration-300 hover:scale-105 group px-1.5 sm:px-2"
                 onClick={(e) => { e.stopPropagation(); onWriteClick(mainKeyword.keyword, "cluster", totalVolume, avgKd, keywordCluster.map(k => k.keyword), parentPillar) }}
               >
                 <PenLine className="w-2.5 h-2.5 sm:w-3 sm:h-3 group-hover:animate-pulse" />
                 <span>Write</span>
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <span className="absolute inset-0 bg-linear-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               </Button>
             </div>
           </div>

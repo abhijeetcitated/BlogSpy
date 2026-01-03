@@ -104,10 +104,10 @@ export function EarningsCalculator() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full justify-between h-10 sm:h-11 text-sm">
                     <span className="flex items-center gap-2">
-                      <span className="flex-shrink-0">{NicheIcons[selectedNiche.id]}</span>
+                      <span className="shrink-0">{NicheIcons[selectedNiche.id]}</span>
                       <span className="truncate">{selectedNiche.name}</span>
                     </span>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[280px] sm:w-[300px] max-h-[300px] overflow-y-auto">
@@ -117,7 +117,7 @@ export function EarningsCalculator() {
                       onClick={() => setSelectedNiche(niche)}
                       className="flex items-center gap-3 py-2.5 sm:py-3"
                     >
-                      <span className="flex-shrink-0">{NicheIcons[niche.id]}</span>
+                      <span className="shrink-0">{NicheIcons[niche.id]}</span>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{niche.name}</p>
                         <p className="text-xs text-muted-foreground">
@@ -193,14 +193,14 @@ export function EarningsCalculator() {
                     <span className="flex items-center gap-2">
                       {selectedNetwork ? (
                         <>
-                          <span className="flex-shrink-0">{NetworkIcons[selectedNetwork.id]}</span>
+                          <span className="shrink-0">{NetworkIcons[selectedNetwork.id]}</span>
                           <span className="truncate">{selectedNetwork.name}</span>
                         </>
                       ) : (
                         <span className="text-muted-foreground">Auto-detect best network</span>
                       )}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[280px] sm:w-[300px]">
@@ -214,7 +214,7 @@ export function EarningsCalculator() {
                       className="flex items-center gap-3 py-2.5 sm:py-3"
                       disabled={network.minTraffic > monthlyPageviews}
                     >
-                      <span className="flex-shrink-0">{NetworkIcons[network.id]}</span>
+                      <span className="shrink-0">{NetworkIcons[network.id]}</span>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{network.name}</p>
                         <p className="text-xs text-muted-foreground">
@@ -222,7 +222,7 @@ export function EarningsCalculator() {
                         </p>
                       </div>
                       {network.minTraffic > monthlyPageviews && (
-                        <span className="text-xs text-red-400 flex-shrink-0">Need more traffic</span>
+                        <span className="text-xs text-red-400 shrink-0">Need more traffic</span>
                       )}
                     </DropdownMenuItem>
                   ))}

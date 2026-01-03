@@ -173,7 +173,7 @@ export function UrlAnalyzerForm({
         <Button
           type="submit"
           disabled={isLoading || !url.trim()}
-          className="w-full h-12 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium"
+          className="w-full h-12 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium"
         >
           {isLoading ? (
             <>

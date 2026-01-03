@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 
 // Mock content data
 const mockContent = [
@@ -138,6 +139,10 @@ const generateOnPageAnalysis = (url: string) => ({
 
 // GET /api/content - Get content list
 export async function GET(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get("page") || "1")
@@ -197,6 +202,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/content - Analyze content/URL
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const body = await request.json()
     const { action, url, content, keyword } = body

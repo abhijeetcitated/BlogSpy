@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Featured Snippet Optimizer Panel
  * 
  * Production-grade UI component for analyzing and optimizing content

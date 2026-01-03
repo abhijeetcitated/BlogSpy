@@ -12,6 +12,10 @@ import {
   Calculator,
   CloudSun,
 } from "lucide-react"
+import type { SortDirection } from "@/src/types/shared"
+
+// Re-export SortDirection for backward compatibility
+export type { SortDirection } from "@/src/types/shared"
 
 // Intent Configuration for display - Strong colors for both dark and light mode
 export const INTENT_CONFIG: Record<string, { color: string; label: string; tooltip: string; description: string }> = {
@@ -56,8 +60,8 @@ export const SERP_ICONS: Record<string, { icon: React.ReactNode; label: string; 
   ai_overview: { icon: React.createElement(MessageSquare, { className: "h-3.5 w-3.5" }), label: "AI Overview", ctrImpact: 40 },
 }
 
-// Sort types - Extended for all sortable columns
-export type SortField = 
+// Sort types - Extended for all sortable columns (feature-specific)
+export type TableConfigSortField = 
   | "keyword" 
   | "volume" 
   | "rtv"
@@ -72,7 +76,8 @@ export type SortField =
   | "socialOpp"
   | null
 
-export type SortDirection = "asc" | "desc"
+// Legacy alias for backward compatibility
+export type SortField = TableConfigSortField
 
 // Column definitions for the table
 export interface ColumnDefinition {

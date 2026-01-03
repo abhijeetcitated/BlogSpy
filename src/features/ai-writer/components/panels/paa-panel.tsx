@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // =============================================================================
 // PAA (PEOPLE ALSO ASK) PANEL - Production Level
@@ -312,7 +312,7 @@ export function PAAPanel({
               <Badge variant="secondary">{data.totalQuestions}</Badge>
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Questions for "{keyword}" â€¢ {location.countryName}
+              Questions for "{keyword}" • {location.countryName}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -653,7 +653,7 @@ function QuestionCard({
             <p className="font-medium text-sm leading-tight">
               {QUESTION_TYPE_ICONS[question.type]} {question.question}
             </p>
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -718,7 +718,7 @@ function QuestionCard({
             </span>
             {question.searchVolume && (
               <span className="text-xs text-muted-foreground">
-                â€¢ {question.searchVolume.toLocaleString()} vol
+                • {question.searchVolume.toLocaleString()} vol
               </span>
             )}
           </div>

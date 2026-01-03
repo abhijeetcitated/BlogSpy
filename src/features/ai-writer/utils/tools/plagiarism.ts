@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Plagiarism Checker Utilities
  * 
  * Comprehensive plagiarism detection and analysis functions
@@ -775,7 +775,7 @@ export function compareTexts(text1: string, text2: string): ComparisonResult {
     if (i < words2.length && word !== words2[i]) {
       differences.push({
         type: 'modified',
-        text: `${word} â†’ ${words2[i]}`,
+        text: `${word} → ${words2[i]}`,
         position: i
       });
     }
@@ -881,7 +881,7 @@ export function exportPlagiarismReport(
     if (analysis.summary.criticalIssues.length > 0) {
       report += `### Critical Issues\n`;
       analysis.summary.criticalIssues.forEach(i => {
-        report += `- âš ï¸ ${i}\n`;
+        report += `- ⚠️ ${i}\n`;
       });
       report += '\n';
     }

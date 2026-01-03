@@ -23,7 +23,7 @@ export function IntegrationsTab() {
       </div>
 
       {/* Benefits Card */}
-      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+      <Card className="bg-linear-to-r from-primary/5 to-primary/10 border-primary/20">
         <CardContent className="pt-6">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="space-y-2">

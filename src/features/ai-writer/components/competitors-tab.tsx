@@ -47,7 +47,7 @@ export function CompetitorsTab({ editorStats }: CompetitorsTabProps) {
         ))}
 
         {/* Comparison Card */}
-        <Card className="p-4 bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 border-cyan-500/30 mt-6">
+        <Card className="p-4 bg-linear-to-br from-cyan-500/10 to-emerald-500/10 border-cyan-500/30 mt-6">
           <h4 className="text-sm font-medium text-foreground mb-3">
             Your Content vs Top 3
           </h4>

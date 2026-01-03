@@ -210,7 +210,7 @@ export function ViewPagesModal({ open, onOpenChange, issue }: ViewPagesModalProp
               </div>
 
               {/* Winner Summary */}
-              <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30">
+              <div className="mt-6 p-4 rounded-lg bg-linear-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30">
                 <div className="flex items-center gap-2 mb-2">
                   <Trophy className="h-5 w-5 text-yellow-500" />
                   <h4 className="text-sm font-semibold text-white">Recommendation</h4>

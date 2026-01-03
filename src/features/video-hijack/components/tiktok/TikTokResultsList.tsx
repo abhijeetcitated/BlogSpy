@@ -84,7 +84,7 @@ export function TikTokResultsList({ results, isLoading, searchQuery }: TikTokRes
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-r from-[#ff0050]/10 to-[#00f2ea]/10 border border-[#ff0050]/20">
+          <div className="p-1.5 sm:p-2 rounded-lg bg-linear-to-r from-[#ff0050]/10 to-[#00f2ea]/10 border border-[#ff0050]/20">
             <TikTokIcon size={16} className="text-[#ff0050] sm:w-5 sm:h-5" />
           </div>
           <div>

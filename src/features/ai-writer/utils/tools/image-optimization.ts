@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Image Optimization Utilities
  * 
  * Algorithms for image SEO analysis and optimization:

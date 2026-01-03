@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 
 // Mock ranking data
 const mockRankings = [
@@ -99,6 +100,10 @@ const mockCompetitors = [
 
 // GET /api/rankings - Get rankings list
 export async function GET(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const { searchParams } = new URL(request.url)
     const domain = searchParams.get("domain") || ""
@@ -162,6 +167,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/rankings - Add keyword to track
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const body = await request.json()
     const { keyword, url, domain } = body
@@ -207,6 +216,10 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/rankings - Remove keyword from tracking
 export async function DELETE(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Content Detector Hook
  * 
  * React hook for AI-generated content detection

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Entity Coverage Hook
  * 
  * React hook for managing entity coverage analysis:

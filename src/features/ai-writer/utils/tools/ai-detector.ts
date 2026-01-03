@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Content Detector Utilities
  * 
  * Comprehensive AI-generated content detection functions

@@ -355,7 +355,7 @@ export function ApiKeysTab() {
       <Card className="bg-card/50 border-border">
         <CardContent className="p-6">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-linear-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center">
               <Key className="h-5 w-5 text-emerald-400" />
             </div>
             <div className="flex-1">

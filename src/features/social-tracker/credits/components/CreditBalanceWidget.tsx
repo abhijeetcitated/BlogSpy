@@ -169,7 +169,7 @@ export function CreditBalanceWidget({
                 setIsOpen(false)
                 onBuyCredits()
               }}
-              className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
+              className="w-full bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white"
               size="sm"
             >
               <Plus className="h-4 w-4 mr-1" />

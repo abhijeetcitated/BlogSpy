@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // =============================================================================
 // AUTO-OPTIMIZE BUTTON COMPONENT - Production Level
@@ -659,7 +659,7 @@ function OverviewTab({ analysis }: OverviewTabProps) {
           <h4 className="font-medium text-amber-700">Warnings</h4>
           {analysis.summary.warnings.map((warning, i) => (
             <div key={i} className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
               <span className="text-sm text-amber-800">{warning}</span>
             </div>
           ))}
@@ -767,7 +767,7 @@ function ActionCard({
             onClick={onToggleSelect}
             disabled={isApplied}
             className={cn(
-              "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 flex-shrink-0 transition-colors",
+              "w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 shrink-0 transition-colors",
               isApplied ? "bg-green-500 border-green-500" :
               isSelected ? "bg-primary border-primary" : "border-muted-foreground/30"
             )}
@@ -799,7 +799,7 @@ function ActionCard({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             {!isApplied && (
               <>
                 <TooltipProvider>

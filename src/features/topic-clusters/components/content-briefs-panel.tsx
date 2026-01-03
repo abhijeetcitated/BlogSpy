@@ -314,7 +314,7 @@ ${brief.parentPillar ? `\n## Parent Pillar\n${brief.parentPillar}` : ""}
       </div>
       
       {/* Stats Bar */}
-      <div className="p-4 border-b border-zinc-800 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10">
+      <div className="p-4 border-b border-zinc-800 bg-linear-to-r from-emerald-500/10 to-cyan-500/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
@@ -524,7 +524,7 @@ ${brief.parentPillar ? `\n## Parent Pillar\n${brief.parentPillar}` : ""}
                   <div className="pt-3 border-t border-zinc-800">
                     <Button 
                       onClick={(e) => { e.stopPropagation(); sendToAIWriter(brief) }}
-                      className="w-full gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                      className="w-full gap-2 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
                     >
                       <Sparkles className="h-4 w-4" />
                       Send to AI Writer
@@ -552,7 +552,7 @@ ${brief.parentPillar ? `\n## Parent Pillar\n${brief.parentPillar}` : ""}
             </Button>
             <Button
               size="lg"
-              className="gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+              className="gap-2 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
             >
               <Download className="h-5 w-5" />
               Export All to CSV

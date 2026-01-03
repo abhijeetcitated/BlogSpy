@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // PAA (PEOPLE ALSO ASK) UTILITIES - Production Level
 // Question extraction, clustering, coverage analysis
 // =============================================================================
@@ -183,7 +183,7 @@ export function detectAnswerFormat(question: string): AnswerFormat {
     return 'list';
   }
 
-  // Comparison questions â†’ table
+  // Comparison questions → table
   if (/vs|versus|compare|difference/.test(normalized)) {
     return 'table';
   }
@@ -763,7 +763,7 @@ function generateSuggestedSection(question: PAAQuestion): string {
   // Remove question marks and clean up
   let heading = q.replace(/\?/g, '').trim();
 
-  // Transform "What is X" â†’ "Understanding X"
+  // Transform "What is X" → "Understanding X"
   heading = heading.replace(/^what is/i, 'Understanding');
   heading = heading.replace(/^how to/i, 'How to');
   heading = heading.replace(/^why (does|is|do|are)/i, 'Why');
@@ -1016,24 +1016,24 @@ export function exportToJSON(questions: PAAQuestion[]): string {
  */
 function getQuestionTypeIcon(type: QuestionType): string {
   const icons: Record<QuestionType, string> = {
-    what: 'â“',
-    how: 'ðŸ”§',
-    why: 'ðŸ’¡',
-    when: 'ðŸ“…',
-    where: 'ðŸ“',
-    who: 'ðŸ‘¤',
-    which: 'ðŸ”€',
-    can: 'âœ…',
-    does: 'ðŸ¤”',
-    is: 'â”',
-    are: 'â”',
-    will: 'ðŸ”®',
-    should: 'âš–ï¸',
-    comparison: 'âš”ï¸',
-    list: 'ðŸ“‹',
-    other: 'ðŸ’­'
+    what: '❓',
+    how: '🔧',
+    why: '💡',
+    when: '📅',
+    where: '📍',
+    who: '👤',
+    which: '🔀',
+    can: '✅',
+    does: '🤔',
+    is: '❔',
+    are: '❔',
+    will: '🔮',
+    should: '⚖️',
+    comparison: '⚔️',
+    list: '📋',
+    other: '💭'
   };
-  return icons[type] || 'ðŸ’­';
+  return icons[type] || '💭';
 }
 
 /**
@@ -1041,17 +1041,17 @@ function getQuestionTypeIcon(type: QuestionType): string {
  */
 function getCategoryIcon(category: QuestionCategory): string {
   const icons: Record<QuestionCategory, string> = {
-    basics: 'ðŸ“š',
-    'how-to': 'ðŸ› ï¸',
-    comparison: 'âš”ï¸',
-    troubleshooting: 'ðŸ”§',
-    features: 'âœ¨',
-    pricing: 'ðŸ’°',
-    alternatives: 'ðŸ”„',
-    reviews: 'â­',
-    other: 'ðŸ“'
+    basics: '📚',
+    'how-to': '🛠️',
+    comparison: '⚔️',
+    troubleshooting: '🔧',
+    features: '✨',
+    pricing: '💰',
+    alternatives: '🔄',
+    reviews: '⭐',
+    other: '📁'
   };
-  return icons[category] || 'ðŸ“';
+  return icons[category] || '📁';
 }
 
 /**

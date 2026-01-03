@@ -75,7 +75,7 @@ export function YouTubeResultCard({ video, isSelected, onSelect }: YouTubeResult
 
         {/* Channel Info */}
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden bg-muted shrink-0">
             <Image
               src={video.channelThumbnail}
               alt={video.channelName}
@@ -87,10 +87,10 @@ export function YouTubeResultCard({ video, isSelected, onSelect }: YouTubeResult
           <div className="flex items-center gap-1 min-w-0">
             <span className="text-[10px] sm:text-xs text-muted-foreground truncate">{video.channelName}</span>
             {video.channelVerified && (
-              <VerifiedIcon size={10} className="text-blue-500 flex-shrink-0 sm:w-3 sm:h-3" />
+              <VerifiedIcon size={10} className="text-blue-500 shrink-0 sm:w-3 sm:h-3" />
             )}
           </div>
-          <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto flex-shrink-0">
+          <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto shrink-0">
             {formatViews(video.channelSubs)} subs
           </span>
         </div>

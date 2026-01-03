@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // CONTENT BRIEF PANEL - Comprehensive Brief Display UI
 // =============================================================================
 // Industry-standard content brief UI like Surfer SEO, Frase, Clearscope
@@ -391,7 +391,7 @@ function OutlineTab({ outline, onCopyToEditor, expandedSections, toggleSection }
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">Alternatives:</p>
             {outline.title.alternatives.slice(0, 3).map((alt, i) => (
-              <p key={i} className="text-xs text-muted-foreground">â€¢ {alt}</p>
+              <p key={i} className="text-xs text-muted-foreground">• {alt}</p>
             ))}
           </div>
         </CardContent>
@@ -843,7 +843,7 @@ function CompetitorCard({ competitor }: { competitor: CompetitorInsight }) {
             <div>
               <p className="text-xs text-muted-foreground mb-1">Top Headings:</p>
               {competitor.topHeadings.map((h, i) => (
-                <p key={i} className="text-xs">â€¢ {h}</p>
+                <p key={i} className="text-xs">• {h}</p>
               ))}
             </div>
           </div>

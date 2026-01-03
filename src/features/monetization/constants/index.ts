@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // MONETIZATION - Constants & Mock Data
 // ============================================
 
@@ -8,7 +8,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "finance",
     name: "Finance & Investing",
-    icon: "💰",
+    icon: "??",
     avgRpm: 45,
     minRpm: 25,
     maxRpm: 80,
@@ -17,7 +17,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "insurance",
     name: "Insurance",
-    icon: "🛡️",
+    icon: "???",
     avgRpm: 55,
     minRpm: 35,
     maxRpm: 100,
@@ -26,7 +26,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "legal",
     name: "Legal & Law",
-    icon: "⚖️",
+    icon: "??",
     avgRpm: 50,
     minRpm: 30,
     maxRpm: 90,
@@ -35,7 +35,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "health",
     name: "Health & Wellness",
-    icon: "🏥",
+    icon: "??",
     avgRpm: 25,
     minRpm: 15,
     maxRpm: 45,
@@ -44,7 +44,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "tech",
     name: "Technology",
-    icon: "💻",
+    icon: "??",
     avgRpm: 20,
     minRpm: 12,
     maxRpm: 35,
@@ -53,7 +53,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "travel",
     name: "Travel",
-    icon: "✈️",
+    icon: "??",
     avgRpm: 18,
     minRpm: 10,
     maxRpm: 30,
@@ -62,7 +62,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "food",
     name: "Food & Recipes",
-    icon: "🍳",
+    icon: "??",
     avgRpm: 22,
     minRpm: 15,
     maxRpm: 40,
@@ -71,7 +71,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "lifestyle",
     name: "Lifestyle",
-    icon: "🌟",
+    icon: "??",
     avgRpm: 15,
     minRpm: 8,
     maxRpm: 25,
@@ -80,7 +80,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "parenting",
     name: "Parenting & Family",
-    icon: "👨‍👩‍👧",
+    icon: "????????",
     avgRpm: 20,
     minRpm: 12,
     maxRpm: 35,
@@ -89,7 +89,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "diy",
     name: "DIY & Crafts",
-    icon: "🔨",
+    icon: "??",
     avgRpm: 18,
     minRpm: 10,
     maxRpm: 30,
@@ -98,7 +98,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "gaming",
     name: "Gaming",
-    icon: "🎮",
+    icon: "??",
     avgRpm: 12,
     minRpm: 6,
     maxRpm: 20,
@@ -107,7 +107,7 @@ export const BLOG_NICHES: BlogNiche[] = [
   {
     id: "education",
     name: "Education & Online Courses",
-    icon: "📚",
+    icon: "??",
     avgRpm: 25,
     minRpm: 15,
     maxRpm: 45,
@@ -119,7 +119,7 @@ export const AD_NETWORKS: AdNetwork[] = [
   {
     id: "adsense",
     name: "Google AdSense",
-    logo: "🔷",
+    logo: "??",
     minTraffic: 0,
     avgRpm: 8,
     requirements: "No minimum traffic",
@@ -128,7 +128,7 @@ export const AD_NETWORKS: AdNetwork[] = [
   {
     id: "ezoic",
     name: "Ezoic",
-    logo: "🟢",
+    logo: "??",
     minTraffic: 0,
     avgRpm: 15,
     requirements: "No minimum, AI optimization",
@@ -137,7 +137,7 @@ export const AD_NETWORKS: AdNetwork[] = [
   {
     id: "monumetric",
     name: "Monumetric",
-    logo: "🔵",
+    logo: "??",
     minTraffic: 10000,
     avgRpm: 20,
     requirements: "10K+ pageviews/month",
@@ -146,7 +146,7 @@ export const AD_NETWORKS: AdNetwork[] = [
   {
     id: "mediavine",
     name: "Mediavine",
-    logo: "🟣",
+    logo: "??",
     minTraffic: 50000,
     avgRpm: 30,
     requirements: "50K+ sessions/month",
@@ -155,7 +155,7 @@ export const AD_NETWORKS: AdNetwork[] = [
   {
     id: "raptive",
     name: "Raptive (AdThrive)",
-    logo: "🟠",
+    logo: "??",
     minTraffic: 100000,
     avgRpm: 40,
     requirements: "100K+ pageviews/month",

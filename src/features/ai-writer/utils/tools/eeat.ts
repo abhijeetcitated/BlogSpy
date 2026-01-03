@@ -1,4 +1,4 @@
-﻿/**
+/**
  * E-E-A-T Analyzer Utilities
  * 
  * Comprehensive algorithms for analyzing content based on Google's E-E-A-T guidelines:
@@ -728,9 +728,9 @@ export function analyzeTrustworthiness(
     score: transparencyScore,
     weight: 0.8,
     evidence: [
-      contentMetadata.hasAboutSection ? 'âœ“ About section' : 'âœ— No about section',
-      contentMetadata.hasContactInfo ? 'âœ“ Contact info' : 'âœ— No contact info',
-      contentMetadata.hasDisclaimer ? 'âœ“ Disclaimers' : 'âœ— No disclaimers'
+      contentMetadata.hasAboutSection ? '✓ About section' : '✗ No about section',
+      contentMetadata.hasContactInfo ? '✓ Contact info' : '✗ No contact info',
+      contentMetadata.hasDisclaimer ? '✓ Disclaimers' : '✗ No disclaimers'
     ],
     suggestions: transparencyScore < 70 
       ? ['Add about page/section', 'Include contact information', 'Add disclosure statements']

@@ -22,7 +22,7 @@ export function AIOverviewSection({ analysis }: AIOverviewSectionProps) {
       </div>
       
       {/* Citation Sources Card */}
-      <div className="lg:col-span-1 bg-card dark:bg-gradient-to-br dark:from-card/80 dark:to-purple-900/10 border border-purple-500/20 rounded-xl p-4 lg:p-5">
+      <div className="lg:col-span-1 bg-card dark:bg-linear-to-br dark:from-card/80 dark:to-purple-900/10 border border-purple-500/20 rounded-xl p-4 lg:p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-purple-500 dark:text-purple-400" />

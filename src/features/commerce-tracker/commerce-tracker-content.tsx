@@ -116,7 +116,7 @@ export function CommerceTrackerContent() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-2.5 sm:gap-3 md:gap-3.5">
-          <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 shrink-0">
+          <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-linear-to-br from-amber-500/20 to-orange-500/20 shrink-0">
             <ShoppingCart className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-amber-400" />
           </div>
           <div>
@@ -160,7 +160,7 @@ export function CommerceTrackerContent() {
           <Button 
             size="sm"
             onClick={() => setShowAddDialog(true)}
-            className="h-8 sm:h-8 md:h-9 px-2 sm:px-2.5 md:px-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 font-semibold text-xs sm:text-xs md:text-sm"
+            className="h-8 sm:h-8 md:h-9 px-2 sm:px-2.5 md:px-3 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 font-semibold text-xs sm:text-xs md:text-sm"
           >
             <Plus className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 mr-1 sm:mr-1 md:mr-1.5" />
             Add Keyword
@@ -232,7 +232,7 @@ export function CommerceTrackerContent() {
                   Clear Filters
                 </Button>
               ) : (
-                <Button onClick={() => setShowAddDialog(true)} className="bg-gradient-to-r from-amber-500 to-orange-500">
+                <Button onClick={() => setShowAddDialog(true)} className="bg-linear-to-r from-amber-500 to-orange-500">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Keywords
                 </Button>

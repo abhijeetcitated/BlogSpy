@@ -22,7 +22,7 @@ export function CTASection({
   secondaryHref = "/pricing",
 }: CTASectionProps) {
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-blue-600 to-cyan-500 text-white">
+    <section className="py-20 px-4 bg-linear-to-br from-blue-600 to-cyan-500 text-white">
       <div className="container text-center max-w-3xl">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
           {title}

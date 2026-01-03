@@ -5,9 +5,14 @@
 // Matches keyword-table.tsx & keyword-magic-content.tsx
 // ============================================
 
+import type { SortDirection as SharedSortDirection, SearchIntent } from "@/src/types/shared"
+
+// Re-export shared types for convenience
+export type SortDirection = SharedSortDirection
+
 // Intent Types
 export type KeywordIntent = "I" | "C" | "T" | "N"
-export type IntentFull = "informational" | "commercial" | "transactional" | "navigational"
+export type IntentFull = SearchIntent
 
 // SERP Features
 export type SerpFeature = 
@@ -81,9 +86,8 @@ export const DEFAULT_KEYWORD_FILTERS: KeywordFilters = {
   hasWeakSpot: null,
 }
 
-// Sort Options
+// Sort Options (SortDirection is imported from shared types above)
 export type KeywordSortField = "keyword" | "volume" | "kd" | "cpc" | "trend" | null
-export type SortDirection = "asc" | "desc"
 
 export interface KeywordSortOptions {
   field: KeywordSortField

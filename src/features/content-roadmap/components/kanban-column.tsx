@@ -69,7 +69,7 @@ export function KanbanColumn({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-w-[220px] sm:min-w-[260px] max-w-[280px] sm:max-w-[320px] flex-shrink-0">
+    <div className="flex flex-col flex-1 min-w-[220px] sm:min-w-[260px] max-w-[280px] sm:max-w-[320px] shrink-0">
       {/* Column Header */}
       <div
         className={cn(

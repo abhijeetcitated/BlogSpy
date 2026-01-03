@@ -61,8 +61,8 @@ export function CommandCenter() {
         onClick={openCommandPalette}
         className="w-full text-left"
       >
-        <Card className="bg-gradient-to-br from-card via-card to-emerald-950/10 border-border/50 backdrop-blur-sm relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition-all">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-transparent to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <Card className="bg-linear-to-br from-card via-card to-emerald-950/10 border-border/50 backdrop-blur-sm relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition-all">
+          <div className="absolute inset-0 bg-linear-to-r from-emerald-500/5 via-transparent to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <CardContent className="p-4 sm:p-6 md:p-8 relative">
             <div className="max-w-3xl mx-auto space-y-4">
               <div className="relative">

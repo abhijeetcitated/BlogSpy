@@ -44,7 +44,7 @@ export function CitationCard({ citation, domain }: CitationCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-foreground truncate">{citation.keyword}</h3>
-              <TrendIcon className={`h-4 w-4 ${trendColor} flex-shrink-0`} />
+              <TrendIcon className={`h-4 w-4 ${trendColor} shrink-0`} />
             </div>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="text-muted-foreground">

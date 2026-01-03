@@ -3,6 +3,11 @@
 // ============================================
 // Complete metrics like Ahrefs/SEMrush
 
+import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+
+// Re-export shared types for convenience
+export type SortDirection = SharedSortDirection
+
 // ============================================
 // CORE KEYWORD DATA (All Metrics)
 // ============================================
@@ -191,7 +196,8 @@ export const DEFAULT_FILTERS: KeywordFilters = {
   searchQuery: ""
 }
 
-export type SortField = 
+// Feature-specific sort fields
+export type KeywordPoolSortField = 
   | "keyword" 
   | "volume" 
   | "kd" 
@@ -200,7 +206,7 @@ export type SortField =
   | "trend"
   | "opportunity"
 
-export type SortDirection = "asc" | "desc"
+export type SortField = KeywordPoolSortField
 
 export interface SortConfig {
   field: SortField

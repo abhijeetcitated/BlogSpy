@@ -19,7 +19,7 @@ export function SummaryFooter({ filteredCount, totalCount, issues }: SummaryFoot
     <div className={cn(
       "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4",
       "p-3 sm:p-4 rounded-xl",
-      "bg-gradient-to-r from-card/80 to-card/50 dark:from-card/50 dark:to-card/30",
+      "bg-linear-to-r from-card/80 to-card/50 dark:from-card/50 dark:to-card/30",
       "border border-border/50 dark:border-border/30"
     )}>
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
@@ -41,7 +41,7 @@ export function SummaryFooter({ filteredCount, totalCount, issues }: SummaryFoot
         <Button 
           size="sm" 
           className={cn(
-            "bg-gradient-to-r from-emerald-600 to-emerald-500",
+            "bg-linear-to-r from-emerald-600 to-emerald-500",
             "hover:from-emerald-500 hover:to-emerald-400",
             "text-white shadow-lg shadow-emerald-500/20",
             "transition-all duration-200 hover:scale-[1.02]",

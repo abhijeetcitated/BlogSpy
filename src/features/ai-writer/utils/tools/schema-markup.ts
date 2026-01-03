@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Schema Markup Generator Utilities
  * 
  * Production-grade utilities for generating, validating, and managing
@@ -73,7 +73,7 @@ const TYPE_PATTERNS: Record<SchemaType, RegExp[]> = {
   Review: [
     /\b(review|rating|stars?|recommend|verdict)\b/i,
     /pros and cons|overall score|we tested/i,
-    /\d+\/\d+|â˜…+/
+    /\d+\/\d+|★+/
   ],
   Recipe: [
     /\b(recipe|ingredients?|cook|bake|prep time)\b/i,
@@ -107,7 +107,7 @@ const TYPE_PATTERNS: Record<SchemaType, RegExp[]> = {
     /\b(page|website|site|home)\b/i
   ],
   BreadcrumbList: [
-    /home\s*[>Â»â€º]\s*/i,
+    /home\s*[>»›]\s*/i,
     /breadcrumb|navigation path/i
   ],
   ItemList: [
@@ -344,7 +344,7 @@ function extractIngredients(content: string): string[] {
   if (ingredientSection) {
     const lines = ingredientSection[1].split('\n');
     for (const line of lines) {
-      const cleaned = line.replace(/^[-â€¢*]\s*/, '').trim();
+      const cleaned = line.replace(/^[-•*]\s*/, '').trim();
       if (cleaned && cleaned.length > 2 && cleaned.length < 100) {
         ingredients.push(cleaned);
       }
@@ -977,17 +977,17 @@ function generateGooglePreview(schema: GeneratedSchema): string {
   let richSnippet = '';
   
   if (type === 'Recipe') {
-    richSnippet = 'â­â­â­â­â­ 4.5 (120 reviews) Â· 45 min Â· Calories: 250';
+    richSnippet = '⭐⭐⭐⭐⭐ 4.5 (120 reviews) · 45 min · Calories: 250';
   } else if (type === 'Product') {
     const offers = schema.offers as Record<string, unknown> | undefined;
     const price = offers?.price || '29.99';
-    richSnippet = `$${price} Â· In Stock Â· â­â­â­â­ 4.2 (85 reviews)`;
+    richSnippet = `$${price} · In Stock · ⭐⭐⭐⭐ 4.2 (85 reviews)`;
   } else if (type === 'Event') {
-    richSnippet = `ðŸ“… ${schema.startDate || 'Jan 15, 2025'} Â· ðŸ“ Location`;
+    richSnippet = `📅 ${schema.startDate || 'Jan 15, 2025'} · 📍 Location`;
   } else if (type === 'FAQ' || type === 'FAQPage') {
-    richSnippet = 'â“ Frequently Asked Questions (expandable)';
+    richSnippet = '❓ Frequently Asked Questions (expandable)';
   } else if (type === 'HowTo') {
-    richSnippet = 'ðŸ“‹ Step-by-step guide Â· 10 steps Â· 30 min';
+    richSnippet = '📋 Step-by-step guide · 10 steps · 30 min';
   }
 
   return `**${title}**\nexample.com\n${description.slice(0, 160)}${description.length > 160 ? '...' : ''}\n${richSnippet ? `\n${richSnippet}` : ''}`;

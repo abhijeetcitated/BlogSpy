@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 
 // ============================================
 // POST /api/social-tracker/refresh
@@ -6,6 +7,10 @@ import { NextResponse } from "next/server"
 // ============================================
 
 export async function POST() {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     // TODO: Replace with real implementation
     // 1. Fetch all user's keywords

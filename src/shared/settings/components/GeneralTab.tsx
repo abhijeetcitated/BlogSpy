@@ -285,7 +285,7 @@ export function GeneralTab() {
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20">
               {avatar && <AvatarImage src={avatar} alt={displayName} />}
-              <AvatarFallback className="bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 text-emerald-400 text-xl">
+              <AvatarFallback className="bg-linear-to-br from-emerald-500/20 to-cyan-500/20 text-emerald-400 text-xl">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -1031,7 +1031,7 @@ export function GeneralTab() {
           {MOCK_LOGIN_HISTORY.some(login => login.status !== "success") && (
             <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-amber-400">Suspicious Activity Detected</p>
                   <p className="text-sm text-muted-foreground mt-1">

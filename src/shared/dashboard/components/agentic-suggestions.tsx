@@ -98,14 +98,14 @@ export function AgenticSuggestions({ suggestions }: AgenticSuggestionsProps) {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-card via-card to-violet-950/10 border-violet-500/20 backdrop-blur-sm relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-purple-500/5" />
+    <Card className="bg-linear-to-br from-card via-card to-violet-950/10 border-violet-500/20 backdrop-blur-sm relative overflow-hidden">
+      <div className="absolute inset-0 bg-linear-to-r from-violet-500/5 via-transparent to-purple-500/5" />
       <CardContent className="p-4 sm:p-6 relative">
         <div className="space-y-3 sm:space-y-4">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-linear-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30">
                 <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-violet-400" />
               </div>
               <div>
@@ -189,7 +189,7 @@ interface SuggestionCardProps {
 function SuggestionCard({ suggestion, onDismiss }: SuggestionCardProps) {
   return (
     <div
-      className={`relative p-3 sm:p-4 rounded-lg sm:rounded-xl bg-gradient-to-br ${suggestion.bgColor} border ${suggestion.borderColor} transition-all duration-300 group`}
+      className={`relative p-3 sm:p-4 rounded-lg sm:rounded-xl bg-linear-to-br ${suggestion.bgColor} border ${suggestion.borderColor} transition-all duration-300 group`}
     >
       {/* Priority Badge */}
       {suggestion.priority === 'high' && (

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * E-E-A-T Analyzer Panel Component
  * 
  * Comprehensive UI for analyzing and improving E-E-A-T signals:
@@ -276,7 +276,7 @@ function SignalCard({ signal }: SignalCardProps) {
                 <ul className="space-y-1">
                   {signal.evidence.map((e, i) => (
                     <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                      <CheckCircle className="h-3 w-3 mt-0.5 text-green-500 flex-shrink-0" />
+                      <CheckCircle className="h-3 w-3 mt-0.5 text-green-500 shrink-0" />
                       <span className="line-clamp-2">{e}</span>
                     </li>
                   ))}
@@ -291,7 +291,7 @@ function SignalCard({ signal }: SignalCardProps) {
                 <ul className="space-y-1">
                   {signal.suggestions.map((s, i) => (
                     <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                      <Lightbulb className="h-3 w-3 mt-0.5 text-yellow-500 flex-shrink-0" />
+                      <Lightbulb className="h-3 w-3 mt-0.5 text-yellow-500 shrink-0" />
                       {s}
                     </li>
                   ))}
@@ -337,7 +337,7 @@ function IssueCard({ issue }: IssueCardProps) {
       
       <div className="mt-3 pt-3 border-t border-dashed">
         <div className="flex items-start gap-2">
-          <Lightbulb className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <Lightbulb className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
           <div>
             <p className="text-xs font-medium">Fix:</p>
             <p className="text-xs text-muted-foreground">{issue.fixSuggestion}</p>
@@ -398,7 +398,7 @@ function RecommendationCard({ recommendation, onApply }: RecommendationCardProps
                 <ul className="space-y-1">
                   {recommendation.examples.map((ex, i) => (
                     <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                      <span className="text-muted-foreground">â€¢</span>
+                      <span className="text-muted-foreground">•</span>
                       {ex}
                     </li>
                   ))}
@@ -583,7 +583,7 @@ function OverviewTab({ analysis }: { analysis: EEATAnalysis }) {
           <div className="space-y-2">
             {analysis.quickWins.slice(0, 3).map(rec => (
               <div key={rec.id} className="flex items-start gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
                 <span>{rec.title}</span>
               </div>
             ))}

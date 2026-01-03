@@ -3,12 +3,17 @@
 // ============================================
 
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 import { buildMockTrendingSounds } from "../_helpers"
 
 // TODO: Set RAPIDAPI_KEY in server env and replace mock fetch logic if needed.
 const TIKTOK_API_KEY = process.env.RAPIDAPI_KEY
 
 export async function GET(_request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     if (!TIKTOK_API_KEY) {
       return NextResponse.json({

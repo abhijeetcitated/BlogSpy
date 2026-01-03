@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AI Content Detector Panel Component
  * 
  * Comprehensive AI-generated content detection UI
@@ -505,7 +505,7 @@ const OverviewTab: React.FC<{
             </h4>
             <ul className="space-y-1">
               {summary.concerns.map((c, i) => (
-                <li key={i} className="text-xs text-muted-foreground">â€¢ {c}</li>
+                <li key={i} className="text-xs text-muted-foreground">• {c}</li>
               ))}
             </ul>
           </div>
@@ -519,7 +519,7 @@ const OverviewTab: React.FC<{
             </h4>
             <ul className="space-y-1">
               {summary.positives.map((p, i) => (
-                <li key={i} className="text-xs text-muted-foreground">â€¢ {p}</li>
+                <li key={i} className="text-xs text-muted-foreground">• {p}</li>
               ))}
             </ul>
           </div>

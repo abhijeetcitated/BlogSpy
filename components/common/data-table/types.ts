@@ -1,5 +1,10 @@
 // Data Table Types
 
+import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+
+// Re-export shared types for convenience
+export type SortDirection = SharedSortDirection
+
 export interface Column<T> {
   key: keyof T | string
   header: string
@@ -29,8 +34,6 @@ export interface DataTableProps<T> {
   actions?: DataTableAction<T>[]
   className?: string
 }
-
-export type SortDirection = "asc" | "desc"
 
 export interface DataTableState {
   search: string

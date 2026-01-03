@@ -37,7 +37,7 @@ export default function LoginPage() {
     <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-xl shadow-2xl">
       <CardHeader className="space-y-1 text-center">
         <div className="flex justify-center mb-4">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+          <div className="h-12 w-12 rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
         </div>
@@ -51,7 +51,7 @@ export default function LoginPage() {
         {/* Coming Soon Notice */}
         <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
           <div className="flex items-center gap-3">
-            <Construction className="h-5 w-5 text-amber-400 flex-shrink-0" />
+            <Construction className="h-5 w-5 text-amber-400 shrink-0" />
             <div>
               <p className="text-amber-400 font-medium text-sm">Authentication Coming Soon</p>
               <p className="text-amber-400/70 text-xs mt-1">
@@ -66,7 +66,7 @@ export default function LoginPage() {
           type="button"
           onClick={handleDemoLogin}
           disabled={isLoading}
-          className="w-full h-12 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium text-base"
+          className="w-full h-12 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium text-base"
         >
           {isLoading ? (
             <>

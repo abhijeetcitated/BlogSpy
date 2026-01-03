@@ -1,4 +1,4 @@
-﻿// =============================================================================
+// =============================================================================
 // AUTO-OPTIMIZE UTILITIES - Production Level
 // =============================================================================
 // One-click optimization algorithms for content improvement
@@ -1513,16 +1513,16 @@ export function exportOptimizationReport(
   ];
   
   if (analysis.actionsByPriority.critical > 0) {
-    lines.push(`- ðŸ”´ Critical: ${analysis.actionsByPriority.critical}`);
+    lines.push(`- 🔴 Critical: ${analysis.actionsByPriority.critical}`);
   }
   if (analysis.actionsByPriority.high > 0) {
-    lines.push(`- ðŸŸ  High: ${analysis.actionsByPriority.high}`);
+    lines.push(`- 🟠 High: ${analysis.actionsByPriority.high}`);
   }
   if (analysis.actionsByPriority.medium > 0) {
-    lines.push(`- ðŸŸ¡ Medium: ${analysis.actionsByPriority.medium}`);
+    lines.push(`- 🟡 Medium: ${analysis.actionsByPriority.medium}`);
   }
   if (analysis.actionsByPriority.low > 0) {
-    lines.push(`- ðŸ”µ Low: ${analysis.actionsByPriority.low}`);
+    lines.push(`- 🔵 Low: ${analysis.actionsByPriority.low}`);
   }
   
   lines.push('', '## Recommended Actions', '');
@@ -1534,7 +1534,7 @@ export function exportOptimizationReport(
   if (analysis.summary.warnings.length > 0) {
     lines.push('', '## Warnings', '');
     for (const warning of analysis.summary.warnings) {
-      lines.push(`âš ï¸ ${warning}`);
+      lines.push(`⚠️ ${warning}`);
     }
   }
   

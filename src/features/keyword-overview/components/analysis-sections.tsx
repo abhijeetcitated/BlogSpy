@@ -15,7 +15,7 @@ interface PixelRankSectionProps {
 
 export function PixelRankSection({ score }: PixelRankSectionProps) {
   return (
-    <div className="bg-card dark:bg-gradient-to-br dark:from-card/80 dark:to-purple-900/20 border border-purple-500/30 rounded-xl p-5">
+    <div className="bg-card dark:bg-linear-to-br dark:from-card/80 dark:to-purple-900/20 border border-purple-500/30 rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Monitor className="w-5 h-5 text-purple-500 dark:text-purple-400" />
@@ -51,7 +51,7 @@ interface RTVSectionProps {
 
 export function RTVSection({ analysis }: RTVSectionProps) {
   return (
-    <div className="bg-card dark:bg-gradient-to-br dark:from-card/80 dark:to-orange-900/20 border border-orange-500/30 rounded-xl p-5">
+    <div className="bg-card dark:bg-linear-to-br dark:from-card/80 dark:to-orange-900/20 border border-orange-500/30 rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-orange-500 dark:text-orange-400" />
@@ -87,7 +87,7 @@ interface DecayOpportunityCardProps {
 
 export function DecayOpportunityCard({ analysis }: DecayOpportunityCardProps) {
   return (
-    <div className="lg:col-span-1 bg-card dark:bg-gradient-to-br dark:from-card/80 dark:to-orange-900/10 border border-orange-500/20 rounded-xl p-4 lg:p-5">
+    <div className="lg:col-span-1 bg-card dark:bg-linear-to-br dark:from-card/80 dark:to-orange-900/10 border border-orange-500/20 rounded-xl p-4 lg:p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Flame className="w-5 h-5 text-orange-500 dark:text-orange-400" />
@@ -109,7 +109,7 @@ export function DecayOpportunityCard({ analysis }: DecayOpportunityCardProps) {
             </div>
             <div className="w-full bg-muted rounded-full h-1.5">
               <div 
-                className="bg-gradient-to-r from-orange-500 to-red-500 h-1.5 rounded-full" 
+                className="bg-linear-to-r from-orange-500 to-red-500 h-1.5 rounded-full" 
                 style={{ width: `${Math.min(analysis.communityCountInTop10 * 20, 100)}%` }}
               />
             </div>

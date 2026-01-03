@@ -5,7 +5,7 @@ export function BackgroundEffects() {
     <>
       {/* Premium background with subtle grid pattern */}
       <div
-        className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/20"
+        className="absolute inset-0 bg-linear-to-br from-background via-background to-muted/20"
       />
       
       {/* Grid overlay - theme aware */}

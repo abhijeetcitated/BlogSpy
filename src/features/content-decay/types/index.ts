@@ -2,14 +2,19 @@
 // CONTENT DECAY - Type Definitions
 // ============================================
 
+import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+
+// Re-export shared types
+export type SortDirection = SharedSortDirection
+
 // Core decay types
 export type DecayReason = "Competitor" | "Outdated" | "Missing Keywords" | "Schema Issues" | "Slow Load"
 export type DecayStatus = "critical" | "watch" | "fixed" | "ignored"
 export type MatrixZone = "critical" | "watch" | "low" | "stable"
 
-// Sort types
-export type SortField = "trafficLoss" | "rankDrop" | "decayRate" | "title"
-export type SortDirection = "asc" | "desc"
+// Sort types (feature-specific)
+export type ContentDecaySortField = "trafficLoss" | "rankDrop" | "decayRate" | "title"
+export type SortField = ContentDecaySortField
 
 // Alert types
 export type AlertSeverity = "critical" | "warning" | "info"

@@ -13,7 +13,7 @@ export function AlertInfoCard() {
     <Card className="bg-muted/50 border-muted">
       <CardContent className="pt-4">
         <div className="flex gap-3">
-          <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <Info className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
           <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-1">How alerts work</p>
             <ul className="list-disc list-inside space-y-1 text-xs">

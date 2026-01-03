@@ -548,7 +548,7 @@ export function ClusterBuilderPanel({ keywords, onBack, onExportBriefs }: Cluste
       
       {/* Analysis Stats */}
       {result && !isAnalyzing && (
-        <div className="p-4 border-b border-zinc-800 bg-gradient-to-r from-orange-500/10 to-amber-500/10">
+        <div className="p-4 border-b border-zinc-800 bg-linear-to-r from-orange-500/10 to-amber-500/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <div className="text-center">
@@ -816,7 +816,7 @@ export function ClusterBuilderPanel({ keywords, onBack, onExportBriefs }: Cluste
               <Button
                 size="lg"
                 onClick={handleExport}
-                className="gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+                className="gap-2 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
               >
                 <Sparkles className="h-5 w-5" />
                 Generate Content Briefs

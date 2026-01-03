@@ -14,12 +14,12 @@ export default function MarketingLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-900 to-slate-950">
       {/* Navigation */}
       <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
         <nav className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <span className="text-xl font-bold text-white">BlogSpy</span>
@@ -44,7 +44,7 @@ export default function MarketingLayout({
               </Button>
             </Link>
             <Link href="/register">
-              <Button className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
+              <Button className="bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
                 Start Free
               </Button>
             </Link>
@@ -93,7 +93,7 @@ export default function MarketingLayout({
           </div>
           <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-md bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+              <div className="h-6 w-6 rounded-md bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
                 <Sparkles className="h-3 w-3 text-white" />
               </div>
               <span className="text-sm text-slate-400">© 2025 BlogSpy. All rights reserved.</span>

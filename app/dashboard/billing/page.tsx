@@ -280,7 +280,7 @@ export default function BillingPage() {
                   <ul className="space-y-2">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
-                        <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                        <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                         {feature}
                       </li>
                     ))}

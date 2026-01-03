@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // =============================================================================
 // AUTO-OPTIMIZE HOOK - Production Level

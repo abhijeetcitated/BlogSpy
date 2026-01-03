@@ -436,8 +436,8 @@ export function TaskModal({ open, onClose, onSave, editTask, mode }: TaskModalPr
             className={cn(
               "gap-2 rounded-lg shadow-lg font-medium",
               mode === "add"
-                ? "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/25"
-                : "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-blue-500/25"
+                ? "bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/25"
+                : "bg-linear-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-blue-500/25"
             )}
           >
             {mode === "add" ? (

@@ -15,7 +15,7 @@ interface VennDiagramProps {
  */
 export function VennDiagram({ stats }: VennDiagramProps) {
   return (
-    <div className="relative w-48 h-32 flex-shrink-0">
+    <div className="relative w-48 h-32 shrink-0">
       {/* Your circle */}
       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center">
         <span className="text-[10px] font-medium text-emerald-400 text-center leading-tight">

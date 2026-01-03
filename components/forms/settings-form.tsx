@@ -66,7 +66,7 @@ export function SettingsForm({
         <Button
           onClick={handleSave}
           disabled={isLoading}
-          className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+          className="bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
         >
           {isLoading ? (
             <>

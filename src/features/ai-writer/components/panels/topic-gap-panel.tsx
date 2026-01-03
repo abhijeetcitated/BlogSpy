@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Topic Gap Analysis Panel Component
  * 
  * Comprehensive topic gap analysis UI
@@ -498,7 +498,7 @@ const OverviewTab: React.FC<{
             </h4>
             <ul className="space-y-1">
               {summary.strengths.map((s, i) => (
-                <li key={i} className="text-sm text-muted-foreground">â€¢ {s}</li>
+                <li key={i} className="text-sm text-muted-foreground">• {s}</li>
               ))}
             </ul>
           </div>
@@ -512,7 +512,7 @@ const OverviewTab: React.FC<{
             </h4>
             <ul className="space-y-1">
               {summary.weaknesses.map((w, i) => (
-                <li key={i} className="text-sm text-muted-foreground">â€¢ {w}</li>
+                <li key={i} className="text-sm text-muted-foreground">• {w}</li>
               ))}
             </ul>
           </div>

@@ -226,7 +226,7 @@ export function ArticleDetailModal({
             <Button
               onClick={() => onReviveWithAI(article.id)}
               disabled={isReviving}
-              className="w-full gap-1.5 sm:gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white h-9 sm:h-10 text-xs sm:text-sm"
+              className="w-full gap-1.5 sm:gap-2 bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white h-9 sm:h-10 text-xs sm:text-sm"
             >
               {isReviving ? (
                 <>

@@ -220,7 +220,7 @@ export function IssueCard({
             "p-3 sm:p-4 rounded-xl border",
             resolved 
               ? "bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30"
-              : "bg-gradient-to-r from-cyan-500/5 to-emerald-500/5 dark:from-cyan-500/10 dark:to-emerald-500/10 border-cyan-500/20 dark:border-cyan-500/30"
+              : "bg-linear-to-r from-cyan-500/5 to-emerald-500/5 dark:from-cyan-500/10 dark:to-emerald-500/10 border-cyan-500/20 dark:border-cyan-500/30"
           )}>
             <div className="flex items-start gap-3">
               <div className={cn(
@@ -277,7 +277,7 @@ export function IssueCard({
                 <Button
                   size="sm"
                   className={cn(
-                    "bg-gradient-to-r from-emerald-600 to-emerald-500",
+                    "bg-linear-to-r from-emerald-600 to-emerald-500",
                     "hover:from-emerald-500 hover:to-emerald-400",
                     "text-white shadow-lg shadow-emerald-500/20",
                     "transition-all duration-200"

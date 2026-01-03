@@ -148,9 +148,9 @@ export function ImportKeywordsModal({
               )}
             >
               {mode === "new" ? (
-                <CheckCircle2 className="h-5 w-5 text-violet-500 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-violet-500 mt-0.5 shrink-0" />
               ) : (
-                <Circle className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <Circle className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
               )}
               <div className="flex-1 space-y-2">
                 <div className="font-medium flex items-center gap-2">
@@ -180,9 +180,9 @@ export function ImportKeywordsModal({
               )}
             >
               {mode === "existing" ? (
-                <CheckCircle2 className="h-5 w-5 text-violet-500 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-violet-500 mt-0.5 shrink-0" />
               ) : (
-                <Circle className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <Circle className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
               )}
               <div className="flex-1 space-y-2">
                 <div className="font-medium flex items-center gap-2">

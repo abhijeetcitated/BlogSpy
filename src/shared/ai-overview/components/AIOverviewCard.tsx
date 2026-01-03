@@ -86,7 +86,7 @@ export function AIOverviewCard({
   return (
     <div className={cn(
       "rounded-xl border overflow-hidden",
-      "bg-card dark:bg-gradient-to-br dark:from-card/80 dark:to-purple-900/20 border-purple-500/30",
+      "bg-card dark:bg-linear-to-br dark:from-card/80 dark:to-purple-900/20 border-purple-500/30",
       className
     )}>
       {/* Header */}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Topic Gap Analysis Hook
  * 
  * React hook for managing topic gap analysis

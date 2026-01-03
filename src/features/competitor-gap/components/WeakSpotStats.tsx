@@ -12,7 +12,7 @@ interface WeakSpotStatsProps {
 export function WeakSpotStats({ highOpportunity, redditCount, totalPotential }: WeakSpotStatsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
+      <Card className="bg-linear-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -27,7 +27,7 @@ export function WeakSpotStats({ highOpportunity, redditCount, totalPotential }: 
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
+      <Card className="bg-linear-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -42,7 +42,7 @@ export function WeakSpotStats({ highOpportunity, redditCount, totalPotential }: 
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border-cyan-500/20">
+      <Card className="bg-linear-to-br from-cyan-500/10 to-cyan-500/5 border-cyan-500/20">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>

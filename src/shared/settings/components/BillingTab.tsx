@@ -182,9 +182,9 @@ export function BillingTab() {
           <CardDescription className="text-muted-foreground">Your subscription and billing details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-linear-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+              <div className="h-12 w-12 rounded-lg bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
                 <CreditCard className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -218,7 +218,7 @@ export function BillingTab() {
               <div className="relative">
                 <Progress value={percentage} className="h-3" />
                 <div
-                  className="absolute inset-0 h-3 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500"
+                  className="absolute inset-0 h-3 rounded-full bg-linear-to-r from-emerald-500 to-cyan-500"
                   style={{ width: `${percentage}%`, opacity: 0.2 }}
                 />
               </div>
@@ -230,7 +230,7 @@ export function BillingTab() {
 
       {/* Upgrade Callout - Show only for non-enterprise */}
       {plan !== "ENTERPRISE" && (
-        <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30">
+        <Card className="bg-linear-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -243,7 +243,7 @@ export function BillingTab() {
                   per month
                 </p>
               </div>
-              <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white">
+              <Button className="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white">
                 Upgrade Now
               </Button>
             </div>

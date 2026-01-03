@@ -2,6 +2,11 @@
 // RANK TRACKER - Type Definitions
 // ============================================
 
+import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+
+// Re-export shared types
+export type SortDirection = SharedSortDirection
+
 // Re-export platform types
 export * from "./platforms"
 
@@ -57,14 +62,10 @@ export interface RankData {
 export type FilterTab = "All" | "Top 3" | "Top 10" | "Top 100" | "Improved" | "Declined"
 
 /**
- * Sortable Fields
+ * Sortable Fields (feature-specific)
  */
-export type SortField = "keyword" | "rank" | "change" | "volume" | null
-
-/**
- * Sort Direction
- */
-export type SortDirection = "asc" | "desc"
+export type RankTrackerSortField = "keyword" | "rank" | "change" | "volume" | null
+export type SortField = RankTrackerSortField
 
 /**
  * Statistics Summary

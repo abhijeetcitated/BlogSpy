@@ -3,6 +3,7 @@
 // ============================================
 
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth } from "@/lib/auth-utils"
 import { buildMockTikTokRawResults, mapRapidApiItemToRaw } from "../_helpers"
 
 // TikTok API configuration (RapidAPI)
@@ -12,6 +13,10 @@ const TIKTOK_API_HOST = "tiktok-scraper7.p.rapidapi.com"
 const TIKTOK_API_BASE = `https://${TIKTOK_API_HOST}`
 
 export async function POST(request: NextRequest) {
+  // Auth check
+  const auth = await requireAuth()
+  if (!auth.success) return auth.response
+
   try {
     const body = await request.json()
     const {

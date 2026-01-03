@@ -4,7 +4,7 @@ import { Sparkles } from "lucide-react"
 
 export function WeakSpotInfoBanner() {
   return (
-    <div className="p-4 rounded-lg bg-gradient-to-r from-cyan-500/10 via-transparent to-purple-500/10 border border-cyan-500/20">
+    <div className="p-4 rounded-lg bg-linear-to-r from-cyan-500/10 via-transparent to-purple-500/10 border border-cyan-500/20">
       <div className="flex items-start gap-3">
         <Sparkles className="h-5 w-5 text-cyan-400 mt-0.5 shrink-0" />
         <div>

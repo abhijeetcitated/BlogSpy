@@ -48,7 +48,7 @@ export function TikTokResultCard({ video, isSelected, onSelect }: TikTokResultCa
         />
         
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent" />
 
         {/* Play Button Overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -71,7 +71,7 @@ export function TikTokResultCard({ video, isSelected, onSelect }: TikTokResultCa
         </div>
 
         {/* Platform Icon */}
-        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 p-1 sm:p-1.5 rounded-lg bg-gradient-to-r from-[#ff0050] to-[#00f2ea] text-white">
+        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 p-1 sm:p-1.5 rounded-lg bg-linear-to-r from-[#ff0050] to-[#00f2ea] text-white">
           <TikTokIcon size={14} className="sm:w-4 sm:h-4" />
         </div>
 
@@ -103,7 +103,7 @@ export function TikTokResultCard({ video, isSelected, onSelect }: TikTokResultCa
 
         {/* Creator Info */}
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden bg-muted shrink-0 ring-1 ring-border">
             <Image
               src={video.creatorAvatar}
               alt={video.creatorName}
@@ -115,10 +115,10 @@ export function TikTokResultCard({ video, isSelected, onSelect }: TikTokResultCa
           <div className="flex items-center gap-1 min-w-0">
             <span className="text-[10px] sm:text-xs font-medium text-foreground truncate">@{video.creatorUsername}</span>
             {video.creatorVerified && (
-              <VerifiedIcon size={10} className="text-[#00f2ea] flex-shrink-0 sm:w-3 sm:h-3" />
+              <VerifiedIcon size={10} className="text-[#00f2ea] shrink-0 sm:w-3 sm:h-3" />
             )}
           </div>
-          <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto flex-shrink-0">
+          <span className="text-[10px] sm:text-xs text-muted-foreground ml-auto shrink-0">
             {formatViews(video.creatorFollowers)} fans
           </span>
         </div>
@@ -145,7 +145,7 @@ export function TikTokResultCard({ video, isSelected, onSelect }: TikTokResultCa
 
         {/* Sound/Music */}
         {video.soundName && (
-          <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-lg bg-gradient-to-r from-[#ff0050]/5 to-[#00f2ea]/5 border border-[#ff0050]/10">
+          <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-lg bg-linear-to-r from-[#ff0050]/5 to-[#00f2ea]/5 border border-[#ff0050]/10">
             <MusicIcon size={12} className="text-[#ff0050] shrink-0 sm:w-4 sm:h-4" />
             <span className="text-[10px] sm:text-xs text-muted-foreground truncate">
               {video.soundName}

@@ -19,7 +19,7 @@ export function TriageHeader({
   onAutoSchedule,
 }: TriageHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 lg:p-6 rounded-xl bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 dark:from-red-950/40 dark:via-orange-950/30 dark:to-amber-950/20 border border-red-500/20 dark:border-red-900/30">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 lg:p-6 rounded-xl bg-linear-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 dark:from-red-950/40 dark:via-orange-950/30 dark:to-amber-950/20 border border-red-500/20 dark:border-red-900/30">
       <div className="flex items-center gap-2.5 sm:gap-3 lg:gap-4">
         <div className="relative shrink-0">
           <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -48,7 +48,7 @@ export function TriageHeader({
         onClick={onAutoSchedule}
         disabled={isAutoScheduling}
         size="sm"
-        className="w-auto ml-auto sm:ml-0 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white gap-1 sm:gap-2 shadow-lg shadow-amber-900/30 h-8 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base px-3 sm:px-4"
+        className="w-auto ml-auto sm:ml-0 bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white gap-1 sm:gap-2 shadow-lg shadow-amber-900/30 h-8 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base px-3 sm:px-4"
       >
         {isAutoScheduling ? (
           <>

@@ -1,10 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import type { User, DemoUser } from '@/types/user';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import type { DemoUser } from '@/types/user';
 import { getFeatureAccess, type FeatureAccess } from '@/lib/feature-access';
 
-// Demo user for testing
+// Demo user for testing only - use loginWithDemo() explicitly
 const DEMO_USER: DemoUser = {
   id: 'demo_user_001',
   email: 'demo@blogspy.io',
@@ -14,119 +16,205 @@ const DEMO_USER: DemoUser = {
 };
 
 interface AuthContextType {
-  user: User | DemoUser | null;
+  user: SupabaseUser | DemoUser | null;
+  session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   isDemoMode: boolean;
   featureAccess: FeatureAccess;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginWithDemo: () => void;
-  logout: () => void;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | DemoUser | null>(null);
+  const [user, setUser] = useState<SupabaseUser | DemoUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
+
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   // Calculate feature access based on auth state
   const featureAccess = useMemo(() => {
     return getFeatureAccess(!!user, isDemoMode);
   }, [user, isDemoMode]);
 
-  // Check for existing session on mount
+  // Derived authentication state - user exists and not in demo mode means real auth
+  const isAuthenticated = useMemo(() => {
+    return !!user;
+  }, [user]);
+
+  // Listen to Supabase auth state changes
   useEffect(() => {
-    const checkAuth = () => {
+    // Get initial session
+    const getInitialSession = async () => {
       try {
-        // Check for demo user first
-        const demoUser = localStorage.getItem('demo_user');
-        if (demoUser) {
-          setUser(JSON.parse(demoUser));
+        // Check for demo user first (for development convenience)
+        const demoUserData = localStorage.getItem('demo_user');
+        if (demoUserData) {
+          setUser(JSON.parse(demoUserData));
           setIsDemoMode(true);
           setIsLoading(false);
           return;
         }
 
-        // Check for real auth token
-        const authToken = localStorage.getItem('auth_token');
-        const userData = localStorage.getItem('user_data');
+        // Get real Supabase session
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
-        if (authToken && userData) {
-          setUser(JSON.parse(userData));
+        if (error) {
+          console.error('Error getting session:', error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
           setIsDemoMode(false);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('Auth initialization error:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
-  }, []);
+    getInitialSession();
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log('Auth state changed:', event);
+        
+        if (currentSession) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          setIsDemoMode(false);
+          // Clear any demo user data when real auth happens
+          localStorage.removeItem('demo_user');
+        } else if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          setIsDemoMode(false);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
-      // For now, just use demo mode
-      // In production, this would call the real API
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // For demo purposes, accept any login
-      loginWithDemo();
-      return true;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('Login failed:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (data.session) {
+        setSession(data.session);
+        setUser(data.user);
+        setIsDemoMode(false);
+        return { success: true };
+      }
+
+      return { success: false, error: 'Login failed - no session returned' };
     } catch (error) {
-      console.error('Login failed:', error);
-      return false;
+      console.error('Login error:', error);
+      return { success: false, error: 'An unexpected error occurred' };
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [supabase]);
 
   const loginWithDemo = useCallback(() => {
     localStorage.setItem('demo_user', JSON.stringify(DEMO_USER));
     setUser(DEMO_USER);
+    setSession(null);
     setIsDemoMode(true);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('demo_user');
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_data');
-    setUser(null);
-    setIsDemoMode(false);
-  }, []);
-
-  const register = useCallback(async (name: string, email: string, password: string): Promise<boolean> => {
+  const logout = useCallback(async () => {
     setIsLoading(true);
     try {
-      // For now, just use demo mode
-      console.log('Register attempt:', { name, email });
+      // Clear demo mode
+      localStorage.removeItem('demo_user');
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Sign out from Supabase (if not in demo mode)
+      if (!isDemoMode && session) {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error('Logout error:', error);
+        }
+      }
       
-      // For demo purposes, auto-login after register
-      loginWithDemo();
-      return true;
+      setUser(null);
+      setSession(null);
+      setIsDemoMode(false);
     } catch (error) {
-      console.error('Register failed:', error);
-      return false;
+      console.error('Logout error:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [loginWithDemo]);
+  }, [supabase, isDemoMode, session]);
+
+  const register = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
+
+      if (error) {
+        console.error('Registration failed:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        // Note: User may need to verify email before session is active
+        if (data.session) {
+          setSession(data.session);
+          setUser(data.user);
+          setIsDemoMode(false);
+        }
+        return { success: true };
+      }
+
+      return { success: false, error: 'Registration failed - no user returned' };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { success: false, error: 'An unexpected error occurred' };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [supabase]);
 
   const value: AuthContextType = {
     user,
-    isLoading: false, // TEMPORARY: Never loading during development
-    isAuthenticated: true, // TEMPORARY: Always authenticated during development
-    isDemoMode: false,
+    session,
+    isLoading,
+    isAuthenticated,
+    isDemoMode,
     featureAccess,
     login,
     loginWithDemo,
