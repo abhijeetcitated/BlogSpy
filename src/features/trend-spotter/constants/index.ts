@@ -150,4 +150,5 @@ export const nicheToCategories: Record<string, EventCategory[]> = {
 // ============================================
 // MAP CONFIGURATION
 // ============================================
-export const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
+// Using local TopoJSON for reliable loading (no CDN dependency)
+export const geoUrl = "/world-110m.json"
