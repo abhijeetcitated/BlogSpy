@@ -124,6 +124,9 @@ export interface KeywordState {
   keywords: Keyword[]
   selectedIds: Set<number>
   
+  // Drawer state (single keyword for detail view)
+  selectedKeyword: Keyword | null
+  
   // Search state
   search: SearchState
   
@@ -161,6 +164,11 @@ export interface KeywordState {
   updateKeyword: (id: number, updates: Partial<Keyword>) => void
   removeKeyword: (id: number) => void
   
+  // Drawer actions
+  setSelectedKeyword: (keyword: Keyword | null) => void
+  openKeywordDrawer: (keyword: Keyword) => void
+  closeKeywordDrawer: () => void
+  
   // Sort actions
   setSort: (field: SortField, direction?: SortDirection) => void
   toggleSortDirection: () => void
@@ -191,6 +199,7 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
   // Initial state
   keywords: [],
   selectedIds: new Set(),
+  selectedKeyword: null,
   search: DEFAULT_SEARCH,
   filters: DEFAULT_FILTERS,
   sort: DEFAULT_SORT,
@@ -269,6 +278,11 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
         return newSet
       })(),
     })),
+
+  // Drawer actions
+  setSelectedKeyword: (keyword) => set({ selectedKeyword: keyword }),
+  openKeywordDrawer: (keyword) => set({ selectedKeyword: keyword }),
+  closeKeywordDrawer: () => set({ selectedKeyword: null }),
 
   // Sort actions
   setSort: (field, direction) =>
@@ -360,6 +374,7 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
   resetStore: () => set({
     keywords: [],
     selectedIds: new Set(),
+    selectedKeyword: null,
     search: DEFAULT_SEARCH,
     filters: DEFAULT_FILTERS,
     sort: DEFAULT_SORT,
@@ -379,3 +394,4 @@ export const selectPagination = (state: KeywordState) => state.pagination
 export const selectLoading = (state: KeywordState) => state.loading
 export const selectSelectedIds = (state: KeywordState) => state.selectedIds
 export const selectSelectedCount = (state: KeywordState) => state.selectedIds.size
+export const selectSelectedKeyword = (state: KeywordState) => state.selectedKeyword

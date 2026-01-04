@@ -62,6 +62,7 @@ export type { KeywordTableProps } from "./table"
 // ============================================
 export { 
   KeywordDetailsDrawer,
+  KeywordDrawer,
   OverviewTab,
   CommerceTab,
   SocialTab,

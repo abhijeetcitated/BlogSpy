@@ -9,6 +9,13 @@ export { KeywordTable } from "./KeywordTable"
 export { KeywordTableRow } from "./KeywordTableRow"
 export type { KeywordTableProps } from "./KeywordTable"
 
+// TanStack Table v8 Component (NEW)
+export { KeywordDataTable } from "./KeywordDataTable"
+export type { KeywordDataTableProps } from "./KeywordDataTable"
+
+// TanStack Table Column Definitions
+export { createColumns, defaultColumns } from "./columns/columns"
+
 // Utilities - now in utils/ folder
 // export { generateKeywordCSV, downloadKeywordsCSV } from "../../utils/export-utils"
 // export { sortKeywords } from "../../utils/sort-utils"

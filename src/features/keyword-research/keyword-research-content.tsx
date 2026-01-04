@@ -21,7 +21,6 @@ import { useKeywordStore, type KeywordFilters } from "./store"
 // Feature imports
 import type { Country, MatchType, BulkMode, SERPFeature } from "./types"
 import { POPULAR_COUNTRIES, ALL_COUNTRIES } from "./constants"
-import { MOCK_KEYWORDS } from "./__mocks__"
 import { applyAllFilters } from "./utils"
 import { 
   BulkKeywordsInput,
@@ -120,6 +119,9 @@ export function KeywordResearchContent() {
   // ZUSTAND STORE
   // ============================================
   const {
+    // Data
+    keywords: storeKeywords,
+    
     // Search state
     search,
     setSeedKeyword,
@@ -154,7 +156,8 @@ export function KeywordResearchContent() {
   // FILTERED KEYWORDS (with memoization)
   // ============================================
   const filteredKeywords = useMemo(() => {
-    return applyAllFilters(MOCK_KEYWORDS, {
+    // Use keywords from store (populated by fetchKeywords action)
+    return applyAllFilters(storeKeywords, {
       filterText: debouncedFilterText,
       matchType: filters.matchType,
       volumeRange: filters.volumeRange,
@@ -171,7 +174,7 @@ export function KeywordResearchContent() {
       minTrendGrowth: filters.minTrendGrowth,
     })
   }, [
-    debouncedFilterText, filters.matchType, filters.volumeRange, filters.kdRange,
+    storeKeywords, debouncedFilterText, filters.matchType, filters.volumeRange, filters.kdRange,
     filters.cpcRange, filters.geoRange, filters.selectedIntents, filters.includeTerms,
     filters.excludeTerms, filters.weakSpotToggle, filters.weakSpotTypes,
     filters.selectedSerpFeatures, filters.trendDirection, filters.minTrendGrowth

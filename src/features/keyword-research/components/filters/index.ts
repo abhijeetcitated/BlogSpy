@@ -2,6 +2,10 @@
 // FILTERS - Barrel Export
 // ============================================
 
+// Main FilterBar Component (combines all filters)
+export { FilterBar } from "./FilterBar"
+
+// Individual filter components
 export { VolumeFilter } from "./volume"
 export { KDFilter } from "./kd"
 export { IntentFilter } from "./intent"
