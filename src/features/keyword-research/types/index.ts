@@ -102,5 +102,55 @@ export interface FilterState {
   searchText?: string
 }
 
+// ============================================
+// COMMERCE / AMAZON TYPES
+// ============================================
+
+/**
+ * Amazon Product from PA-API or mock data
+ */
+export interface AmazonProduct {
+  asin: string
+  title: string
+  price: number
+  currency: string
+  rating: number
+  reviews: number
+  category: string
+  imageUrl?: string
+  productUrl?: string
+  affiliatePotential: "high" | "medium" | "low"
+  isPrime?: boolean
+  inStock?: boolean
+}
+
+/**
+ * Amazon Data Response
+ */
+export interface AmazonData {
+  products: AmazonProduct[]
+  avgPrice: number
+  avgRating: number
+  totalProducts: number
+  competitionLevel: "high" | "medium" | "low"
+  fetchedAt: string
+}
+
+/**
+ * Drawer Data State (for Commerce/Social tabs)
+ */
+export type DrawerDataState = "idle" | "loading" | "success" | "error"
+
+/**
+ * Generic API Response with retry support
+ */
+export interface DrawerDataResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+  isRetryable?: boolean
+  source?: "mock" | "amazon" | "dataforseo"
+}
+
 // Re-export API types
 export * from "./api.types"

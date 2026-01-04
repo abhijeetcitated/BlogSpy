@@ -82,14 +82,33 @@ function MetricCard({
 // ============================================
 
 export function OverviewTab({ keyword }: OverviewTabProps) {
-  // Calculate metrics
-  const rtvData = generateMockRTV(keyword.id, keyword.volume)
-  const geoScore = keyword.geoScore ?? generateMockGEOScore(keyword.id)
-  const aioData = generateMockAIOverviewAnalysis(keyword.keyword, keyword.weakSpot.type !== null)
+  // ─────────────────────────────────────────
+  // SAFETY CHECK: Bail early if no keyword
+  // ─────────────────────────────────────────
+  if (!keyword) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+        No keyword data available
+      </div>
+    )
+  }
 
-  // Calculate trend
-  const trendGrowth = keyword.trend.length >= 2
-    ? ((keyword.trend[keyword.trend.length - 1] - keyword.trend[0]) / Math.max(keyword.trend[0], 1)) * 100
+  // Safe defaults for potentially undefined data
+  const safeTrend = keyword.trend ?? []
+  const safeVolume = keyword.volume ?? 0
+  const safeKd = keyword.kd ?? 0
+  const safeCpc = keyword.cpc ?? 0
+  const safeSerpFeatures = keyword.serpFeatures ?? []
+  const safeWeakSpot = keyword.weakSpot ?? { type: null }
+
+  // Calculate metrics with safe values
+  const rtvData = generateMockRTV(keyword.id, safeVolume)
+  const geoScore = keyword.geoScore ?? generateMockGEOScore(keyword.id)
+  const aioData = generateMockAIOverviewAnalysis(keyword.keyword, safeWeakSpot.type !== null)
+
+  // Calculate trend with safety
+  const trendGrowth = safeTrend.length >= 2
+    ? ((safeTrend[safeTrend.length - 1] - safeTrend[0]) / Math.max(safeTrend[0], 1)) * 100
     : 0
   const trendDirection = trendGrowth > 5 ? "up" : trendGrowth < -5 ? "down" : "neutral"
 
@@ -103,7 +122,7 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
     return { level: "Extreme", color: "text-red-600", bgColor: "bg-red-600" }
   }
 
-  const kdInfo = getKdInfo(keyword.kd)
+  const kdInfo = getKdInfo(safeKd)
 
   // Get GEO level
   const getGeoInfo = (score: number) => {
@@ -159,19 +178,19 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between">
             <span className={cn("text-3xl font-bold", kdInfo.color)}>
-              {keyword.kd}%
+              {safeKd}%
             </span>
             <Badge variant="outline" className={kdInfo.color}>
               {kdInfo.level}
             </Badge>
           </div>
-          <Progress value={keyword.kd} className="h-2" />
+          <Progress value={safeKd} className="h-2" />
           <p className="text-xs text-muted-foreground">
-            {keyword.kd <= 29
+            {safeKd <= 29
               ? "Great opportunity! This keyword has low competition."
-              : keyword.kd <= 49
+              : safeKd <= 49
               ? "Moderate competition. Quality content can rank well."
-              : keyword.kd <= 69
+              : safeKd <= 69
               ? "Competitive keyword. Strong content and backlinks needed."
               : "Very competitive. Consider long-tail alternatives."}
           </p>
@@ -179,7 +198,7 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
       </Card>
 
       {/* Weak Spot */}
-      {keyword.weakSpot.type && (
+      {safeWeakSpot.type && (
         <Card className="bg-card/50 border-border/50 border-l-4 border-l-amber-500">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -190,10 +209,10 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
           <CardContent>
             <div className="flex items-center justify-between">
               <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">
-                {keyword.weakSpot.type}
+                {safeWeakSpot.type}
               </Badge>
               <span className="text-sm text-muted-foreground">
-                Rank #{keyword.weakSpot.rank}
+                Rank #{safeWeakSpot.rank ?? "N/A"}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
@@ -212,8 +231,8 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {keyword.serpFeatures.length > 0 ? (
-              keyword.serpFeatures.map((feature) => (
+            {safeSerpFeatures.length > 0 ? (
+              safeSerpFeatures.map((feature) => (
                 <Badge
                   key={feature}
                   variant="secondary"
@@ -239,24 +258,32 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end justify-between h-24 gap-1">
-            {keyword.trend.map((value, index) => {
-              const maxValue = Math.max(...keyword.trend)
-              const height = (value / maxValue) * 100
-              return (
-                <div
-                  key={index}
-                  className="flex-1 bg-primary/20 hover:bg-primary/40 transition-colors rounded-t"
-                  style={{ height: `${height}%` }}
-                  title={`Month ${index + 1}: ${value.toLocaleString()}`}
-                />
-              )
-            })}
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground mt-2">
-            <span>12 months ago</span>
-            <span>Now</span>
-          </div>
+          {safeTrend.length > 0 ? (
+            <>
+              <div className="flex items-end justify-between h-24 gap-1">
+                {safeTrend.map((value, index) => {
+                  const maxValue = Math.max(...safeTrend, 1)
+                  const height = (value / maxValue) * 100
+                  return (
+                    <div
+                      key={index}
+                      className="flex-1 bg-primary/20 hover:bg-primary/40 transition-colors rounded-t"
+                      style={{ height: `${Math.max(height, 2)}%` }}
+                      title={`Month ${index + 1}: ${value.toLocaleString()}`}
+                    />
+                  )
+                })}
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                <span>12 months ago</span>
+                <span>Now</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
+              No trend data available
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
