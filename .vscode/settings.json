@@ -1,4 +1,119 @@
 {
     "claudeCode.useTerminal": true,
-    "chatgpt.openOnStartup": false
-}
+    "chatgpt.openOnStartup": true,
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🤖 AGENT MODE (Cursor's Composer equivalent)
+    // ═══════════════════════════════════════════════════════════════
+    "chat.agent.enabled": true,
+    "chat.agent.maxRequests": 30,
+    "github.copilot.chat.agent.autoFix": true,
+    "github.copilot.chat.agent.runTasks": true,
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🔌 MCP SERVERS (VS Code's Advantage over Cursor)
+    // ═══════════════════════════════════════════════════════════════
+    "chat.mcp.access": true,
+    "chat.mcp.discovery.enabled": {
+        "claude-desktop": true,
+        "windsurf": true,
+        "cursor-global": true,
+        "cursor-workspace": true
+    },
+    "chat.mcp.autostart": true,
+    "chat.mcp.gallery.enabled": true,
+
+    // ═══════════════════════════════════════════════════════════════
+    // ⏪ CHECKPOINTS/UNDO (Cursor's Restore equivalent)
+    // ═══════════════════════════════════════════════════════════════
+    "chat.checkpoints.enabled": true,
+    "chat.checkpoints.autoCheckpoint": true,
+
+    // ═══════════════════════════════════════════════════════════════
+    // 📝 CUSTOM INSTRUCTIONS (.cursorrules equivalent)
+    // ═══════════════════════════════════════════════════════════════
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+    "chat.useAgentsMdFile": true,
+    "chat.useNestedAgentsMdFiles": true,
+
+    // ═══════════════════════════════════════════════════════════════
+    // ⌨️ TERMINAL AUTO-APPROVAL (Cursor's auto-run equivalent)
+    // Using chat.tools.terminal.* (Official VS Code v1.107+ naming)
+    // ═══════════════════════════════════════════════════════════════
+    "chat.tools.terminal.autoApprove": {
+        "npm": true,
+        "npx": true,
+        "yarn": true,
+        "pnpm": true,
+        "git status": true,
+        "git log": true,
+        "git diff": true,
+        "git branch": true,
+        "git add": true,
+        "git checkout": true,
+        "npm run test": true,
+        "npm run build": true,
+        "npm run dev": true,
+        "npm install": true,
+        "echo": true,
+        "cd": true,
+        "ls": true,
+        "dir": true,
+        "cat": true,
+        "pwd": true,
+        "node": true,
+        "python": true,
+        "make": true,
+        "grep": true
+    },
+    "chat.tools.terminal.denyList": {
+        "rm -rf": true,
+        "rm -rf /": true,
+        "del /s": true,
+        "format": true,
+        "DROP": true,
+        "git push --force": true,
+        "git reset --hard": true
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // ⚡ NEXT EDIT SUGGESTIONS (Cursor's Tab prediction)
+    // ═══════════════════════════════════════════════════════════════
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "editor.inlineSuggest.enabled": true,
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": true
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 💬 CHAT UX IMPROVEMENTS
+    // ═══════════════════════════════════════════════════════════════
+    "chat.editRequests": "inline",
+    "chat.viewSessions.orientation": "sideBySide",
+    "chat.notifyWindowOnConfirmation": true,
+    "inlineChat.holdToSpeak": true,
+    "inlineChat.lineNaturalLanguageHint": true,
+    "github.copilot.chat.inlineChat.followUps.enabled": true,
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🚀 PERFORMANCE OPTIMIZATIONS
+    // ═══════════════════════════════════════════════════════════════
+    "github.copilot.advanced.inlineSuggestCount": 3,
+    "github.copilot.chat.localeOverride": "en",
+    
+    // ═══════════════════════════════════════════════════════════════
+    // 🔧 EDITOR OPTIMIZATIONS (Faster feel)
+    // ═══════════════════════════════════════════════════════════════
+    "editor.quickSuggestions": {
+        "other": "on",
+        "comments": "off",
+        "strings": "on"
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.acceptSuggestionOnEnter": "on",
+    "editor.tabCompletion": "on",
+    "editor.wordBasedSuggestions": "off"
+}r

@@ -301,7 +301,7 @@ export const commandGroups: CommandGroup[] = [
     commands: navigationCommands,
   },
   {
-    category: "action",
+    category: "quick",
     label: "Utilities",
     commands: utilityCommands,
   },

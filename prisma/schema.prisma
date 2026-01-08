@@ -11,8 +11,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = env("DATABASE_URL") // Use pooler for IPv4 compatibility
 }
 
 // ============================================
@@ -41,8 +40,6 @@ model User {
   
   // Relations
   projects      Project[]
-  keywords      Keyword[]
-  rankings      Ranking[]
   content       Content[]
   searches      SearchHistory[]
   subscriptions Subscription[]
@@ -111,7 +108,6 @@ model Project {
   updatedAt   DateTime @updatedAt
   
   // Relations
-  keywords    Keyword[]
   rankings    Ranking[]
   content     Content[]
   competitors Competitor[]
@@ -126,29 +122,24 @@ model Project {
 
 model Keyword {
   id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectId   String?
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
   
-  // Keyword Data
-  keyword     String
-  location    String   @default("US")
+  // Keyword Data (Global Cache - shared across all users)
+  text        String   // The actual keyword text
+  country     String   @default("US") // e.g., 'US', 'IN', 'UK'
   language    String   @default("en")
   
   // Metrics (cached from DataForSEO)
   volume      Int?
-  difficulty  Int?
+  difficulty  Int?     // KD score
   cpc         Float?
   competition Float?
-  intent      String?
+  intent      String?  // I/C/T/N codes
   
-  // Trend Data
-  trend       String?  // up, down, stable
-  monthlyData Json?    // Array of monthly volumes
+  // Trend Data (JSON array of numbers)
+  trendData   Json?    // Array of monthly volumes: [1000, 1200, 1100, ...]
   
-  // SERP Features
-  serpFeatures Json?   // Array of SERP features
+  // SERP Data (JSON object storing AIO, Weak Spots, Features, etc.)
+  serpData    Json?    // { hasAio: true, weakSpots: [...], serpFeatures: [...] }
   
   // Timestamps
   createdAt   DateTime @default(now())
@@ -156,10 +147,12 @@ model Keyword {
   lastFetchedAt DateTime?
   
   // Relations
-  rankings    Ranking[]
+  searches    SearchHistory[] // Users who searched this keyword
+  rankings    Ranking[]       // Rankings for this keyword
   
-  @@unique([userId, keyword, location])
-  @@index([keyword])
+  @@unique([text, country]) // One keyword per country (prevents duplicates)
+  @@index([text])
+  @@index([country])
   @@map("keywords")
 }
 
@@ -169,10 +162,8 @@ model Keyword {
 
 model Ranking {
   id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectId   String?
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   keywordId   String
   keyword     Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
   
@@ -191,6 +182,7 @@ model Ranking {
   
   // History (stored as separate entries)
   @@index([keywordId, checkedAt])
+  @@index([projectId])
   @@map("rankings")
 }
 
@@ -283,6 +275,8 @@ model SearchHistory {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywordId   String?
+  keyword     Keyword? @relation(fields: [keywordId], references: [id], onDelete: SetNull)
   
   query       String
   type        SearchType
@@ -298,6 +292,7 @@ model SearchHistory {
   createdAt   DateTime @default(now())
   
   @@index([userId, createdAt])
+  @@index([keywordId])
   @@map("search_history")
 }
 

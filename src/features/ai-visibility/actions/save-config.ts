@@ -3,8 +3,7 @@
  * 💾 SAVE CONFIG ACTION - AI Visibility Configuration
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
- * Server action to save/update user's AI Visibility tracking configuration.
- * Stores domain, brand keywords, and competitor domains.
+ * REFACTORED: Now uses authAction wrapper for consistent auth/rate-limiting.
  * 
  * @example
  * ```tsx
@@ -18,19 +17,32 @@
 
 "use server"
 
+import { authAction, z } from "@/src/lib/safe-action"
 import { createServerClient } from "@/src/lib/supabase/server"
 import type { AIVisibilityConfig } from "../types"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// TYPES
+// SCHEMAS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface SaveConfigInput {
-  trackedDomain: string
-  brandKeywords: string[]
-  competitorDomains?: string[]
-  projectId?: string
-}
+const saveConfigSchema = z.object({
+  trackedDomain: z.string().min(1, "Tracked domain is required"),
+  brandKeywords: z.array(z.string()).min(1, "At least one brand keyword is required"),
+  competitorDomains: z.array(z.string()).optional(),
+  projectId: z.string().optional(),
+})
+
+const getConfigSchema = z.object({
+  projectId: z.string().optional(),
+})
+
+const deleteConfigSchema = z.object({
+  configId: z.string().uuid("Invalid config ID"),
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 export interface SaveConfigResponse {
   success: boolean
@@ -45,202 +57,167 @@ export interface GetConfigResponse {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// SAVE CONFIG ACTION
+// SERVER ACTIONS (using authAction wrapper)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 /**
  * Saves or updates user's AI Visibility configuration.
  * Creates new config if none exists, updates if exists.
  */
-export async function saveVisibilityConfig(
-  input: SaveConfigInput
-): Promise<SaveConfigResponse> {
-  try {
-    const supabase = await createServerClient()
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
+export const saveVisibilityConfig = authAction
+  .schema(saveConfigSchema)
+  .action(async ({ parsedInput, ctx }): Promise<SaveConfigResponse> => {
+    try {
+      const supabase = await createServerClient()
+      const userId = ctx.userId
+
+      // Check if config already exists for this user
+      const { data: existingConfig } = await supabase
+        .from("ai_visibility_configs")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("project_id", parsedInput.projectId || "default")
+        .single()
+
+      const now = new Date().toISOString()
+
+      if (existingConfig) {
+        // Update existing config
+        const { data, error } = await supabase
+          .from("ai_visibility_configs")
+          .update({
+            tracked_domain: parsedInput.trackedDomain,
+            brand_keywords: parsedInput.brandKeywords,
+            competitor_domains: parsedInput.competitorDomains || [],
+            updated_at: now,
+          })
+          .eq("id", existingConfig.id)
+          .select()
+          .single()
+
+        if (error) {
+          console.error("[saveVisibilityConfig] Update error:", error)
+          return {
+            success: false,
+            error: "Failed to update configuration",
+          }
+        }
+
+        return {
+          success: true,
+          data: mapDbToConfig(data),
+        }
+      } else {
+        // Create new config
+        const { data, error } = await supabase
+          .from("ai_visibility_configs")
+          .insert({
+            user_id: userId,
+            project_id: parsedInput.projectId || "default",
+            tracked_domain: parsedInput.trackedDomain,
+            brand_keywords: parsedInput.brandKeywords,
+            competitor_domains: parsedInput.competitorDomains || [],
+            created_at: now,
+            updated_at: now,
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error("[saveVisibilityConfig] Insert error:", error)
+          return {
+            success: false,
+            error: "Failed to save configuration",
+          }
+        }
+
+        return {
+          success: true,
+          data: mapDbToConfig(data),
+        }
+      }
+    } catch (error) {
+      console.error("[saveVisibilityConfig] Error:", error)
       return {
         success: false,
-        error: "You must be logged in to save configuration",
+        error: "An unexpected error occurred",
       }
     }
-
-    // Check if config already exists for this user
-    const { data: existingConfig } = await supabase
-      .from("ai_visibility_configs")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("project_id", input.projectId || "default")
-      .single()
-
-    const now = new Date().toISOString()
-
-    if (existingConfig) {
-      // Update existing config
-      const { data, error } = await supabase
-        .from("ai_visibility_configs")
-        .update({
-          tracked_domain: input.trackedDomain,
-          brand_keywords: input.brandKeywords,
-          competitor_domains: input.competitorDomains || [],
-          updated_at: now,
-        })
-        .eq("id", existingConfig.id)
-        .select()
-        .single()
-
-      if (error) {
-        console.error("[saveVisibilityConfig] Update error:", error)
-        return {
-          success: false,
-          error: "Failed to update configuration",
-        }
-      }
-
-      return {
-        success: true,
-        data: mapDbToConfig(data),
-      }
-    } else {
-      // Create new config
-      const { data, error } = await supabase
-        .from("ai_visibility_configs")
-        .insert({
-          user_id: user.id,
-          project_id: input.projectId || "default",
-          tracked_domain: input.trackedDomain,
-          brand_keywords: input.brandKeywords,
-          competitor_domains: input.competitorDomains || [],
-          created_at: now,
-          updated_at: now,
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error("[saveVisibilityConfig] Insert error:", error)
-        return {
-          success: false,
-          error: "Failed to save configuration",
-        }
-      }
-
-      return {
-        success: true,
-        data: mapDbToConfig(data),
-      }
-    }
-  } catch (error) {
-    console.error("[saveVisibilityConfig] Error:", error)
-    return {
-      success: false,
-      error: "An unexpected error occurred",
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// GET CONFIG ACTION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+  })
 
 /**
  * Gets user's AI Visibility configuration.
  * Returns null if no config exists (first-time user).
  */
-export async function getVisibilityConfig(
-  projectId?: string
-): Promise<GetConfigResponse> {
-  try {
-    const supabase = await createServerClient()
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return {
-        success: false,
-        error: "You must be logged in",
+export const getVisibilityConfig = authAction
+  .schema(getConfigSchema)
+  .action(async ({ parsedInput, ctx }): Promise<GetConfigResponse> => {
+    try {
+      const supabase = await createServerClient()
+      const userId = ctx.userId
+
+      const { data, error } = await supabase
+        .from("ai_visibility_configs")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("project_id", parsedInput.projectId || "default")
+        .single()
+
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 = no rows found (which is okay for new users)
+        console.error("[getVisibilityConfig] Error:", error)
+        return {
+          success: false,
+          error: "Failed to fetch configuration",
+        }
       }
-    }
 
-    const { data, error } = await supabase
-      .from("ai_visibility_configs")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("project_id", projectId || "default")
-      .single()
-
-    if (error && error.code !== "PGRST116") {
-      // PGRST116 = no rows found (which is okay for new users)
+      return {
+        success: true,
+        data: data ? mapDbToConfig(data) : null,
+      }
+    } catch (error) {
       console.error("[getVisibilityConfig] Error:", error)
       return {
         success: false,
-        error: "Failed to fetch configuration",
+        error: "An unexpected error occurred",
       }
     }
-
-    return {
-      success: true,
-      data: data ? mapDbToConfig(data) : null,
-    }
-  } catch (error) {
-    console.error("[getVisibilityConfig] Error:", error)
-    return {
-      success: false,
-      error: "An unexpected error occurred",
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// DELETE CONFIG ACTION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+  })
 
 /**
  * Deletes user's AI Visibility configuration.
  */
-export async function deleteVisibilityConfig(
-  configId: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const supabase = await createServerClient()
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return {
-        success: false,
-        error: "You must be logged in",
+export const deleteVisibilityConfig = authAction
+  .schema(deleteConfigSchema)
+  .action(async ({ parsedInput, ctx }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const supabase = await createServerClient()
+      const userId = ctx.userId
+
+      const { error } = await supabase
+        .from("ai_visibility_configs")
+        .delete()
+        .eq("id", parsedInput.configId)
+        .eq("user_id", userId) // Security: only delete own config
+
+      if (error) {
+        console.error("[deleteVisibilityConfig] Error:", error)
+        return {
+          success: false,
+          error: "Failed to delete configuration",
+        }
       }
-    }
 
-    const { error } = await supabase
-      .from("ai_visibility_configs")
-      .delete()
-      .eq("id", configId)
-      .eq("user_id", user.id) // Security: only delete own config
-
-    if (error) {
+      return { success: true }
+    } catch (error) {
       console.error("[deleteVisibilityConfig] Error:", error)
       return {
         success: false,
-        error: "Failed to delete configuration",
+        error: "An unexpected error occurred",
       }
     }
-
-    return { success: true }
-  } catch (error) {
-    console.error("[deleteVisibilityConfig] Error:", error)
-    return {
-      success: false,
-      error: "An unexpected error occurred",
-    }
-  }
-}
+  })
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS

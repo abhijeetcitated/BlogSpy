@@ -24,9 +24,9 @@ export const WinnersLosersCards = memo(function WinnersLosersCards({ winners, lo
         </div>
         <div className="space-y-3" role="list" aria-label="Biggest ranking winners">
           {winners.length > 0 ? (
-            winners.map((item, index) => (
+            winners.map((item) => (
               <div
-                key={index}
+                key={item.keyword}
                 className="flex items-center justify-between p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20"
                 role="listitem"
               >
@@ -54,9 +54,9 @@ export const WinnersLosersCards = memo(function WinnersLosersCards({ winners, lo
         </div>
         <div className="space-y-3" role="list" aria-label="Biggest ranking losers">
           {losers.length > 0 ? (
-            losers.map((item, index) => (
+            losers.map((item) => (
               <div
-                key={index}
+                key={item.keyword}
                 className="flex items-center justify-between p-2 rounded-lg bg-red-500/10 border border-red-500/20"
                 role="listitem"
               >

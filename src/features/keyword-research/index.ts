@@ -80,14 +80,8 @@ export {
   type KeywordMagicApiConfig,
 } from "./config"
 
-// Providers
-export {
-  KeywordResearchProvider,
-  useKeywordResearch,
-  type KeywordResearchState as ProviderState,
-  type KeywordResearchAction as ProviderAction,
-  type KeywordResearchContextValue,
-} from "./providers"
+// Providers - Legacy provider removed, use Zustand store instead
+// NOTE: KeywordResearchProvider was deleted - now using useKeywordStore
 
 // Zustand Store (replaces legacy reducer)
 export {

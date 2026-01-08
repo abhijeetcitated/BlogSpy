@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import type { SortField, SortDirection } from "../../constants/table-config"
+import { RefreshCreditsHeader } from "./columns/refresh/RefreshCreditsHeader"
 
 interface KeywordTableHeaderProps {
   selectAll: boolean
@@ -15,6 +16,7 @@ interface KeywordTableHeaderProps {
   sortField: SortField
   sortDirection: SortDirection
   onSort: (field: SortField) => void
+  selectedCount?: number
 }
 
 function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortField: SortField; sortDirection: SortDirection }) {
@@ -34,6 +36,7 @@ export function KeywordTableHeader({
   sortField,
   sortDirection,
   onSort,
+  selectedCount = 0,
 }: KeywordTableHeaderProps) {
   return (
     <thead className="sticky top-0 z-10 bg-muted">
@@ -91,7 +94,7 @@ export function KeywordTableHeader({
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
               <p className="font-medium">Forum Ranking Opportunity</p>
-              <p className="text-xs text-muted-foreground mt-1">Shows if Reddit/Quora ranks in top 10. Easy to outrank!</p>
+              <p className="text-xs text-muted-foreground mt-1">Shows if Reddit, Quora, or Pinterest ranks in top 10. These are easy to outrank with quality content!</p>
             </TooltipContent>
           </Tooltip>
         </th>
@@ -121,17 +124,9 @@ export function KeywordTableHeader({
             </TooltipContent>
           </Tooltip>
         </th>
-        {/* 11. Refresh */}
+        {/* 11. Refresh Credits */}
         <th className="p-2 text-center font-medium bg-muted">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="cursor-default">Refresh</span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs">
-              <p className="font-medium">Refresh Data</p>
-              <p className="text-xs text-muted-foreground mt-1">Click to fetch latest metrics for this keyword. Uses 1 credit per refresh.</p>
-            </TooltipContent>
-          </Tooltip>
+          <RefreshCreditsHeader selectedCount={selectedCount} />
         </th>
       </tr>
     </thead>

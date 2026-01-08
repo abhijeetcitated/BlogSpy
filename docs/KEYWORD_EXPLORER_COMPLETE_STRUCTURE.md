@@ -447,7 +447,7 @@ import { devtools, persist } from "zustand/middleware"
 
 // Types
 import type { Keyword, MatchType, BulkMode, Country, SERPFeature } from "../types"
-import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+import type { SortDirection as SharedSortDirection } from "@/types/shared"
 
 // ============================================
 // EXPORTS
@@ -489,14 +489,14 @@ import type {
   SortDirection, 
   Country as SharedCountry,
   PaginationState as SharedPaginationState 
-} from "@/src/types/shared"
+} from "@/types/shared"
 
 // ============================================
 // EXPORTS
 // ============================================
 
 // Re-exports
-export type { SortDirection } from "@/src/types/shared"
+export type { SortDirection } from "@/types/shared"
 
 // Type exports
 export type SERPFeature = ...
@@ -677,7 +677,7 @@ const filters = useKeywordStore(selectFilters)
 
 // Shared Types
 @/types/rtv.types (CTRStealingFeature)
-@/src/types/shared (SortDirection, Country, PaginationState)
+@/types/shared (SortDirection, Country, PaginationState)
 
 // Global Hooks
 @/hooks/use-debounce

@@ -4,10 +4,11 @@ import { Search, Moon, Sun, ChevronRight, Home, Crown } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { NotificationDropdown } from "@/src/features/notifications"
+import { PAGE_PADDING } from "@/src/styles"
 
 export function TopNav() {
   const router = useRouter()
@@ -45,7 +46,7 @@ export function TopNav() {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex h-12 sm:h-14 items-center gap-2 sm:gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-2 sm:px-4">
+    <header className={`sticky top-0 z-10 flex h-12 sm:h-14 items-center gap-2 sm:gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${PAGE_PADDING.horizontal}`}>
       <SidebarTrigger className="-ml-1 h-9 w-9 min-w-9" />
 
       {/* Breadcrumbs */}
@@ -88,7 +89,9 @@ export function TopNav() {
           {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           <span className="sr-only">Toggle theme</span>
         </Button>
-        <NotificationDropdown />
+        <Suspense fallback={<div className="h-9 w-9" aria-hidden="true" />}>
+          <NotificationDropdown />
+        </Suspense>
       </div>
     </header>
   )

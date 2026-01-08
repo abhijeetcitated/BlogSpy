@@ -8,7 +8,7 @@
 import { create } from "zustand"
 import { devtools, persist } from "zustand/middleware"
 import type { Keyword, MatchType, BulkMode, Country, SERPFeature } from "../types"
-import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+import type { SortDirection as SharedSortDirection } from "@/types/shared"
 
 // ============================================
 // SORT CONFIG
@@ -72,6 +72,24 @@ export interface LoadingState {
 }
 
 // ============================================
+// DRAWER CACHE (for Commerce & Social tabs)
+// ============================================
+export type DrawerCacheType = "commerce" | "social"
+
+export interface DrawerCacheEntry {
+  commerce?: unknown // Amazon/affiliate data
+  social?: unknown   // Reddit/YouTube data
+  fetchedAt?: number // Timestamp for cache invalidation
+}
+
+export interface DrawerCache {
+  [keyword: string]: DrawerCacheEntry
+}
+
+// Cache TTL: 5 minutes (in milliseconds)
+const DRAWER_CACHE_TTL = 5 * 60 * 1000
+
+// ============================================
 // DEFAULT VALUES
 // ============================================
 const DEFAULT_FILTERS: KeywordFilters = {
@@ -123,9 +141,15 @@ export interface KeywordState {
   // Data
   keywords: Keyword[]
   selectedIds: Set<number>
+
+  // Credits
+  credits: number | null
   
   // Drawer state (single keyword for detail view)
   selectedKeyword: Keyword | null
+  
+  // Drawer cache (for Commerce & Social tabs)
+  drawerCache: DrawerCache
   
   // Search state
   search: SearchState
@@ -162,12 +186,21 @@ export interface KeywordState {
   setKeywords: (keywords: Keyword[]) => void
   addKeywords: (keywords: Keyword[]) => void
   updateKeyword: (id: number, updates: Partial<Keyword>) => void
+  updateRow: (id: string, updates: Partial<Keyword>) => void
   removeKeyword: (id: number) => void
+
+  // Credit actions
+  setCredits: (credits: number | null) => void
   
   // Drawer actions
   setSelectedKeyword: (keyword: Keyword | null) => void
   openKeywordDrawer: (keyword: Keyword) => void
   closeKeywordDrawer: () => void
+  
+  // Drawer cache actions
+  setDrawerCache: (keyword: string, type: DrawerCacheType, data: unknown) => void
+  getCachedData: (keyword: string, type: DrawerCacheType) => unknown | null
+  clearDrawerCache: (keyword?: string) => void
   
   // Sort actions
   setSort: (field: SortField, direction?: SortDirection) => void
@@ -199,7 +232,9 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
   // Initial state
   keywords: [],
   selectedIds: new Set(),
+  credits: null,
   selectedKeyword: null,
+  drawerCache: {},
   search: DEFAULT_SEARCH,
   filters: DEFAULT_FILTERS,
   sort: DEFAULT_SORT,
@@ -267,7 +302,27 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
       keywords: state.keywords.map((k) =>
         k.id === id ? { ...k, ...updates } : k
       ),
+      selectedKeyword:
+        state.selectedKeyword?.id === id
+          ? { ...state.selectedKeyword, ...updates }
+          : state.selectedKeyword,
     })),
+
+  updateRow: (id, updates) =>
+    set((state) => {
+      const numericId = Number(id)
+      if (!Number.isFinite(numericId)) return state
+
+      return {
+        keywords: state.keywords.map((k) =>
+          k.id === numericId ? { ...k, ...updates } : k
+        ),
+        selectedKeyword:
+          state.selectedKeyword?.id === numericId
+            ? { ...state.selectedKeyword, ...updates }
+            : state.selectedKeyword,
+      }
+    }),
     
   removeKeyword: (id) =>
     set((state) => ({
@@ -279,10 +334,52 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
       })(),
     })),
 
+  // Credit actions
+  setCredits: (credits) => set({ credits }),
+
   // Drawer actions
   setSelectedKeyword: (keyword) => set({ selectedKeyword: keyword }),
   openKeywordDrawer: (keyword) => set({ selectedKeyword: keyword }),
   closeKeywordDrawer: () => set({ selectedKeyword: null }),
+
+  // Drawer cache actions
+  setDrawerCache: (keyword, type, data) =>
+    set((state) => ({
+      drawerCache: {
+        ...state.drawerCache,
+        [keyword]: {
+          ...state.drawerCache[keyword],
+          [type]: data,
+          fetchedAt: Date.now(),
+        },
+      },
+    })),
+
+  getCachedData: (keyword, type) => {
+    const state = get()
+    const entry = state.drawerCache[keyword]
+    if (!entry) return null
+    
+    // Check if cache is expired (5 min TTL)
+    const fetchedAt = entry.fetchedAt ?? 0
+    if (Date.now() - fetchedAt > DRAWER_CACHE_TTL) {
+      return null
+    }
+    
+    return entry[type] ?? null
+  },
+
+  clearDrawerCache: (keyword) =>
+    set((state) => {
+      if (keyword) {
+        // Clear specific keyword cache
+        const newCache = { ...state.drawerCache }
+        delete newCache[keyword]
+        return { drawerCache: newCache }
+      }
+      // Clear all cache
+      return { drawerCache: {} }
+    }),
 
   // Sort actions
   setSort: (field, direction) =>
@@ -395,3 +492,4 @@ export const selectLoading = (state: KeywordState) => state.loading
 export const selectSelectedIds = (state: KeywordState) => state.selectedIds
 export const selectSelectedCount = (state: KeywordState) => state.selectedIds.size
 export const selectSelectedKeyword = (state: KeywordState) => state.selectedKeyword
+export const selectDrawerCache = (state: KeywordState) => state.drawerCache

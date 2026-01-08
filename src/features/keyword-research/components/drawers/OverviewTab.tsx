@@ -1,90 +1,99 @@
 // ============================================
 // KEYWORD DETAILS DRAWER - Overview Tab
 // ============================================
-// Displays main keyword metrics, trend data, and SERP features
+// Premium dark mode UI focused on RTV (Realizable Traffic Value)
+// and actionable SERP/competition signals.
 // ============================================
 
 "use client"
 
 import * as React from "react"
-import { TrendingUp, TrendingDown, Minus, Target, Zap, Eye, MapPin } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+import { Bot, Eye, TrendingDown, TrendingUp, DollarSign, Info, ShoppingCart, Navigation } from "lucide-react"
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
+
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
-import type { Keyword } from "../../types"
 import { generateMockGEOScore } from "@/lib/geo-calculator"
-import { generateMockRTV } from "@/lib/rtv-calculator"
-import { generateMockAIOverviewAnalysis } from "@/lib/ai-overview-analyzer"
-
-// ============================================
-// TYPES
-// ============================================
+import type { Keyword } from "../../types"
+import { RtvBreakdown } from "./widgets/RtvBreakdown"
 
 interface OverviewTabProps {
   keyword: Keyword
 }
 
-// ============================================
-// HELPER COMPONENTS
-// ============================================
-
-function MetricCard({
-  title,
-  value,
-  subValue,
-  icon: Icon,
-  trend,
-  colorClass,
-}: {
-  title: string
-  value: string | number
-  subValue?: string
-  icon?: React.ElementType
-  trend?: "up" | "down" | "neutral"
-  colorClass?: string
-}) {
-  const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus
-
-  return (
-    <Card className="bg-card/50 border-border/50">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            {Icon && <Icon className="h-4 w-4" />}
-            <span>{title}</span>
-          </div>
-          {trend && (
-            <TrendIcon
-              className={cn(
-                "h-4 w-4",
-                trend === "up" && "text-emerald-500",
-                trend === "down" && "text-red-500",
-                trend === "neutral" && "text-muted-foreground"
-              )}
-            />
-          )}
-        </div>
-        <div className={cn("text-2xl font-bold mt-2", colorClass)}>
-          {value}
-        </div>
-        {subValue && (
-          <div className="text-xs text-muted-foreground mt-1">{subValue}</div>
-        )}
-      </CardContent>
-    </Card>
+function formatInt(n: number): string {
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(
+    Number.isFinite(n) ? n : 0
   )
 }
 
-// ============================================
-// COMPONENT
-// ============================================
+function titleCase(s: string): string {
+  return s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s
+}
+
+function KdGauge({ value }: { value: number }) {
+  const v = Math.max(0, Math.min(100, Number(value) || 0))
+
+  // Semi-circle gauge (180deg). We render a circle but clip via viewBox.
+  const r = 44
+  const cx = 50
+  const cy = 50
+  const circumference = 2 * Math.PI * r
+
+  // Half circumference for semi arc.
+  const semi = circumference / 2
+  const filled = (semi * v) / 100
+  const dashArray = `${filled} ${Math.max(0, semi - filled)}`
+
+  const color =
+    v <= 29
+      ? "text-emerald-400"
+      : v <= 49
+      ? "text-amber-400"
+      : v <= 69
+      ? "text-orange-400"
+      : "text-rose-400"
+
+  return (
+    <div className="relative h-[72px] w-[120px]">
+      <svg viewBox="0 0 100 60" className="h-full w-full">
+        <path
+          d="M 6 50 A 44 44 0 0 1 94 50"
+          className="stroke-border"
+          strokeWidth={10}
+          fill="none"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M 6 50 A 44 44 0 0 1 94 50"
+          className={cn("stroke-current", color)}
+          strokeWidth={10}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={dashArray}
+        />
+      </svg>
+
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-center">
+        <div className={cn("text-2xl font-semibold tabular-nums", color)}>{Math.round(v)}</div>
+      </div>
+    </div>
+  )
+}
 
 export function OverviewTab({ keyword }: OverviewTabProps) {
-  // ─────────────────────────────────────────
-  // SAFETY CHECK: Bail early if no keyword
-  // ─────────────────────────────────────────
   if (!keyword) {
     return (
       <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
@@ -93,197 +102,368 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
     )
   }
 
-  // Safe defaults for potentially undefined data
-  const safeTrend = keyword.trend ?? []
-  const safeVolume = keyword.volume ?? 0
-  const safeKd = keyword.kd ?? 0
-  const safeCpc = keyword.cpc ?? 0
-  const safeSerpFeatures = keyword.serpFeatures ?? []
-  const safeWeakSpot = keyword.weakSpot ?? { type: null }
+  const volume = Math.max(0, Number(keyword.volume ?? 0) || 0)
+  const trend = (keyword.trend ?? []).map((n) => Math.max(0, Number(n) || 0))
+  const kd = Math.max(0, Math.min(100, Number(keyword.kd ?? 0) || 0))
 
-  // Calculate metrics with safe values
-  const rtvData = generateMockRTV(keyword.id, safeVolume)
-  const geoScore = keyword.geoScore ?? generateMockGEOScore(keyword.id)
-  const aioData = generateMockAIOverviewAnalysis(keyword.keyword, safeWeakSpot.type !== null)
+  // Back-compat: weakSpot (deprecated) + new weakSpots
+  const weakSpotLegacy = keyword.weakSpot ?? { type: null }
+  const weakSpots = keyword.weakSpots ?? { reddit: null, quora: null, pinterest: null }
 
-  // Calculate trend with safety
-  const trendGrowth = safeTrend.length >= 2
-    ? ((safeTrend[safeTrend.length - 1] - safeTrend[0]) / Math.max(safeTrend[0], 1)) * 100
-    : 0
-  const trendDirection = trendGrowth > 5 ? "up" : trendGrowth < -5 ? "down" : "neutral"
+  const geoScore = Math.max(0, Math.min(100, Number(keyword.geoScore ?? generateMockGEOScore(keyword.id)) || 0))
 
-  // Get KD level and color
-  const getKdInfo = (kd: number) => {
-    if (kd <= 14) return { level: "Very Easy", color: "text-emerald-500", bgColor: "bg-emerald-500" }
-    if (kd <= 29) return { level: "Easy", color: "text-green-500", bgColor: "bg-green-500" }
-    if (kd <= 49) return { level: "Moderate", color: "text-yellow-500", bgColor: "bg-yellow-500" }
-    if (kd <= 69) return { level: "Hard", color: "text-orange-500", bgColor: "bg-orange-500" }
-    if (kd <= 84) return { level: "Very Hard", color: "text-red-500", bgColor: "bg-red-500" }
-    return { level: "Extreme", color: "text-red-600", bgColor: "bg-red-600" }
+  const aioActive =
+    Boolean(keyword.hasAio) ||
+    (keyword.serpFeatures ?? []).some((f) => String(f).toLowerCase().includes("ai_overview"))
+
+  const rtvValue = Math.max(0, Number(keyword.rtv ?? 0) || 0)
+  const rtvBreakdown = Array.isArray(keyword.rtvBreakdown) ? keyword.rtvBreakdown : []
+  const breakdownLoss = rtvBreakdown.reduce((acc, item) => {
+    const raw = Math.max(0, Number(item.value) || 0)
+    if (raw > 0 && raw < 1) return acc + raw
+    return acc + raw / 100
+  }, 0)
+  const hasRtv = typeof keyword.rtv === "number" && Number.isFinite(keyword.rtv)
+  const loss = Math.max(
+    0,
+    Math.min(1, hasRtv && volume > 0 ? 1 - rtvValue / volume : breakdownLoss)
+  )
+
+  const trendGrowth =
+    trend.length >= 2
+      ? ((trend[trend.length - 1] - trend[0]) / Math.max(trend[0], 1)) * 100
+      : 0
+  const trendIcon = trendGrowth > 0 ? TrendingUp : trendGrowth < 0 ? TrendingDown : TrendingUp
+
+  const trendData = trend.map((v, i) => ({ i, v }))
+
+  // Weak spot analysis: prefer new object; fallback to legacy if present.
+  const weakSignals: Array<{ platform: "reddit" | "quora" | "pinterest"; rank: number; url?: string | null }> = []
+  ;(["reddit", "quora", "pinterest"] as const).forEach((p) => {
+    const rank = weakSpots[p]
+    if (typeof rank === "number" && rank > 0 && rank <= 10) weakSignals.push({ platform: p, rank })
+  })
+  weakSignals.sort((a, b) => a.rank - b.rank)
+
+  if (weakSignals.length === 0 && weakSpotLegacy.type && typeof weakSpotLegacy.rank === "number") {
+    weakSignals.push({ platform: weakSpotLegacy.type, rank: weakSpotLegacy.rank })
   }
 
-  const kdInfo = getKdInfo(safeKd)
-
-  // Get GEO level
-  const getGeoInfo = (score: number) => {
-    if (score >= 80) return { level: "Excellent", color: "text-emerald-500" }
-    if (score >= 60) return { level: "Good", color: "text-green-500" }
-    if (score >= 40) return { level: "Moderate", color: "text-yellow-500" }
-    return { level: "Low", color: "text-red-500" }
+  const googleSearchUrlFor = (platform: string): string => {
+    const site = platform === "reddit" ? "site:reddit.com" : platform === "quora" ? "site:quora.com" : "site:pinterest.com"
+    return `https://www.google.com/search?q=${encodeURIComponent(`${site} ${keyword.keyword}`)}`
   }
 
-  const geoInfo = getGeoInfo(geoScore)
+  // Intent configuration matching table column colors
+  type IntentCode = "I" | "C" | "T" | "N"
+  const intentConfig: Record<IntentCode, {
+    label: string
+    icon: typeof Info
+    color: string
+    bgColor: string
+    borderColor: string
+  }> = {
+    I: {
+      label: "Informational",
+      icon: Info,
+      color: "text-blue-600",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20",
+    },
+    C: {
+      label: "Commercial",
+      icon: ShoppingCart,
+      color: "text-purple-600",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/20",
+    },
+    T: {
+      label: "Transactional",
+      icon: DollarSign,
+      color: "text-green-600",
+      bgColor: "bg-green-500/10",
+      borderColor: "border-green-500/20",
+    },
+    N: {
+      label: "Navigational",
+      icon: Navigation,
+      color: "text-orange-600",
+      bgColor: "bg-orange-500/10",
+      borderColor: "border-orange-500/20",
+    },
+  }
+
+  const intents = (keyword.intent ?? []) as IntentCode[]
 
   return (
-    <div className="space-y-6">
-      {/* Primary Metrics Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        <MetricCard
-          title="Real Traffic Value"
-          value={rtvData.rtv.toLocaleString()}
-          subValue={`${((rtvData.rtv / keyword.volume) * 100).toFixed(1)}% of volume`}
-          icon={Target}
-          colorClass="text-primary"
-        />
-        <MetricCard
-          title="GEO Score"
-          value={`${geoScore}%`}
-          subValue={geoInfo.level}
-          icon={MapPin}
-          colorClass={geoInfo.color}
-        />
-        <MetricCard
-          title="Trend"
-          value={`${trendGrowth >= 0 ? "+" : ""}${trendGrowth.toFixed(1)}%`}
-          subValue="Last 12 months"
-          icon={TrendingUp}
-          trend={trendDirection}
-        />
-        <MetricCard
-          title="AIO Opportunity"
-          value={`${aioData.opportunityScore}%`}
-          subValue={aioData.yourContent.isCited ? "Currently Cited" : "Not Cited"}
-          icon={Zap}
-          colorClass={aioData.opportunityScore >= 70 ? "text-emerald-500" : "text-muted-foreground"}
-        />
-      </div>
+    <div className="space-y-4">
+      <RtvBreakdown volume={volume} rtv={rtvValue} loss={loss} breakdown={rtvBreakdown} />
 
-      {/* Keyword Difficulty */}
-      <Card className="bg-card/50 border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Keyword Difficulty
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className={cn("text-3xl font-bold", kdInfo.color)}>
-              {safeKd}%
-            </span>
-            <Badge variant="outline" className={kdInfo.color}>
-              {kdInfo.level}
-            </Badge>
-          </div>
-          <Progress value={safeKd} className="h-2" />
-          <p className="text-xs text-muted-foreground">
-            {safeKd <= 29
-              ? "Great opportunity! This keyword has low competition."
-              : safeKd <= 49
-              ? "Moderate competition. Quality content can rank well."
-              : safeKd <= 69
-              ? "Competitive keyword. Strong content and backlinks needed."
-              : "Very competitive. Consider long-tail alternatives."}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Weak Spot */}
-      {safeWeakSpot.type && (
-        <Card className="bg-card/50 border-border/50 border-l-4 border-l-amber-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Eye className="h-4 w-4 text-amber-500" />
-              Weak Spot Detected
-            </CardTitle>
+      {/* SEARCH INTENT CARD */}
+      {intents.length > 0 && (
+        <Card className="bg-card/50 border-border/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-foreground">Search Intent</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              What users are looking for when they search this keyword
+            </p>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <Badge variant="secondary" className="bg-amber-500/10 text-amber-600">
-                {safeWeakSpot.type}
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                Rank #{safeWeakSpot.rank ?? "N/A"}
-              </span>
+            <div className="flex items-center gap-3 flex-wrap">
+              {intents.map((intentCode) => {
+                const config = intentConfig[intentCode]
+                if (!config) return null
+                const Icon = config.icon
+
+                return (
+                  <Tooltip key={intentCode}>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "h-8 px-3 font-medium border cursor-default",
+                          config.bgColor,
+                          config.borderColor,
+                          config.color
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5 mr-1.5" />
+                        {config.label}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="text-xs">
+                        <div className="font-semibold mb-1">{config.label} Intent</div>
+                        <div className="text-muted-foreground">
+                          {intentCode === "I" && "Users want information or answers"}
+                          {intentCode === "C" && "Users are researching products/services"}
+                          {intentCode === "T" && "Users are ready to buy or take action"}
+                          {intentCode === "N" && "Users want to find a specific site"}
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                )
+              })}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              There&apos;s a weak competitor in the top 10 results you can outrank.
-            </p>
           </CardContent>
         </Card>
       )}
 
-      {/* SERP Features */}
-      <Card className="bg-card/50 border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+      {/* METRIC GRID - 3 Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Trend Card */}
+        <Card className="border-border bg-transparent">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Trend</CardTitle>
+              <div className="inline-flex items-center gap-1.5 text-xs">
+                {React.createElement(trendIcon, {
+                  className: cn(
+                    "h-3.5 w-3.5",
+                    trendGrowth > 3 ? "text-emerald-400" : trendGrowth < -3 ? "text-rose-400" : "text-muted-foreground"
+                  ),
+                })}
+                <span
+                  className={cn(
+                    "tabular-nums font-medium",
+                    trendGrowth > 3 ? "text-emerald-400" : trendGrowth < -3 ? "text-rose-400" : "text-muted-foreground"
+                  )}
+                >
+                  {`${trendGrowth >= 0 ? "+" : ""}${trendGrowth.toFixed(1)}%`}
+                </span>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-2">
+            <div className="text-xs text-muted-foreground/60">Last 12 months</div>
+            <div className="h-[80px] w-full">
+              <ResponsiveContainer width="100%" height={80}>
+                <LineChart data={trendData} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                  <XAxis dataKey="i" hide />
+                  <YAxis hide domain={[0, "dataMax"]} />
+                  <RechartsTooltip
+                    cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
+                    contentStyle={{
+                      background: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: 8,
+                      color: "hsl(var(--popover-foreground))",
+                      fontSize: 11,
+                    }}
+                    labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                    formatter={(value: unknown) => [formatInt(Number(value) || 0), "Volume"]}
+                    labelFormatter={(label) => `Month ${Number(label) + 1}`}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="v"
+                    stroke="#6366f1"
+                    strokeWidth={2}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* KD Card */}
+        <Card className="border-border bg-transparent">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Keyword Difficulty
+              </CardTitle>
+              <span className="text-xs text-muted-foreground/60">0–100</span>
+            </div>
+          </CardHeader>
+
+          <CardContent className="flex flex-col items-center justify-center space-y-2">
+            <KdGauge value={kd} />
+            <div className="text-sm font-medium text-foreground/80">
+              {kd <= 29
+                ? "Easy"
+                : kd <= 49
+                ? "Moderate"
+                : kd <= 69
+                ? "Hard"
+                : "Very Hard"}
+            </div>
+            <div className="text-[11px] text-center text-muted-foreground/60">
+              Lower is easier to rank
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* GEO Score Card */}
+        <Card className="border-border bg-transparent">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                GEO Score
+              </CardTitle>
+              {aioActive ? (
+                <Badge
+                  variant="outline"
+                  className="border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px]"
+                >
+                  <Bot className="h-3 w-3 mr-1" />
+                  AI Active
+                </Badge>
+              ) : (
+                <span className="text-xs text-muted-foreground/60">Traditional</span>
+              )}
+            </div>
+          </CardHeader>
+
+          <CardContent className="flex flex-col items-center justify-center space-y-2">
+            <div className="flex items-center gap-3">
+              <Bot
+                className={cn(
+                  "h-8 w-8",
+                  aioActive ? "text-purple-400" : "text-muted-foreground/40"
+                )}
+              />
+              <div
+                className={cn(
+                  "text-4xl font-bold tabular-nums",
+                  aioActive ? "text-purple-300" : "text-primary/70"
+                )}
+              >
+                {Math.round(geoScore)}%
+              </div>
+            </div>
+            <div className="text-[11px] text-center text-muted-foreground/60">
+              AI answer readiness
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* WEAK SPOT ANALYSIS */}
+      <Card className="bg-card/50 border-border">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Weak Spot Analysis
+            </CardTitle>
+            <div className="inline-flex items-center gap-1.5 text-xs">
+              <Eye className="h-3.5 w-3.5 text-violet-500" />
+              <span className="tabular-nums font-semibold text-violet-600 dark:text-violet-400">{weakSignals.length}</span>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-3">
+          {weakSignals.length > 2 && (
+            <div className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-sm font-medium text-violet-700 dark:text-violet-300">
+              🎯 High Opportunity: Multiple forums ranking
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-foreground">Platforms in top 10</div>
+
+            {weakSignals.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No weak platforms detected in the top 10.</div>
+            ) : (
+              <div className="flex items-center gap-3 flex-wrap">
+                {weakSignals.map((s) => {
+                  const href = s.url || googleSearchUrlFor(s.platform)
+                  const label = `${titleCase(s.platform)}`
+
+                  return (
+                    <a
+                      key={`${s.platform}_${s.rank}`}
+                      href={href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-violet-500/30 bg-violet-500/5 hover:bg-violet-500/15 hover:border-violet-500/50 transition-all group"
+                      title={s.url ? "Open result" : "Search Google"}
+                    >
+                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-violet-500 text-[11px] font-bold text-white shadow-sm">
+                        #{s.rank}
+                      </span>
+                      <span className="text-sm font-medium text-violet-700 dark:text-violet-300 group-hover:text-violet-600 dark:group-hover:text-violet-200">{label}</span>
+                    </a>
+                  )
+                })}
+              </div>
+            )}
+
+            <p className="text-[11px] text-muted-foreground">
+              Click a platform to open the ranking result or search Google
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* SERP FEATURES */}
+      <Card className="bg-card/50 border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             SERP Features
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {safeSerpFeatures.length > 0 ? (
-              safeSerpFeatures.map((feature) => (
+            {(keyword.serpFeatures ?? []).length > 0 ? (
+              (keyword.serpFeatures ?? []).map((feature) => (
                 <Badge
                   key={feature}
-                  variant="secondary"
-                  className="bg-primary/10 text-primary"
+                  variant="outline"
+                  className="border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-xs font-medium hover:bg-indigo-500/20 transition-colors"
                 >
-                  {feature}
+                  {String(feature)}
                 </Badge>
               ))
             ) : (
-              <span className="text-sm text-muted-foreground">
-                No special SERP features detected
-              </span>
+              <div className="text-sm text-muted-foreground">No special SERP features detected.</div>
             )}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Trend Chart Placeholder */}
-      <Card className="bg-card/50 border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            Search Volume Trend
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {safeTrend.length > 0 ? (
-            <>
-              <div className="flex items-end justify-between h-24 gap-1">
-                {safeTrend.map((value, index) => {
-                  const maxValue = Math.max(...safeTrend, 1)
-                  const height = (value / maxValue) * 100
-                  return (
-                    <div
-                      key={index}
-                      className="flex-1 bg-primary/20 hover:bg-primary/40 transition-colors rounded-t"
-                      style={{ height: `${Math.max(height, 2)}%` }}
-                      title={`Month ${index + 1}: ${value.toLocaleString()}`}
-                    />
-                  )
-                })}
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                <span>12 months ago</span>
-                <span>Now</span>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
-              No trend data available
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

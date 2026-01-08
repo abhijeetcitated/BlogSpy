@@ -123,46 +123,46 @@ export default function BillingPage() {
 
   return (
     <ErrorBoundary>
-    <div className="p-6 space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Billing & Subscription</h1>
-        <p className="text-slate-400 mt-1">Manage your subscription and billing details</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Billing & Subscription</h1>
+        <p className="text-slate-400 mt-1 text-sm sm:text-base">Manage your subscription and billing details</p>
       </div>
 
       {/* Current Plan Overview */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {/* Current Plan Card */}
         <Card className="bg-slate-800/50 border-slate-700">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-slate-400">Current Plan</CardDescription>
-            <CardTitle className="text-2xl text-white flex items-center gap-2">
-              <currentPlan.icon className="w-6 h-6 text-emerald-400" />
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <CardDescription className="text-slate-400 text-xs sm:text-sm">Current Plan</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2">
+              <currentPlan.icon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
               {currentPlan.name}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold text-white">
+              <span className="text-2xl sm:text-3xl font-bold text-white">
                 ${billingCycle === "monthly" ? currentPlan.price : Math.round(currentPlan.priceYearly / 12)}
               </span>
-              <span className="text-slate-400">/month</span>
+              <span className="text-slate-400 text-sm">/month</span>
             </div>
             {mockUser.plan !== "free" && (
-              <p className="text-sm text-slate-400 mt-2">
-                <Calendar className="w-4 h-4 inline mr-1" />
+              <p className="text-xs sm:text-sm text-slate-400 mt-2">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
                 Next billing: {mockUser.nextBillingDate}
               </p>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="p-4 sm:p-6 pt-0">
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 hover:bg-slate-700"
+              className="w-full border-slate-600 hover:bg-slate-700 text-xs sm:text-sm"
               onClick={handleManageSubscription}
               disabled={isLoading || mockUser.plan === "free"}
             >
-              <CreditCard className="w-4 h-4 mr-2" />
+              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               Manage Subscription
             </Button>
           </CardFooter>
@@ -170,32 +170,32 @@ export default function BillingPage() {
 
         {/* Credits Card */}
         <Card className="bg-slate-800/50 border-slate-700">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-slate-400">Credits Usage</CardDescription>
-            <CardTitle className="text-2xl text-white">
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <CardDescription className="text-slate-400 text-xs sm:text-sm">Credits Usage</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl text-white">
               {mockUser.credits} / {mockUser.maxCredits}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
             <Progress value={creditsPercentage} className="h-2" />
-            <p className="text-sm text-slate-400">
+            <p className="text-xs sm:text-sm text-slate-400">
               {creditsUsed} credits used this month
             </p>
             {creditsPercentage < 20 && (
-              <div className="flex items-center gap-2 text-amber-400 text-sm">
-                <AlertCircle className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-amber-400 text-xs sm:text-sm">
+                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                 Running low on credits
               </div>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="p-4 sm:p-6 pt-0">
             <Button 
               variant="outline" 
-              className="w-full border-slate-600 hover:bg-slate-700"
+              className="w-full border-slate-600 hover:bg-slate-700 text-xs sm:text-sm"
               onClick={() => handleUpgrade("pro")}
               disabled={isLoading}
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               Get More Credits
             </Button>
           </CardFooter>
@@ -203,24 +203,24 @@ export default function BillingPage() {
 
         {/* Quick Stats Card */}
         <Card className="bg-slate-800/50 border-slate-700">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-slate-400">This Month</CardDescription>
-            <CardTitle className="text-2xl text-white">Usage Stats</CardTitle>
+          <CardHeader className="pb-2 p-4 sm:p-6">
+            <CardDescription className="text-slate-400 text-xs sm:text-sm">This Month</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl text-white">Usage Stats</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between text-sm">
+          <CardContent className="space-y-2 sm:space-y-3 p-4 sm:p-6 pt-0">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-slate-400">Keyword Searches</span>
               <span className="text-white">127</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-slate-400">Content Analyzed</span>
               <span className="text-white">34</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-slate-400">AI Content Generated</span>
               <span className="text-white">12</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-slate-400">Keywords Tracked</span>
               <span className="text-white">45 / 100</span>
             </div>
@@ -230,20 +230,20 @@ export default function BillingPage() {
 
       {/* Plans Section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">Available Plans</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-white">Available Plans</h2>
           <Tabs value={billingCycle} onValueChange={(v) => setBillingCycle(v as "monthly" | "yearly")}>
             <TabsList className="bg-slate-800">
-              <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger value="yearly">
+              <TabsTrigger value="monthly" className="text-xs sm:text-sm">Monthly</TabsTrigger>
+              <TabsTrigger value="yearly" className="text-xs sm:text-sm">
                 Yearly
-                <Badge className="ml-2 bg-emerald-500/20 text-emerald-400 text-xs">Save 20%</Badge>
+                <Badge className="ml-1 sm:ml-2 bg-emerald-500/20 text-emerald-400 text-[10px] sm:text-xs">Save 20%</Badge>
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-3">
           {plans.map((plan) => {
             const isCurrentPlan = plan.id === mockUser.plan
             const price = billingCycle === "monthly" ? plan.price : Math.round(plan.priceYearly / 12)
@@ -256,39 +256,39 @@ export default function BillingPage() {
                 }`}
               >
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs">
                     Most Popular
                   </Badge>
                 )}
-                <CardHeader>
+                <CardHeader className="p-4 sm:p-6">
                   <div className="flex items-center gap-2">
-                    <plan.icon className={`w-5 h-5 ${plan.popular ? "text-emerald-400" : "text-slate-400"}`} />
-                    <CardTitle className="text-white">{plan.name}</CardTitle>
+                    <plan.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${plan.popular ? "text-emerald-400" : "text-slate-400"}`} />
+                    <CardTitle className="text-white text-base sm:text-lg">{plan.name}</CardTitle>
                   </div>
-                  <CardDescription>{plan.description}</CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-white">${price}</span>
-                    <span className="text-slate-400">/month</span>
+                    <span className="text-3xl sm:text-4xl font-bold text-white">${price}</span>
+                    <span className="text-slate-400 text-sm">/month</span>
                   </div>
                   {billingCycle === "yearly" && plan.price > 0 && (
-                    <p className="text-sm text-emerald-400">
+                    <p className="text-xs sm:text-sm text-emerald-400">
                       ${plan.priceYearly}/year (Save ${plan.price * 12 - plan.priceYearly})
                     </p>
                   )}
-                  <ul className="space-y-2">
+                  <ul className="space-y-1.5 sm:space-y-2">
                     {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                        {feature}
+                      <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-300">
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="p-4 sm:p-6 pt-0">
                   <Button 
-                    className={`w-full ${
+                    className={`w-full text-xs sm:text-sm ${
                       isCurrentPlan 
                         ? "bg-slate-700 text-slate-400 cursor-not-allowed" 
                         : plan.popular 
@@ -309,30 +309,55 @@ export default function BillingPage() {
 
       {/* Billing History */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Billing History</h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-white">Billing History</h2>
         <Card className="bg-slate-800/50 border-slate-700">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            {/* Mobile View - Cards */}
+            <div className="block sm:hidden divide-y divide-slate-700">
+              {mockInvoices.map((invoice) => (
+                <div key={invoice.id} className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-sm font-medium">{invoice.id}</span>
+                    <Badge className="bg-emerald-500/20 text-emerald-400 text-xs">
+                      {invoice.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <span>{invoice.date}</span>
+                    <span>{invoice.plan}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-white font-medium">{invoice.amount}</span>
+                    <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white h-7 px-2">
+                      <Download className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Desktop View - Table */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-700">
-                    <th className="text-left p-4 text-slate-400 font-medium">Invoice</th>
-                    <th className="text-left p-4 text-slate-400 font-medium">Date</th>
-                    <th className="text-left p-4 text-slate-400 font-medium">Plan</th>
-                    <th className="text-left p-4 text-slate-400 font-medium">Amount</th>
-                    <th className="text-left p-4 text-slate-400 font-medium">Status</th>
-                    <th className="text-right p-4 text-slate-400 font-medium">Actions</th>
+                    <th className="text-left p-4 text-slate-400 font-medium text-sm">Invoice</th>
+                    <th className="text-left p-4 text-slate-400 font-medium text-sm">Date</th>
+                    <th className="text-left p-4 text-slate-400 font-medium text-sm">Plan</th>
+                    <th className="text-left p-4 text-slate-400 font-medium text-sm">Amount</th>
+                    <th className="text-left p-4 text-slate-400 font-medium text-sm">Status</th>
+                    <th className="text-right p-4 text-slate-400 font-medium text-sm">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {mockInvoices.map((invoice) => (
                     <tr key={invoice.id} className="border-b border-slate-700/50 last:border-0">
-                      <td className="p-4 text-white">{invoice.id}</td>
-                      <td className="p-4 text-slate-300">{invoice.date}</td>
-                      <td className="p-4 text-slate-300">{invoice.plan}</td>
-                      <td className="p-4 text-white">{invoice.amount}</td>
+                      <td className="p-4 text-white text-sm">{invoice.id}</td>
+                      <td className="p-4 text-slate-300 text-sm">{invoice.date}</td>
+                      <td className="p-4 text-slate-300 text-sm">{invoice.plan}</td>
+                      <td className="p-4 text-white text-sm">{invoice.amount}</td>
                       <td className="p-4">
-                        <Badge className="bg-emerald-500/20 text-emerald-400">
+                        <Badge className="bg-emerald-500/20 text-emerald-400 text-xs">
                           {invoice.status}
                         </Badge>
                       </td>

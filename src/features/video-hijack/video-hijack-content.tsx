@@ -68,6 +68,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
 import { escapeCsvValue, getPublishTimestamp } from "./utils/common.utils"
+import { STACK_SPACING, GAP_PATTERNS, RESPONSIVE_CLASSES } from "@/src/styles"
 
 // ============================================
 // Types
@@ -186,7 +187,7 @@ function generateMockYouTubeResults(keyword: string): VideoResult[] {
       duration: `${Math.floor(Math.random() * 20) + 5}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}`,
       thumbnailUrl: "",
       videoUrl: `https://youtube.com/watch?v=${Math.random().toString(36).slice(2, 13)}`,
-      engagement: (likes / views) * 100,
+      engagement: views > 0 ? (likes / views) * 100 : 0,
       tags: [
         keyword.toLowerCase(),
         `${keyword} tutorial`,
@@ -234,7 +235,7 @@ function generateMockTikTokResults(keyword: string): TikTokResult[] {
       publishedAt: `${Math.floor(Math.random() * 30) + 1}d ago`,
       duration: `0:${String(Math.floor(Math.random() * 45) + 15).padStart(2, "0")}`,
       videoUrl: `https://tiktok.com/@${creator.name}/video/${Math.random().toString(36).slice(2, 13)}`,
-      engagement: (likes / views) * 100,
+      engagement: views > 0 ? (likes / views) * 100 : 0,
       hashtags: [keyword.replace(/\s+/g, ""), "viral", "fyp", "tips", "trending"],
       hijackScore,
       viralPotential: viralOptions[Math.floor(Math.random() * 3)],
@@ -571,9 +572,9 @@ export function VideoHijackContent() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6">
+      <div className={STACK_SPACING.default}>
         {/* ==================== HEADER ==================== */}
-        <div className="flex items-center justify-between">
+        <div className={RESPONSIVE_CLASSES.pageHeader}>
           <div className="min-w-0">
             <h1 className="text-lg sm:text-2xl font-bold text-foreground flex items-center gap-2 sm:gap-3 flex-nowrap">
               <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20">
@@ -599,7 +600,7 @@ export function VideoHijackContent() {
         </div>
 
         {/* ==================== SEARCH BOX ==================== */}
-        <div className="rounded-xl border border-border bg-card p-6">
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-5 md:p-6">
           {/* Search Mode Toggle */}
           <div className="flex items-center gap-2 mb-4">
             <span className="text-sm text-muted-foreground">Search by:</span>
@@ -1008,7 +1009,7 @@ export function VideoHijackContent() {
             )}
 
             {/* Main Content Grid with Sidebar */}
-            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
               {/* Left: Results List */}
               <div className="xl:col-span-3 space-y-3">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">

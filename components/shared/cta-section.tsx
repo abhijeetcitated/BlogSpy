@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PAGE_PADDING, GAP_PATTERNS } from '@/src/styles';
 
 interface CTASectionProps {
   title?: string;
@@ -22,15 +23,15 @@ export function CTASection({
   secondaryHref = "/pricing",
 }: CTASectionProps) {
   return (
-    <section className="py-20 px-4 bg-linear-to-br from-blue-600 to-cyan-500 text-white">
+    <section className={`py-12 sm:py-16 md:py-20 ${PAGE_PADDING.horizontal} bg-linear-to-br from-blue-600 to-cyan-500 text-white`}>
       <div className="container text-center max-w-3xl">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
           {title}
         </h2>
-        <p className="text-xl text-blue-100 mb-8">
+        <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8">
           {description}
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className={`flex flex-col sm:flex-row ${GAP_PATTERNS.tight} justify-center`}>
           <Link href={primaryHref}>
             <Button size="lg" variant="secondary" className="gap-2">
               {primaryCTA} <ArrowRight className="h-4 w-4" />

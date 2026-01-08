@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Github, Twitter, Linkedin, Youtube } from 'lucide-react';
+import { PAGE_PADDING, GAP_PATTERNS } from '@/src/styles';
 
 const footerLinks = {
   product: [
@@ -39,8 +40,8 @@ const socialLinks = [
 export function MarketingFooter() {
   return (
     <footer className="border-t bg-muted/30">
-      <div className="container py-12">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+      <div className={`container py-8 sm:py-10 md:py-12 ${PAGE_PADDING.horizontal}`}>
+        <div className={`grid grid-cols-2 md:grid-cols-5 ${GAP_PATTERNS.wide}`}>
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center space-x-2 mb-4">
@@ -137,7 +138,7 @@ export function MarketingFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t mt-8 sm:mt-10 md:mt-12 pt-6 sm:pt-8 flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} BlogSpy. All rights reserved.
           </p>

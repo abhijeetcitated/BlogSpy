@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { MARKETING_SPACING } from '@/src/styles';
 
 export const metadata: Metadata = {
   title: 'Terms of Service - BlogSpy',
@@ -30,7 +31,7 @@ export default function TermsPage() {
       </header>
 
       {/* Content */}
-      <main className="py-16 px-4">
+      <main className={MARKETING_SPACING.section}>
         <article className="container max-w-3xl prose prose-slate dark:prose-invert">
           <h1>Terms of Service</h1>
           <p className="lead">Last updated: December 1, 2024</p>

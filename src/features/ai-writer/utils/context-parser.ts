@@ -18,9 +18,6 @@ import type {
  * Parse URL search params into WriterContext
  */
 export function parseWriterContext(searchParams: URLSearchParams): WriterContext | null {
-  // DEBUG: Log all params to check what's being received
-  console.log("[DEBUG] parseWriterContext params:", Object.fromEntries(searchParams.entries()))
-  
   // Demo mode for testing - shows mock context banner
   const demoMode = searchParams.get("demo")
   if (demoMode === "context" || demoMode === "pillar") {
@@ -42,9 +39,9 @@ export function parseWriterContext(searchParams: URLSearchParams): WriterContext
   const secondaryKeywords = searchParams.get("secondary")?.split(",").filter(Boolean) || []
   const hasSecondaryKeywords = secondaryKeywords.length > 0
   
-  // Parse numeric values - support alternate param names from Topic Clusters
+  // Parse numeric values
   const volume = searchParams.get("volume") ? parseInt(searchParams.get("volume")!) : undefined
-  const difficulty = parseInt(searchParams.get("difficulty") || searchParams.get("kd") || "") || undefined
+  const difficulty = searchParams.get("difficulty") ? parseInt(searchParams.get("difficulty")!) : undefined
   const cpc = searchParams.get("cpc") ? parseFloat(searchParams.get("cpc")!) : undefined
   
   // Parse intent
@@ -52,8 +49,7 @@ export function parseWriterContext(searchParams: URLSearchParams): WriterContext
   const intent = intentParam || detectIntent(keyword, volume, cpc)
   
   // Parse parent pillar (for cluster articles - important for detection)
-  // Support both: parent_pillar OR pillar_keyword (from Topic Clusters)
-  const parentPillar = searchParams.get("parent_pillar") || searchParams.get("pillar_keyword") || undefined
+  const parentPillar = searchParams.get("parent_pillar") || undefined
   const hasParentPillar = !!parentPillar
   
   // Parse content type - use explicit type if provided, else detect
@@ -65,9 +61,6 @@ export function parseWriterContext(searchParams: URLSearchParams): WriterContext
     hasSecondaryKeywords, 
     hasParentPillar
   )
-  
-  // DEBUG: Log content type detection
-  console.log("[DEBUG] contentType:", { typeParam, contentType, source, keyword })
   
   // Parse SERP features
   const serpFeaturesParam = searchParams.get("serp_features")?.split(",") || []
@@ -307,7 +300,7 @@ export function getSourceDisplayName(source: SourceFeature): string {
 export function getIntentInfo(intent: SearchIntent | undefined | null): { label: string; color: string; description: string } {
   const defaultInfo = {
     label: "Unknown",
-    color: "text-muted-foreground",
+    color: "text-slate-400",
     description: "Search intent not determined",
   }
   
@@ -344,7 +337,7 @@ export function getIntentInfo(intent: SearchIntent | undefined | null): { label:
 export function getContentTypeInfo(type: ContentType | undefined | null): { label: string; color: string; description: string } {
   const defaultInfo = {
     label: "Article",
-    color: "text-muted-foreground",
+    color: "text-slate-400",
     description: "Standard blog article",
   }
   
@@ -363,7 +356,7 @@ export function getContentTypeInfo(type: ContentType | undefined | null): { labe
     },
     standalone: {
       label: "Standalone",
-      color: "text-muted-foreground",
+      color: "text-slate-400",
       description: "Independent article on specific topic",
     },
   }
@@ -372,33 +365,26 @@ export function getContentTypeInfo(type: ContentType | undefined | null): { labe
 
 /**
  * Parse pillar-specific data from URL params
- * Format: sub_keywords=keyword1:h2:5000|keyword2:h3:2000 (pipe) OR keyword1:h2,keyword2:h3 (comma)
+ * Format: sub_keywords=keyword1:h2,keyword2:h3,keyword3:body
  */
 function parsePillarData(searchParams: URLSearchParams): PillarData | undefined {
   const subKeywordsParam = searchParams.get("sub_keywords")
   const clusterCount = parseInt(searchParams.get("cluster_count") || "0")
-  // Support both param names: recommended_length OR rec_words (from Topic Clusters)
-  const recommendedLength = parseInt(
-    searchParams.get("recommended_length") || searchParams.get("rec_words") || "3500"
-  )
-  const recommendedHeadings = parseInt(
-    searchParams.get("recommended_headings") || searchParams.get("rec_headings") || "15"
-  )
+  const recommendedLength = parseInt(searchParams.get("recommended_length") || "3500")
+  const recommendedHeadings = parseInt(searchParams.get("recommended_headings") || "15")
   const coverageTopics = searchParams.get("coverage_topics")?.split(",").filter(Boolean) || []
   
-  // Parse sub_keywords - support BOTH delimiters: pipe (|) from Topic Clusters, comma (,) from others
-  const delimiter = subKeywordsParam?.includes("|") ? "|" : ","
+  // Parse sub_keywords format: "keyword1:h2:5000,keyword2:h3:2000"
   const subKeywords: SubKeyword[] = subKeywordsParam
-    ? subKeywordsParam.split(delimiter).map(item => {
+    ? subKeywordsParam.split(",").map(item => {
         const [keyword, placement = "body", volume] = item.split(":")
-        const normalizedPlacement = (placement?.toLowerCase() || "body") as "h2" | "h3" | "body" | "faq"
         return {
-          keyword: decodeURIComponent(keyword || ""),
-          placement: normalizedPlacement,
+          keyword: decodeURIComponent(keyword),
+          placement: (placement as "h2" | "h3" | "body" | "faq") || "body",
           volume: volume ? parseInt(volume) : undefined,
-          importance: (normalizedPlacement === "h2" ? "primary" : "secondary") as "primary" | "secondary"
+          importance: (placement === "h2" ? "primary" : "secondary") as "primary" | "secondary"
         }
-      }).filter(sk => sk.keyword)
+      })
     : []
   
   // If no sub_keywords but we have secondary keywords, convert them
@@ -413,9 +399,7 @@ function parsePillarData(searchParams: URLSearchParams): PillarData | undefined 
     })
   }
   
-  // Always return data if we have rec_words OR sub_keywords OR cluster_count
-  const hasRecWords = searchParams.has("rec_words") || searchParams.has("recommended_length")
-  if (subKeywords.length === 0 && clusterCount === 0 && !hasRecWords) {
+  if (subKeywords.length === 0 && clusterCount === 0) {
     return undefined
   }
   
@@ -432,49 +416,19 @@ function parsePillarData(searchParams: URLSearchParams): PillarData | undefined 
  * Parse cluster-specific data from URL params
  */
 function parseClusterData(searchParams: URLSearchParams, parentPillar?: string): ClusterData | undefined {
-  // Support both param names: parent_pillar OR pillar_keyword (from Topic Clusters)
-  const pillarKeyword = parentPillar || searchParams.get("pillar_keyword") || undefined
-  
-  // Check if we have rec_words - if so, always return data
-  const hasRecWords = searchParams.has("rec_words") || searchParams.has("recommended_length")
-  
-  // Only return undefined if we have neither pillarKeyword nor rec_words
-  if (!pillarKeyword && !hasRecWords) return undefined
+  if (!parentPillar) return undefined
   
   const pillarUrl = searchParams.get("pillar_url") || undefined
-  // Support both: link_anchor OR pillar_anchor (from Topic Clusters)
-  const linkAnchor = searchParams.get("link_anchor") || searchParams.get("pillar_anchor") || pillarKeyword || "Main Article"
-  // Support both param names: recommended_length OR rec_words
-  const recommendedLength = parseInt(
-    searchParams.get("recommended_length") || searchParams.get("rec_words") || "1800"
-  )
-  const recommendedHeadings = parseInt(
-    searchParams.get("recommended_headings") || searchParams.get("rec_headings") || "6"
-  )
-  
-  // Parse supporting keywords for cluster article (same format as pillar)
-  const subKeywordsParam = searchParams.get("sub_keywords")
-  const delimiter = subKeywordsParam?.includes("|") ? "|" : ","
-  const supportingKeywords = subKeywordsParam
-    ? subKeywordsParam.split(delimiter).map(item => {
-        const [keyword, placement = "body", volume] = item.split(":")
-        const normalizedPlacement = (placement?.toLowerCase() || "body") as "h2" | "h3" | "body" | "faq"
-        return {
-          keyword: decodeURIComponent(keyword || ""),
-          placement: normalizedPlacement,
-          volume: volume ? parseInt(volume) : undefined,
-          importance: (normalizedPlacement === "h2" ? "primary" : "secondary") as "primary" | "secondary"
-        }
-      }).filter(sk => sk.keyword)
-    : undefined
+  const linkAnchor = searchParams.get("link_anchor") || parentPillar
+  const recommendedLength = parseInt(searchParams.get("recommended_length") || "1800")
+  const recommendedHeadings = parseInt(searchParams.get("recommended_headings") || "6")
   
   return {
-    pillarKeyword: pillarKeyword || "Main Pillar",
+    pillarKeyword: parentPillar,
     pillarUrl,
     linkAnchor,
     recommendedLength,
-    recommendedHeadings,
-    supportingKeywords: supportingKeywords && supportingKeywords.length > 0 ? supportingKeywords : undefined
+    recommendedHeadings
   }
 }
 

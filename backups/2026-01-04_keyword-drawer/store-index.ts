@@ -8,7 +8,7 @@
 import { create } from "zustand"
 import { devtools, persist } from "zustand/middleware"
 import type { Keyword, MatchType, BulkMode, Country, SERPFeature } from "../types"
-import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+import type { SortDirection as SharedSortDirection } from "@/types/shared"
 
 // ============================================
 // SORT CONFIG

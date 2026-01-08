@@ -21,6 +21,7 @@ import {
 import { SOCIAL_PLATFORM_CONFIG, SOCIAL_TRACKER_DEFAULTS } from "./constants"
 import { useSocialTracker } from "./hooks"
 import type { SocialPlatform, SocialKeyword } from "./types"
+import { STACK_SPACING } from "@/src/styles"
 
 // Lazy load modals for better performance
 const AddKeywordModal = lazy(() => 
@@ -200,7 +201,7 @@ export function SocialTrackerContent() {
   }
 
   return (
-    <div className="min-h-full space-y-4 md:space-y-6">
+    <div className={`min-h-full ${STACK_SPACING.default}`}>
       {/* Header */}
       <SocialTrackerHeader
         isRefreshing={isRefreshing}

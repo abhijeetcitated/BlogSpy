@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from "@/src/styles"
 
 const features = [
   {
@@ -93,7 +94,7 @@ export default function FeaturesPage() {
   return (
     <div className="relative">
       {/* Hero Section */}
-      <section className="relative py-20 md:py-32 overflow-hidden">
+      <section className={`relative ${MARKETING_SPACING.hero} overflow-hidden`}>
         <div className="absolute inset-0">
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
@@ -104,7 +105,7 @@ export default function FeaturesPage() {
             <Badge className="mb-4 bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
               All Features
             </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            <h1 className={`${MARKETING_TEXT.headline} font-bold text-white mb-6`}>
               Everything you need for{" "}
               <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">
                 SEO success
@@ -132,9 +133,9 @@ export default function FeaturesPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 relative">
+      <section className={MARKETING_SPACING.hero}>
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`grid ${MARKETING_GRID.features} gap-6`}>
             {features.map((feature, index) => (
               <Card 
                 key={index} 
@@ -166,10 +167,10 @@ export default function FeaturesPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 border-t border-slate-800">
+      <section className={`${MARKETING_SPACING.hero} border-t border-slate-800`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className={`${MARKETING_TEXT.title} font-bold text-white mb-4`}>
               Why teams choose BlogSpy
             </h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
@@ -177,7 +178,7 @@ export default function FeaturesPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className={`grid ${MARKETING_GRID.team} gap-6`}>
             {benefits.map((benefit, index) => (
               <div key={index} className="text-center p-6">
                 <div className="h-12 w-12 rounded-xl bg-slate-800 flex items-center justify-center mx-auto mb-4">
@@ -192,11 +193,11 @@ export default function FeaturesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
+      <section className={MARKETING_SPACING.hero}>
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center p-12 rounded-2xl bg-linear-to-r from-emerald-500/10 to-cyan-500/10 border border-slate-800">
             <Sparkles className="h-12 w-12 text-emerald-400 mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className={`${MARKETING_TEXT.title} font-bold text-white mb-4`}>
               Ready to grow your organic traffic?
             </h2>
             <p className="text-slate-400 mb-8 max-w-xl mx-auto">

@@ -189,14 +189,14 @@ export function SmartImagePlaceholder({
     process: { label: "Process Flow", color: "text-pink-400" },
   }
 
-  const currentType = typeInfo[type] || { label: "Image", color: "text-muted-foreground" }
+  const currentType = typeInfo[type] || { label: "Image", color: "text-slate-400" }
 
   return (
-    <Card className="w-full bg-card/50 border-border overflow-hidden mb-6">
+    <Card className="w-full bg-slate-800/50 border-slate-700 overflow-hidden mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
+      <div className="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700">
             <ImageIcon className={cn("h-4 w-4", currentType.color)} />
           </div>
           <div>
@@ -242,8 +242,8 @@ export function SmartImagePlaceholder({
             className={cn(
               "relative w-full h-48 rounded-lg border-2 border-dashed flex items-center justify-center transition-all",
               imageUrl 
-                ? "border-emerald-500/30 bg-background/50" 
-                : "border-border bg-background/30 cursor-pointer hover:border-emerald-500/50 hover:bg-background/50"
+                ? "border-emerald-500/30 bg-slate-900/50" 
+                : "border-slate-600 bg-slate-900/30 cursor-pointer hover:border-emerald-500/50 hover:bg-slate-900/50"
             )}
           >
             {imageUrl ? (
@@ -266,7 +266,7 @@ export function SmartImagePlaceholder({
               </div>
             ) : (
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-muted flex items-center justify-center">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-slate-700 flex items-center justify-center">
                   <Upload className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground">Click to upload</p>
@@ -305,7 +305,7 @@ export function SmartImagePlaceholder({
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="AI image generation prompt..."
-              className="min-h-[80px] text-sm bg-background/50 border-border resize-none"
+              className="min-h-[80px] text-sm bg-slate-900/50 border-slate-700 resize-none"
             />
           </div>
 
@@ -323,7 +323,7 @@ export function SmartImagePlaceholder({
               onChange={(e) => setAltText(e.target.value)}
               placeholder="Descriptive alt text for accessibility and SEO..."
               className={cn(
-                "text-sm bg-background/50 border-border",
+                "text-sm bg-slate-900/50 border-slate-700",
                 altText.length > 125 && "border-amber-500/50"
               )}
               maxLength={150}
@@ -346,7 +346,7 @@ export function SmartImagePlaceholder({
                 <Badge
                   key={i}
                   variant="outline"
-                  className="text-xs bg-background/50 border-border text-muted-foreground cursor-pointer hover:bg-card"
+                  className="text-xs bg-slate-900/50 border-slate-600 text-slate-300 cursor-pointer hover:bg-slate-800"
                   onClick={() => setSeoKeywords(seoKeywords.filter((_, idx) => idx !== i))}
                 >
                   {kw}
@@ -355,7 +355,7 @@ export function SmartImagePlaceholder({
               ))}
               <Input
                 placeholder="+ Add keyword"
-                className="w-24 h-6 text-xs bg-transparent border-dashed border-border px-2"
+                className="w-24 h-6 text-xs bg-transparent border-dashed border-slate-600 px-2"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.currentTarget.value) {
                     setSeoKeywords([...seoKeywords, e.currentTarget.value])
@@ -375,7 +375,7 @@ export function SmartImagePlaceholder({
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
               placeholder="image-filename.webp"
-              className="bg-background/50 border-border font-mono text-xs"
+              className="bg-slate-900/50 border-slate-700 font-mono text-xs"
             />
           </div>
         </div>

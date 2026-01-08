@@ -110,9 +110,13 @@ export const logger = {
     console.warn(formatLogEntry(entry))
   },
 
-  error(message: string, error?: Error, data?: Record<string, unknown>) {
+  error(message: string, errorOrData?: Error | Record<string, unknown>, data?: Record<string, unknown>) {
     if (!shouldLog("error")) return
-    const entry = createLogEntry("error", message, data, error)
+    // Handle both signatures: (message, error, data) and (message, data)
+    const isError = errorOrData instanceof Error
+    const error = isError ? errorOrData : undefined
+    const logData = isError ? data : errorOrData as Record<string, unknown>
+    const entry = createLogEntry("error", message, logData, error)
     console.error(formatLogEntry(entry))
   },
 

@@ -21,6 +21,7 @@ import {
   useCompetitorGap,
 } from "./competitor-gap-content/index"
 import type { GapKeyword, ForumIntelPost, RelatedKeyword } from "./types"
+import { STACK_SPACING } from "@/src/styles"
 
 export function CompetitorGapContent() {
   const router = useRouter()
@@ -192,7 +193,7 @@ export function CompetitorGapContent() {
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full bg-background">
+      <div className={`flex flex-col h-full bg-background ${STACK_SPACING.default}`}>
         <Header mainView={mainView} onViewChange={setMainView} />
 
         {isGapAnalysis && (
@@ -212,7 +213,7 @@ export function CompetitorGapContent() {
 
         {(hasAnalyzed || !isGapAnalysis) && (
           <>
-            <div className="py-3 sm:py-4 border-b border-border overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
+            <div className="py-2 sm:py-3 md:py-4 border-b border-border overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
               {isGapAnalysis ? (
                 <GapStatsBar
                   gapFilter={gapFilter}

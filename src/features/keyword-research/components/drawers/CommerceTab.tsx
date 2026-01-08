@@ -34,6 +34,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { Keyword, AmazonData, AmazonProduct, DrawerDataState } from "../../types"
 import { generateMockCommerceOpportunity } from "@/lib/commerce-opportunity-calculator"
 import { fetchAmazonData } from "../../actions/fetch-drawer-data"
+import { useKeywordStore } from "../../store"
 
 // ============================================
 // TYPES
@@ -196,6 +197,25 @@ export function CommerceTab({ keyword }: CommerceTabProps) {
   const [isRetryable, setIsRetryable] = React.useState(false)
 
   // ─────────────────────────────────────────
+  // CACHE ACCESS (Zustand)
+  // ─────────────────────────────────────────
+  const getCachedData = useKeywordStore((s) => s.getCachedData)
+  const setDrawerCache = useKeywordStore((s) => s.setDrawerCache)
+
+  // ─────────────────────────────────────────
+  // CACHE CHECK ON MOUNT
+  // ─────────────────────────────────────────
+  React.useEffect(() => {
+    if (!keyword?.keyword) return
+    
+    const cached = getCachedData(keyword.keyword, "commerce") as AmazonData | null
+    if (cached) {
+      setAmazonData(cached)
+      setState("success")
+    }
+  }, [keyword?.keyword, getCachedData])
+
+  // ─────────────────────────────────────────
   // SAFETY CHECK
   // ─────────────────────────────────────────
   if (!keyword) {
@@ -210,20 +230,31 @@ export function CommerceTab({ keyword }: CommerceTabProps) {
   const commerceData = generateMockCommerceOpportunity(keyword.id, keyword.keyword, keyword.intent)
 
   // ─────────────────────────────────────────
-  // LOAD AMAZON DATA
+  // LOAD AMAZON DATA (with cache-first strategy)
   // ─────────────────────────────────────────
   const loadAmazonData = async () => {
+    // 1. Check cache first (FREE)
+    const cached = getCachedData(keyword.keyword, "commerce") as AmazonData | null
+    if (cached) {
+      setAmazonData(cached)
+      setState("success")
+      return // No API call needed
+    }
+
+    // 2. Cache miss → Call API (PAID - 1 credit)
     setState("loading")
     setError(null)
 
     try {
-      const result = await fetchAmazonData({ 
+      const result = await fetchAmazonData({
         keyword: keyword.keyword,
-        country: "US" 
+        country: "US"
       })
 
       // Check result structure
       if (result?.data?.success && result.data.data) {
+        // Store in cache for future use
+        setDrawerCache(keyword.keyword, "commerce", result.data.data)
         setAmazonData(result.data.data)
         setState("success")
       } else {

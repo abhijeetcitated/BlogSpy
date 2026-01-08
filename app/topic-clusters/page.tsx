@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar, TopNav } from "@/components/layout"
 import { TopicClusterContent } from "@/components/features"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
+import { PAGE_PADDING } from "@/src/styles"
 
 export const metadata = {
   title: "Topic Clusters Demo - BlogSpy | Build Content Authority",
@@ -19,7 +20,7 @@ export default function TopicClustersDemoPage() {
         <AppSidebar />
         <SidebarInset>
           <TopNav />
-          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col">
+          <main className={`flex-1 ${PAGE_PADDING.default} overflow-hidden flex flex-col`}>
             <TopicClusterContent />
           </main>
         </SidebarInset>

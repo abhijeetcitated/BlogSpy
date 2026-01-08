@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { authService, User } from "@/services"
-import { getFeatureAccess, type FeatureAccess } from "@/lib/feature-access"
+import { getFeatureAccess, isDevEnvironment, type FeatureAccess } from "@/lib/feature-access"
 
 interface UseAuthReturn {
   user: User | null
@@ -29,11 +29,19 @@ export function useAuth(): UseAuthReturn {
     setIsLoading(false)
   }, [])
 
+  // Determine if user is authenticated
+  // - Dev mode: Always authenticated for testing
+  // - Prod mode: Check actual user state
+  const isAuthenticated = useMemo(() => {
+    if (isDevEnvironment()) return true
+    return !!user
+  }, [user])
+
   // Calculate feature access based on auth state
   const featureAccess = useMemo(() => {
     const isDemoUser = user?.email === "demo@blogspy.io"
-    return getFeatureAccess(!!user, isDemoUser)
-  }, [user])
+    return getFeatureAccess(isAuthenticated, isDemoUser)
+  }, [user, isAuthenticated])
 
   // Login handler
   const login = useCallback(async (email: string, password: string) => {
@@ -79,8 +87,8 @@ export function useAuth(): UseAuthReturn {
 
   return {
     user,
-    isAuthenticated: true, // TEMPORARY: Always authenticated during development
-    isLoading: false,
+    isAuthenticated,
+    isLoading,
     featureAccess,
     login,
     register,

@@ -47,7 +47,7 @@ export function generateMockYouTubeResults(keyword: string): VideoResult[] {
       duration: `${Math.floor(Math.random() * 20) + 5}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}`,
       thumbnailUrl: "",
       videoUrl: `https://youtube.com/watch?v=${Math.random().toString(36).slice(2, 13)}`,
-      engagement: (likes / views) * 100,
+      engagement: views > 0 ? (likes / views) * 100 : 0,
       tags: [
         keyword.toLowerCase(),
         `${keyword} tutorial`,
@@ -98,7 +98,7 @@ export function generateMockTikTokResults(keyword: string): TikTokResult[] {
       publishedAt: `${Math.floor(Math.random() * 30) + 1}d ago`,
       duration: `0:${String(Math.floor(Math.random() * 45) + 15).padStart(2, "0")}`,
       videoUrl: `https://tiktok.com/@${creator.name}/video/${Math.random().toString(36).slice(2, 13)}`,
-      engagement: (likes / views) * 100,
+      engagement: views > 0 ? (likes / views) * 100 : 0,
       hashtags: [keyword.replace(/\s+/g, ""), "viral", "fyp", "tips", "trending"],
       hijackScore,
       viralPotential: viralOptions[Math.floor(Math.random() * 3)],

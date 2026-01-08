@@ -14,6 +14,7 @@ import {
 import { generateCitationAnalysis, generateCitationTrend, getCitationRecommendations } from "./__mocks__/citation-data"
 import { calculateCitationScore, filterCitations, sortCitations } from "./utils/citation-utils"
 import type { CitationStatus, SortByOption, SortOrder } from "./types"
+import { STACK_SPACING, GAP_PATTERNS } from "@/src/styles"
 
 export function CitationCheckerContent() {
   // Domain state
@@ -53,7 +54,7 @@ export function CitationCheckerContent() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-background p-6 space-y-6">
+    <div className={`min-h-screen bg-background ${STACK_SPACING.default}`}>
       {/* Header */}
       <PageHeader
         inputDomain={inputDomain}
@@ -69,9 +70,9 @@ export function CitationCheckerContent() {
       />
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 lg:grid-cols-3 ${GAP_PATTERNS.default}`}>
         {/* Citations List */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className={`lg:col-span-2 ${STACK_SPACING.tight}`}>
           {/* Filters */}
           <CitationFilters
             searchQuery={searchQuery}
@@ -91,7 +92,7 @@ export function CitationCheckerContent() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4">
+        <div className={STACK_SPACING.tight}>
           <RecommendationsPanel recommendations={recommendations} />
           <MissedOpportunitiesPanel opportunities={analysis.missedOpportunities} />
           <TopCompetitorsPanel competitors={analysis.competitorComparison} />

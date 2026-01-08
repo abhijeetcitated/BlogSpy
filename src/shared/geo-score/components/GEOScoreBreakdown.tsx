@@ -104,9 +104,9 @@ export function GEOScoreBreakdown({
         <div className="pt-3 border-t border-slate-700">
           <h4 className="text-xs font-medium text-slate-400 mb-2">Current AI Citations</h4>
           <div className="flex flex-wrap gap-1.5">
-            {citationSources.map((source, i) => (
+            {citationSources.map((source) => (
               <span
-                key={i}
+                key={source.domain}
                 className={cn(
                   "px-2 py-0.5 rounded text-xs",
                   source.type === "reddit" && "bg-orange-500/20 text-orange-300",
@@ -131,8 +131,8 @@ export function GEOScoreBreakdown({
         <div className="pt-3 border-t border-slate-700">
           <h4 className="text-xs font-medium text-slate-400 mb-2">Recommendations</h4>
           <ul className="space-y-1.5">
-            {recommendations.map((rec, i) => (
-              <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+            {recommendations.map((rec) => (
+              <li key={rec} className="text-xs text-slate-300 flex items-start gap-2">
                 <span className="text-cyan-400 mt-0.5">•</span>
                 <span>{rec}</span>
               </li>

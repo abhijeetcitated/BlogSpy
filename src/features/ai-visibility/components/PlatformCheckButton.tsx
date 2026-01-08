@@ -89,12 +89,20 @@ export function PlatformCheckButton({
         configId,
       })
 
-      if (response.success && response.data) {
-        setLastResult(response.data.isVisible ? "visible" : "not-visible")
-        onResult?.(response.data)
+      // Handle SafeAction response structure
+      if (response?.serverError) {
+        setLastResult(null)
+        onError?.(response.serverError)
+        return
+      }
+
+      const result = response?.data
+      if (result?.success && result?.data) {
+        setLastResult(result.data.isVisible ? "visible" : "not-visible")
+        onResult?.(result.data)
       } else {
         setLastResult(null)
-        onError?.(response.error || "Check failed")
+        onError?.(result?.error || "Check failed")
       }
     })
   }

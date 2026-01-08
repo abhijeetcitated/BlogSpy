@@ -401,7 +401,7 @@ export function analyzeKeywords(
   
   // Step 8: Calculate quality metrics
   const qualityScore = calculateQualityScore(generatedPillars, generatedClusters, keywords.length)
-  const coverageScore = Math.round(((keywords.length - orphanKeywords.length) / keywords.length) * 100)
+  const coverageScore = keywords.length > 0 ? Math.round(((keywords.length - orphanKeywords.length) / keywords.length) * 100) : 0
   const balanceScore = calculateBalanceScore(generatedPillars, generatedClusters)
   
   return {

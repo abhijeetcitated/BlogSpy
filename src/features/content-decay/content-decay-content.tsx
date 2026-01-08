@@ -39,6 +39,7 @@ import {
   ArticleDetailModal,
   GSCConnectionPrompt,
 } from "./components"
+import { STACK_SPACING } from "@/src/styles"
 
 // ============================================
 // LOCAL STORAGE KEYS
@@ -424,7 +425,7 @@ export function ContentDecayContent() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex-1 space-y-4 sm:space-y-6 overflow-auto">
+      <div className={`flex-1 overflow-auto ${STACK_SPACING.default}`}>
         {/* Triage Header */}
         <TriageHeader
           criticalCount={criticalArticles.length}

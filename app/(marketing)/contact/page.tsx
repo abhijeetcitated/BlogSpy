@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from '@/src/styles';
 
 const contactMethods = [
   {
@@ -81,10 +82,10 @@ export default function ContactPage() {
       </header>
 
       {/* Hero */}
-      <section className="py-20 px-4">
+      <section className={MARKETING_SPACING.hero}>
         <div className="container text-center max-w-3xl">
           <Badge className="mb-4" variant="secondary">Contact Us</Badge>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
+          <h1 className={`${MARKETING_TEXT.headline} font-bold tracking-tight mb-4`}>
             Get in touch
           </h1>
           <p className="text-xl text-muted-foreground">
@@ -97,7 +98,7 @@ export default function ContactPage() {
       {/* Contact Methods */}
       <section className="pb-16 px-4">
         <div className="container">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className={`grid ${MARKETING_GRID.team} gap-6 max-w-6xl mx-auto`}>
             {contactMethods.map((method, index) => (
               <Card key={index} className="text-center hover:shadow-md transition-shadow">
                 <CardContent className="pt-6">
@@ -120,7 +121,7 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Form */}
-      <section className="py-16 px-4 bg-muted/50">
+      <section className={`${MARKETING_SPACING.section} bg-muted/50`}>
         <div className="container max-w-2xl">
           <Card>
             <CardHeader className="text-center">
@@ -213,7 +214,7 @@ export default function ContactPage() {
       </section>
 
       {/* Response Time */}
-      <section className="py-16 px-4">
+      <section className={MARKETING_SPACING.section}>
         <div className="container text-center max-w-2xl">
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Clock className="h-5 w-5" />

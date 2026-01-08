@@ -6,23 +6,33 @@
  * Next.js Server Actions to trigger AI Tech Audit from client components.
  * Uses the AuditService to check website AI-readiness.
  * 
+ * REFACTORED: Now uses authAction wrapper for consistent auth/rate-limiting.
+ * 
  * @example
  * ```tsx
  * "use client"
- * import { runTechAudit } from "@/features/ai-visibility/actions/run-audit"
+ * import { runTechAudit } from "@/src/features/ai-visibility/actions/run-audit"
  * 
- * const result = await runTechAudit("example.com")
- * if (result.success) {
- *   console.log(result.data.overallScore)
+ * const result = await runTechAudit({ domain: "example.com" })
+ * if (result?.data?.success) {
+ *   console.log(result.data.data.overallScore)
  * }
  * ```
  */
 
 "use server"
 
-import { createServerClient } from "@/src/lib/supabase/server"
+import { authAction, z } from "@/src/lib/safe-action"
 import { createAuditService } from "../services/audit.service"
 import type { TechAuditResult, BotAccessStatus, SchemaValidation } from "../types"
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// SCHEMAS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+const domainSchema = z.object({
+  domain: z.string().min(1, "Domain is required"),
+})
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // RESPONSE TYPES
@@ -82,7 +92,7 @@ function validateAndNormalizeDomain(input: string): string | null {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// SERVER ACTIONS
+// SERVER ACTIONS (using authAction wrapper)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 /**
@@ -93,205 +103,156 @@ function validateAndNormalizeDomain(input: string): string | null {
  * - llms.txt for AI instructions file
  * - Schema.org JSON-LD structured data
  * 
- * @param rawDomain - Domain to audit (with or without protocol)
- * @returns Typed response with audit results or error message
- * 
  * @example
- * const result = await runTechAudit("https://example.com")
- * if (result.success) {
- *   console.log(`AI Readiness Score: ${result.data.overallScore}%`)
- * } else {
- *   console.error(result.error)
+ * const result = await runTechAudit({ domain: "example.com" })
+ * if (result?.data?.success) {
+ *   console.log(`AI Readiness Score: ${result.data.data.overallScore}%`)
  * }
  */
-export async function runTechAudit(
-  rawDomain: string
-): Promise<AuditActionResponse<TechAuditResult>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+export const runTechAudit = authAction
+  .schema(domainSchema)
+  .action(async ({ parsedInput }): Promise<AuditActionResponse<TechAuditResult>> => {
+    try {
+      // Validate and normalize domain
+      const domain = validateAndNormalizeDomain(parsedInput.domain)
+
+      if (!domain) {
+        return {
+          success: false,
+          error: "Please enter a valid domain (e.g., example.com)",
+        }
+      }
+
+      // Run the audit
+      const auditService = createAuditService(domain)
+      const result = await auditService.runFullAudit()
+
+      return {
+        success: true,
+        data: result,
+      }
+    } catch (error) {
+      console.error("[runTechAudit] Error:", error)
+
+      // Return user-friendly error messages
+      const message = error instanceof Error ? error.message : "Unknown error occurred"
+
+      if (message.includes("fetch failed") || message.includes("ENOTFOUND")) {
+        return {
+          success: false,
+          error: "Could not reach the website. Please check the URL and try again.",
+        }
+      }
+
+      if (message.includes("abort") || message.includes("timeout")) {
+        return {
+          success: false,
+          error: "The website took too long to respond. Please try again.",
+        }
+      }
+
       return {
         success: false,
-        error: "Unauthorized: Please login to use this feature.",
+        error: "Failed to run audit. Please try again later.",
       }
     }
-
-    // Validate input
-    const domain = validateAndNormalizeDomain(rawDomain)
-    
-    if (!domain) {
-      return {
-        success: false,
-        error: "Please enter a valid domain (e.g., example.com)",
-      }
-    }
-
-    // Run the audit
-    const auditService = createAuditService(domain)
-    const result = await auditService.runFullAudit()
-
-    return {
-      success: true,
-      data: result,
-    }
-  } catch (error) {
-    console.error("[runTechAudit] Error:", error)
-    
-    // Return user-friendly error messages
-    const message = error instanceof Error ? error.message : "Unknown error occurred"
-    
-    if (message.includes("fetch failed") || message.includes("ENOTFOUND")) {
-      return {
-        success: false,
-        error: "Could not reach the website. Please check the URL and try again.",
-      }
-    }
-    
-    if (message.includes("abort") || message.includes("timeout")) {
-      return {
-        success: false,
-        error: "The website took too long to respond. Please try again.",
-      }
-    }
-
-    return {
-      success: false,
-      error: "Failed to run audit. Please try again later.",
-    }
-  }
-}
+  })
 
 /**
  * Checks only robots.txt for AI bot access.
  * Useful for quick bot-specific checks.
  */
-export async function checkRobotsTxt(
-  rawDomain: string
-): Promise<AuditActionResponse<BotAccessStatus[]>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+export const checkRobotsTxt = authAction
+  .schema(domainSchema)
+  .action(async ({ parsedInput }): Promise<AuditActionResponse<BotAccessStatus[]>> => {
+    try {
+      const domain = validateAndNormalizeDomain(parsedInput.domain)
+      
+      if (!domain) {
+        return {
+          success: false,
+          error: "Please enter a valid domain",
+        }
+      }
+
+      const auditService = createAuditService(domain)
+      const result = await auditService.checkRobotsTxt()
+
+      return {
+        success: true,
+        data: result,
+      }
+    } catch (error) {
+      console.error("[checkRobotsTxt] Error:", error)
       return {
         success: false,
-        error: "Unauthorized: Please login to use this feature.",
+        error: "Failed to check robots.txt",
       }
     }
-
-    const domain = validateAndNormalizeDomain(rawDomain)
-    
-    if (!domain) {
-      return {
-        success: false,
-        error: "Please enter a valid domain",
-      }
-    }
-
-    const auditService = createAuditService(domain)
-    const result = await auditService.checkRobotsTxt()
-
-    return {
-      success: true,
-      data: result,
-    }
-  } catch (error) {
-    console.error("[checkRobotsTxt] Error:", error)
-    return {
-      success: false,
-      error: "Failed to check robots.txt",
-    }
-  }
-}
+  })
 
 /**
  * Checks only llms.txt file existence.
  * Useful for checking AI instruction file compliance.
  */
-export async function checkLlmsTxt(
-  rawDomain: string
-): Promise<AuditActionResponse<{ exists: boolean; content: string | null; location?: string | null }>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+export const checkLlmsTxt = authAction
+  .schema(domainSchema)
+  .action(async ({ parsedInput }): Promise<AuditActionResponse<{ exists: boolean; content: string | null; location?: string | null }>> => {
+    try {
+      const domain = validateAndNormalizeDomain(parsedInput.domain)
+      
+      if (!domain) {
+        return {
+          success: false,
+          error: "Please enter a valid domain",
+        }
+      }
+
+      const auditService = createAuditService(domain)
+      const result = await auditService.checkLlmsTxt()
+
+      return {
+        success: true,
+        data: result,
+      }
+    } catch (error) {
+      console.error("[checkLlmsTxt] Error:", error)
       return {
         success: false,
-        error: "Unauthorized: Please login to use this feature.",
+        error: "Failed to check llms.txt",
       }
     }
-
-    const domain = validateAndNormalizeDomain(rawDomain)
-    
-    if (!domain) {
-      return {
-        success: false,
-        error: "Please enter a valid domain",
-      }
-    }
-
-    const auditService = createAuditService(domain)
-    const result = await auditService.checkLlmsTxt()
-
-    return {
-      success: true,
-      data: result,
-    }
-  } catch (error) {
-    console.error("[checkLlmsTxt] Error:", error)
-    return {
-      success: false,
-      error: "Failed to check llms.txt",
-    }
-  }
-}
+  })
 
 /**
  * Checks only Schema.org structured data.
  * Useful for checking JSON-LD implementation.
  */
-export async function checkSchemaOrg(
-  rawDomain: string
-): Promise<AuditActionResponse<SchemaValidation>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+export const checkSchemaOrg = authAction
+  .schema(domainSchema)
+  .action(async ({ parsedInput }): Promise<AuditActionResponse<SchemaValidation>> => {
+    try {
+      const domain = validateAndNormalizeDomain(parsedInput.domain)
+      
+      if (!domain) {
+        return {
+          success: false,
+          error: "Please enter a valid domain",
+        }
+      }
+
+      const auditService = createAuditService(domain)
+      const result = await auditService.checkSchemaOrg()
+
+      return {
+        success: true,
+        data: result,
+      }
+    } catch (error) {
+      console.error("[checkSchemaOrg] Error:", error)
       return {
         success: false,
-        error: "Unauthorized: Please login to use this feature.",
+        error: "Failed to check Schema.org",
       }
     }
-
-    const domain = validateAndNormalizeDomain(rawDomain)
-    
-    if (!domain) {
-      return {
-        success: false,
-        error: "Please enter a valid domain",
-      }
-    }
-
-    const auditService = createAuditService(domain)
-    const result = await auditService.checkSchemaOrg()
-
-    return {
-      success: true,
-      data: result,
-    }
-  } catch (error) {
-    console.error("[checkSchemaOrg] Error:", error)
-    return {
-      success: false,
-      error: "Failed to check Schema.org",
-    }
-  }
-}
+  })

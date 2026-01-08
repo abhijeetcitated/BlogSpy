@@ -11,16 +11,6 @@ export { TaskModal } from "./task-modal"
 export { CalendarView } from "./calendar-view"
 export { AdvancedFilters } from "./advanced-filters"
 export { BulkActions } from "./bulk-actions"
-export {
-  TaskCardSkeleton,
-  KanbanColumnSkeleton,
-  BoardViewSkeleton,
-  ListViewSkeleton,
-  CalendarViewSkeleton,
-  RoadmapLoadingSkeleton,
-  ErrorState,
-  EmptyState,
-} from "./loading-skeleton"
-
-// New split components
-export { ContentRoadmapMain } from "./ContentRoadmapMain"
+export { RoadmapLoadingSkeleton } from "./loading-skeleton"
+export { ErrorState } from "./error-state"
+export { EmptyState } from "./empty-state"

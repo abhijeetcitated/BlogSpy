@@ -79,7 +79,7 @@ function QueueItem({
         ? "bg-orange-500/10 border-orange-500/50 ring-1 ring-orange-500/20" 
         : item.status === "completed"
           ? "bg-emerald-500/5 border-emerald-500/30"
-        : "bg-card/30 border-border/50"
+          : "bg-slate-800/30 border-slate-700/50"
     )}>
       <div className="flex items-center gap-2">
         {item.status === "completed" ? (
@@ -87,8 +87,8 @@ function QueueItem({
         ) : isActive ? (
           <div className="h-4 w-4 rounded-full bg-orange-500 animate-pulse" />
         ) : (
-          <div className="h-4 w-4 rounded-full border-2 border-border flex items-center justify-center">
-            <span className="text-[10px] text-muted-foreground">{index + 1}</span>
+          <div className="h-4 w-4 rounded-full border-2 border-slate-600 flex items-center justify-center">
+            <span className="text-[10px] text-slate-500">{index + 1}</span>
           </div>
         )}
         
@@ -126,7 +126,7 @@ function HistoryItem({
   onExport: () => void
 }) {
   return (
-    <div className="p-3 rounded-lg bg-card/30 border border-border/50">
+    <div className="p-3 rounded-lg bg-slate-800/30 border border-slate-700/50">
       <div className="flex items-center gap-2 mb-2">
         {article.type === "pillar" ? (
           <Building2 className="h-4 w-4 text-purple-400" />
@@ -258,9 +258,9 @@ ${currentItem.links?.map(link =>
               </Badge>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <div className="w-32 h-1.5 bg-card rounded-full overflow-hidden">
+              <div className="w-32 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-linear-to-r from-orange-500 to-amber-500 transition-all" 
+                  className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all" 
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -314,7 +314,7 @@ ${currentItem.links?.map(link =>
                   Close
                 </Button>
               </div>
-              <div className="flex-1 bg-background rounded-lg p-4 overflow-y-auto">
+              <div className="flex-1 bg-slate-900 rounded-lg p-4 overflow-y-auto">
                 <pre className="whitespace-pre-wrap text-sm">{viewingHistory.content}</pre>
               </div>
             </div>
@@ -354,7 +354,7 @@ ${currentItem.links?.map(link =>
                 </div>
                 
                 {/* Article requirements */}
-                <div className="mt-3 p-3 rounded-lg bg-card/50 space-y-2">
+                <div className="mt-3 p-3 rounded-lg bg-slate-800/50 space-y-2">
                   {/* Sub-keywords for pillar */}
                   {currentItem.subKeywords && currentItem.subKeywords.length > 0 && (
                     <div className="space-y-1">
@@ -372,7 +372,7 @@ ${currentItem.links?.map(link =>
                               sk.placement === "h2" ? "border-purple-500/30 text-purple-300" :
                               sk.placement === "h3" ? "border-blue-500/30 text-blue-300" :
                               sk.placement === "faq" ? "border-amber-500/30 text-amber-300" :
-                              "border-muted-foreground/30 text-muted-foreground"
+                              "border-slate-500/30 text-slate-300"
                             )}
                           >
                             [{sk.placement.toUpperCase()}] {sk.keyword}
@@ -411,7 +411,7 @@ ${currentItem.links?.map(link =>
                   )}
                   
                   {/* Specs */}
-                  <div className="flex items-center gap-4 pt-2 border-t border-border">
+                  <div className="flex items-center gap-4 pt-2 border-t border-slate-700">
                     <span className="text-[10px] text-muted-foreground">
                       📝 {currentItem.recommendedWords.toLocaleString()} words
                     </span>
@@ -428,7 +428,7 @@ ${currentItem.links?.map(link =>
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Click 'Generate with AI' to create content, or write manually..."
-                  className="min-h-[400px] bg-background/50 border-border resize-none text-sm"
+                  className="min-h-[400px] bg-slate-900/50 border-slate-700 resize-none text-sm"
                 />
                 
                 {content && (
@@ -442,7 +442,7 @@ ${currentItem.links?.map(link =>
               <div className="p-4 border-t border-zinc-800 flex items-center justify-between">
                 <Button
                   size="lg"
-                  className="gap-2 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+                  className="gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
                   onClick={handleGenerate}
                   disabled={isGenerating}
                 >

@@ -3,23 +3,15 @@
  * 🔍 RUN CITATION - Server Actions for Citation Visibility Check
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
- * Server actions to check brand visibility across AI platforms.
- * Calls ChatGPT, Claude, Perplexity, Gemini via OpenRouter and checks if brand is mentioned.
+ * REFACTORED: Now uses authAction wrapper for consistent auth/rate-limiting.
  * 
  * @example
  * ```tsx
  * "use client"
- * import { runVisibilityCheck, checkPlatformNow } from "@/features/ai-visibility/actions"
+ * import { runVisibilityCheck, checkPlatformNow } from "@/src/features/ai-visibility/actions"
  * 
  * // Full check across all platforms
  * const result = await runVisibilityCheck({
- *   query: "best seo tools",
- *   configId: "user-config-id"
- * })
- * 
- * // Quick check on single platform
- * const platformResult = await checkPlatformNow({
- *   platform: "chatgpt",
  *   query: "best seo tools",
  *   configId: "user-config-id"
  * })
@@ -28,30 +20,41 @@
 
 "use server"
 
-import { createServerClient } from "@/src/lib/supabase/server"
-import { 
-  runFullVisibilityCheck, 
+import { authAction, z } from "@/src/lib/safe-action"
+import {
+  runFullVisibilityCheck,
   quickPlatformCheck,
-  type FullVisibilityCheckResult 
+  type FullVisibilityCheckResult
 } from "../services/citation.service"
 import { getVisibilityConfig } from "./save-config"
-import type { AIPlatform, VisibilityCheckResult } from "../types"
+import type { VisibilityCheckResult } from "../types"
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// SCHEMAS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+const platformEnum = z.enum(["chatgpt", "claude", "perplexity", "gemini", "google-aio", "searchgpt", "apple-siri"])
+
+const runVisibilityCheckSchema = z.object({
+  query: z.string().min(3, "Query must be at least 3 characters"),
+  configId: z.string().min(1, "Config ID is required"),
+  platforms: z.array(platformEnum).optional(),
+})
+
+const checkPlatformSchema = z.object({
+  platform: platformEnum,
+  query: z.string().min(3, "Query must be at least 3 characters"),
+  configId: z.string().min(1, "Config ID is required"),
+})
+
+const batchCheckSchema = z.object({
+  keywords: z.array(z.string()).min(1, "At least one keyword required").max(10, "Maximum 10 keywords allowed"),
+  configId: z.string().min(1, "Config ID is required"),
+})
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export interface RunVisibilityCheckInput {
-  query: string
-  configId: string
-  platforms?: AIPlatform[]
-}
-
-export interface CheckPlatformInput {
-  platform: AIPlatform
-  query: string
-  configId: string
-}
 
 export interface VisibilityActionResponse<T> {
   success: boolean
@@ -61,216 +64,145 @@ export interface VisibilityActionResponse<T> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// SERVER ACTIONS
+// SERVER ACTIONS (using authAction wrapper)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 /**
  * Run visibility check across multiple AI platforms.
  * Checks if brand/domain is mentioned in AI responses.
- * 
- * @param input - Query, config ID, and optional platforms list
- * @returns Full visibility results across all platforms
  */
-export async function runVisibilityCheck(
-  input: RunVisibilityCheckInput
-): Promise<VisibilityActionResponse<FullVisibilityCheckResult>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+export const runVisibilityCheck = authAction
+  .schema(runVisibilityCheckSchema)
+  .action(async ({ parsedInput }): Promise<VisibilityActionResponse<FullVisibilityCheckResult>> => {
+    try {
+      const { query, configId, platforms } = parsedInput
+
+      // Get user's visibility config
+      const configResult = await getVisibilityConfig({ projectId: configId })
+      
+      if (!configResult?.data?.success || !configResult.data.data) {
+        return {
+          success: false,
+          error: "Please set up your visibility configuration first",
+        }
+      }
+
+      const config = configResult.data.data
+
+      // Run visibility check across platforms
+      const result = await runFullVisibilityCheck({
+        query: query.trim(),
+        config,
+        platforms,
+      })
+
+      return {
+        success: true,
+        data: result,
+        creditsUsed: result.summary.totalCreditsUsed,
+      }
+    } catch (error) {
+      console.error("[runVisibilityCheck] Error:", error)
+      
+      const message = error instanceof Error ? error.message : "Unknown error"
+      
       return {
         success: false,
-        error: "Unauthorized: Please login to use this feature.",
+        error: `Visibility check failed: ${message}`,
       }
     }
-
-    const { query, configId, platforms } = input
-
-    if (!query || query.trim().length < 3) {
-      return {
-        success: false,
-        error: "Query must be at least 3 characters long",
-      }
-    }
-
-    // Get user's visibility config
-    const configResult = await getVisibilityConfig(configId)
-    
-    if (!configResult.success || !configResult.data) {
-      return {
-        success: false,
-        error: "Please set up your visibility configuration first",
-      }
-    }
-
-    const config = configResult.data
-
-    // Run visibility check across platforms
-    const result = await runFullVisibilityCheck({
-      query: query.trim(),
-      config,
-      platforms,
-    })
-
-    return {
-      success: true,
-      data: result,
-      creditsUsed: result.summary.totalCreditsUsed,
-    }
-  } catch (error) {
-    console.error("[runVisibilityCheck] Error:", error)
-    
-    const message = error instanceof Error ? error.message : "Unknown error"
-    
-    return {
-      success: false,
-      error: `Visibility check failed: ${message}`,
-    }
-  }
-}
+  })
 
 /**
  * Quick check on a single AI platform.
  * Used for "Check Now" / "Refresh" button on platform cards.
- * 
- * @param input - Platform, query, and config ID
- * @returns Single platform visibility result
  */
-export async function checkPlatformNow(
-  input: CheckPlatformInput
-): Promise<VisibilityActionResponse<VisibilityCheckResult>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
+export const checkPlatformNow = authAction
+  .schema(checkPlatformSchema)
+  .action(async ({ parsedInput }): Promise<VisibilityActionResponse<VisibilityCheckResult>> => {
+    try {
+      const { platform, query, configId } = parsedInput
+
+      // Get user's visibility config
+      const configResult = await getVisibilityConfig({ projectId: configId })
+      
+      if (!configResult?.data?.success || !configResult.data.data) {
+        return {
+          success: false,
+          error: "Please set up your visibility configuration first",
+        }
+      }
+
+      const config = configResult.data.data
+
+      // Run quick check
+      const result = await quickPlatformCheck(platform, query.trim(), config)
+
+      return {
+        success: true,
+        data: result,
+        creditsUsed: result.creditsUsed,
+      }
+    } catch (error) {
+      console.error("[checkPlatformNow] Error:", error)
+      
+      const message = error instanceof Error ? error.message : "Unknown error"
+      
       return {
         success: false,
-        error: "Unauthorized: Please login to use this feature.",
+        error: `Platform check failed: ${message}`,
       }
     }
-
-    const { platform, query, configId } = input
-
-    if (!query || query.trim().length < 3) {
-      return {
-        success: false,
-        error: "Query must be at least 3 characters long",
-      }
-    }
-
-    // Validate platform
-    const validPlatforms: AIPlatform[] = [
-      "chatgpt", "claude", "perplexity", "gemini", "google-aio", "searchgpt", "apple-siri"
-    ]
-    
-    if (!validPlatforms.includes(platform)) {
-      return {
-        success: false,
-        error: `Invalid platform: ${platform}`,
-      }
-    }
-
-    // Get user's visibility config
-    const configResult = await getVisibilityConfig(configId)
-    
-    if (!configResult.success || !configResult.data) {
-      return {
-        success: false,
-        error: "Please set up your visibility configuration first",
-      }
-    }
-
-    const config = configResult.data
-
-    // Run quick check
-    const result = await quickPlatformCheck(platform, query.trim(), config)
-
-    return {
-      success: true,
-      data: result,
-      creditsUsed: result.creditsUsed,
-    }
-  } catch (error) {
-    console.error("[checkPlatformNow] Error:", error)
-    
-    const message = error instanceof Error ? error.message : "Unknown error"
-    
-    return {
-      success: false,
-      error: `Platform check failed: ${message}`,
-    }
-  }
-}
+  })
 
 /**
  * Batch check multiple keywords across all platforms.
  * Useful for scheduled/bulk checks.
- * 
- * @param keywords - List of keywords to check
- * @param configId - User's config ID
- * @returns Results for each keyword
  */
-export async function batchVisibilityCheck(
-  keywords: string[],
-  configId: string
-): Promise<VisibilityActionResponse<{ results: Record<string, FullVisibilityCheckResult>; totalCredits: number }>> {
-  try {
-    if (!keywords || keywords.length === 0) {
+export const batchVisibilityCheck = authAction
+  .schema(batchCheckSchema)
+  .action(async ({ parsedInput }): Promise<VisibilityActionResponse<{ results: Record<string, FullVisibilityCheckResult>; totalCredits: number }>> => {
+    try {
+      const { keywords, configId } = parsedInput
+
+      // Get user's visibility config
+      const configResult = await getVisibilityConfig({ projectId: configId })
+      
+      if (!configResult?.data?.success || !configResult.data.data) {
+        return {
+          success: false,
+          error: "Please set up your visibility configuration first",
+        }
+      }
+
+      const config = configResult.data.data
+      const results: Record<string, FullVisibilityCheckResult> = {}
+      let totalCredits = 0
+
+      // Run checks sequentially to avoid rate limits
+      for (const keyword of keywords) {
+        if (keyword.trim().length >= 3) {
+          const result = await runFullVisibilityCheck({
+            query: keyword.trim(),
+            config,
+          })
+          
+          results[keyword] = result
+          totalCredits += result.summary.totalCreditsUsed
+        }
+      }
+
+      return {
+        success: true,
+        data: { results, totalCredits },
+        creditsUsed: totalCredits,
+      }
+    } catch (error) {
+      console.error("[batchVisibilityCheck] Error:", error)
+      
       return {
         success: false,
-        error: "No keywords provided",
+        error: "Batch check failed",
       }
     }
-
-    if (keywords.length > 10) {
-      return {
-        success: false,
-        error: "Maximum 10 keywords allowed per batch",
-      }
-    }
-
-    // Get user's visibility config
-    const configResult = await getVisibilityConfig(configId)
-    
-    if (!configResult.success || !configResult.data) {
-      return {
-        success: false,
-        error: "Please set up your visibility configuration first",
-      }
-    }
-
-    const config = configResult.data
-    const results: Record<string, FullVisibilityCheckResult> = {}
-    let totalCredits = 0
-
-    // Run checks sequentially to avoid rate limits
-    for (const keyword of keywords) {
-      if (keyword.trim().length >= 3) {
-        const result = await runFullVisibilityCheck({
-          query: keyword.trim(),
-          config,
-        })
-        
-        results[keyword] = result
-        totalCredits += result.summary.totalCreditsUsed
-      }
-    }
-
-    return {
-      success: true,
-      data: { results, totalCredits },
-      creditsUsed: totalCredits,
-    }
-  } catch (error) {
-    console.error("[batchVisibilityCheck] Error:", error)
-    
-    return {
-      success: false,
-      error: "Batch check failed",
-    }
-  }
-}
+  })

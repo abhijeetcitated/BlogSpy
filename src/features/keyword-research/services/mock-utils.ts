@@ -77,22 +77,23 @@ export function convertToAPIKeyword(keyword: Keyword): APIKeyword {
       optimizationTips: [],
     },
     communityDecay: {
-      hasContent: keyword.weakSpot.type !== null,
-      decayScore: keyword.weakSpot.type !== null ? Math.floor(Math.random() * 50) + 50 : 0,
+      hasContent: keyword.weakSpots.reddit !== null || keyword.weakSpots.quora !== null || keyword.weakSpots.pinterest !== null,
+      decayScore: (keyword.weakSpots.reddit !== null || keyword.weakSpots.quora !== null || keyword.weakSpots.pinterest !== null) ? Math.floor(Math.random() * 50) + 50 : 0,
       platforms: [],
-      bestOpportunity: keyword.weakSpot.type ? {
-        platform: keyword.weakSpot.type,
-        reason: "Outdated content in SERP",
-      } : null,
+      bestOpportunity: keyword.weakSpots.reddit !== null ? { platform: "reddit" as const, reason: "Outdated content in SERP" } :
+                       keyword.weakSpots.quora !== null ? { platform: "quora" as const, reason: "Outdated content in SERP" } :
+                       keyword.weakSpots.pinterest !== null ? { platform: "pinterest" as const, reason: "Outdated content in SERP" } : null,
     },
     weakSpot: {
-      hasWeakSpot: keyword.weakSpot.type !== null,
-      type: keyword.weakSpot.type,
-      rank: keyword.weakSpot.rank ?? null,
+      hasWeakSpot: keyword.weakSpots.reddit !== null || keyword.weakSpots.quora !== null || keyword.weakSpots.pinterest !== null,
+      type: keyword.weakSpots.reddit !== null ? "reddit" : keyword.weakSpots.quora !== null ? "quora" : keyword.weakSpots.pinterest !== null ? "pinterest" : null,
+      rank: keyword.weakSpots.reddit ?? keyword.weakSpots.quora ?? keyword.weakSpots.pinterest ?? null,
       url: null,
       age: null,
       quality: null,
-      opportunity: keyword.weakSpot.type ? `${keyword.weakSpot.type} content is outdated` : null,
+      opportunity: keyword.weakSpots.reddit !== null ? "reddit content is outdated" :
+                   keyword.weakSpots.quora !== null ? "quora content is outdated" :
+                   keyword.weakSpots.pinterest !== null ? "pinterest content is outdated" : null,
     },
     lastUpdated: new Date().toISOString(),
     dataFreshness: "fresh",

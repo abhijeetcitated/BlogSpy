@@ -5,6 +5,7 @@ import { Target, Users, Lightbulb, Trophy, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from '@/src/styles';
 
 export const metadata: Metadata = {
   title: 'About Us - BlogSpy',
@@ -90,10 +91,10 @@ export default function AboutPage() {
       </header>
 
       {/* Hero */}
-      <section className="py-20 px-4">
+      <section className={MARKETING_SPACING.hero}>
         <div className="container text-center max-w-4xl">
           <Badge className="mb-4" variant="secondary">About Us</Badge>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-6">
+          <h1 className={`${MARKETING_TEXT.headline} font-bold tracking-tight mb-6`}>
             Empowering Content Creators to{' '}
             <span className="bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
               Dominate Search
@@ -107,7 +108,7 @@ export default function AboutPage() {
       </section>
 
       {/* Story */}
-      <section className="py-16 px-4 bg-muted/50">
+      <section className={`${MARKETING_SPACING.section} bg-muted/50`}>
         <div className="container max-w-4xl">
           <div className="prose prose-lg dark:prose-invert mx-auto">
             <h2 className="text-3xl font-bold mb-6">Our Story</h2>
@@ -130,9 +131,9 @@ export default function AboutPage() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 px-4">
+      <section className={MARKETING_SPACING.section}>
         <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+          <div className={`grid ${MARKETING_GRID.stats} gap-8 max-w-4xl mx-auto`}>
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-4xl font-bold text-blue-500 mb-2">{stat.value}</div>
@@ -144,10 +145,10 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="py-16 px-4 bg-muted/50">
+      <section className={`${MARKETING_SPACING.section} bg-muted/50`}>
         <div className="container">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Values</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <h2 className={`${MARKETING_TEXT.title} font-bold text-center mb-12`}>Our Values</h2>
+          <div className={`grid ${MARKETING_GRID.team} gap-6 max-w-6xl mx-auto`}>
             {values.map((value, index) => (
               <Card key={index} className="text-center">
                 <CardContent className="pt-6">
@@ -164,10 +165,10 @@ export default function AboutPage() {
       </section>
 
       {/* Team */}
-      <section className="py-16 px-4">
+      <section className={MARKETING_SPACING.section}>
         <div className="container">
-          <h2 className="text-3xl font-bold text-center mb-12">Meet Our Team</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <h2 className={`${MARKETING_TEXT.title} font-bold text-center mb-12`}>Meet Our Team</h2>
+          <div className={`grid ${MARKETING_GRID.team} gap-6 max-w-6xl mx-auto`}>
             {team.map((member, index) => (
               <Card key={index}>
                 <CardContent className="pt-6 text-center">
@@ -185,9 +186,9 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 bg-muted/50">
+      <section className={`${MARKETING_SPACING.hero} bg-muted/50`}>
         <div className="container text-center max-w-2xl">
-          <h2 className="text-3xl font-bold mb-4">Join 50,000+ Content Creators</h2>
+          <h2 className={`${MARKETING_TEXT.title} font-bold mb-4`}>Join 50,000+ Content Creators</h2>
           <p className="text-xl text-muted-foreground mb-8">
             Start your SEO journey with BlogSpy today. No credit card required.
           </p>

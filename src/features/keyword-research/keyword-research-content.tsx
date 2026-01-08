@@ -13,7 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { useDebounce } from "@/hooks/use-debounce"
 import { createBrowserClient } from "@supabase/ssr"
-import { AlertCircle, Sparkles } from "lucide-react"
+import { Sparkles } from "lucide-react"
 
 // Zustand store
 import { useKeywordStore, type KeywordFilters } from "./store"

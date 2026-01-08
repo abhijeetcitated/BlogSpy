@@ -289,8 +289,8 @@ export function TrendSpotter() {
                   { icon: Sparkles, text: "AI Content Suggestions" },
                   { icon: Rocket, text: "Auto-Schedule Publishing" },
                   { icon: Crown, text: "Priority Niche Alerts" },
-                ].map((feature, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                ].map((feature) => (
+                  <div key={feature.text} className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
                     <div className="p-1 rounded-md bg-purple-500/10 shrink-0">
                       <feature.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-purple-400" />
                     </div>
@@ -337,17 +337,16 @@ export function TrendSpotter() {
                     <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                     <span className="text-muted-foreground">Upcoming Events</span>
                   </div>
-                  {["Christmas Gift Guide", "New Year Resolutions", "Valentine's Day"].map((event, idx) => (
-                    <div key={idx} className="flex items-center gap-2 p-1.5 rounded-lg bg-muted/50">
-                      <div className={cn(
-                        "w-1 h-6 rounded-full shrink-0",
-                        idx === 0 ? "bg-red-500" : idx === 1 ? "bg-amber-500" : "bg-pink-500"
-                      )} />
+                  {[
+                    { event: "Christmas Gift Guide", color: "bg-red-500", days: "11 days left" },
+                    { event: "New Year Resolutions", color: "bg-amber-500", days: "18 days left" },
+                    { event: "Valentine's Day", color: "bg-pink-500", days: "62 days left" }
+                  ].map((item) => (
+                    <div key={item.event} className="flex items-center gap-2 p-1.5 rounded-lg bg-muted/50">
+                      <div className={cn("w-1 h-6 rounded-full shrink-0", item.color)} />
                       <div className="min-w-0">
-                        <div className="text-[11px] font-medium text-foreground truncate">{event}</div>
-                        <div className="text-[9px] text-muted-foreground">
-                          {idx === 0 ? "11 days left" : idx === 1 ? "18 days left" : "62 days left"}
-                        </div>
+                        <div className="text-[11px] font-medium text-foreground truncate">{item.event}</div>
+                        <div className="text-[9px] text-muted-foreground">{item.days}</div>
                       </div>
                     </div>
                   ))}

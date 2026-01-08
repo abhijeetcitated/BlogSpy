@@ -21,8 +21,10 @@ import type { SortField, SortDirection } from "../../constants/table-config"
 import { KeywordTableRow } from "./KeywordTableRow"
 import { KeywordTableHeader } from "./KeywordTableHeader"
 import { KeywordTableFooter } from "./KeywordTableFooter"
+import { CreditBalance } from "../header/CreditBalance"
 import { downloadKeywordsCSV } from "../../utils/export-utils"
 import { sortKeywords } from "../../utils/sort-utils"
+import { useKeywordStore } from "../../store"
 
 export interface KeywordTableProps {
   keywords?: Keyword[]
@@ -43,6 +45,7 @@ export function KeywordTable({
 }: KeywordTableProps) {
   // Router for navigation
   const router = useRouter()
+  const updateKeyword = useKeywordStore((state) => state.updateKeyword)
   
   // ============================================
   // GUEST ACTION GUARD
@@ -187,29 +190,6 @@ export function KeywordTable({
     }
   }, [sortField, sortDirection])
 
-  // Refresh handler - GUARDED for guests
-  const handleRefresh = useCallback((id: number) => {
-    guardAction("refresh keyword data", () => {
-      // Set refreshing state
-      setKeywords(prev => prev.map(k => k.id === id ? { ...k, isRefreshing: true } : k))
-      
-      // Simulate API call - replace with actual API call later
-      setTimeout(() => {
-        setKeywords(prev => prev.map(k => 
-          k.id === id 
-            ? { 
-                ...k, 
-                isRefreshing: false, 
-                lastUpdated: new Date(),
-                // Mock: slightly change volume to show update
-                volume: k.volume + Math.floor(Math.random() * 100 - 50)
-              } 
-            : k
-        ))
-      }, 1500)
-    })
-  }, [guardAction])
-
   // Sorted keywords
   const sortedKeywords = useMemo(() => {
     return sortKeywords(data, sortField, sortDirection)
@@ -281,25 +261,30 @@ export function KeywordTable({
               <Share2 className="h-3.5 w-3.5" />
               {selectedRows.size > 0 ? `To Clusters (${selectedRows.size})` : 'To Topic Clusters'}
             </Button>
+            
+            {/* Credit Balance */}
+            <div className="border-l border-border pl-2 ml-1">
+              <CreditBalance />
+            </div>
           </div>
         </div>
 
         {/* TABLE WRAPPER - Dynamic height, fills available space */}
-        <div className="max-h-[calc(100vh-180px)] overflow-auto">
-          <table className="w-full text-sm table-fixed min-w-[800px]" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
-            {/* Column widths definition - 11 columns (Action removed) */}
+        <div className="max-h-[calc(100vh-180px)] overflow-x-auto overflow-y-auto">
+          <table className="w-full text-sm table-fixed min-w-[1200px]" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+            {/* Column widths - matches header/row order: Checkbox, Keyword, Intent, Volume, Trend, KD, CPC, WeakSpot, GEO, SERP, Refresh */}
             <colgroup>
-              <col style={{ width: '32px' }} />
-              <col style={{ width: '22%' }} />
-              <col style={{ width: '7%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '7%' }} />
-              <col style={{ width: '7%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '7%' }} />
-              <col style={{ width: '11%' }} />
-              <col style={{ width: '9%' }} />
+              <col style={{ width: '40px' }} />      {/* 1. Checkbox */}
+              <col style={{ width: '220px' }} />     {/* 2. Keyword */}
+              <col style={{ width: '70px' }} />      {/* 3. Intent */}
+              <col style={{ width: '80px' }} />      {/* 4. Volume */}
+              <col style={{ width: '80px' }} />      {/* 5. Trend */}
+              <col style={{ width: '60px' }} />      {/* 6. KD */}
+              <col style={{ width: '60px' }} />      {/* 7. CPC */}
+              <col style={{ width: '180px' }} />     {/* 8. Weak Spot - room for badges */}
+              <col style={{ width: '60px' }} />      {/* 9. GEO */}
+              <col style={{ width: '100px' }} />     {/* 10. SERP */}
+              <col style={{ width: '50px' }} />      {/* 11. Refresh */}
             </colgroup>
             <KeywordTableHeader
               selectAll={selectAll}
@@ -307,6 +292,7 @@ export function KeywordTable({
               sortField={sortField}
               sortDirection={sortDirection}
               onSort={handleSort}
+              selectedCount={selectedRows.size}
             />
             <tbody>
               {displayedKeywords.map((item, index) => (
@@ -316,7 +302,6 @@ export function KeywordTable({
                   index={index}
                   isSelected={selectedRows.has(item.id)}
                   onSelect={handleSelectRow}
-                  onRefresh={handleRefresh}
                   onKeywordClick={onKeywordClick}
                 />
               ))}

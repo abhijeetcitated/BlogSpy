@@ -164,8 +164,8 @@ export function calculateAffiliateStats(keywords: AffiliateKeyword[]): Affiliate
   ).length
   
   const totalMonthly = keywords.reduce((sum, k) => sum + k.estimatedEarnings.monthly, 0)
-  const avgScore = keywords.reduce((sum, k) => sum + k.affiliateScore, 0) / keywords.length
-  const avgCommission = keywords.reduce((sum, k) => sum + k.estimatedCommission, 0) / keywords.length
+  const avgScore = keywords.length > 0 ? keywords.reduce((sum, k) => sum + k.affiliateScore, 0) / keywords.length : 0
+  const avgCommission = keywords.length > 0 ? keywords.reduce((sum, k) => sum + k.estimatedCommission, 0) / keywords.length : 0
   
   // Find top niche
   const nicheCounts: Record<string, number> = {}

@@ -18,9 +18,10 @@ import { MOCK_PAGE_STRUCTURE, MOCK_ISSUES, MOCK_NLP_KEYWORDS } from "./__mocks__
 import { SCAN_DURATION_MS, SCAN_INTERVAL_MS } from "./constants"
 import { calculateDynamicScore, validateURL } from "./utils/checker-utils"
 import { useScanHistory, useKeyboardShortcuts } from "./hooks"
-import { useIsMobile } from "@/hooks"
+import { useIsMobile } from "@/hooks/use-mobile"
 import type { CurrentIssue } from "./types"
 import { useRef } from "react"
+import { STACK_SPACING } from "@/src/styles"
 
 // Lazy load heavy AIFixModal component
 const AIFixModal = lazy(() => 
@@ -187,7 +188,7 @@ export function OnPageCheckerContent() {
   })
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className={`h-full flex flex-col bg-background ${STACK_SPACING.tight}`}>
       {/* Screen Reader Announcements */}
       <div role="status" aria-live="polite" className="sr-only">
         {isScanning && `Scan in progress. ${scanProgress}% complete.`}

@@ -258,19 +258,26 @@ export default function AIVisibilityPage() {
 
     setIsAddingKeyword(true)
     try {
-      const result = await addTrackedKeyword({
+      const response = await addTrackedKeyword({
         keyword,
         category: category || "other",
       })
 
-      if (result.success) {
+      // Handle SafeAction response structure
+      if (response?.serverError) {
+        toast.error(response.serverError)
+        return
+      }
+
+      const result = response?.data
+      if (result?.success) {
         toast.success(`Keyword "${keyword}" added successfully!`, {
           description: "It will be checked in the next scan.",
         })
         setShowAddKeywordModal(false)
         router.refresh()
       } else {
-        toast.error(result.error || "Failed to add keyword")
+        toast.error(result?.error || "Failed to add keyword")
       }
     } catch (error) {
       toast.error("Failed to add keyword", {

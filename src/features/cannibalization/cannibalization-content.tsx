@@ -17,6 +17,7 @@ import { IgnoreIssueDialog } from "./components/IgnoreIssueDialog"
 import { BulkActionsDialog } from "./components/BulkActionsDialog"
 import { HistoryTrendsCard, generateMockHistory } from "./components/HistoryTrendsCard"
 import type { SortField, SortDirection, FilterSeverity, CannibalizationIssue } from "./types"
+import { STACK_SPACING } from "@/src/styles"
 
 // ============================================
 // LOCAL STORAGE KEYS
@@ -202,7 +203,7 @@ export function CannibalizationContent() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex-1 space-y-3 sm:space-y-4 lg:space-y-6 overflow-auto bg-background">
+      <div className={`flex-1 overflow-auto bg-background ${STACK_SPACING.default}`}>
         <PageHeader 
           isScanning={isScanning} 
           onRescan={handleRescan}

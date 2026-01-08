@@ -152,7 +152,7 @@ export function calculateOverlapScore(pages: CannibalizingPage[]): number {
     totalOverlap += (titleScore * 0.3 + keywordScore * 0.5 + rankScore * 0.2)
   })
   
-  return Math.round(totalOverlap / others.length)
+  return others.length > 0 ? Math.round(totalOverlap / others.length) : 0
 }
 
 export function calculateTrafficLoss(pages: CannibalizingPage[]): number {

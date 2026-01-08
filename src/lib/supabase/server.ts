@@ -19,6 +19,7 @@
 import { createServerClient as createSupabaseServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/supabase"
+import { assertSupabaseTransactionMode } from "./db-config"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // ENVIRONMENT VALIDATION
@@ -59,6 +60,7 @@ function getSupabaseEnv() {
  * This function is async because it needs to access cookies.
  */
 export async function createServerClient() {
+  assertSupabaseTransactionMode()
   const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv()
   const cookieStore = await cookies()
 

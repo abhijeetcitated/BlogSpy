@@ -52,7 +52,9 @@ function generateCSV(keywords: Keyword[], _options: ExportOptions): Blob {
     "CPC",
     "Intent",
     "GEO Score",
-    "Weak Spot",
+    "Reddit Rank",
+    "Quora Rank",
+    "Pinterest Rank",
     "SERP Features",
   ]
   
@@ -63,7 +65,9 @@ function generateCSV(keywords: Keyword[], _options: ExportOptions): Blob {
     k.cpc.toFixed(2),
     `"${k.intent.join(", ")}"`,
     k.geoScore ?? "N/A",
-    k.weakSpot.type ? `${k.weakSpot.type} #${k.weakSpot.rank}` : "None",
+    k.weakSpots.reddit !== null ? `#${k.weakSpots.reddit}` : "-",
+    k.weakSpots.quora !== null ? `#${k.weakSpots.quora}` : "-",
+    k.weakSpots.pinterest !== null ? `#${k.weakSpots.pinterest}` : "-",
     `"${k.serpFeatures.join(", ")}"`,
   ])
   

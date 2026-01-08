@@ -10,6 +10,7 @@ import { CommunityKeywordSection } from "./components/CommunityKeywordSection"
 import { CommunitySidebar } from "./components/CommunitySidebar"
 import { AddKeywordModal } from "./components/AddKeywordModal"
 import { useCommunityTracker } from "./hooks/useCommunityTracker"
+import { STACK_SPACING, GAP_PATTERNS } from "@/src/styles"
 
 export function CommunityTrackerContent() {
   // Get user credits from context
@@ -45,7 +46,7 @@ export function CommunityTrackerContent() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5 md:space-y-6">
+    <div className={STACK_SPACING.default}>
       {/* Header */}
       <CommunityHeader
         isRefreshing={isRefreshing}
@@ -64,9 +65,9 @@ export function CommunityTrackerContent() {
       <CommunitySummaryCards summary={summary} />
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+      <div className={`grid grid-cols-1 lg:grid-cols-4 ${GAP_PATTERNS.default}`}>
         {/* Keywords List */}
-        <div className="lg:col-span-3 space-y-3 sm:space-y-4">
+        <div className={`lg:col-span-3 ${STACK_SPACING.tight}`}>
           <CommunityFilterBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}

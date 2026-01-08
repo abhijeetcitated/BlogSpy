@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from "@/src/styles"
 
 // Mock blog posts
 const featuredPost = {
@@ -92,7 +93,7 @@ export default function BlogPage() {
   return (
     <div className="relative">
       {/* Hero Section */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
+      <section className={`relative ${MARKETING_SPACING.section} overflow-hidden`}>
         <div className="absolute inset-0">
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
@@ -103,7 +104,7 @@ export default function BlogPage() {
             <Badge className="mb-4 bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
               BlogSpy Blog
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h1 className={`${MARKETING_TEXT.headline} font-bold text-white mb-6`}>
               SEO insights for{" "}
               <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">
                 modern marketers
@@ -204,7 +205,7 @@ export default function BlogPage() {
             </Button>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`grid ${MARKETING_GRID.features} gap-6`}>
             {blogPosts.map((post, index) => (
               <Card key={index} className="bg-slate-900/50 border-slate-800 hover:border-slate-700 transition-all duration-300 group">
                 <CardHeader>
@@ -241,7 +242,7 @@ export default function BlogPage() {
       </section>
 
       {/* Newsletter CTA */}
-      <section className="py-20">
+      <section className={MARKETING_SPACING.hero}>
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center p-8 rounded-2xl bg-linear-to-r from-emerald-500/10 to-cyan-500/10 border border-slate-800">
             <h2 className="text-2xl font-bold text-white mb-4">

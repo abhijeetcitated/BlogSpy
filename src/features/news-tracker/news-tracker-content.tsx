@@ -30,6 +30,7 @@ import {
   type KeywordAlert,
 } from "./components"
 import type { NewsPlatform, NewsKeyword, NewsSummary } from "./types"
+import { STACK_SPACING } from "@/src/styles"
 
 // ============================================
 // MOCK USER ID (Replace with actual auth)
@@ -428,7 +429,7 @@ export function NewsTrackerContent() {
   }, [])
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className={STACK_SPACING.default}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">

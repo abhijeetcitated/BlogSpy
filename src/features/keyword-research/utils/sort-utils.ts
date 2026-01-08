@@ -31,9 +31,13 @@ export function sortKeywords(
         comparison = a.cpc - b.cpc
         break
       case "trend":
-        // Calculate trend growth from trend array
-        const aTrendGrowth = a.trend?.length > 1 ? ((a.trend[a.trend.length - 1] - a.trend[0]) / a.trend[0]) : 0
-        const bTrendGrowth = b.trend?.length > 1 ? ((b.trend[b.trend.length - 1] - b.trend[0]) / b.trend[0]) : 0
+        // Calculate trend growth from trend array (division-by-zero safe)
+        const aTrendGrowth = a.trend?.length > 1 && a.trend[0] > 0
+          ? ((a.trend[a.trend.length - 1] - a.trend[0]) / a.trend[0])
+          : 0
+        const bTrendGrowth = b.trend?.length > 1 && b.trend[0] > 0
+          ? ((b.trend[b.trend.length - 1] - b.trend[0]) / b.trend[0])
+          : 0
         comparison = aTrendGrowth - bTrendGrowth
         break
       case "intent":

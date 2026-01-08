@@ -5,16 +5,7 @@
 // ============================================
 
 import { cn } from "@/lib/utils"
-import { 
-  Image, 
-  Video, 
-  MapPin, 
-  ShoppingBag, 
-  Star,
-  MessageSquare,
-  Newspaper,
-  HelpCircle
-} from "lucide-react"
+import { Video, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   Tooltip,
@@ -22,26 +13,17 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-type SerpFeature = 
-  | "featured_snippet"
-  | "image_pack"
-  | "video"
-  | "local_pack"
-  | "shopping"
-  | "reviews"
-  | "people_also_ask"
-  | "news"
-  | "knowledge_panel"
+type SerpFeature = "featured_snippet" | "video"
 
 interface SerpColumnProps {
-  features: SerpFeature[]
+  features: string[]
   maxDisplay?: number
   className?: string
 }
 
 const serpConfig: Record<SerpFeature, {
   label: string
-  icon: typeof Image
+  icon: typeof Video
   color: string
 }> = {
   featured_snippet: {
@@ -49,45 +31,10 @@ const serpConfig: Record<SerpFeature, {
     icon: Star,
     color: "text-yellow-500",
   },
-  image_pack: {
-    label: "Image Pack",
-    icon: Image,
-    color: "text-blue-500",
-  },
   video: {
     label: "Video",
     icon: Video,
     color: "text-red-500",
-  },
-  local_pack: {
-    label: "Local Pack",
-    icon: MapPin,
-    color: "text-green-500",
-  },
-  shopping: {
-    label: "Shopping",
-    icon: ShoppingBag,
-    color: "text-purple-500",
-  },
-  reviews: {
-    label: "Reviews",
-    icon: Star,
-    color: "text-orange-500",
-  },
-  people_also_ask: {
-    label: "People Also Ask",
-    icon: HelpCircle,
-    color: "text-cyan-500",
-  },
-  news: {
-    label: "News",
-    icon: Newspaper,
-    color: "text-indigo-500",
-  },
-  knowledge_panel: {
-    label: "Knowledge Panel",
-    icon: MessageSquare,
-    color: "text-emerald-500",
   },
 }
 
@@ -96,18 +43,26 @@ export function SerpColumn({
   maxDisplay = 4,
   className,
 }: SerpColumnProps) {
-  if (!features || features.length === 0) {
-    return <span className="text-muted-foreground">—</span>
+  const normalized = (features || [])
+    .map((feature) => {
+      const value = feature.toLowerCase()
+      if (value === "snippet") return "featured_snippet"
+      if (value === "video_carousel") return "video"
+      return value
+    })
+    .filter((feature): feature is SerpFeature => feature === "featured_snippet" || feature === "video")
+
+  if (normalized.length === 0) {
+    return <span className="text-muted-foreground">-</span>
   }
 
-  const displayFeatures = features.slice(0, maxDisplay)
-  const remaining = features.length - maxDisplay
+  const displayFeatures = normalized.slice(0, maxDisplay)
+  const remaining = normalized.length - maxDisplay
 
   return (
     <div className={cn("flex items-center gap-1", className)}>
       {displayFeatures.map((feature) => {
         const config = serpConfig[feature]
-        if (!config) return null
         const Icon = config.icon
 
         return (
@@ -129,7 +84,7 @@ export function SerpColumn({
             </Badge>
           </TooltipTrigger>
           <TooltipContent>
-            {features.slice(maxDisplay).map(f => serpConfig[f]?.label).join(", ")}
+            {normalized.slice(maxDisplay).map((f) => serpConfig[f]?.label).join(", ")}
           </TooltipContent>
         </Tooltip>
       )}

@@ -224,13 +224,13 @@ export function UsageTab() {
           </div>
 
           <div className="space-y-2">
-            {filteredHistory.map((item, index) => {
+            {filteredHistory.map((item) => {
               const FeatureIcon = FEATURE_ICON_MAP[item.feature] || BarChart3
               const featureColor = FEATURE_COLOR_MAP[item.feature] || "text-muted-foreground"
               
               return (
                 <div
-                  key={index}
+                  key={`${item.date}-${item.feature}-${item.credits}`}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-border hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex items-center gap-3">

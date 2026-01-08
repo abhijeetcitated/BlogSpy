@@ -1,46 +1,93 @@
 // ============================================
-// VIDEO HIJACK - TikTok API Route
+// VIDEO HIJACK - TikTok API Route (Refactored)
 // ============================================
-// Handles TikTok API requests (via RapidAPI or Apify)
+// Clean, maintainable API using route helpers
 // ============================================
 
-import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
+import { createProtectedHandler, ApiError } from "@/lib/api"
 
-// TikTok API configuration (using RapidAPI)
-const TIKTOK_API_KEY = process.env.RAPIDAPI_KEY
+// ============================================
+// TYPES
+// ============================================
+
+interface TikTokVideoItem {
+  aweme_id?: string
+  id?: string
+  desc?: string
+  create_time?: number
+  video?: {
+    cover?: string
+    origin_cover?: string
+    play_addr?: { url_list?: string[] }
+    duration?: number
+  }
+  author?: {
+    uid?: string
+    unique_id?: string
+    nickname?: string
+    avatar_thumb?: { url_list?: string[] }
+    follower_count?: number
+    verification_type?: number
+  }
+  statistics?: {
+    play_count?: number
+    digg_count?: number
+    comment_count?: number
+    share_count?: number
+  }
+  music?: {
+    title?: string
+    author?: string
+  }
+}
+
+// ============================================
+// CONFIGURATION
+// ============================================
+
 const TIKTOK_API_HOST = "tiktok-scraper7.p.rapidapi.com"
 const TIKTOK_API_BASE = `https://${TIKTOK_API_HOST}`
 
-/**
- * GET /api/video-hijack/tiktok
- * Search TikTok videos for a given keyword/hashtag
- */
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams
-    const query = searchParams.get("query")
-    const count = parseInt(searchParams.get("count") || "30")
-    const cursor = searchParams.get("cursor") || undefined
-    const region = searchParams.get("region") || "US"
+// ============================================
+// SCHEMAS
+// ============================================
 
-    if (!query) {
-      return NextResponse.json(
-        { error: "Query parameter is required" },
-        { status: 400 }
-      )
-    }
+const TikTokSearchSchema = z.object({
+  query: z.string().min(1, "Query is required").max(200, "Query too long"),
+  count: z.coerce.number().int().min(1).max(50).default(30),
+  cursor: z.string().optional(),
+  region: z.string().length(2).default("US"),
+})
+
+const TikTokAnalyticsSchema = z.object({
+  hashtag: z.string().min(1, "Hashtag is required").max(100, "Hashtag too long"),
+})
+
+type TikTokSearchInput = z.infer<typeof TikTokSearchSchema>
+type TikTokAnalyticsInput = z.infer<typeof TikTokAnalyticsSchema>
+
+// ============================================
+// GET - Search TikTok Videos
+// ============================================
+
+export const GET = createProtectedHandler<TikTokSearchInput>({
+  rateLimit: "search",
+  schema: TikTokSearchSchema,
+  handler: async ({ data }) => {
+    const { query, count, cursor, region } = data
+    
+    // Check for API key
+    const TIKTOK_API_KEY = process.env.RAPIDAPI_KEY
 
     if (!TIKTOK_API_KEY) {
-      // Return mock data if no API key
-      return NextResponse.json({
-        success: true,
-        data: {
-          items: generateMockTikTokResults(query, count),
-          hasMore: true,
-          cursor: "mock_cursor_next",
-        },
-        source: "mock",
-      })
+      // Return mock data if no API key configured
+      return {
+        items: generateMockTikTokResults(query, count),
+        hasMore: true,
+        cursor: "mock_cursor_next",
+        source: "mock" as const,
+      }
     }
 
     // Fetch from TikTok API via RapidAPI
@@ -58,125 +105,86 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const data = await response.json()
+    const data_response = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.message || "TikTok API error")
+      console.error("[TikTok API] Error:", data_response.message || "Unknown error")
+      throw ApiError.badRequest("Failed to fetch TikTok data")
     }
 
     // Transform API response
-    const videos = (data.data || []).map((item: any) => ({
-      id: item.aweme_id || item.id,
-      caption: item.desc || "",
-      thumbnail: item.video?.cover || item.video?.origin_cover || "",
-      videoUrl: item.video?.play_addr?.url_list?.[0] || "",
-      creatorId: item.author?.uid || "",
-      creatorUsername: item.author?.unique_id || "",
-      creatorName: item.author?.nickname || "",
-      creatorAvatar: item.author?.avatar_thumb?.url_list?.[0] || "",
-      creatorFollowers: item.author?.follower_count || 0,
-      creatorVerified: item.author?.verification_type > 0,
-      publishedAt: new Date((item.create_time || 0) * 1000).toISOString(),
-      views: item.statistics?.play_count || 0,
-      likes: item.statistics?.digg_count || 0,
-      comments: item.statistics?.comment_count || 0,
-      shares: item.statistics?.share_count || 0,
-      plays: item.statistics?.play_count || 0,
-      duration: item.video?.duration || 0,
-      url: `https://www.tiktok.com/@${item.author?.unique_id}/video/${item.aweme_id}`,
-      hashtags: extractHashtags(item.desc || ""),
-      soundName: item.music?.title || "",
-      soundAuthor: item.music?.author || "",
-      engagementRate: calculateEngagement(
-        item.statistics?.digg_count || 0,
-        item.statistics?.comment_count || 0,
-        item.statistics?.share_count || 0,
-        item.statistics?.play_count || 1
-      ),
-      opportunityScore: calculateOpportunityScore(
-        item.statistics?.play_count || 0,
-        item.author?.follower_count || 0,
-        calculateEngagement(
-          item.statistics?.digg_count || 0,
-          item.statistics?.comment_count || 0,
-          item.statistics?.share_count || 0,
-          item.statistics?.play_count || 1
-        )
-      ),
-    }))
+    const videos = (data_response.data || []).map((item: TikTokVideoItem) => transformTikTokVideo(item))
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        items: videos,
-        hasMore: data.has_more || false,
-        cursor: data.cursor || null,
-      },
-      source: "api",
-    })
-  } catch (error) {
-    console.error("[TikTok API] Error:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch TikTok data" },
-      { status: 500 }
-    )
-  }
-}
+    return {
+      items: videos,
+      hasMore: data_response.has_more || false,
+      cursor: data_response.cursor || null,
+      source: "api" as const,
+    }
+  },
+})
 
-/**
- * POST /api/video-hijack/tiktok
- * Get hashtag analytics
- */
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { hashtag } = body
+// ============================================
+// POST - Hashtag Analytics
+// ============================================
 
-    if (!hashtag) {
-      return NextResponse.json(
-        { error: "Hashtag is required" },
-        { status: 400 }
-      )
+export const POST = createProtectedHandler<TikTokAnalyticsInput>({
+  rateLimit: "strict", // Analytics is expensive
+  schema: TikTokAnalyticsSchema,
+  handler: async ({ data }) => {
+    const { hashtag } = data
+    
+    const TIKTOK_API_KEY = process.env.RAPIDAPI_KEY
+
+    if (!TIKTOK_API_KEY) {
+      // Return mock analytics
+      return generateMockHashtagAnalytics(hashtag)
     }
 
-    // Return mock analytics data
-    const analytics = {
-      hashtag,
-      viewCount: Math.floor(Math.random() * 1000000000) + 10000000,
-      videoCount: Math.floor(Math.random() * 500000) + 10000,
-      averageViews: Math.floor(Math.random() * 500000) + 50000,
-      averageEngagement: Math.random() * 15 + 5,
-      topCreators: [
-        { username: "creator1", followers: 1500000, videos: 45 },
-        { username: "creator2", followers: 890000, videos: 38 },
-        { username: "creator3", followers: 650000, videos: 32 },
-      ],
-      relatedHashtags: [
-        `${hashtag}challenge`,
-        `${hashtag}tips`,
-        `${hashtag}tutorial`,
-        `viral${hashtag}`,
-        `${hashtag}2024`,
-      ],
-      trendingStatus: ["rising", "stable", "viral"][Math.floor(Math.random() * 3)],
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: analytics,
-    })
-  } catch (error) {
-    console.error("[TikTok API] Error:", error)
-    return NextResponse.json(
-      { error: "Failed to analyze hashtag" },
-      { status: 500 }
-    )
-  }
-}
+    // TODO: Implement real hashtag analytics when API is available
+    // RapidAPI TikTok endpoint for hashtag info can be added here
+    return generateMockHashtagAnalytics(hashtag)
+  },
+})
 
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
+
+function transformTikTokVideo(item: TikTokVideoItem) {
+  const views = item.statistics?.play_count || 0
+  const likes = item.statistics?.digg_count || 0
+  const comments = item.statistics?.comment_count || 0
+  const shares = item.statistics?.share_count || 0
+  const followers = item.author?.follower_count || 0
+  const engagement = calculateEngagement(likes, comments, shares, views)
+
+  return {
+    id: item.aweme_id || item.id,
+    caption: item.desc || "",
+    thumbnail: item.video?.cover || item.video?.origin_cover || "",
+    videoUrl: item.video?.play_addr?.url_list?.[0] || "",
+    creatorId: item.author?.uid || "",
+    creatorUsername: item.author?.unique_id || "",
+    creatorName: item.author?.nickname || "",
+    creatorAvatar: item.author?.avatar_thumb?.url_list?.[0] || "",
+    creatorFollowers: followers,
+    creatorVerified: (item.author?.verification_type ?? 0) > 0,
+    publishedAt: new Date((item.create_time || 0) * 1000).toISOString(),
+    views,
+    likes,
+    comments,
+    shares,
+    plays: views,
+    duration: item.video?.duration || 0,
+    url: `https://www.tiktok.com/@${item.author?.unique_id}/video/${item.aweme_id}`,
+    hashtags: extractHashtags(item.desc || ""),
+    soundName: item.music?.title || "",
+    soundAuthor: item.music?.author || "",
+    engagementRate: engagement,
+    opportunityScore: calculateOpportunityScore(views, followers, engagement),
+  }
+}
 
 function extractHashtags(text: string): string[] {
   const matches = text.match(/#[\w\u0080-\uFFFF]+/g) || []
@@ -185,15 +193,38 @@ function extractHashtags(text: string): string[] {
 
 function calculateEngagement(likes: number, comments: number, shares: number, views: number): number {
   if (views === 0) return 0
-  return ((likes + comments * 2 + shares * 3) / views) * 100
+  return Math.round(((likes + comments * 2 + shares * 3) / views) * 100 * 100) / 100
 }
 
 function calculateOpportunityScore(views: number, followers: number, engagement: number): number {
-  // High views + lower follower ratio + moderate engagement = opportunity
-  const viewScore = Math.min(views / 500000, 100) * 0.35
-  const followerScore = (1 - Math.min(followers / 5000000, 1)) * 100 * 0.25
-  const engageScore = Math.min(engagement, 20) * 5 * 0.4
+  // High views + low followers + high engagement = high opportunity
+  const viewScore = Math.min(views / 100000, 100) * 0.35
+  const followerScore = (1 - Math.min(followers / 1000000, 1)) * 100 * 0.25
+  const engageScore = Math.min(engagement * 5, 100) * 0.4
   return Math.round(viewScore + followerScore + engageScore)
+}
+
+function generateMockHashtagAnalytics(hashtag: string) {
+  return {
+    hashtag,
+    viewCount: Math.floor(Math.random() * 1000000000) + 10000000,
+    videoCount: Math.floor(Math.random() * 500000) + 10000,
+    averageViews: Math.floor(Math.random() * 500000) + 50000,
+    averageEngagement: Math.round((Math.random() * 15 + 5) * 100) / 100,
+    topCreators: [
+      { username: "creator1", followers: 1500000, videos: 45 },
+      { username: "creator2", followers: 890000, videos: 38 },
+      { username: "creator3", followers: 650000, videos: 32 },
+    ],
+    relatedHashtags: [
+      `${hashtag}challenge`,
+      `${hashtag}tips`,
+      `${hashtag}tutorial`,
+      `viral${hashtag}`,
+      `${hashtag}2026`,
+    ],
+    trendingStatus: ["rising", "stable", "viral"][Math.floor(Math.random() * 3)] as "rising" | "stable" | "viral",
+  }
 }
 
 function generateMockTikTokResults(query: string, count: number) {
@@ -205,17 +236,17 @@ function generateMockTikTokResults(query: string, count: number) {
     const likes = Math.floor(views * (Math.random() * 0.15 + 0.05))
     const comments = Math.floor(likes * (Math.random() * 0.08 + 0.02))
     const shares = Math.floor(likes * (Math.random() * 0.05 + 0.01))
-    const followers = Math.floor(Math.random() * 2000000) + 5000
+    const followers = Math.floor(Math.random() * 2000000) + 10000
     const engagement = calculateEngagement(likes, comments, shares, views)
 
     results.push({
       id: `mock_tt_${i}_${Date.now()}`,
-      caption: `${query} ${["hack", "tutorial", "tips", "challenge", "viral"][i % 5]} 🔥 #${hashtag} #fyp #viral`,
-      thumbnail: `https://picsum.photos/seed/${hashtag}${i}/360/640`,
-      videoUrl: `https://example.com/video/${i}`,
+      caption: `${["🔥", "✨", "💯", "🚀", "⭐"][i % 5]} Check out this ${query} content! #${hashtag} #fyp #viral`,
+      thumbnail: `https://picsum.photos/seed/tt${query}${i}/405/720`,
+      videoUrl: "",
       creatorId: `user_${i}`,
-      creatorUsername: `${["viral", "trending", "content", "creator", "tips"][i % 5]}_${i + 1}`,
-      creatorName: `${["Viral", "Trending", "Content", "Creator", "Tips"][i % 5]} Creator ${i + 1}`,
+      creatorUsername: `creator_${i}`,
+      creatorName: `${["Creative", "Trending", "Viral", "Popular", "Rising"][i % 5]} Creator ${i + 1}`,
       creatorAvatar: `https://picsum.photos/seed/avatar${i}/100/100`,
       creatorFollowers: followers,
       creatorVerified: followers > 500000,
@@ -224,12 +255,12 @@ function generateMockTikTokResults(query: string, count: number) {
       likes,
       comments,
       shares,
-      plays: views + Math.floor(Math.random() * 10000),
-      duration: Math.floor(Math.random() * 60) + 15,
-      url: `https://www.tiktok.com/@user_${i}/video/mock_${i}`,
-      hashtags: [hashtag, "fyp", "viral", "trending", "2024"].slice(0, Math.floor(Math.random() * 3) + 3),
-      soundName: `Original Sound - Creator ${i + 1}`,
-      soundAuthor: `creator_${i + 1}`,
+      plays: views,
+      duration: Math.floor(Math.random() * 55) + 5,
+      url: `https://www.tiktok.com/@creator_${i}/video/mock_${i}`,
+      hashtags: [hashtag, "fyp", "viral", "trending", query.split(" ")[0]?.toLowerCase() || "content"],
+      soundName: `${["Trending Sound", "Original Audio", "Viral Beat", "Popular Track"][i % 4]} ${i + 1}`,
+      soundAuthor: `artist_${i}`,
       engagementRate: engagement,
       opportunityScore: calculateOpportunityScore(views, followers, engagement),
     })

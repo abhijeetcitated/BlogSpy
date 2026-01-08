@@ -327,13 +327,20 @@ export function TechAuditWidget({
     setResult(null)
 
     startTransition(async () => {
-      const response = await runTechAudit(domain)
+      const response = await runTechAudit({ domain })
       
-      if (response.success && response.data) {
-        setResult(response.data)
-        onAuditComplete?.(response.data)
+      // Handle SafeAction response structure
+      if (response?.serverError) {
+        setError(response.serverError)
+        return
+      }
+      
+      const result = response?.data
+      if (result?.success && result?.data) {
+        setResult(result.data)
+        onAuditComplete?.(result.data)
       } else {
-        setError(response.error || "Audit failed")
+        setError(result?.error || "Audit failed")
       }
     })
   }

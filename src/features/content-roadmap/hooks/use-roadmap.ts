@@ -1,380 +1,331 @@
 "use client"
 
 // ============================================
-// Content Roadmap Custom Hooks
+// CONTENT ROADMAP - Data + Mutations (Local Mock)
 // ============================================
-// Production-ready hooks with:
-// - Loading states
-// - Error handling
-// - Optimistic updates
-// - Auto-refetch on mutation
+// This feature is currently frontend-only (no backend wired).
+// Other hooks/components expect a stable set of exports from this module.
+//
+// Design goals:
+// - Deterministic, build-safe exports (no empty module).
+// - Lightweight state + mutation helpers optimized for low RAM.
+// - No side-effectful network calls; uses mock data from __mocks__.
 // ============================================
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useCallback, useMemo, useState } from "react"
 import type { TaskCard, TaskStatus } from "../types"
-import * as roadmapService from "../services/roadmap.service"
+import { INITIAL_TASKS } from "../__mocks__/task-data"
+import { calculateAutoPriority } from "../utils"
 
-// ============================================
-// Types
-// ============================================
+export type MutationResult<T = unknown> =
+  | { success: true; data?: T }
+  | { success: false; error: string }
 
-interface UseTasksState {
-  tasks: TaskCard[]
-  isLoading: boolean
-  isRefetching: boolean
-  error: string | null
+function nowIso() {
+  return new Date().toISOString()
 }
 
-interface MutationState {
-  isLoading: boolean
-  error: string | null
+function newId() {
+  // Deterministic enough for UI usage, avoids heavy UUID deps.
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function normalizeTaskForCreate(
+  task: Omit<TaskCard, "id" | "createdAt" | "updatedAt">
+): TaskCard {
+  const ts = nowIso()
+  return {
+    ...task,
+    id: newId(),
+    createdAt: ts,
+    updatedAt: ts,
+  }
+}
+
+function applyUpdate(task: TaskCard, patch: Partial<TaskCard>): TaskCard {
+  return {
+    ...task,
+    ...patch,
+    updatedAt: patch.updatedAt ?? nowIso(),
+  }
 }
 
 // ============================================
-// Main Hook: useRoadmapTasks
+// Query hook
 // ============================================
 
 export function useRoadmapTasks() {
-  const [state, setState] = useState<UseTasksState>({
-    tasks: [],
-    isLoading: true,
-    isRefetching: false,
-    error: null,
-  })
-  
-  const isMounted = useRef(true)
+  const initial = useMemo(() => INITIAL_TASKS, [])
+  const [tasks, setTasks] = useState<TaskCard[]>(initial)
 
-  // Fetch tasks
-  const fetchTasks = useCallback(async (isRefetch = false) => {
-    if (!isMounted.current) return
-    
-    setState((prev) => ({
-      ...prev,
-      isLoading: !isRefetch,
-      isRefetching: isRefetch,
-      error: null,
-    }))
+  // Frontend-only: keep flags but stable.
+  const [isLoading] = useState(false)
+  const [isRefetching, setIsRefetching] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-    const response = await roadmapService.fetchTasks()
+  const optimisticUpdate = useCallback(
+    (updater: (tasks: TaskCard[]) => TaskCard[]) => {
+      setTasks((prev) => updater(prev))
+    },
+    []
+  )
 
-    if (!isMounted.current) return
-
-    if (response.success && response.data) {
-      setState({
-        tasks: response.data,
-        isLoading: false,
-        isRefetching: false,
-        error: null,
-      })
-    } else {
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        isRefetching: false,
-        error: response.error || "Failed to fetch tasks",
-      }))
-    }
-  }, [])
-
-  // Initial fetch
-  useEffect(() => {
-    isMounted.current = true
-    fetchTasks()
-    
-    return () => {
-      isMounted.current = false
-    }
-  }, [fetchTasks])
-
-  // Refetch function
-  const refetch = useCallback(() => fetchTasks(true), [fetchTasks])
-
-  // Optimistic update helper
-  const optimisticUpdate = useCallback((updater: (tasks: TaskCard[]) => TaskCard[]) => {
-    setState((prev) => ({
-      ...prev,
-      tasks: updater(prev.tasks),
-    }))
+  const refetch = useCallback(() => {
+    // No backend: simulate refetch; clear error.
+    setIsRefetching(true)
+    setError(null)
+    // microtask keeps UI consistent without real delay.
+    Promise.resolve().then(() => setIsRefetching(false))
   }, [])
 
   return {
-    ...state,
+    tasks,
+    setTasks,
+    isLoading,
+    isRefetching,
+    error,
     refetch,
     optimisticUpdate,
-    setTasks: (tasks: TaskCard[]) => setState((prev) => ({ ...prev, tasks })),
   }
 }
 
 // ============================================
-// Mutation Hook: useCreateTask
+// Mutation hooks (compatible with callers)
 // ============================================
 
-export function useCreateTask(onSuccess?: (task: TaskCard) => void) {
-  const [state, setState] = useState<MutationState>({
-    isLoading: false,
-    error: null,
-  })
+function useMutationState() {
+  const [isLoading, setIsLoading] = useState(false)
+  return { isLoading, setIsLoading }
+}
+
+export function useCreateTask(onSuccess?: (created: TaskCard) => void) {
+  const { isLoading, setIsLoading } = useMutationState()
 
   const mutate = useCallback(
-    async (taskData: Omit<TaskCard, "id" | "createdAt" | "updatedAt">) => {
-      setState({ isLoading: true, error: null })
-
-      const response = await roadmapService.createTask(taskData)
-
-      if (response.success && response.data) {
-        setState({ isLoading: false, error: null })
-        onSuccess?.(response.data)
-        return { success: true, data: response.data }
-      } else {
-        setState({ isLoading: false, error: response.error || "Failed to create task" })
-        return { success: false, error: response.error }
+    async (
+      task: Omit<TaskCard, "id" | "createdAt" | "updatedAt">
+    ): Promise<MutationResult<TaskCard>> => {
+      setIsLoading(true)
+      try {
+        const created = normalizeTaskForCreate(task)
+        onSuccess?.(created)
+        return { success: true, data: created }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to create task"
+        return { success: false, error: msg }
+      } finally {
+        setIsLoading(false)
       }
     },
-    [onSuccess]
+    [onSuccess, setIsLoading]
   )
 
-  return {
-    ...state,
-    mutate,
-    reset: () => setState({ isLoading: false, error: null }),
-  }
+  return { mutate, isLoading }
 }
 
-// ============================================
-// Mutation Hook: useUpdateTask
-// ============================================
-
-export function useUpdateTask(onSuccess?: (task: TaskCard) => void) {
-  const [state, setState] = useState<MutationState>({
-    isLoading: false,
-    error: null,
-  })
+export function useUpdateTask(onSuccess?: (updated: TaskCard) => void) {
+  const { isLoading, setIsLoading } = useMutationState()
 
   const mutate = useCallback(
-    async (id: string, updates: Partial<TaskCard>) => {
-      setState({ isLoading: true, error: null })
+    async (id: string, patch: Partial<TaskCard>): Promise<MutationResult<TaskCard>> => {
+      setIsLoading(true)
+      try {
+        // Caller already performed optimistic update; just synthesize updated value.
+        const EMPTY_TAGS = [] as TaskCard["tags"]
+        const EMPTY_COMMENTS = [] as TaskCard["comments"]
 
-      const response = await roadmapService.updateTask(id, updates)
+        const updated: TaskCard = applyUpdate(
+          {
+            // minimal placeholder; onSuccess consumer uses fields by id
+            id,
+            title: patch.title ?? "",
+            keyword: patch.keyword ?? "",
+            volume: patch.volume ?? 0,
+            volumeDisplay: patch.volumeDisplay ?? "0",
+            kd: patch.kd ?? 0,
+            priorityScore: patch.priorityScore ?? 0,
+            assignee: patch.assignee ?? "ME",
+            status: (patch.status as TaskStatus) ?? "backlog",
+            tags: patch.tags ?? EMPTY_TAGS,
+            comments: patch.comments ?? EMPTY_COMMENTS,
+            progress: patch.progress ?? 0,
+            dueDate: patch.dueDate,
+            wordCount: patch.wordCount,
+            targetWordCount: patch.targetWordCount,
+            notes: patch.notes,
+            createdAt: patch.createdAt ?? nowIso(),
+            updatedAt: patch.updatedAt ?? nowIso(),
+          },
+          patch
+        )
 
-      if (response.success && response.data) {
-        setState({ isLoading: false, error: null })
-        onSuccess?.(response.data)
-        return { success: true, data: response.data }
-      } else {
-        setState({ isLoading: false, error: response.error || "Failed to update task" })
-        return { success: false, error: response.error }
+        onSuccess?.(updated)
+        return { success: true, data: updated }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to update task"
+        return { success: false, error: msg }
+      } finally {
+        setIsLoading(false)
       }
     },
-    [onSuccess]
+    [onSuccess, setIsLoading]
   )
 
-  return {
-    ...state,
-    mutate,
-    reset: () => setState({ isLoading: false, error: null }),
-  }
+  return { mutate, isLoading }
 }
-
-// ============================================
-// Mutation Hook: useDeleteTask
-// ============================================
 
 export function useDeleteTask(onSuccess?: (id: string) => void) {
-  const [state, setState] = useState<MutationState>({
-    isLoading: false,
-    error: null,
-  })
+  const { isLoading, setIsLoading } = useMutationState()
 
   const mutate = useCallback(
-    async (id: string) => {
-      setState({ isLoading: true, error: null })
-
-      const response = await roadmapService.deleteTask(id)
-
-      if (response.success) {
-        setState({ isLoading: false, error: null })
+    async (id: string): Promise<MutationResult> => {
+      setIsLoading(true)
+      try {
         onSuccess?.(id)
         return { success: true }
-      } else {
-        setState({ isLoading: false, error: response.error || "Failed to delete task" })
-        return { success: false, error: response.error }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to delete task"
+        return { success: false, error: msg }
+      } finally {
+        setIsLoading(false)
       }
     },
-    [onSuccess]
+    [onSuccess, setIsLoading]
   )
 
-  return {
-    ...state,
-    mutate,
-    reset: () => setState({ isLoading: false, error: null }),
-  }
+  return { mutate, isLoading }
 }
 
-// ============================================
-// Mutation Hook: useBulkUpdateStatus
-// ============================================
-
-export function useBulkUpdateStatus(onSuccess?: (tasks: TaskCard[]) => void) {
-  const [state, setState] = useState<MutationState>({
-    isLoading: false,
-    error: null,
-  })
+export function useBulkUpdateStatus(onSuccess?: () => void) {
+  const { isLoading, setIsLoading } = useMutationState()
 
   const mutate = useCallback(
-    async (ids: string[], status: TaskStatus) => {
-      setState({ isLoading: true, error: null })
-
-      const response = await roadmapService.bulkUpdateStatus(ids, status)
-
-      if (response.success && response.data) {
-        setState({ isLoading: false, error: null })
-        onSuccess?.(response.data)
-        return { success: true, data: response.data }
-      } else {
-        setState({ isLoading: false, error: response.error || "Failed to update tasks" })
-        return { success: false, error: response.error }
+    async (_ids: string[], _status: TaskStatus): Promise<MutationResult> => {
+      setIsLoading(true)
+      try {
+        onSuccess?.()
+        return { success: true }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to update tasks"
+        return { success: false, error: msg }
+      } finally {
+        setIsLoading(false)
       }
     },
-    [onSuccess]
+    [onSuccess, setIsLoading]
   )
 
-  return {
-    ...state,
-    mutate,
-    reset: () => setState({ isLoading: false, error: null }),
-  }
+  return { mutate, isLoading }
 }
 
-// ============================================
-// Mutation Hook: useBulkDelete
-// ============================================
-
-export function useBulkDelete(onSuccess?: (count: number) => void) {
-  const [state, setState] = useState<MutationState>({
-    isLoading: false,
-    error: null,
-  })
+export function useBulkDelete(onSuccess?: () => void) {
+  const { isLoading, setIsLoading } = useMutationState()
 
   const mutate = useCallback(
-    async (ids: string[]) => {
-      setState({ isLoading: true, error: null })
-
-      const response = await roadmapService.bulkDeleteTasks(ids)
-
-      if (response.success && response.data) {
-        setState({ isLoading: false, error: null })
-        onSuccess?.(response.data.deletedCount)
-        return { success: true, data: response.data }
-      } else {
-        setState({ isLoading: false, error: response.error || "Failed to delete tasks" })
-        return { success: false, error: response.error }
+    async (_ids: string[]): Promise<MutationResult> => {
+      setIsLoading(true)
+      try {
+        onSuccess?.()
+        return { success: true }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to delete tasks"
+        return { success: false, error: msg }
+      } finally {
+        setIsLoading(false)
       }
     },
-    [onSuccess]
+    [onSuccess, setIsLoading]
   )
 
-  return {
-    ...state,
-    mutate,
-    reset: () => setState({ isLoading: false, error: null }),
-  }
+  return { mutate, isLoading }
 }
 
-// ============================================
-// Mutation Hook: useAutoPrioritize
-// ============================================
+export function useAutoPrioritize(onSuccess?: (updatedTasks: TaskCard[]) => void) {
+  const { isLoading, setIsLoading } = useMutationState()
 
-export function useAutoPrioritize(onSuccess?: (tasks: TaskCard[]) => void) {
-  const [state, setState] = useState<MutationState>({
-    isLoading: false,
-    error: null,
-  })
+  const mutate = useCallback(async (): Promise<MutationResult<TaskCard[]>> => {
+    setIsLoading(true)
+    try {
+      // Caller supplies optimisticUpdate; we just compute new priority scores.
+      const ts = nowIso()
+      const updated = INITIAL_TASKS
+        .map((t) => ({ ...t, priorityScore: calculateAutoPriority(t), updatedAt: ts }))
+        .sort((a, b) => b.priorityScore - a.priorityScore)
 
-  const mutate = useCallback(async () => {
-    setState({ isLoading: true, error: null })
-
-    const response = await roadmapService.autoPrioritizeTasks()
-
-    if (response.success && response.data) {
-      setState({ isLoading: false, error: null })
-      onSuccess?.(response.data)
-      return { success: true, data: response.data }
-    } else {
-      setState({ isLoading: false, error: response.error || "Failed to prioritize tasks" })
-      return { success: false, error: response.error }
+      onSuccess?.(updated)
+      return { success: true, data: updated }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to auto-prioritize"
+      return { success: false, error: msg }
+    } finally {
+      setIsLoading(false)
     }
-  }, [onSuccess])
+  }, [onSuccess, setIsLoading])
 
-  return {
-    ...state,
-    mutate,
-    reset: () => setState({ isLoading: false, error: null }),
-  }
+  return { mutate, isLoading }
 }
 
-// ============================================
-// Mutation Hook: useMoveToTop
-// ============================================
-
-export function useMoveToTop(onSuccess?: (task: TaskCard) => void) {
-  const [state, setState] = useState<MutationState>({
-    isLoading: false,
-    error: null,
-  })
+export function useMoveToTop(onSuccess?: (updated: TaskCard) => void) {
+  const { isLoading, setIsLoading } = useMutationState()
 
   const mutate = useCallback(
-    async (id: string) => {
-      setState({ isLoading: true, error: null })
-
-      const response = await roadmapService.moveTaskToTop(id)
-
-      if (response.success && response.data) {
-        setState({ isLoading: false, error: null })
-        onSuccess?.(response.data)
-        return { success: true, data: response.data }
-      } else {
-        setState({ isLoading: false, error: response.error || "Failed to move task" })
-        return { success: false, error: response.error }
+    async (id: string): Promise<MutationResult<TaskCard>> => {
+      setIsLoading(true)
+      try {
+        // Caller will do optimistic update; we just return an updated timestamp.
+        const updated: TaskCard = {
+          id,
+          title: "",
+          keyword: "",
+          volume: 0,
+          volumeDisplay: "0",
+          kd: 0,
+          priorityScore: 0,
+          assignee: "ME",
+          status: "backlog",
+          tags: [],
+          comments: [],
+          progress: 0,
+          createdAt: nowIso(),
+          updatedAt: nowIso(),
+        }
+        onSuccess?.(updated)
+        return { success: true, data: updated }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to move task"
+        return { success: false, error: msg }
+      } finally {
+        setIsLoading(false)
       }
     },
-    [onSuccess]
+    [onSuccess, setIsLoading]
   )
 
-  return {
-    ...state,
-    mutate,
-    reset: () => setState({ isLoading: false, error: null }),
-  }
+  return { mutate, isLoading }
 }
-
-// ============================================
-// Hook: useResetData (for testing)
-// ============================================
 
 export function useResetData(onSuccess?: () => void) {
-  const [state, setState] = useState<MutationState>({
-    isLoading: false,
-    error: null,
-  })
+  const { isLoading, setIsLoading } = useMutationState()
 
-  const mutate = useCallback(async () => {
-    setState({ isLoading: true, error: null })
-
-    const response = await roadmapService.resetToMockData()
-
-    if (response.success) {
-      setState({ isLoading: false, error: null })
+  const mutate = useCallback(async (): Promise<MutationResult> => {
+    setIsLoading(true)
+    try {
       onSuccess?.()
       return { success: true }
-    } else {
-      setState({ isLoading: false, error: response.error || "Failed to reset data" })
-      return { success: false, error: response.error }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to reset data"
+      return { success: false, error: msg }
+    } finally {
+      setIsLoading(false)
     }
-  }, [onSuccess])
+  }, [onSuccess, setIsLoading])
 
-  return {
-    ...state,
-    mutate,
-    reset: () => setState({ isLoading: false, error: null }),
-  }
+  return { mutate, isLoading }
 }
+
+// ============================================
+// Note
+// ============================================
+// This module intentionally does not mutate shared state directly.
+// Callers provide optimistic state updates + refetch semantics.
+// When backend wiring happens, replace internals without changing exports.

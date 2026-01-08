@@ -1,7 +1,9 @@
 // ============================================
 // KEYWORD MAGIC - Actions Barrel Export
 // ============================================
+// NOTE: search.action.ts removed - use fetchKeywords instead
 
-export { searchKeywords, type SearchKeywordsResponse } from "./search.action"
-export { fetchKeywords, type FetchKeywordsResponse } from "./fetch-keywords"
+export { fetchKeywords, type FetchKeywordsResult } from "./fetch-keywords"
 export { fetchAmazonData, type FetchAmazonDataAction } from "./fetch-drawer-data"
+export { refreshKeywordAction, type RefreshKeywordResponse } from "./refresh-keyword"
+export { getUserCreditsAction } from "./refresh-keyword"

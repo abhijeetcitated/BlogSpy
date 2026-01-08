@@ -7,15 +7,25 @@ import type {
   SortDirection, 
   Country as SharedCountry,
   PaginationState as SharedPaginationState 
-} from "@/src/types/shared"
+} from "@/types/shared"
 
 // Re-export shared types for convenience
-export type { SortDirection } from "@/src/types/shared"
+export type { SortDirection } from "@/types/shared"
 
 /**
  * SERP Feature type - valid values for keyword SERP features
  */
 export type SERPFeature = CTRStealingFeature | "snippet" | "faq" | "reviews" | "image" | "video" | "shopping" | "ad" | "local" | "news"
+
+/**
+ * WeakSpots - Ranks for Reddit, Quora, Pinterest in top 10 SERP
+ * null = platform not in top 10
+ */
+export interface WeakSpots {
+  reddit: number | null
+  quora: number | null
+  pinterest: number | null
+}
 
 export interface Keyword {
   id: number
@@ -23,11 +33,19 @@ export interface Keyword {
   intent: ("I" | "C" | "T" | "N")[]
   volume: number
   trend: number[]
-  weakSpot: { type: "reddit" | "quora" | null; rank?: number }
+  /** @deprecated Use weakSpots instead */
+  weakSpot?: { type: "reddit" | "quora" | "pinterest" | null; rank?: number }
+  /** Platform ranks in top 10 SERP - null means not present */
+  weakSpots: WeakSpots
   kd: number
   cpc: number
   serpFeatures: SERPFeature[]
+  /** Realizable Traffic Value (volume after SERP feature loss) */
+  rtv?: number
+  /** Breakdown of traffic loss by SERP feature */
+  rtvBreakdown?: Array<{ label: string; value: number }>
   geoScore?: number
+  hasAio?: boolean
   // Refresh tracking
   lastUpdated?: Date
   isRefreshing?: boolean
@@ -140,6 +158,40 @@ export interface AmazonData {
  * Drawer Data State (for Commerce/Social tabs)
  */
 export type DrawerDataState = "idle" | "loading" | "success" | "error"
+
+// ============================================
+// SOCIAL INSIGHTS TYPES (YouTube + Community)
+// ============================================
+
+export interface YouTubeResult {
+  title: string
+  url: string
+  thumbnailUrl?: string
+  views?: number
+  /** Pre-formatted string for UI (e.g. "12.3K views") */
+  viewsLabel?: string
+  channel?: string
+  /** Pre-formatted string for UI (e.g. "2 months ago") */
+  published?: string
+}
+
+export interface CommunityResult {
+  platform: "reddit" | "pinterest"
+  title: string
+  snippet?: string
+  url: string
+
+  // Reddit-specific (best-effort, based on DataForSEO social API)
+  subreddit?: string
+  subredditMembers?: number
+  score?: number
+  comments?: number
+  author?: string
+
+  // Pinterest-specific
+  imageUrl?: string
+  saves?: number
+}
 
 /**
  * Generic API Response with retry support

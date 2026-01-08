@@ -1,166 +1,94 @@
-// ============================================
-// 🛡️ SECURE ACTION WRAPPER (The Guard)
-// ============================================
-// Centralized security for all Server Actions
-// - Supabase authentication
-// - Upstash rate limiting (10 req / 10s sliding window)
-// - Secure error logging (no stack trace leaks)
-// ============================================
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 🛡️ SAFE ACTION - Type-safe Server Actions with Authentication
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 
+ * Simple wrapper for next-safe-action v8+ with Supabase authentication.
+ * 
+ * @see https://next-safe-action.dev/docs/getting-started
+ */
 
 import "server-only"
-import { createSafeActionClient } from "next-safe-action"
+
+import {
+  createSafeActionClient,
+  DEFAULT_SERVER_ERROR_MESSAGE,
+} from "next-safe-action"
 import { z } from "zod"
-import { Ratelimit } from "@upstash/ratelimit"
-import { Redis } from "@upstash/redis"
-import { createServerClient } from "@/src/lib/supabase/server"
-import { headers } from "next/headers"
+import { createClient } from "@/lib/supabase/server"
 
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TYPES
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface AuthContext {
+export interface ActionContext {
   userId: string
   email: string
   role: "user" | "admin" | "moderator"
 }
 
-// ============================================
-// RATE LIMITER (Upstash - 10 req / 10s sliding window)
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// BASE ACTION CLIENT (handles errors globally)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-let ratelimit: Ratelimit | null = null
+const baseClient = createSafeActionClient({
+  handleServerError(error) {
+    // Log error for debugging (server-side only)
+    console.error("[SafeAction Error]:", error.message)
 
-function getRateLimiter(): Ratelimit | null {
-  // Skip rate limiting if Upstash is not configured
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn("[SafeAction] Upstash not configured, rate limiting disabled")
+    // Handle Next.js redirects
+    if (error.message.includes("NEXT_REDIRECT")) {
+      throw error
     }
-    return null
-  }
 
-  if (!ratelimit) {
-    ratelimit = new Ratelimit({
-      redis: Redis.fromEnv(),
-      limiter: Ratelimit.slidingWindow(10, "10 s"), // 10 requests per 10 seconds
-      analytics: true,
-      prefix: "blogspy:action:",
-    })
-  }
+    // Sanitize error message - don't expose internals
+    if (process.env.NODE_ENV === "production") {
+      // Return generic message in production
+      return DEFAULT_SERVER_ERROR_MESSAGE
+    }
 
-  return ratelimit
-}
-
-// ============================================
-// HELPER: Get Client IP for Rate Limiting
-// ============================================
-
-async function getClientIdentifier(userId?: string): Promise<string> {
-  // Prefer user ID for authenticated requests
-  if (userId) {
-    return `user:${userId}`
-  }
-
-  // Fall back to IP for anonymous requests
-  const headersList = await headers()
-  const forwardedFor = headersList.get("x-forwarded-for")
-  const realIP = headersList.get("x-real-ip")
-
-  if (forwardedFor) {
-    return `ip:${forwardedFor.split(",")[0].trim()}`
-  }
-
-  return realIP ? `ip:${realIP}` : "ip:anonymous"
-}
-
-// ============================================
-// SECURE ERROR HANDLER (No Stack Trace Leaks)
-// ============================================
-
-function handleServerError(error: Error): string {
-  // Log full error server-side for debugging
-  console.error("[SafeAction Error]:", {
-    message: error.message,
-    name: error.name,
-    // Stack only logged in development
-    ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
-  })
-
-  // Allow Next.js redirects to pass through
-  if (error.message.includes("NEXT_REDIRECT")) {
-    throw error
-  }
-
-  // Return sanitized error messages to client
-  const safeErrors = [
-    "Unauthorized",
-    "Too Many Requests",
-    "Admin access required",
-    "Invalid input",
-  ]
-
-  if (safeErrors.some((msg) => error.message.includes(msg))) {
+    // In development, return actual error for debugging
     return error.message
-  }
-
-  // Generic error for everything else (no stack trace leak)
-  return "An unexpected error occurred. Please try again."
-}
-
-// ============================================
-// PUBLIC ACTION (No Auth Required)
-// ============================================
-
-export const publicAction = createSafeActionClient({
-  handleServerError,
+  },
 })
 
-// ============================================
-// AUTHENTICATED ACTION (Auth + Rate Limit)
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// PUBLIC ACTION (no auth required)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-export const authAction = publicAction.use(async ({ next }) => {
-  // ─────────────────────────────────────────
-  // STEP 1: Check Supabase Authentication
-  // ─────────────────────────────────────────
-  const supabase = await createServerClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+export const publicAction = baseClient
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// AUTH ACTION (requires authenticated user)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+export const authAction = baseClient.use(async ({ next }) => {
+  // Get Supabase client
+  const supabase = await createClient()
+
+  // Get current user
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
 
   if (error || !user) {
-    throw new Error("Unauthorized")
+    throw new Error("Authentication required")
   }
 
-  // ─────────────────────────────────────────
-  // STEP 2: Check Rate Limit
-  // ─────────────────────────────────────────
-  const limiter = getRateLimiter()
-
-  if (limiter) {
-    const identifier = await getClientIdentifier(user.id)
-    const { success, reset } = await limiter.limit(identifier)
-
-    if (!success) {
-      const retryAfter = Math.ceil((reset - Date.now()) / 1000)
-      throw new Error(`Too Many Requests. Retry after ${retryAfter}s`)
-    }
-  }
-
-  // ─────────────────────────────────────────
-  // STEP 3: Build Auth Context
-  // ─────────────────────────────────────────
-  const ctx: AuthContext = {
+  // Build context
+  const ctx: ActionContext = {
     userId: user.id,
     email: user.email || "",
-    role: (user.user_metadata?.role as AuthContext["role"]) || "user",
+    role: (user.user_metadata?.role as ActionContext["role"]) || "user",
   }
 
   return next({ ctx })
 })
 
-// ============================================
-// ADMIN ACTION (Auth + Admin Role Required)
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// ADMIN ACTION (requires admin role)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 export const adminAction = authAction.use(async ({ next, ctx }) => {
   if (ctx.role !== "admin") {
@@ -170,17 +98,33 @@ export const adminAction = authAction.use(async ({ next, ctx }) => {
   return next({ ctx })
 })
 
-// ============================================
-// CONVENIENCE EXPORTS
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// LEGACY EXPORTS (for backwards compatibility with existing code)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
+// Alias for existing code using 'action'
+export const action = publicAction
+
+// Alias for existing code using 'actionClient'
+export const actionClient = publicAction
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// CONVENIENCE EXPORTS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+// Re-export zod for schema definitions
 export { z }
 
+// Common schema patterns
 export const schemas = {
   id: z.string().uuid(),
   email: z.string().email(),
   pagination: z.object({
     page: z.number().int().min(1).default(1),
     limit: z.number().int().min(1).max(100).default(20),
+  }),
+  dateRange: z.object({
+    from: z.string().datetime(),
+    to: z.string().datetime(),
   }),
 }

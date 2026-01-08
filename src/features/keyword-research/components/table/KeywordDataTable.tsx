@@ -8,6 +8,7 @@
 // ============================================
 
 import { useMemo, useCallback } from "react"
+import { toast } from "sonner"
 import {
   useReactTable,
   getCoreRowModel,
@@ -36,6 +37,7 @@ import { useKeywordStore } from "../../store"
 import { createColumns } from "./columns/columns"
 import { applyFilters } from "../../utils/filter-utils"
 import type { Keyword } from "../../types"
+import { refreshKeywordAction } from "../../actions/refresh-keyword"
 
 // ============================================
 // PROPS INTERFACE
@@ -65,9 +67,6 @@ export function KeywordDataTable({
   isGuest = false,
   pageSize: defaultPageSize = 20,
 }: KeywordDataTableProps) {
-  // Reserved for future use
-  void _country
-  
   // ─────────────────────────────────────────
   // ZUSTAND STORE CONNECTION
   // ─────────────────────────────────────────
@@ -79,6 +78,7 @@ export function KeywordDataTable({
   const _selectAll = useKeywordStore((state) => state.selectAll)
   const deselectAll = useKeywordStore((state) => state.deselectAll)
   const updateKeyword = useKeywordStore((state) => state.updateKeyword)
+  const setCredits = useKeywordStore((state) => state.setCredits)
   const sort = useKeywordStore((state) => state.sort)
   const setSort = useKeywordStore((state) => state.setSort)
   
@@ -160,26 +160,47 @@ export function KeywordDataTable({
   // HANDLERS
   // ─────────────────────────────────────────
   const handleRefresh = useCallback(
-    (id: number) => {
+    async (id: number) => {
       if (isGuest) {
-        // TODO: Show login prompt
+        toast.error("Sign in to refresh keywords")
         return
       }
-      
-      // Set refreshing state
+
+      const row = rawKeywords.find((k) => k.id === id)
+      if (!row) return
+
       updateKeyword(id, { isRefreshing: true })
-      
-      // Simulate API call (replace with real call later)
-      setTimeout(() => {
-        updateKeyword(id, {
-          isRefreshing: false,
-          lastUpdated: new Date(),
-          // Mock: slightly change volume
-          volume: rawKeywords.find((k) => k.id === id)?.volume ?? 0 + Math.floor(Math.random() * 100 - 50),
+
+      try {
+        const result = await refreshKeywordAction({
+          keyword: row.keyword,
+          country: _country,
+          intent: row.intent,
         })
-      }, 1500)
+
+        const payload = result?.data?.data
+        const newBalance = result?.data?.newBalance
+        if (!result?.data?.success || !payload) {
+          throw new Error(result?.serverError || "Failed to refresh keyword")
+        }
+
+        updateKeyword(id, {
+          weakSpots: payload.serpData.weakSpots,
+          serpFeatures: payload.serpData.serpFeatures,
+          hasAio: payload.serpData.hasAio,
+          lastUpdated: new Date(payload.lastUpdated),
+          isRefreshing: false,
+        })
+        if (typeof newBalance === "number") {
+          setCredits(newBalance)
+        }
+      } catch (error) {
+        console.error("[KeywordDataTable] Refresh failed:", error)
+        updateKeyword(id, { isRefreshing: false })
+        toast.error(error instanceof Error ? error.message : "Failed to refresh keyword")
+      }
     },
-    [isGuest, updateKeyword, rawKeywords]
+    [_country, isGuest, rawKeywords, setCredits, updateKeyword]
   )
 
   const isRefreshing = useCallback(

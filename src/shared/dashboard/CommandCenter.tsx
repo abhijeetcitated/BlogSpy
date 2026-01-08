@@ -20,6 +20,7 @@ import {
 } from "./components"
 import { getGreetingData, type GreetingData } from "../utils"
 import { useCommandPaletteContext, getModifierKey } from "@/src/features/command-palette"
+import { STACK_SPACING } from "@/src/styles"
 
 export function CommandCenter() {
   // Command palette context
@@ -42,15 +43,15 @@ export function CommandCenter() {
   const displayDate = greetingData?.date || new Date().toLocaleDateString()
 
   return (
-    <div className="space-y-6">
+    <div className={STACK_SPACING.default}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground">
             {displayGreeting} {displayMessage}
           </h1>
         </div>
-        <Badge variant="secondary" className="bg-secondary/50 text-muted-foreground font-normal shrink-0">
+        <Badge variant="secondary" className="bg-secondary/50 text-muted-foreground font-normal shrink-0 text-xs sm:text-sm">
           {displayDate}
         </Badge>
       </div>

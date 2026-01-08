@@ -14,6 +14,7 @@ import {
   NotificationsTab,
 } from "./components"
 import { IntegrationsTab, AlertPreferencesTab } from "@/src/features/integrations/shared"
+import { PAGE_PADDING, STACK_SPACING } from "@/src/styles"
 
 export function SettingsContent() {
   const searchParams = useSearchParams()
@@ -33,16 +34,16 @@ export function SettingsContent() {
   }
 
   return (
-    <div className="flex-1 p-6 bg-background">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className={`flex-1 ${PAGE_PADDING.default} bg-background`}>
+      <div className={`max-w-4xl mx-auto ${STACK_SPACING.default}`}>
         {/* Page Header */}
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your account settings and preferences</p>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Settings</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage your account settings and preferences</p>
         </div>
 
         {/* Tabbed Interface */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SettingsTab)} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as SettingsTab)} className={STACK_SPACING.default}>
           <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           <TabsContent value="general">

@@ -1,356 +1,500 @@
 // ============================================
-// KEYWORD DETAILS DRAWER - Social Tab
+// KEYWORD DETAILS DRAWER - Social Tab (Vercel/Linear Style)
 // ============================================
-// Displays social media opportunities for the keyword
-// with "Load Social Data" functionality
+// High-signal social metrics (YouTube / Reddit / Pinterest)
+// - Locked → Loading → Data
+// - Minimalism + modern dark mode styling
+// - External images use referrerPolicy="no-referrer"
+// - All outbound links open in _blank
 // ============================================
 
 "use client"
 
 import * as React from "react"
 import {
-  MessageCircle,
-  Users,
-  TrendingUp,
-  Youtube,
-  Loader2,
-  RefreshCw,
-  Hash,
-  ThumbsUp,
+  AlertTriangle,
+  ArrowUp,
   Eye,
+  Loader2,
+  Lock,
+  MessageCircle,
+  Pin as PinIcon,
+  RefreshCw,
+  Users,
+  Youtube,
 } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Skeleton } from "@/components/ui/skeleton"
 
-import type { Keyword } from "../../types"
+import type { CommunityResult, DrawerDataState, Keyword, YouTubeResult } from "../../types"
 import { generateMockSocialOpportunity } from "@/lib/social-opportunity-calculator"
-
-// ============================================
-// TYPES
-// ============================================
+import { fetchSocialInsights } from "../../actions/fetch-drawer-data"
+import { useKeywordStore } from "../../store"
 
 interface SocialTabProps {
   keyword: Keyword
 }
 
-interface RedditPost {
-  subreddit: string
+type SocialDataPayload = {
+  youtube: YouTubeResult[]
+  community: CommunityResult[]
+}
+
+function formatNumber(num: number): string {
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`
+  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`
+  return `${num}`
+}
+
+function splitCommunity(results: CommunityResult[]): {
+  reddit: CommunityResult[]
+  pinterest: CommunityResult[]
+} {
+  const reddit = results.filter((r) => r.platform === "reddit")
+  const pinterest = results.filter((r) => r.platform === "pinterest")
+  return { reddit, pinterest }
+}
+
+function getScoreColor(score: number): string {
+  if (score >= 70) return "text-emerald-400"
+  if (score >= 50) return "text-amber-400"
+  return "text-rose-400"
+}
+
+function SectionHeader({
+  icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ReactNode
   title: string
-  upvotes: number
-  comments: number
-  recency: string
+  subtitle?: string
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-2">
+        {icon}
+        <div className="space-y-0.5">
+          <div className="text-sm font-medium text-slate-200">{title}</div>
+          {subtitle ? <div className="text-xs text-slate-500">{subtitle}</div> : null}
+        </div>
+      </div>
+    </div>
+  )
 }
 
-interface YouTubeVideo {
-  title: string
-  channel: string
-  views: number
-  likes: number
-  published: string
+function LockedState({
+  keywordLabel,
+  onLoad,
+  isLoading,
+}: {
+  keywordLabel: string
+  onLoad: () => void
+  isLoading: boolean
+}) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+      <div className="flex flex-col items-center text-center gap-4">
+        <div className="h-12 w-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
+          <Lock className="h-5 w-5 text-slate-300" />
+        </div>
+
+        <div className="space-y-1">
+          <div className="text-sm font-medium text-slate-200">Unlock Social Intelligence for “{keywordLabel}”</div>
+          <div className="text-xs text-slate-500">YouTube intent • Reddit heat • Pinterest visuals</div>
+        </div>
+
+        <Button
+          onClick={onLoad}
+          disabled={isLoading}
+          className="bg-slate-100 text-slate-950 hover:bg-slate-200 transition-all duration-200"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Loading…
+            </>
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              🔄 Load Social Data (⚡ 1 Credit)
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  )
 }
 
-interface TikTokData {
-  hashtag: string
-  views: number
-  videos: number
-  trending: boolean
+function SkeletonYouTube() {
+  return (
+    <div className="flex flex-col gap-3">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="flex gap-4 p-3 rounded-lg border border-slate-800 bg-slate-900/40">
+          <div className="w-32 h-20 shrink-0 overflow-hidden rounded-md bg-slate-800/50" />
+          <div className="flex-1 flex flex-col justify-center gap-2">
+            <div className="h-4 w-5/6 bg-slate-800/60 rounded" />
+            <div className="h-3 w-2/3 bg-slate-800/40 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
-interface SocialData {
-  reddit: {
-    posts: RedditPost[]
-    totalMentions: number
-    topSubreddits: string[]
-    sentimentScore: number
-  }
-  youtube: {
-    videos: YouTubeVideo[]
-    avgViews: number
-    competitorChannels: number
-  }
-  tiktok: {
-    hashtags: TikTokData[]
-    totalViews: number
-    videoCount: number
-  }
+function SkeletonReddit() {
+  return (
+    <div className="rounded-lg border border-slate-800 bg-slate-900/40 overflow-hidden">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="p-3 border-b border-slate-800/50 last:border-b-0">
+          <div className="h-4 w-4/5 bg-slate-800/60 rounded" />
+          <div className="mt-2 flex items-center gap-2">
+            <div className="h-5 w-20 bg-slate-800/40 rounded" />
+            <div className="h-3 w-24 bg-slate-800/40 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 }
 
-// ============================================
-// MOCK DATA GENERATOR
-// ============================================
-
-function generateMockSocialData(keyword: string): SocialData {
-  const hash = keyword.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-
-  const subreddits = ["technology", "gadgets", "AskReddit", "LifeProTips", "productivity", "business"]
-  const channels = ["TechReview", "ProductGuide", "BestOf2025", "ExpertAdvice", "TopPicks"]
-
-  return {
-    reddit: {
-      posts: Array.from({ length: 4 }, (_, i) => ({
-        subreddit: subreddits[(hash + i) % subreddits.length],
-        title: `${["Best", "Top", "Ultimate guide to", "Honest review:"][i]} ${keyword}`,
-        upvotes: Math.floor(50 + (hash * (i + 1)) % 5000),
-        comments: Math.floor(10 + (hash * i) % 500),
-        recency: ["2h ago", "5h ago", "1d ago", "3d ago"][i],
-      })),
-      totalMentions: Math.floor(100 + hash % 2000),
-      topSubreddits: subreddits.slice(0, 3),
-      sentimentScore: Math.round(50 + (hash % 40)),
-    },
-    youtube: {
-      videos: Array.from({ length: 3 }, (_, i) => ({
-        title: `${keyword} - ${["Complete Guide", "Review 2025", "Best Options"][i]}`,
-        channel: channels[(hash + i) % channels.length],
-        views: Math.floor(1000 + (hash * (i + 1)) % 500000),
-        likes: Math.floor(50 + (hash * i) % 10000),
-        published: ["1 week ago", "2 weeks ago", "1 month ago"][i],
-      })),
-      avgViews: Math.floor(10000 + hash % 100000),
-      competitorChannels: Math.floor(5 + hash % 50),
-    },
-    tiktok: {
-      hashtags: [
-        { hashtag: `#${keyword.replace(/\s+/g, "")}`, views: (hash % 10) * 1000000, videos: hash % 10000, trending: hash % 2 === 0 },
-        { hashtag: `#${keyword.split(" ")[0]}tips`, views: (hash % 5) * 500000, videos: hash % 5000, trending: hash % 3 === 0 },
-        { hashtag: `#${keyword.split(" ")[0]}review`, views: (hash % 3) * 200000, videos: hash % 2000, trending: false },
-      ],
-      totalViews: (hash % 20) * 1000000,
-      videoCount: hash % 50000,
-    },
-  }
+function SkeletonPinterest() {
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className="relative aspect-[2/3] rounded-lg overflow-hidden border border-slate-800 bg-slate-900/40"
+        >
+          <div className="absolute inset-0 bg-slate-800/50" />
+        </div>
+      ))}
+    </div>
+  )
 }
 
-// ============================================
-// COMPONENT
-// ============================================
+function EmptyState({ label }: { label: string }) {
+  return <div className="text-xs text-slate-500">No {label} found.</div>
+}
 
 export function SocialTab({ keyword }: SocialTabProps) {
-  const [socialData, setSocialData] = React.useState<SocialData | null>(null)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [hasLoaded, setHasLoaded] = React.useState(false)
+  const [state, setState] = React.useState<DrawerDataState>("idle")
+  const [data, setData] = React.useState<SocialDataPayload | null>(null)
+  const [error, setError] = React.useState<string | null>(null)
 
-  // Get social opportunity score
+  // ─────────────────────────────────────────
+  // CACHE ACCESS (Zustand)
+  // ─────────────────────────────────────────
+  const getCachedData = useKeywordStore((s) => s.getCachedData)
+  const setDrawerCache = useKeywordStore((s) => s.setDrawerCache)
+
+  // ─────────────────────────────────────────
+  // CACHE CHECK ON MOUNT
+  // ─────────────────────────────────────────
+  React.useEffect(() => {
+    if (!keyword?.keyword) return
+    
+    const cached = getCachedData(keyword.keyword, "social") as SocialDataPayload | null
+    if (cached) {
+      setData(cached)
+      setState("success")
+    }
+  }, [keyword?.keyword, getCachedData])
+
+  if (!keyword) {
+    return <div className="text-xs text-slate-500">No keyword data.</div>
+  }
+
   const socialOpp = generateMockSocialOpportunity(keyword.id, keyword.keyword)
 
+  // ─────────────────────────────────────────
+  // LOAD SOCIAL DATA (with cache-first strategy)
+  // ─────────────────────────────────────────
   const loadSocialData = async () => {
-    setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setSocialData(generateMockSocialData(keyword.keyword))
-    setIsLoading(false)
-    setHasLoaded(true)
+    // 1. Check cache first (FREE)
+    const cached = getCachedData(keyword.keyword, "social") as SocialDataPayload | null
+    if (cached) {
+      setData(cached)
+      setState("success")
+      return // No API call needed
+    }
+
+    // 2. Cache miss → Call API (PAID - 1 credit)
+    setState("loading")
+    setError(null)
+
+    try {
+      const res = await fetchSocialInsights({ keyword: keyword.keyword, country: "US" })
+
+      if (res?.data?.success && res.data.data) {
+        // Store in cache for future use
+        setDrawerCache(keyword.keyword, "social", res.data.data)
+        setData(res.data.data)
+        setState("success")
+        return
+      }
+
+      setError(res?.data?.error || res?.serverError || "Failed to fetch social data")
+      setState("error")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to fetch social data")
+      setState("error")
+    }
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 70) return "text-emerald-500"
-    if (score >= 50) return "text-yellow-500"
-    return "text-red-500"
-  }
-
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
-    return num.toString()
-  }
+  const youtube: YouTubeResult[] = (data?.youtube ?? []).slice(0, 3)
+  const { reddit, pinterest } = splitCommunity(data?.community ?? [])
+  const redditSorted = [...reddit].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 8)
+  const pinterestGrid = pinterest.slice(0, 9)
 
   return (
     <div className="space-y-6">
-      {/* Social Opportunity Score */}
-      <Card className="bg-card/50 border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-            <Users className="h-4 w-4" />
-            Social Opportunity
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className={cn("text-3xl font-bold", getScoreColor(socialOpp.score))}>
-              {socialOpp.score}%
-            </span>
-            <Badge variant="secondary" className={socialOpp.score >= 70 ? "bg-emerald-500/10 text-emerald-500" : ""}>
-              {socialOpp.score >= 70 ? "High Engagement" : socialOpp.score >= 50 ? "Moderate" : "Low Activity"}
-            </Badge>
+      {/* Always-on: Opportunity */}
+      <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-slate-400" />
+            <div className="text-sm font-medium text-slate-200">Social Opportunity</div>
           </div>
-          <Progress value={socialOpp.score} className="h-2" />
-          <p className="text-xs text-muted-foreground">
-            This keyword has {socialOpp.score >= 70 ? "strong" : socialOpp.score >= 50 ? "moderate" : "limited"} social media presence and engagement potential.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Load Social Data Button */}
-      {!hasLoaded && (
-        <Card className="bg-linear-to-br from-pink-500/10 to-purple-500/10 border-pink-500/20">
-          <CardContent className="p-6 text-center">
-            <MessageCircle className="h-12 w-12 text-pink-500 mx-auto mb-4" />
-            <CardTitle className="text-lg mb-2">Social Media Insights</CardTitle>
-            <CardDescription className="mb-4">
-              Load real-time data from Reddit, YouTube, and TikTok to discover social opportunities.
-            </CardDescription>
-            <Button
-              onClick={loadSocialData}
-              disabled={isLoading}
-              className="bg-linear-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <Users className="h-4 w-4 mr-2" />
-                  Load Social Data
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
+          <div className={cn("text-lg font-semibold", getScoreColor(socialOpp.score))}>{socialOpp.score}%</div>
         </div>
-      )}
+        <div className="mt-3 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+          <div
+            className="h-full bg-indigo-500/80"
+            style={{ width: `${Math.max(0, Math.min(100, socialOpp.score))}%` }}
+          />
+        </div>
+        <div className="mt-2 text-xs text-slate-500">
+          High-signal social presence estimate for this keyword.
+        </div>
+      </div>
 
-      {/* Social Data Results */}
-      {socialData && !isLoading && (
+      {/* State */}
+      {state === "idle" ? <LockedState keywordLabel={keyword.keyword} onLoad={loadSocialData} isLoading={false} /> : null}
+
+      {state === "loading" ? (
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <SectionHeader
+              icon={<Youtube className="h-4 w-4 text-red-500" />}
+              title="YouTube"
+              subtitle="Video intent"
+            />
+            <SkeletonYouTube />
+          </div>
+
+          <div className="space-y-3">
+            <SectionHeader
+              icon={<MessageCircle className="h-4 w-4 text-orange-500" />}
+              title="Reddit"
+              subtitle="Discussion pulse"
+            />
+            <SkeletonReddit />
+          </div>
+
+          <div className="space-y-3">
+            <SectionHeader
+              icon={<PinIcon className="h-4 w-4 text-pink-500" />}
+              title="Pinterest"
+              subtitle="Visual trend"
+            />
+            <SkeletonPinterest />
+          </div>
+        </div>
+      ) : null}
+
+      {state === "error" && error ? (
+        <Alert variant="destructive" className="border border-slate-800 bg-slate-900/50">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle className="text-sm text-slate-200">Failed to load social data</AlertTitle>
+          <AlertDescription className="mt-2">
+            <div className="text-xs text-slate-500">{error}</div>
+            <div className="mt-3">
+              <Button
+                variant="outline"
+                onClick={loadSocialData}
+                className="border-slate-800 bg-transparent hover:bg-slate-800/80 transition-all duration-200"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {state === "success" ? (
         <>
-          {/* Reddit Section */}
-          <Card className="bg-card/50 border-border/50 border-l-4 border-l-orange-500">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-orange-500" />
-                Reddit
-              </CardTitle>
-              <Badge variant="outline" className="text-orange-500">
-                {socialData.reddit.totalMentions} mentions
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Sentiment */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Sentiment Score</span>
-                <span className={getScoreColor(socialData.reddit.sentimentScore)}>
-                  {socialData.reddit.sentimentScore}% Positive
-                </span>
-              </div>
+          {/* YouTube (Compact list) */}
+          <div className="space-y-3">
+            <SectionHeader
+              icon={<Youtube className="h-4 w-4 text-red-500" />}
+              title="YouTube"
+              subtitle="Top videos"
+            />
 
-              {/* Top Subreddits */}
-              <div className="flex flex-wrap gap-1">
-                {socialData.reddit.topSubreddits.map((sub) => (
-                  <Badge key={sub} variant="secondary" className="text-xs">
-                    r/{sub}
-                  </Badge>
+            {youtube.length === 0 ? (
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+                <EmptyState label="YouTube videos" />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {youtube.map((v) => (
+                  <a
+                    key={v.url}
+                    href={v.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group flex gap-4 p-3 rounded-lg border border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-800/80 transition-all duration-200"
+                  >
+                    <div className="relative w-32 h-20 shrink-0 overflow-hidden rounded-md border border-slate-800/80">
+                      {v.thumbnailUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={v.thumbnailUrl}
+                          alt={v.title}
+                          referrerPolicy="no-referrer"
+                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-800/40">
+                          <Youtube className="h-5 w-5 text-slate-500" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col justify-center gap-1 min-w-0">
+                      <h4 className="text-sm font-medium leading-tight text-slate-200 group-hover:text-indigo-400 line-clamp-2">
+                        {v.title}
+                      </h4>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          <span className="font-mono text-xs text-indigo-400">
+                            {typeof v.views === "number" ? `${formatNumber(v.views)} views` : v.viewsLabel ?? "— views"}
+                          </span>
+                        </span>
+                        <span>•</span>
+                        <span className="truncate">{v.channel ?? "Unknown channel"}</span>
+                        {v.published ? (
+                          <>
+                            <span>•</span>
+                            <span className="truncate">{v.published}</span>
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
+                  </a>
                 ))}
               </div>
+            )}
+          </div>
 
-              {/* Recent Posts */}
-              <div className="space-y-2 mt-2">
-                {socialData.reddit.posts.slice(0, 3).map((post, i) => (
-                  <div key={i} className="p-2 rounded bg-muted/30 text-sm">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                      <span className="text-orange-500">r/{post.subreddit}</span>
-                      <span>•</span>
-                      <span>{post.recency}</span>
+          {/* Reddit (Signal row) */}
+          <div className="space-y-3">
+            <SectionHeader
+              icon={<MessageCircle className="h-4 w-4 text-orange-500" />}
+              title="Reddit"
+              subtitle="Headlines & heat"
+            />
+
+            {redditSorted.length === 0 ? (
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+                <EmptyState label="Reddit threads" />
+              </div>
+            ) : (
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
+                {redditSorted.map((t) => (
+                  <a
+                    key={t.url}
+                    href={t.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-start justify-between p-3 border-b border-slate-800/50 last:border-b-0 hover:bg-slate-800/50 transition-all duration-200"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <div className="text-xs font-bold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded w-fit">
+                        r/{t.subreddit ?? "…"}
+                      </div>
+                      <h4 className="text-sm text-slate-300 line-clamp-1">{t.title}</h4>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <MessageCircle className="w-3 h-3" /> {typeof t.comments === "number" ? t.comments : "—"}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-foreground line-clamp-1">{post.title}</p>
-                    <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="h-3 w-3" /> {formatNumber(post.upvotes)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageCircle className="h-3 w-3" /> {post.comments}
-                      </span>
+
+                    <div className="flex items-center gap-1 text-xs font-mono text-slate-400 shrink-0 ml-4">
+                      <ArrowUp className="w-3 h-3" /> {typeof t.score === "number" ? t.score : "—"}
                     </div>
-                  </div>
+                  </a>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
 
-          {/* YouTube Section */}
-          <Card className="bg-card/50 border-border/50 border-l-4 border-l-red-500">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Youtube className="h-4 w-4 text-red-500" />
-                YouTube
-              </CardTitle>
-              <Badge variant="outline" className="text-red-500">
-                {socialData.youtube.competitorChannels} competitors
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Avg Views */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Avg Video Views</span>
-                <span className="font-medium">{formatNumber(socialData.youtube.avgViews)}</span>
+          {/* Pinterest (Visual grid) */}
+          <div className="space-y-3">
+            <SectionHeader
+              icon={<PinIcon className="h-4 w-4 text-pink-500" />}
+              title="Pinterest"
+              subtitle="Visual trend"
+            />
+
+            {pinterestGrid.length === 0 ? (
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+                <EmptyState label="Pinterest pins" />
               </div>
-
-              {/* Top Videos */}
-              <div className="space-y-2">
-                {socialData.youtube.videos.map((video, i) => (
-                  <div key={i} className="p-2 rounded bg-muted/30 text-sm">
-                    <p className="font-medium line-clamp-1">{video.title}</p>
-                    <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
-                      <span className="text-red-500">{video.channel}</span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" /> {formatNumber(video.views)}
-                      </span>
-                      <span>{video.published}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* TikTok Section */}
-          <Card className="bg-card/50 border-border/50 border-l-4 border-l-pink-500">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Hash className="h-4 w-4 text-pink-500" />
-                TikTok
-              </CardTitle>
-              <Badge variant="outline" className="text-pink-500">
-                {formatNumber(socialData.tiktok.totalViews)} total views
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {socialData.tiktok.hashtags.map((tag) => (
-                <div key={tag.hashtag} className="flex items-center justify-between p-2 rounded bg-muted/30">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-pink-500">{tag.hashtag}</span>
-                    {tag.trending && (
-                      <Badge className="bg-pink-500/10 text-pink-500 text-xs">
-                        <TrendingUp className="h-3 w-3 mr-1" /> Trending
-                      </Badge>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {pinterestGrid.map((p) => (
+                  <a
+                    key={p.url}
+                    href={p.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="relative aspect-[2/3] rounded-lg overflow-hidden border border-slate-800 group hover:border-slate-700 transition-all duration-200"
+                  >
+                    {p.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.imageUrl}
+                        alt="Pinterest"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-slate-900/40">
+                        <PinIcon className="h-6 w-6 text-slate-500" />
+                      </div>
                     )}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatNumber(tag.views)} views • {formatNumber(tag.videos)} videos
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
 
-          {/* Refresh Button */}
-          <Button variant="outline" className="w-full" onClick={loadSocialData}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Social Data
-          </Button>
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center flex-col gap-1">
+                      <PinIcon className="w-5 h-5 text-white" />
+                      <span className="text-xs font-bold text-white">
+                        {typeof p.saves === "number" ? `${formatNumber(p.saves)} Saves` : "— Saves"}
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              onClick={loadSocialData}
+              className="w-full border-slate-800 bg-transparent hover:bg-slate-800/80 transition-all duration-200"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Social Data
+            </Button>
+          </div>
         </>
-      )}
+      ) : null}
     </div>
   )
 }

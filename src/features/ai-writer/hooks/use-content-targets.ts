@@ -1,288 +1,71 @@
-// ============================================
-// AI WRITER - CONTENT TARGETS HOOK
-// ============================================
-// Feature #5 & #6: Hook for managing content
-// targets with real-time updates
-// ============================================
+"use client"
 
-'use client'
+import { useMemo } from 'react'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import type { ContentTargets } from '../types/content-targets.types'
-import { DEFAULT_CONTENT_TARGETS } from '../types/content-targets.types'
-import {
-  generateTargetsFromCompetitors,
-  generateTargetsFromKeyword,
-  updateTargetsWithCurrent,
-  getAllTargetProgress
-} from '../utils/content-targets'
-
-// ============================================
-// TYPES
-// ============================================
-
-interface UseContentTargetsOptions {
-  /** Initial targets (optional) */
-  initialTargets?: Partial<ContentTargets>
-  /** Target keyword for generating targets */
-  targetKeyword?: string
-  /** Search intent */
-  intent?: 'informational' | 'commercial' | 'transactional' | 'navigational'
-  /** Competitor data for generating targets */
-  competitors?: {
-    wordCount: number
-    h1Count: number
-    h2Count: number
-    h3Count: number
-    imageCount: number
-    internalLinks: number
-    externalLinks: number
-  }[]
-  /** Current domain for link analysis */
-  currentDomain?: string
-  /** Debounce delay for content updates */
-  debounceMs?: number
-  /** Auto-update targets when content changes */
-  autoUpdate?: boolean
+export type ContentTargets = {
+  wordCountTarget: number
+  headingCountTarget: number
+  imageCountTarget: number
 }
 
-interface UseContentTargetsReturn {
-  // State
-  targets: ContentTargets
-  progress: ReturnType<typeof getAllTargetProgress>
-  isAnalyzing: boolean
-  
-  // Actions
-  updateFromContent: (html: string) => void
-  setTargets: (targets: Partial<ContentTargets>) => void
-  regenerateFromKeyword: (keyword: string, intent?: UseContentTargetsOptions['intent']) => void
-  regenerateFromCompetitors: (competitors: UseContentTargetsOptions['competitors']) => void
-  reset: () => void
-  
-  // Derived
-  overallScore: number
-  missingTargets: string[]
+export type ContentTargetsProgress = {
+  wordCount: { current: number; target: number; progress: number }
+  headings: { current: number; target: number; progress: number }
+  images: { current: number; target: number; progress: number }
 }
 
-// ============================================
-// DEBOUNCE HELPER
-// ============================================
-
-function useDebouncedCallback<T extends (...args: Parameters<T>) => void>(
-  callback: T,
-  delay: number
-): T {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const callbackRef = useRef(callback)
-  
-  useEffect(() => {
-    callbackRef.current = callback
-  }, [callback])
-  
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-    }
-  }, [])
-  
-  return useCallback(
-    ((...args: Parameters<T>) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      timeoutRef.current = setTimeout(() => {
-        callbackRef.current(...args)
-      }, delay)
-    }) as T,
-    [delay]
-  )
+export type UseContentTargetsOptions = {
+  content: string
+  targets?: Partial<ContentTargets>
 }
 
-// ============================================
-// MAIN HOOK
-// ============================================
-
-export function useContentTargets(
-  options: UseContentTargetsOptions = {}
-): UseContentTargetsReturn {
-  const {
-    initialTargets,
-    targetKeyword,
-    intent,
-    competitors,
-    currentDomain,
-    debounceMs = 300,
-    autoUpdate = true
-  } = options
-
-  // State
-  const [targets, setTargetsState] = useState<ContentTargets>(() => {
-    // Initialize with provided targets or generate from keyword/competitors
-    let baseTargets = { ...DEFAULT_CONTENT_TARGETS }
-    
-    if (competitors && competitors.length > 0) {
-      const competitorTargets = generateTargetsFromCompetitors(competitors)
-      baseTargets = { ...baseTargets, ...competitorTargets } as ContentTargets
-    } else if (targetKeyword) {
-      const keywordTargets = generateTargetsFromKeyword(targetKeyword, intent)
-      baseTargets = { ...baseTargets, ...keywordTargets } as ContentTargets
-    }
-    
-    if (initialTargets) {
-      baseTargets = { ...baseTargets, ...initialTargets } as ContentTargets
-    }
-    
-    return baseTargets
-  })
-  
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-
-  // Calculate progress
-  const progress = useMemo(() => getAllTargetProgress(targets), [targets])
-
-  // Calculate overall score (0-100)
-  const overallScore = useMemo(() => {
-    return progress.overall.percentage
-  }, [progress])
-
-  // Get list of missing/under targets
-  const missingTargets = useMemo(() => {
-    const missing: string[] = []
-    
-    if (progress.wordCount.status === 'under') {
-      missing.push(`Word count (${targets.wordCount.current}/${targets.wordCount.min} min)`)
-    }
-    if (progress.h1.status === 'under') {
-      missing.push('H1 heading')
-    }
-    if (progress.h2.status === 'under') {
-      missing.push(`H2 headings (${targets.headings.h2.current}/${targets.headings.h2.min} min)`)
-    }
-    if (progress.h3.status === 'under') {
-      missing.push(`H3 headings (${targets.headings.h3.current}/${targets.headings.h3.min} min)`)
-    }
-    if (progress.images.status === 'under') {
-      missing.push(`Images (${targets.images.current}/${targets.images.min} min)`)
-    }
-    if (progress.internalLinks.status === 'under') {
-      missing.push(`Internal links (${targets.links.internal.current}/${targets.links.internal.min} min)`)
-    }
-    if (progress.externalLinks.status === 'under') {
-      missing.push(`External links (${targets.links.external.current}/${targets.links.external.min} min)`)
-    }
-    
-    return missing
-  }, [progress, targets])
-
-  // Update from content
-  const performUpdate = useCallback((html: string) => {
-    setIsAnalyzing(true)
-    
-    try {
-      const updated = updateTargetsWithCurrent(targets, html, currentDomain)
-      setTargetsState(updated)
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }, [targets, currentDomain])
-
-  // Debounced version
-  const updateFromContent = useDebouncedCallback(performUpdate, debounceMs)
-
-  // Set targets manually
-  const setTargets = useCallback((newTargets: Partial<ContentTargets>) => {
-    setTargetsState(prev => ({
-      ...prev,
-      ...newTargets,
-      lastUpdated: new Date()
-    } as ContentTargets))
-  }, [])
-
-  // Regenerate from keyword
-  const regenerateFromKeyword = useCallback((
-    keyword: string,
-    newIntent?: UseContentTargetsOptions['intent']
-  ) => {
-    const keywordTargets = generateTargetsFromKeyword(keyword, newIntent)
-    setTargetsState(prev => ({
-      ...prev,
-      ...keywordTargets,
-      // Preserve current counts
-      wordCount: {
-        ...(keywordTargets.wordCount || prev.wordCount),
-        current: prev.wordCount.current
-      },
-      headings: {
-        h1: { ...(keywordTargets.headings?.h1 || prev.headings.h1), current: prev.headings.h1.current },
-        h2: { ...(keywordTargets.headings?.h2 || prev.headings.h2), current: prev.headings.h2.current },
-        h3: { ...(keywordTargets.headings?.h3 || prev.headings.h3), current: prev.headings.h3.current }
-      },
-      lastUpdated: new Date()
-    } as ContentTargets))
-  }, [])
-
-  // Regenerate from competitors
-  const regenerateFromCompetitors = useCallback((
-    newCompetitors: UseContentTargetsOptions['competitors']
-  ) => {
-    if (!newCompetitors || newCompetitors.length === 0) return
-    
-    const competitorTargets = generateTargetsFromCompetitors(newCompetitors)
-    setTargetsState(prev => ({
-      ...prev,
-      ...competitorTargets,
-      // Preserve current counts
-      wordCount: {
-        ...(competitorTargets.wordCount || prev.wordCount),
-        current: prev.wordCount.current
-      },
-      headings: {
-        h1: { ...(competitorTargets.headings?.h1 || prev.headings.h1), current: prev.headings.h1.current },
-        h2: { ...(competitorTargets.headings?.h2 || prev.headings.h2), current: prev.headings.h2.current },
-        h3: { ...(competitorTargets.headings?.h3 || prev.headings.h3), current: prev.headings.h3.current }
-      },
-      lastUpdated: new Date()
-    } as ContentTargets))
-  }, [])
-
-  // Reset to defaults
-  const reset = useCallback(() => {
-    setTargetsState({ ...DEFAULT_CONTENT_TARGETS, lastUpdated: new Date() })
-  }, [])
-
-  // Update targets when competitors change
-  useEffect(() => {
-    if (competitors && competitors.length > 0) {
-      regenerateFromCompetitors(competitors)
-    }
-  }, [competitors]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Update targets when keyword changes
-  useEffect(() => {
-    if (targetKeyword) {
-      regenerateFromKeyword(targetKeyword, intent)
-    }
-  }, [targetKeyword, intent]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  return {
-    // State
-    targets,
-    progress,
-    isAnalyzing,
-    
-    // Actions
-    updateFromContent,
-    setTargets,
-    regenerateFromKeyword,
-    regenerateFromCompetitors,
-    reset,
-    
-    // Derived
-    overallScore,
-    missingTargets
-  }
+function clampPct(v: number): number {
+  if (!Number.isFinite(v)) return 0
+  return Math.min(100, Math.max(0, v))
 }
 
-export default useContentTargets
+function estimateWords(htmlOrText: string): number {
+  const text = htmlOrText
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!text) return 0
+  return text.split(' ').filter(Boolean).length
+}
+
+function countHeadings(html: string): number {
+  const m = html.match(/<h[1-6][^>]*>/gi)
+  return m ? m.length : 0
+}
+
+function countImages(html: string): number {
+  const m = html.match(/<img\b[^>]*>/gi)
+  return m ? m.length : 0
+}
+
+export function useContentTargets(options: UseContentTargetsOptions): ContentTargetsProgress {
+  const { content, targets } = options
+
+  return useMemo(() => {
+    const effective: ContentTargets = {
+      wordCountTarget: targets?.wordCountTarget ?? 1800,
+      headingCountTarget: targets?.headingCountTarget ?? 10,
+      imageCountTarget: targets?.imageCountTarget ?? 3
+    }
+
+    const wc = estimateWords(content)
+    const hc = countHeadings(content)
+    const ic = countImages(content)
+
+    const wordProgress = clampPct((wc / Math.max(1, effective.wordCountTarget)) * 100)
+    const headingProgress = clampPct((hc / Math.max(1, effective.headingCountTarget)) * 100)
+    const imageProgress = clampPct((ic / Math.max(1, effective.imageCountTarget)) * 100)
+
+    return {
+      wordCount: { current: wc, target: effective.wordCountTarget, progress: wordProgress },
+      headings: { current: hc, target: effective.headingCountTarget, progress: headingProgress },
+      images: { current: ic, target: effective.imageCountTarget, progress: imageProgress }
+    }
+  }, [content, targets])
+}

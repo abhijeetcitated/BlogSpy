@@ -188,7 +188,7 @@ export function generateVideoHijackAnalysis(): VideoHijackAnalysis {
   const highHijackCount = keywords.filter((k) => k.hijackScore >= 70).length
   const significantHijackCount = keywords.filter((k) => k.hijackScore >= 50 && k.hijackScore < 70).length
   const totalClicksLost = keywords.reduce((sum, k) => sum + k.estimatedClicksLost, 0)
-  const avgHijackScore = Math.round(keywords.reduce((sum, k) => sum + k.hijackScore, 0) / keywords.length)
+  const avgHijackScore = keywords.length > 0 ? Math.round(keywords.reduce((sum, k) => sum + k.hijackScore, 0) / keywords.length) : 0
   const topOpportunities = keywords.filter((k) => k.opportunityLevel === "high").length
   const hasOwnVideoCount = keywords.filter((k) => k.hasOwnVideo).length
 

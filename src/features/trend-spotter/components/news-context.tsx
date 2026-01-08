@@ -20,9 +20,9 @@ export function NewsContext() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-        {newsItems.map((news, i) => (
+        {newsItems.map((news) => (
           <Card
-            key={i}
+            key={`${news.source}-${news.time}`}
             className="bg-card border-border hover:border-muted-foreground/30 transition-all group"
           >
             <CardContent className="p-3 sm:p-4 space-y-2.5 sm:space-y-3">

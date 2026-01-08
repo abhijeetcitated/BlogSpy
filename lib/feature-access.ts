@@ -3,40 +3,10 @@
  * FEATURE ACCESS CONTROL
  * ============================================
  * 
- * ⚠️  IMPORTANT: AUTH SYSTEM DISABLED FOR DEVELOPMENT ⚠️
+ * Environment-aware authentication system:
+ * - Development: Full access for faster iteration
+ * - Production: Requires proper authentication
  * 
- * TODO: [AUTH] Before production deployment, re-enable authentication:
- * 
- * 1. RESTORE ENV-BASED CHECKS:
- *    - Import { env } from "@/config/env"
- *    - Check env.isDev vs env.isProd
- *    - In dev: full access
- *    - In prod: check actual auth
- * 
- * 2. IMPLEMENT PROPER AUTH FLOW:
- *    - Login page: /login
- *    - Signup page: /signup  
- *    - Protected routes middleware
- *    - Session management (Clerk/NextAuth/Supabase)
- * 
- * 3. IMPLEMENT SUBSCRIPTION TIERS:
- *    - Free: Limited features, demo mode
- *    - Pro: Full access, no limits
- *    - Enterprise: Team features
- * 
- * 4. STRIPE INTEGRATION:
- *    - Payment processing
- *    - Subscription management
- *    - Usage-based billing (credits)
- * 
- * 5. FILES TO UPDATE WHEN ENABLING AUTH:
- *    - lib/feature-access.ts (this file)
- *    - hooks/use-auth.ts
- *    - contexts/auth-context.tsx
- *    - src/features/ai-writer/utils/context-parser.ts (remove getDemoContextForDev)
- *    - src/features/ai-writer/ai-writer-content.tsx (remove dev-only context)
- * 
- * SEARCH FOR: TODO: [AUTH] to find all auth-related code
  * ============================================
  */
 
@@ -48,36 +18,10 @@ export interface FeatureAccess {
 }
 
 /**
- * Get feature access - ALWAYS returns full access during development
- * TODO: [AUTH] Re-enable auth checks before production
- */
-export function getFeatureAccess(
-  _isAuthenticated: boolean = false,
-  _isDemoUser: boolean = false
-): FeatureAccess {
-  // TEMPORARY: Always give full access during feature development
-  return {
-    hasFullAccess: true,
-    isDemoMode: false,
-    isDevMode: true,
-    accessLevel: "full",
-  }
-}
-
-/**
- * Always skip auth checks during feature development
- * TODO: [AUTH] Change to: return env.isDev
- */
-export function shouldSkipAuthCheck(): boolean {
-  return true
-}
-
-/**
- * Always return true during development
- * TODO: [AUTH] Change to: return env.isDev
+ * Check if we're in development mode
  */
 export function isDevEnvironment(): boolean {
-  return true
+  return process.env.NODE_ENV === "development"
 }
 
 /**
@@ -85,4 +29,96 @@ export function isDevEnvironment(): boolean {
  */
 export function isProdEnvironment(): boolean {
   return process.env.NODE_ENV === "production"
+}
+
+/**
+ * Should skip auth check?
+ * - Dev: Skip for faster development
+ * - Prod: Never skip
+ */
+export function shouldSkipAuthCheck(): boolean {
+  return isDevEnvironment()
+}
+
+/**
+ * Get feature access based on authentication status
+ * 
+ * @param isAuthenticated - Whether user is logged in
+ * @param isDemoUser - Whether user is using demo account
+ * @returns FeatureAccess object with access levels
+ */
+export function getFeatureAccess(
+  isAuthenticated: boolean = false,
+  isDemoUser: boolean = false
+): FeatureAccess {
+  const isDev = isDevEnvironment()
+
+  // Development mode: Full access for testing
+  if (isDev) {
+    return {
+      hasFullAccess: true,
+      isDemoMode: false,
+      isDevMode: true,
+      accessLevel: "full",
+    }
+  }
+
+  // Production: Check actual authentication
+  if (!isAuthenticated) {
+    return {
+      hasFullAccess: false,
+      isDemoMode: true,
+      isDevMode: false,
+      accessLevel: "demo",
+    }
+  }
+
+  // Demo user: Limited access
+  if (isDemoUser) {
+    return {
+      hasFullAccess: false,
+      isDemoMode: true,
+      isDevMode: false,
+      accessLevel: "demo",
+    }
+  }
+
+  // Authenticated user: Full access
+  return {
+    hasFullAccess: true,
+    isDemoMode: false,
+    isDevMode: false,
+    accessLevel: "full",
+  }
+}
+
+/**
+ * Check if user can access a specific feature
+ * Useful for feature-gating in components
+ */
+export function canAccessFeature(
+  featureName: string,
+  isAuthenticated: boolean,
+  userPlan: "free" | "pro" | "enterprise" = "free"
+): boolean {
+  // Dev mode: All features accessible
+  if (isDevEnvironment()) return true
+
+  // Production: Check plan-based access
+  const freeFeatures = ["keyword-magic", "keyword-overview"]
+  const proFeatures = [...freeFeatures, "rank-tracker", "content-decay", "topic-clusters", "ai-writer"]
+  const enterpriseFeatures = [...proFeatures, "competitor-gap", "video-hijack", "api-access"]
+
+  if (!isAuthenticated) {
+    return freeFeatures.includes(featureName)
+  }
+
+  switch (userPlan) {
+    case "enterprise":
+      return enterpriseFeatures.includes(featureName)
+    case "pro":
+      return proFeatures.includes(featureName)
+    default:
+      return freeFeatures.includes(featureName)
+  }
 }

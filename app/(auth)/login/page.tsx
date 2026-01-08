@@ -1,108 +1,231 @@
 "use client"
 
 /**
- * Login Page - Demo Mode Only
- * Real authentication will be added later
- * Last updated: Dec 10, 2025
+ * Login Page - Supabase Authentication
+ * Supports email/password and Google OAuth
  */
 
-import { useState } from "react"
-import { Loader2, ArrowRight, Sparkles, Construction } from "lucide-react"
+import { useActionState, useState, useTransition, useEffect } from "react"
+import { Loader2, Mail, Lock, Chrome } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { signIn, signUp, signInWithGoogle } from "../actions/auth"
+import { toast } from "sonner"
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  
+  // Login form state
+  const [loginState, loginAction] = useActionState(signIn, { success: true })
+  
+  // Signup form state
+  const [signupState, signupAction] = useActionState(signUp, { success: true })
 
-  const handleDemoLogin = () => {
-    setIsLoading(true)
-    
-    // Set demo user in localStorage
-    const demoUser = {
-      id: "demo_user_001",
-      email: "demo@blogspy.io",
-      name: "Demo User",
-      plan: "PRO",
-      credits: 999,
+  // Show error toast when action fails
+  useEffect(() => {
+    if (loginState && !loginState.success && loginState.error) {
+      toast.error("Login failed", {
+        description: loginState.error,
+      })
     }
-    
-    localStorage.setItem("auth_token", "demo_token_" + Date.now())
-    localStorage.setItem("user", JSON.stringify(demoUser))
-    
-    // Redirect using window.location for full page reload
-    window.location.href = "/dashboard"
+  }, [loginState])
+
+  useEffect(() => {
+    if (signupState && !signupState.success && signupState.error) {
+      toast.error("Sign up failed", {
+        description: signupState.error,
+      })
+    }
+  }, [signupState])
+
+  const handleGoogleSignIn = () => {
+    setIsGoogleLoading(true)
+    startTransition(async () => {
+      const result = await signInWithGoogle()
+      if (!result.success && result.error) {
+        toast.error("Google sign-in failed", {
+          description: result.error,
+        })
+        setIsGoogleLoading(false)
+      }
+    })
   }
 
   return (
-    <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-xl shadow-2xl">
+    <Card className="w-full max-w-md bg-zinc-950 border-zinc-800 shadow-2xl">
       <CardHeader className="space-y-1 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="h-12 w-12 rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
-            <Sparkles className="h-6 w-6 text-white" />
-          </div>
-        </div>
         <CardTitle className="text-2xl font-bold text-white">Welcome to BlogSpy</CardTitle>
-        <CardDescription className="text-slate-400">
-          Try our SEO tools with a demo account
+        <CardDescription className="text-zinc-400">
+          Sign in to access your SEO toolkit
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Coming Soon Notice */}
-        <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-          <div className="flex items-center gap-3">
-            <Construction className="h-5 w-5 text-amber-400 shrink-0" />
-            <div>
-              <p className="text-amber-400 font-medium text-sm">Authentication Coming Soon</p>
-              <p className="text-amber-400/70 text-xs mt-1">
-                Full login & signup will be available in the next update. For now, use the demo account to explore all features.
-              </p>
-            </div>
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border border-zinc-800">
+            <TabsTrigger 
+              value="login"
+              className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white"
+            >
+              Login
+            </TabsTrigger>
+            <TabsTrigger 
+              value="signup"
+              className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white"
+            >
+              Sign Up
+            </TabsTrigger>
+          </TabsList>
+
+          {/* LOGIN TAB */}
+          <TabsContent value="login" className="space-y-4 mt-6">
+            <form action={loginAction} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email" className="text-zinc-300">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <Input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                    className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="login-password" className="text-zinc-300">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <Input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                    className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Continue with Email"
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+
+          {/* SIGNUP TAB */}
+          <TabsContent value="signup" className="space-y-4 mt-6">
+            <form action={signupAction} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-email" className="text-zinc-300">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <Input
+                    id="signup-email"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    required
+                    className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-password" className="text-zinc-300">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                  <Input
+                    id="signup-password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                    className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-emerald-500"
+                  />
+                </div>
+                <p className="text-xs text-zinc-500">Must be at least 6 characters</p>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-zinc-800" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-zinc-950 px-2 text-zinc-500">Or continue with</span>
           </div>
         </div>
 
-        {/* Demo Login Button - Primary Action */}
+        {/* Google OAuth */}
         <Button
           type="button"
-          onClick={handleDemoLogin}
-          disabled={isLoading}
-          className="w-full h-12 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium text-base"
+          variant="outline"
+          onClick={handleGoogleSignIn}
+          disabled={isGoogleLoading || isPending}
+          className="w-full bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white"
         >
-          {isLoading ? (
+          {isGoogleLoading ? (
             <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Entering Demo...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Connecting to Google...
             </>
           ) : (
             <>
-              <Sparkles className="mr-2 h-5 w-5" />
-              Try Demo Account
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <Chrome className="mr-2 h-4 w-4" />
+              Continue with Google
             </>
           )}
         </Button>
 
-        {/* Features Preview */}
-        <div className="pt-4 border-t border-slate-800">
-          <p className="text-xs text-slate-500 text-center mb-3">Demo includes full access to:</p>
-          <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Keyword Research
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Rank Tracking
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Content Analyzer
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              AI Writer
-            </div>
-          </div>
+        {/* Footer Links */}
+        <div className="text-center text-xs text-zinc-500">
+          By continuing, you agree to our{" "}
+          <a href="/terms" className="text-emerald-500 hover:text-emerald-400 underline">
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" className="text-emerald-500 hover:text-emerald-400 underline">
+            Privacy Policy
+          </a>
         </div>
       </CardContent>
     </Card>

@@ -239,7 +239,7 @@ export function calculateHijackScore(video: {
   const { views, likes, comments, daysOld, subscriberCount } = video
   
   // Engagement rate (lower = easier to hijack)
-  const engagementRate = ((likes + comments) / views) * 100
+  const engagementRate = views > 0 ? ((likes + comments) / views) * 100 : 0
   const engagementScore = Math.max(0, 100 - engagementRate * 10)
   
   // Age factor (older = easier to hijack)

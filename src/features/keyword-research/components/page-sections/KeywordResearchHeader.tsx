@@ -76,7 +76,11 @@ export function KeywordResearchHeader({
         toast.success(`Found ${result.data.data.length} keywords for "${query}"`)
       } else {
         // Handle validation or server errors
-        const errorMessage = result?.serverError || result?.validationErrors?.query?.[0] || "Failed to fetch keywords"
+        const validationError =
+          (result as unknown as { validationErrors?: { query?: { _errors?: string[] } } })
+            ?.validationErrors?.query?._errors?.[0]
+
+        const errorMessage = result?.serverError || validationError || "Failed to fetch keywords"
         toast.error(errorMessage)
       }
     } catch (error) {

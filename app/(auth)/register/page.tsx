@@ -1,100 +1,153 @@
 "use client"
 
-import { useState } from "react"
+/**
+ * Register Page - Supabase Authentication
+ * Dedicated sign-up experience
+ */
+
+import { useActionState, useState, useTransition, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Loader2, ArrowRight, Sparkles, Construction, Check } from "lucide-react"
+import { Loader2, Mail, Lock, Chrome, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { signUp, signInWithGoogle } from "../actions/auth"
+import { toast } from "sonner"
 
 const features = [
-  "500 keyword searches/month",
-  "10 rank tracking keywords",
-  "Basic content analysis",
-  "Email support",
+  "Unlimited keyword research",
+  "Rank tracking for 50+ keywords",
+  "AI-powered content analysis",
+  "Priority support",
 ]
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  
+  // Signup form state
+  const [signupState, signupAction] = useActionState(signUp, { success: true })
 
-  const handleDemoLogin = async () => {
-    setIsLoading(true)
-    
-    // Set demo user in localStorage
-    const demoUser = {
-      id: "demo_user_001",
-      email: "demo@blogspy.io",
-      name: "Demo User",
-      plan: "PRO",
-      credits: 999,
+  // Show error toast when action fails
+  useEffect(() => {
+    if (signupState && !signupState.success && signupState.error) {
+      toast.error("Sign up failed", {
+        description: signupState.error,
+      })
     }
-    
-    localStorage.setItem("auth_token", "demo_token_" + Date.now())
-    localStorage.setItem("user", JSON.stringify(demoUser))
-    
-    // Small delay for UX
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    router.push("/dashboard")
-    setIsLoading(false)
+  }, [signupState])
+
+  const handleGoogleSignIn = () => {
+    setIsGoogleLoading(true)
+    startTransition(async () => {
+      const result = await signInWithGoogle()
+      if (!result.success && result.error) {
+        toast.error("Google sign-in failed", {
+          description: result.error,
+        })
+        setIsGoogleLoading(false)
+      }
+    })
   }
 
   return (
-    <Card className="bg-slate-900/50 border-slate-800 backdrop-blur-xl shadow-2xl">
+    <Card className="w-full max-w-md bg-zinc-950 border-zinc-800 shadow-2xl">
       <CardHeader className="space-y-1 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="h-12 w-12 rounded-xl bg-linear-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
-            <Sparkles className="h-6 w-6 text-white" />
-          </div>
-        </div>
-        <CardTitle className="text-2xl font-bold text-white">Get Started Free</CardTitle>
-        <CardDescription className="text-slate-400">
-          Try BlogSpy with a demo account
+        <CardTitle className="text-2xl font-bold text-white">Create Your Account</CardTitle>
+        <CardDescription className="text-zinc-400">
+          Start optimizing your content today
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Coming Soon Notice */}
-        <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
-          <div className="flex items-center gap-3">
-            <Construction className="h-5 w-5 text-amber-400 shrink-0" />
-            <div>
-              <p className="text-amber-400 font-medium text-sm">Registration Coming Soon</p>
-              <p className="text-amber-400/70 text-xs mt-1">
-                Account creation will be available soon. For now, explore all features with our demo account.
-              </p>
+        {/* Signup Form */}
+        <form action={signupAction} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="signup-email" className="text-zinc-300">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Input
+                id="signup-email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                required
+                className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-emerald-500"
+              />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="signup-password" className="text-zinc-300">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Input
+                id="signup-password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                required
+                minLength={6}
+                className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:ring-emerald-500"
+              />
+            </div>
+            <p className="text-xs text-zinc-500">Must be at least 6 characters</p>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </Button>
+        </form>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-zinc-800" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-zinc-950 px-2 text-zinc-500">Or continue with</span>
           </div>
         </div>
 
-        {/* Demo Login Button - Primary Action */}
+        {/* Google OAuth */}
         <Button
           type="button"
-          onClick={handleDemoLogin}
-          disabled={isLoading}
-          className="w-full h-12 bg-linear-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium text-base"
+          variant="outline"
+          onClick={handleGoogleSignIn}
+          disabled={isGoogleLoading || isPending}
+          className="w-full bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800 hover:text-white"
         >
-          {isLoading ? (
+          {isGoogleLoading ? (
             <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Starting Demo...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Connecting to Google...
             </>
           ) : (
             <>
-              <Sparkles className="mr-2 h-5 w-5" />
-              Try Demo Account
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <Chrome className="mr-2 h-4 w-4" />
+              Continue with Google
             </>
           )}
         </Button>
 
-        {/* Free Plan Features */}
-        <div className="pt-4 border-t border-slate-800">
-          <p className="text-sm text-slate-400 mb-3 text-center">What you&apos;ll get with free plan:</p>
+        {/* Features List */}
+        <div className="pt-4 border-t border-zinc-800">
+          <p className="text-sm text-zinc-400 mb-3 text-center">What you&apos;ll get:</p>
           <ul className="space-y-2">
             {features.map((feature) => (
-              <li key={feature} className="flex items-center gap-2 text-sm text-slate-300">
+              <li key={feature} className="flex items-center gap-2 text-sm text-zinc-300">
                 <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                 {feature}
               </li>
@@ -102,15 +155,28 @@ export default function RegisterPage() {
           </ul>
         </div>
 
-        {/* Already have account */}
-        <div className="text-center text-sm text-slate-400 pt-4 border-t border-slate-800">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-          >
-            Sign in
-          </Link>
+        {/* Footer Links */}
+        <div className="space-y-3">
+          <div className="text-center text-xs text-zinc-500">
+            By continuing, you agree to our{" "}
+            <a href="/terms" className="text-emerald-500 hover:text-emerald-400 underline">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="text-emerald-500 hover:text-emerald-400 underline">
+              Privacy Policy
+            </a>
+          </div>
+
+          <div className="text-center text-sm text-zinc-400 pt-2 border-t border-zinc-800">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
       </CardContent>
     </Card>

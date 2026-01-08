@@ -18,6 +18,7 @@ import { CommerceSummaryCards, CommerceKeywordCard, CommerceFilterBar, CommerceS
 import { AddKeywordDialog } from "./components/AddKeywordDialog"
 import { useCommerceTracker } from "./hooks"
 import { COMMERCE_PLATFORM_CONFIG } from "./constants"
+import { STACK_SPACING } from "@/src/styles"
 
 export function CommerceTrackerContent() {
   const {
@@ -112,7 +113,7 @@ export function CommerceTrackerContent() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className={STACK_SPACING.default}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-2.5 sm:gap-3 md:gap-3.5">

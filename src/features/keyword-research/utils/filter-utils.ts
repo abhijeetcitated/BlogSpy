@@ -81,6 +81,15 @@ function normalize(str: string): string {
   return str.toLowerCase().trim()
 }
 
+function normalizeSerpFeatureValue(feature: string): string {
+  const value = normalize(feature)
+
+  if (value === "snippet") return "featured_snippet"
+  if (value === "video_carousel") return "video"
+
+  return value
+}
+
 /**
  * Check if value is within range (inclusive)
  * Handles null/undefined gracefully
@@ -291,22 +300,32 @@ export function filterByWeakSpot(
   if (normalizedToggle === "all") return keywords
 
   return keywords.filter(k => {
-    const hasWeakSpot = k.weakSpot && k.weakSpot.type !== null
+    // New weakSpots object: { reddit: number | null, quora: number | null, pinterest: number | null }
+    const weakSpots = k.weakSpots
+    const hasAnyWeakSpot = weakSpots && (
+      weakSpots.reddit !== null ||
+      weakSpots.quora !== null ||
+      weakSpots.pinterest !== null
+    )
 
     if (normalizedToggle === "without") {
-      // Show only keywords WITHOUT weak spots
-      return !hasWeakSpot
+      // Show only keywords WITHOUT any weak spots
+      return !hasAnyWeakSpot
     }
 
     if (normalizedToggle === "with") {
       // Show only keywords WITH weak spots
-      if (!hasWeakSpot) return false
+      if (!hasAnyWeakSpot) return false
       
       // If specific types selected, filter by type
       if (weakSpotTypes.length > 0) {
-        return weakSpotTypes.some(type => 
-          normalize(k.weakSpot.type || "") === normalize(type)
-        )
+        return weakSpotTypes.some(type => {
+          const normalizedType = normalize(type)
+          if (normalizedType === "reddit") return weakSpots.reddit !== null
+          if (normalizedType === "quora") return weakSpots.quora !== null
+          if (normalizedType === "pinterest") return weakSpots.pinterest !== null
+          return false
+        })
       }
       
       // Any weak spot type
@@ -329,9 +348,16 @@ export function filterBySerpFeatures(
 ): Keyword[] {
   if (!selectedFeatures || selectedFeatures.length === 0) return keywords
 
+  const normalizedSelected = selectedFeatures.map((feature) =>
+    normalizeSerpFeatureValue(String(feature))
+  )
+
   return keywords.filter(k => {
     if (!k.serpFeatures || k.serpFeatures.length === 0) return false
-    return selectedFeatures.some(feature => k.serpFeatures.includes(feature))
+    const normalizedFeatures = k.serpFeatures.map((feature) =>
+      normalizeSerpFeatureValue(String(feature))
+    )
+    return normalizedSelected.some((feature) => normalizedFeatures.includes(feature))
   })
 }
 
@@ -461,10 +487,11 @@ export function filterByAIO(
 
   return keywords.filter(k => {
     // Check if keyword has AIO/AI Overview
-    // Field can be: has_aio, hasAIO, or check serpFeatures
-    const hasAIO = (k as Keyword & { has_aio?: boolean; hasAIO?: boolean }).has_aio 
+    // Field can be: hasAio, has_aio, hasAIO, or check serpFeatures
+    const hasAIO = (k as Keyword & { hasAio?: boolean }).hasAio
+      || (k as Keyword & { has_aio?: boolean; hasAIO?: boolean }).has_aio
       || (k as Keyword & { hasAIO?: boolean }).hasAIO
-      || k.serpFeatures?.includes("snippet" as SERPFeature)
+      || k.serpFeatures?.includes("ai_overview" as SERPFeature)
     
     return hasAIO === true
   })

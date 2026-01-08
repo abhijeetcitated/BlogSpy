@@ -117,8 +117,8 @@ export function KeywordDetailModal({
               <h4 className="text-sm font-medium text-muted-foreground">SERP Features</h4>
               <div className="flex flex-wrap gap-2">
                 {keyword.serpFeatures.length > 0 ? (
-                  keyword.serpFeatures.map((feature, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
+                  keyword.serpFeatures.map((feature) => (
+                    <div key={feature} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border">
                       <SerpFeatureIcon feature={feature} />
                       <span className="text-xs text-foreground capitalize">{feature.replace("_", " ")}</span>
                     </div>

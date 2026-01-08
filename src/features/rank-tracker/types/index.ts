@@ -2,7 +2,7 @@
 // RANK TRACKER - Type Definitions
 // ============================================
 
-import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+import type { SortDirection as SharedSortDirection } from "@/types/shared"
 
 // Re-export shared types
 export type SortDirection = SharedSortDirection

@@ -1,84 +1,137 @@
-// ============================================
-// 🔐 DATA ACCESS LAYER - User Module
-// ============================================
-// Secure server-only access to user data.
-// Uses React Taint API to prevent sensitive data leaks.
-// 
-// RULE: Raw DB rows are NEVER returned directly.
-//       Always map to safe DTOs.
-// ============================================
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 🔐 DATA ACCESS LAYER (DAL) - User Operations
+ * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 
+ * React 19 Taint API Implementation:
+ * - Prevents sensitive data from leaking to client components
+ * - Uses experimental_taintObjectReference for entire objects
+ * - Uses experimental_taintUniqueValue for specific fields
+ * - Returns clean DTOs (Data Transfer Objects)
+ * 
+ * @see https://react.dev/reference/react/experimental_taintObjectReference
+ * @see https://react.dev/reference/react/experimental_taintUniqueValue
+ */
 
 import "server-only"
-import { 
-  experimental_taintObjectReference, 
-  experimental_taintUniqueValue 
-} from "react"
-import { createServerClient } from "@/src/lib/supabase/server"
 
-// ============================================
-// SAFE DTOs (Data Transfer Objects)
-// ============================================
+import { experimental_taintObjectReference, experimental_taintUniqueValue } from "react"
+import { createClient } from "@/lib/supabase/server"
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 /**
- * Safe user DTO - can be passed to Client Components
+ * RAW Database User (TAINTED - Never expose to client)
+ */
+interface RawUser {
+  id: string
+  email: string
+  email_verified: boolean
+  phone: string | null
+  created_at: string
+  updated_at: string
+  last_sign_in_at: string | null
+  role: string
+  app_metadata: Record<string, unknown>
+  user_metadata: Record<string, unknown>
+  // Sensitive fields
+  encrypted_password?: string
+  confirmation_token?: string
+  recovery_token?: string
+  email_change_token_new?: string
+  phone_change_token?: string
+}
+
+/**
+ * CLEAN User DTO (Safe to pass to client)
  */
 export interface UserDTO {
   id: string
   email: string
   name: string | null
-  avatarUrl: string | null
+  avatar: string | null
   role: "user" | "admin" | "moderator"
-  createdAt: string // ISO string for serialization
+  createdAt: string
+  emailVerified: boolean
 }
 
 /**
- * Safe user profile DTO with billing info
+ * User Profile (Extended info, safe for client)
  */
-export interface UserProfileDTO extends UserDTO {
-  plan: "free" | "starter" | "professional" | "enterprise"
-  creditsTotal: number
-  creditsUsed: number
-  creditsRemaining: number
-}
-
-// ============================================
-// INTERNAL TYPES (Never exposed to client)
-// ============================================
-
-/**
- * @internal - Sensitive user data (all fields tainted)
- */
-interface SensitiveUserData {
-  userId: string
+export interface UserProfile extends UserDTO {
+  plan: "free" | "pro" | "enterprise"
+  credits: number
   stripeCustomerId: string | null
-  stripeSubscriptionId: string | null
-  accessToken: string | null
-  refreshToken: string | null
+  subscriptionStatus: string | null
 }
 
-// ============================================
-// TAINT HELPERS
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// HELPER: Taint Raw User Object
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-/**
- * Taint sensitive string values
- */
-function taintValue(value: string | null, message: string, owner: object): void {
-  if (value) {
-    experimental_taintUniqueValue(message, owner, value)
+function taintUser(user: RawUser): void {
+  // Taint the entire object to prevent accidental leakage
+  experimental_taintObjectReference(
+    "Do not pass raw user objects to the client. Use UserDTO instead.",
+    user
+  )
+
+  // Taint specific sensitive values
+  experimental_taintUniqueValue(
+    "Do not pass user email to the client without sanitization.",
+    user,
+    user.email
+  )
+
+  if (user.phone) {
+    experimental_taintUniqueValue(
+      "Do not pass user phone to the client.",
+      user,
+      user.phone
+    )
   }
 }
 
-// ============================================
-// PUBLIC API: Safe User Access
-// ============================================
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// HELPER: Convert Raw User to Safe DTO
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+function toUserDTO(rawUser: RawUser): UserDTO {
+  return {
+    id: rawUser.id,
+    email: rawUser.email.replace(/(.{2}).*(@.*)/, "$1***$2"), // Mask email: ab***@domain.com
+    name: (rawUser.user_metadata?.name as string) || null,
+    avatar: (rawUser.user_metadata?.avatar_url as string) || null,
+    role: (rawUser.role as UserDTO["role"]) || "user",
+    createdAt: rawUser.created_at,
+    emailVerified: rawUser.email_verified,
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// DAL FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 /**
- * Get the current authenticated user (safe DTO)
- * ✅ Safe to pass to Client Components
+ * Get current authenticated user (returns safe DTO)
+ * 
+ * @returns {Promise<UserDTO | null>} Safe user data or null if not authenticated
+ * 
+ * @example
+ * ```tsx
+ * import { getCurrentUser } from "@/lib/dal/user"
+ * 
+ * export async function UserProfile() {
+ *   const user = await getCurrentUser()
+ *   if (!user) return <div>Not authenticated</div>
+ *   return <div>Hello {user.name}</div>
+ * }
+ * ```
  */
 export async function getCurrentUser(): Promise<UserDTO | null> {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
   
@@ -86,150 +139,95 @@ export async function getCurrentUser(): Promise<UserDTO | null> {
     return null
   }
 
-  // Map Supabase auth user to safe DTO
-  return {
-    id: user.id,
-    email: user.email || "",
-    name: user.user_metadata?.name || user.user_metadata?.full_name || null,
-    avatarUrl: user.user_metadata?.avatar_url || null,
-    role: (user.user_metadata?.role as UserDTO["role"]) || "user",
-    createdAt: user.created_at,
-  }
+  // Cast to RawUser and taint it
+  const rawUser = user as unknown as RawUser
+  taintUser(rawUser)
+
+  // Return clean DTO
+  return toUserDTO(rawUser)
 }
 
 /**
- * Get user profile with billing info (safe DTO)
- * ✅ Safe to pass to Client Components
+ * Get user by ID (admin only, returns safe DTO)
+ * 
+ * @param {string} userId - User ID to fetch
+ * @returns {Promise<UserDTO | null>} Safe user data or null if not found
  */
-export async function getUserProfile(userId: string): Promise<UserProfileDTO | null> {
-  const supabase = await createServerClient()
+export async function getUserById(userId: string): Promise<UserDTO | null> {
+  const supabase = await createClient()
   
-  // Get user from auth
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  // This would typically fetch from your users table
+  // For now, we'll use the auth user
+  const { data: { user }, error } = await supabase.auth.getUser()
   
-  if (authError || !user || user.id !== userId) {
+  if (error || !user || user.id !== userId) {
     return null
   }
 
-  // Get credits from user_credits table
-  const { data: credits } = await supabase
-    .from("user_credits")
-    .select("credits_total, credits_used, plan")
-    .eq("user_id", userId)
+  const rawUser = user as unknown as RawUser
+  taintUser(rawUser)
+
+  return toUserDTO(rawUser)
+}
+
+/**
+ * Get user profile with extended information (credits, subscription, etc.)
+ * 
+ * @returns {Promise<UserProfile | null>} Extended user profile or null
+ */
+export async function getUserProfile(): Promise<UserProfile | null> {
+  const supabase = await createClient()
+  
+  const { data: { user }, error } = await supabase.auth.getUser()
+  
+  if (error || !user) {
+    return null
+  }
+
+  const rawUser = user as unknown as RawUser
+  taintUser(rawUser)
+
+  // Fetch additional profile data from database
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("plan, credits, stripe_customer_id, subscription_status")
+    .eq("user_id", user.id)
     .single()
 
-  const creditsTotal = credits?.credits_total ?? 100
-  const creditsUsed = credits?.credits_used ?? 0
-  const plan = credits?.plan?.toLowerCase() as UserProfileDTO["plan"] ?? "free"
+  const baseDTO = toUserDTO(rawUser)
 
   return {
-    id: user.id,
-    email: user.email || "",
-    name: user.user_metadata?.name || user.user_metadata?.full_name || null,
-    avatarUrl: user.user_metadata?.avatar_url || null,
-    role: (user.user_metadata?.role as UserDTO["role"]) || "user",
-    createdAt: user.created_at,
-    plan,
-    creditsTotal,
-    creditsUsed,
-    creditsRemaining: Math.max(0, creditsTotal - creditsUsed),
+    ...baseDTO,
+    plan: (profile?.plan as UserProfile["plan"]) || "free",
+    credits: profile?.credits || 0,
+    stripeCustomerId: profile?.stripe_customer_id || null,
+    subscriptionStatus: profile?.subscription_status || null,
   }
 }
 
-// ============================================
-// INTERNAL API: Sensitive Data Access
-// ============================================
-
 /**
- * Get user with sensitive billing data for server-side operations
- * ⚠️ ALL SENSITIVE FIELDS ARE TAINTED
- * ❌ Do NOT pass to Client Components (React will throw)
+ * Check if user has specific role
  * 
- * @internal Use only for billing operations, Stripe webhooks, etc.
+ * @param {string} requiredRole - Role to check
+ * @returns {Promise<boolean>} True if user has the role
  */
-export async function _getUserWithSensitiveData(
-  userId: string
-): Promise<SensitiveUserData | null> {
-  const supabase = await createServerClient()
-  
-  // Get session for tokens
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  // Get Stripe IDs from user_credits
-  const { data: credits } = await supabase
-    .from("user_credits")
-    .select("stripe_customer_id, stripe_subscription_id")
-    .eq("user_id", userId)
-    .single()
-
-  // Create the sensitive data object
-  const sensitiveData: SensitiveUserData = {
-    userId,
-    stripeCustomerId: credits?.stripe_customer_id || null,
-    stripeSubscriptionId: credits?.stripe_subscription_id || null,
-    accessToken: session?.access_token || null,
-    refreshToken: session?.refresh_token || null,
-  }
-
-  // TAINT the entire object reference
-  experimental_taintObjectReference(
-    "🚨 SECURITY: This object contains sensitive user data and must not be passed to client components.",
-    sensitiveData
-  )
-
-  // TAINT each sensitive field individually
-  taintValue(
-    sensitiveData.stripeCustomerId,
-    "🚨 SECURITY: Stripe customer IDs must never be sent to the client.",
-    sensitiveData
-  )
-  taintValue(
-    sensitiveData.stripeSubscriptionId,
-    "🚨 SECURITY: Stripe subscription IDs must never be sent to the client.",
-    sensitiveData
-  )
-  taintValue(
-    sensitiveData.accessToken,
-    "🚨 SECURITY: Access tokens must never be sent to the client.",
-    sensitiveData
-  )
-  taintValue(
-    sensitiveData.refreshToken,
-    "🚨 SECURITY: Refresh tokens must never be sent to the client.",
-    sensitiveData
-  )
-
-  return sensitiveData
-}
-
-// ============================================
-// AUTH HELPERS
-// ============================================
-
-/**
- * Require authentication - throws if not authenticated
- * ✅ Returns safe UserDTO
- */
-export async function requireAuth(): Promise<UserDTO> {
+export async function hasRole(requiredRole: "admin" | "moderator" | "user"): Promise<boolean> {
   const user = await getCurrentUser()
-  
-  if (!user) {
-    throw new Error("Unauthorized")
-  }
-  
-  return user
+  if (!user) return false
+  return user.role === requiredRole || user.role === "admin" // Admin has all roles
 }
 
 /**
- * Require admin role - throws if not admin
- * ✅ Returns safe UserDTO
+ * Check if user is admin
+ * 
+ * @returns {Promise<boolean>} True if user is admin
  */
-export async function requireAdmin(): Promise<UserDTO> {
-  const user = await requireAuth()
-  
-  if (user.role !== "admin") {
-    throw new Error("Admin access required")
-  }
-  
-  return user
+export async function isAdmin(): Promise<boolean> {
+  return hasRole("admin")
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// EXPORTS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+// Types are already exported via interface declarations above

@@ -148,9 +148,9 @@ export function ClusterInspector({ cluster, isOpen, onClose, onOpen }: ClusterIn
             </Badge>
           </div>
           <div className="space-y-1 sm:space-y-1.5">
-            {cluster.keywords.map((kw, idx) => (
+            {cluster.keywords.map((kw) => (
               <div
-                key={idx}
+                key={kw.keyword}
                 className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors group border border-zinc-200 dark:border-zinc-700"
               >
                 <div className="flex-1 min-w-0">

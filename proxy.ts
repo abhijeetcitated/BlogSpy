@@ -1,17 +1,55 @@
 /**
- * Next.js Proxy (Route Protection)
+ * Next.js Proxy (Route Protection + Security)
  * ============================================
  * Handles:
  * - Route protection (auth required for dashboard)
  * - Redirect logic (logged in users can't access auth pages)
+ * - Security headers (XSS, CSP, HSTS)
+ * - CORS for API routes
  * - API rate limiting headers
  * 
- * NOTE: In production, integrate with Clerk middleware
+ * @version 2.0.0
  * ============================================
  */
 
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+
+// ============================================
+// SECURITY HEADERS
+// ============================================
+
+const SECURITY_HEADERS: Record<string, string> = {
+  "X-XSS-Protection": "1; mode=block",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+}
+
+// Content Security Policy (relaxed for development, strict in production)
+const CSP_PRODUCTION = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://challenges.cloudflare.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://api.stripe.com https://*.supabase.co https://*.googleapis.com wss://*.supabase.co",
+  "frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join("; ")
+
+// ============================================
+// CORS CONFIGURATION
+// ============================================
+
+const ALLOWED_ORIGINS = [
+  process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  "https://blogspy.ai",
+  "https://www.blogspy.ai",
+  "https://app.blogspy.ai",
+]
 
 // ============================================
 // ROUTE CONFIGURATION
@@ -86,6 +124,30 @@ function isStaticAsset(pathname: string): boolean {
 }
 
 // ============================================
+// SECURITY HELPERS
+// ============================================
+
+function applySecurityHeaders(response: NextResponse): void {
+  Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+    response.headers.set(key, value)
+  })
+  
+  // Apply CSP in production
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set("Content-Security-Policy", CSP_PRODUCTION)
+    response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+  }
+}
+
+function applyCorsHeaders(request: NextRequest, response: NextResponse): void {
+  const origin = request.headers.get("origin")
+  if (origin && ALLOWED_ORIGINS.some(o => origin.includes(o.replace("https://", "")))) {
+    response.headers.set("Access-Control-Allow-Origin", origin)
+    response.headers.set("Access-Control-Allow-Credentials", "true")
+  }
+}
+
+// ============================================
 // PROXY (Next.js 16+)
 // ============================================
 
@@ -98,6 +160,22 @@ export default function proxy(request: NextRequest) {
   }
 
   // ============================================
+  // HANDLE CORS PREFLIGHT FOR API ROUTES
+  // ============================================
+  if (isApiRoute(pathname) && request.method === "OPTIONS") {
+    const origin = request.headers.get("origin")
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": origin && ALLOWED_ORIGINS.some(o => origin.includes(o.replace("https://", ""))) ? origin : "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Max-Age": "86400",
+      },
+    })
+  }
+
+  // ============================================
   // DEMO MODE: Allow all access during development
   // Remove this block when implementing real auth
   // ============================================
@@ -105,10 +183,12 @@ export default function proxy(request: NextRequest) {
   
   if (isDemoMode) {
     const response = NextResponse.next()
-    // Add security headers even in demo mode
-    response.headers.set("X-Frame-Options", "DENY")
-    response.headers.set("X-Content-Type-Options", "nosniff")
-    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
+    // Apply all security headers
+    applySecurityHeaders(response)
+    // Add CORS for API routes
+    if (isApiRoute(pathname)) {
+      applyCorsHeaders(request, response)
+    }
     return response
   }
 
@@ -124,15 +204,13 @@ export default function proxy(request: NextRequest) {
   // ============================================
   // SECURITY HEADERS (for all routes)
   // ============================================
-  response.headers.set("X-Frame-Options", "DENY")
-  response.headers.set("X-Content-Type-Options", "nosniff")
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
-  response.headers.set("X-XSS-Protection", "1; mode=block")
+  applySecurityHeaders(response)
 
   // ============================================
-  // API RATE LIMITING HEADERS
+  // API ROUTES - CORS + RATE LIMITING
   // ============================================
   if (isApiRoute(pathname)) {
+    applyCorsHeaders(request, response)
     // Add rate limit headers (actual limiting done in API routes)
     response.headers.set("X-RateLimit-Limit", "100")
     response.headers.set("X-RateLimit-Remaining", "99")

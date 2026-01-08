@@ -15,6 +15,7 @@ import {
 
 interface GeoColumnProps {
   geoScore?: number
+  hasAio?: boolean
   country?: string
   countryCode?: string
   showFlag?: boolean
@@ -46,6 +47,7 @@ const getScoreLabel = (score: number): string => {
 
 export function GeoColumn({
   geoScore,
+  hasAio,
   country,
   countryCode,
   showFlag = true,
@@ -61,7 +63,7 @@ export function GeoColumn({
             variant="outline"
             className={cn("h-6 gap-1", getScoreColor(geoScore), className)}
           >
-            <Bot className="h-3 w-3" />
+            {hasAio && <Bot className="h-3 w-3" />}
             <span className="text-xs tabular-nums">{geoScore}</span>
           </Badge>
         </TooltipTrigger>

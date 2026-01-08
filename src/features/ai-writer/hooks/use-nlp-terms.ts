@@ -1,205 +1,157 @@
-// ============================================
-// AI WRITER - NLP Terms Hook
-// ============================================
-// Feature #1: Custom hook for NLP term management
-// Production-ready state management with real-time analysis
-// ============================================
+"use client"
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import type { 
-  NLPTerm, 
-  NLPOptimizationScore, 
-  NLPConfig,
-  NLPAnalysisResult 
-} from '../types/nlp-terms.types'
-import {
-  analyzeNLPTerms,
-  calculateNLPScore,
-  performNLPAnalysis,
-  DEFAULT_NLP_CONFIG
-} from '../utils/nlp-analysis'
-import { getMockNLPTermsByKeyword, getInitialNLPScore } from '../__mocks__/nlp-terms.mock'
+import { useCallback, useMemo } from 'react'
 
-interface UseNLPTermsOptions {
-  keyword: string
+export type NLPTerm = {
+  term: string
+  count: number
+  score: number
+}
+
+export type UseNLPTermsOptions = {
   content: string
-  config?: Partial<NLPConfig>
-  debounceMs?: number
-  enabled?: boolean
+  maxTerms?: number
+  minTermLength?: number
+  stopwords?: Set<string>
 }
 
-interface UseNLPTermsReturn {
-  // State
+export type UseNLPTermsReturn = {
   terms: NLPTerm[]
-  score: NLPOptimizationScore
-  isAnalyzing: boolean
-  lastAnalyzed: number | null
-  
-  // Actions
-  refreshAnalysis: () => void
-  setTerms: (terms: NLPTerm[]) => void
-  addCustomTerm: (term: Omit<NLPTerm, 'id' | 'currentCount' | 'status'>) => void
-  removeTerm: (termId: string) => void
-  updateTermTarget: (termId: string, targetCount: number, maxCount: number) => void
-  
-  // Analysis result
-  analysisResult: NLPAnalysisResult | null
+  isLoading: boolean
+  error: string | null
+  refresh: () => void
 }
 
-/**
- * Custom hook for NLP term management and analysis
- */
-export function useNLPTerms({
-  keyword,
-  content,
-  config = {},
-  debounceMs = 500,
-  enabled = true
-}: UseNLPTermsOptions): UseNLPTermsReturn {
-  // Merge config with defaults
-  const mergedConfig = useMemo(() => ({
-    ...DEFAULT_NLP_CONFIG,
-    ...config
-  }), [config])
-  
-  // State
-  const [terms, setTerms] = useState<NLPTerm[]>([])
-  const [score, setScore] = useState<NLPOptimizationScore>(getInitialNLPScore())
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [lastAnalyzed, setLastAnalyzed] = useState<number | null>(null)
-  const [analysisResult, setAnalysisResult] = useState<NLPAnalysisResult | null>(null)
-  
-  // Refs for debouncing
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const previousKeywordRef = useRef<string>('')
-  
-  // Load terms when keyword changes
-  useEffect(() => {
-    if (!enabled || !keyword) return
-    
-    // Only reload terms if keyword actually changed
-    if (keyword !== previousKeywordRef.current) {
-      previousKeywordRef.current = keyword
-      
-      // In production, this would be an API call
-      const newTerms = getMockNLPTermsByKeyword(keyword)
-      setTerms(newTerms)
-      
-      // Reset analysis
-      setScore(getInitialNLPScore())
-      setAnalysisResult(null)
+const DEFAULT_STOPWORDS = new Set<string>([
+  'a',
+  'an',
+  'and',
+  'are',
+  'as',
+  'at',
+  'be',
+  'but',
+  'by',
+  'for',
+  'from',
+  'has',
+  'have',
+  'he',
+  'her',
+  'his',
+  'i',
+  'in',
+  'is',
+  'it',
+  'its',
+  'me',
+  'my',
+  'not',
+  'of',
+  'on',
+  'or',
+  'our',
+  'she',
+  'that',
+  'the',
+  'their',
+  'them',
+  'there',
+  'they',
+  'this',
+  'to',
+  'was',
+  'we',
+  'were',
+  'what',
+  'when',
+  'where',
+  'which',
+  'who',
+  'will',
+  'with',
+  'you',
+  'your'
+])
+
+function tokenize(text: string): string[] {
+  // Cheap tokenizer: ASCII-ish words; lowercased.
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter(Boolean)
+}
+
+function scoreTerm(count: number, maxCount: number): number {
+  if (maxCount <= 0) return 0
+  // Normalize 0..1 with a small bias toward higher frequency.
+  const v = count / maxCount
+  return Math.min(1, Math.max(0, Math.pow(v, 0.75)))
+}
+
+export function useNLPTerms(options: UseNLPTermsOptions): UseNLPTermsReturn {
+  const { content, maxTerms = 25, minTermLength = 3, stopwords } = options
+
+  const terms = useMemo<NLPTerm[]>(() => {
+    const sw = stopwords ?? DEFAULT_STOPWORDS
+    const tokens = tokenize(content)
+
+    const freq = new Map<string, number>()
+    for (const t of tokens) {
+      if (t.length < minTermLength) continue
+      if (sw.has(t)) continue
+      freq.set(t, (freq.get(t) ?? 0) + 1)
     }
-  }, [keyword, enabled])
-  
-  // Analyze content when it changes (debounced)
-  useEffect(() => {
-    if (!enabled || terms.length === 0) return
-    
-    // Clear existing timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current)
+
+    let maxCount = 0
+    for (const c of freq.values()) maxCount = Math.max(maxCount, c)
+
+    const scored: NLPTerm[] = []
+    for (const [term, count] of freq.entries()) {
+      scored.push({ term, count, score: scoreTerm(count, maxCount) })
     }
-    
-    // Set new timer
-    debounceTimerRef.current = setTimeout(() => {
-      runAnalysis()
-    }, debounceMs)
-    
-    // Cleanup
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-      }
-    }
-  }, [content, terms, enabled, debounceMs])
-  
-  /**
-   * Run NLP analysis on current content
-   */
-  const runAnalysis = useCallback(() => {
-    if (terms.length === 0) return
-    
-    setIsAnalyzing(true)
-    
-    // Simulate async analysis (in production, could be actual API call)
-    requestAnimationFrame(() => {
-      try {
-        const result = performNLPAnalysis(content, terms, mergedConfig)
-        
-        setTerms(result.terms)
-        setScore(result.score)
-        setAnalysisResult(result)
-        setLastAnalyzed(Date.now())
-      } catch (error) {
-        console.error('NLP analysis error:', error)
-      } finally {
-        setIsAnalyzing(false)
-      }
-    })
-  }, [content, terms, mergedConfig])
-  
-  /**
-   * Manual refresh analysis
-   */
-  const refreshAnalysis = useCallback(() => {
-    runAnalysis()
-  }, [runAnalysis])
-  
-  /**
-   * Add a custom term
-   */
-  const addCustomTerm = useCallback((
-    termData: Omit<NLPTerm, 'id' | 'currentCount' | 'status'>
-  ) => {
-    const newTerm: NLPTerm = {
-      ...termData,
-      id: `custom-${Date.now()}`,
-      currentCount: 0,
-      status: 'missing'
-    }
-    
-    setTerms(prev => [...prev, newTerm])
+
+    scored.sort((a, b) => b.count - a.count || a.term.localeCompare(b.term))
+    return scored.slice(0, Math.max(0, maxTerms))
+  }, [content, maxTerms, minTermLength, stopwords])
+
+  const refresh = useCallback(() => {
+    // Pure derivation; no fetch. Kept for API compatibility.
   }, [])
-  
-  /**
-   * Remove a term
-   */
-  const removeTerm = useCallback((termId: string) => {
-    setTerms(prev => prev.filter(t => t.id !== termId))
-  }, [])
-  
-  /**
-   * Update term target counts
-   */
-  const updateTermTarget = useCallback((
-    termId: string, 
-    targetCount: number, 
-    maxCount: number
-  ) => {
-    setTerms(prev => prev.map(t => 
-      t.id === termId 
-        ? { ...t, targetCount, maxCount }
-        : t
-    ))
-  }, [])
-  
+
   return {
     terms,
-    score,
-    isAnalyzing,
-    lastAnalyzed,
-    refreshAnalysis,
-    setTerms,
-    addCustomTerm,
-    removeTerm,
-    updateTermTarget,
-    analysisResult
+    isLoading: false,
+    error: null,
+    refresh
   }
 }
 
-/**
- * Simple hook for NLP score display only
- */
-export function useNLPScore(terms: NLPTerm[]): NLPOptimizationScore {
-  return useMemo(() => calculateNLPScore(terms), [terms])
+export type UseNLPScoreOptions = {
+  content: string
+}
+
+export type NLPScore = {
+  score: number
+  label: 'poor' | 'ok' | 'good'
+}
+
+export function useNLPScore(options: UseNLPScoreOptions): NLPScore {
+  const { content } = options
+
+  const { score, label } = useMemo<NLPScore>(() => {
+    // Heuristic: penalize extremely low unique token counts.
+    const tokens = tokenize(content)
+    const unique = new Set(tokens.filter((t) => t.length >= 3))
+    const density = unique.size / Math.max(1, tokens.length)
+
+    // Map density into 0..100-ish score.
+    const raw = Math.round(Math.min(100, Math.max(0, density * 300)))
+    const lbl: NLPScore['label'] = raw < 35 ? 'poor' : raw < 70 ? 'ok' : 'good'
+    return { score: raw, label: lbl }
+  }, [content])
+
+  return { score, label }
 }

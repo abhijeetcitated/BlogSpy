@@ -8,11 +8,11 @@ const nextConfig: NextConfig = {
   // Enable React Strict Mode for better debugging
   reactStrictMode: true,
 
-  // ============================================
-  // REACT COMPILER (Next.js 16.1+ - 2026 Enterprise)
-  // ============================================
-  // Enables automatic memoization - no more useMemo/useCallback needed
+  // React Compiler (React 19) - automatic memoization
   reactCompiler: true,
+
+  // Partial Prerendering (Instant Shell)
+  cacheComponents: true,
 
   // ============================================
   // TURBOPACK (Next.js 16 default)
@@ -63,7 +63,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "X-Frame-Options",
-            value: "SAMEORIGIN",
+            value: "DENY",
           },
           {
             key: "X-Content-Type-Options",
@@ -122,21 +122,19 @@ const nextConfig: NextConfig = {
       allowedOrigins: [
         "localhost:3000",
         "blogspy.com",
-        "www.blogspy.com",
       ],
     },
   },
 
-  // NOTE: cacheComponents (PPR) disabled - incompatible with
-  // route segment config `dynamic = 'force-dynamic'` used by cron jobs.
-  // Re-enable once cron routes are migrated to use 'use cache' directive.
+  // NOTE: PPR is enabled; ensure cron routes avoid `dynamic = "force-dynamic"`
+  // where an instant shell is not desired.
 
   // ============================================
   // LOGGING (Development)
   // ============================================
   logging: {
     fetches: {
-      fullUrl: true,
+      fullUrl: process.env.NODE_ENV === "development",
     },
   },
 

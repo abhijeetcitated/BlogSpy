@@ -1,3 +1,5 @@
+"use client"
+
 import { Suspense } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar, TopNav } from "@/components/layout"

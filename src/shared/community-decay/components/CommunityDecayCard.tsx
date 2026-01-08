@@ -151,8 +151,8 @@ export function CommunityDecayCard({
               Community Sources in SERP
             </h4>
             <div className="space-y-2">
-              {communitySources.map((source, i) => (
-                <CommunitySourceCard key={i} source={source} />
+              {communitySources.map((source) => (
+                <CommunitySourceCard key={source.url || source.platform} source={source} />
               ))}
             </div>
           </div>

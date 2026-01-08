@@ -11,6 +11,20 @@ export * from "./project.types"
 // Export from content-brief.types
 export * from "./content-brief.types"
 
+// Export keyword types (used by topic-cluster-content.tsx)
+// Note: SerpFeature is already exported from project.types, so we use selective export
+export type {
+  BusinessPotential,
+  SortField,
+  SortDirection,
+  KeywordStatus,
+  Keyword,
+  Project,
+  ImportSource,
+  IntentConfig,
+  SerpFeatureConfig,
+} from "./keyword-types"
+
 // Selective exports from keyword-pool.types to avoid conflicts
 export type {
   KeywordData,

@@ -29,9 +29,9 @@ export function RelatedDataLists({ searchQuery }: RelatedDataListsProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-0.5 sm:space-y-1 px-2 sm:px-6 pb-3 sm:pb-6">
-          {relatedTopics.map((item, i) => (
+          {relatedTopics.map((item) => (
             <Link
-              key={i}
+              key={item.topic}
               href={`/dashboard/research/overview/${encodeURIComponent(item.topic)}`}
               className="flex items-center justify-between py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg cursor-pointer hover:bg-muted active:bg-muted transition-colors group"
             >
@@ -75,9 +75,9 @@ export function RelatedDataLists({ searchQuery }: RelatedDataListsProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-0.5 sm:space-y-1 px-2 sm:px-6 pb-3 sm:pb-6">
-          {breakoutQueries.map((item, i) => (
+          {breakoutQueries.map((item) => (
             <Link
-              key={i}
+              key={item.query}
               href={`/dashboard/research/overview/${encodeURIComponent(item.query)}`}
               className="flex items-center justify-between py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg cursor-pointer hover:bg-muted active:bg-muted transition-colors group"
             >

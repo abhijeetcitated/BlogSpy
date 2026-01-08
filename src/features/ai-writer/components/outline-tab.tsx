@@ -19,24 +19,24 @@ export function OutlineTab({ editorStats, title }: OutlineTabProps) {
         <div className="space-y-2 text-sm">
           {/* Dynamically generated from editor content */}
           {editorStats.headingCount.h1 > 0 && (
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/50">
               <span className="text-emerald-400 font-mono text-xs">H1</span>
               <span className="text-foreground truncate">{title}</span>
             </div>
           )}
           {editorStats.headingCount.h2 > 0 && (
             <>
-              <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 ml-4">
+              <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800/30 ml-4">
                 <span className="text-cyan-400 font-mono text-xs">H2</span>
                 <span className="text-muted-foreground">What Are AI Agents?</span>
               </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 ml-4">
+              <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800/30 ml-4">
                 <span className="text-cyan-400 font-mono text-xs">H2</span>
                 <span className="text-muted-foreground">Key Use Cases</span>
               </div>
             </>
           )}
-          <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/30 ml-4 opacity-50 cursor-pointer">
+          <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800/30 ml-4 opacity-50 cursor-pointer">
             <span className="text-yellow-400 font-mono text-xs">+</span>
             <span className="text-muted-foreground italic">Add section...</span>
           </div>

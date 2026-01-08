@@ -152,13 +152,21 @@ export function KeywordDetailsModal({
             </div>
           )}
 
-          {/* Weak Spot */}
-          {keyword.weakSpot.type && (
+          {/* Weak Spots */}
+          {(keyword.weakSpots.reddit !== null || keyword.weakSpots.quora !== null || keyword.weakSpots.pinterest !== null) && (
             <div className="space-y-2">
-              <p className="text-sm font-medium">Weak Spot Detected</p>
-              <Badge variant="destructive">
-                {keyword.weakSpot.type} at position #{keyword.weakSpot.rank}
-              </Badge>
+              <p className="text-sm font-medium">Weak Spots Detected</p>
+              <div className="flex flex-wrap gap-2">
+                {keyword.weakSpots.reddit !== null && (
+                  <Badge variant="destructive">Reddit #{keyword.weakSpots.reddit}</Badge>
+                )}
+                {keyword.weakSpots.quora !== null && (
+                  <Badge variant="destructive">Quora #{keyword.weakSpots.quora}</Badge>
+                )}
+                {keyword.weakSpots.pinterest !== null && (
+                  <Badge variant="destructive">Pinterest #{keyword.weakSpots.pinterest}</Badge>
+                )}
+              </div>
             </div>
           )}
 

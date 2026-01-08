@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { PAGE_PADDING } from '@/src/styles';
 
 interface MarketingHeaderProps {
   transparent?: boolean;
@@ -10,13 +11,13 @@ interface MarketingHeaderProps {
 export function MarketingHeader({ transparent = false }: MarketingHeaderProps) {
   return (
     <header className={`border-b ${transparent ? 'bg-transparent' : 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'}`}>
-      <div className="container flex h-16 items-center justify-between">
+      <div className={`container flex h-14 sm:h-16 items-center justify-between ${PAGE_PADDING.horizontal}`}>
         <Link href="/" className="flex items-center space-x-2">
-          <span className="text-2xl font-bold bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+          <span className="text-xl sm:text-2xl font-bold bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
             BlogSpy
           </span>
         </Link>
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-4 lg:gap-6">
           <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Features
           </Link>
@@ -33,7 +34,7 @@ export function MarketingHeader({ transparent = false }: MarketingHeaderProps) {
             Contact
           </Link>
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/login">
             <Button variant="ghost" size="sm">Sign In</Button>
           </Link>

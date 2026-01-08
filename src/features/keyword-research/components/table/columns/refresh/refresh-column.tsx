@@ -1,115 +1,196 @@
 "use client"
 
 // ============================================
-// REFRESH COLUMN - Data refresh/action column
+// REFRESH COLUMN - Semrush-style freshness + refresh
 // ============================================
 
-import { cn } from "@/lib/utils"
-import { RefreshCw, MoreVertical, Trash2, Star, Copy } from "lucide-react"
+import { useCallback, useMemo, useState } from "react"
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  differenceInMonths,
+  differenceInYears,
+  parseISO,
+} from "date-fns"
+import { RefreshCw } from "lucide-react"
+import { toast } from "sonner"
+
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+
+import { refreshKeywordAction } from "../../../../actions/refresh-keyword"
+import { useKeywordStore } from "../../../../store"
+import type { Keyword } from "../../../../types"
 
 interface RefreshColumnProps {
+  keyword: string
   id: string
-  lastUpdated?: Date
-  isRefreshing?: boolean
-  onRefresh?: () => void
-  onFavorite?: () => void
-  onCopy?: () => void
-  onDelete?: () => void
+  lastUpdated?: string | Date | null
   className?: string
 }
 
-export function RefreshColumn({
-  lastUpdated,
-  isRefreshing = false,
-  onRefresh,
-  onFavorite,
-  onCopy,
-  onDelete,
-  className,
-}: RefreshColumnProps) {
-  const formatLastUpdated = (date: Date): string => {
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffHours / 24)
+type FreshnessMeta = {
+  className: string
+  isStale: boolean
+}
 
-    if (diffDays > 0) return `${diffDays}d ago`
-    if (diffHours > 0) return `${diffHours}h ago`
-    return "Just now"
+function formatRelativeTime(date: Date | null): string {
+  if (!date) return "Never"
+
+  const now = new Date()
+  const minutes = Math.max(0, differenceInMinutes(now, date))
+  if (minutes < 1) return "Just now"
+  if (minutes < 60) return `${minutes}m ago`
+
+  const hours = Math.max(0, differenceInHours(now, date))
+  if (hours < 24) return `${hours}h ago`
+
+  const days = Math.max(0, differenceInDays(now, date))
+  if (days < 30) return `${days}d ago`
+
+  const months = Math.max(0, differenceInMonths(now, date))
+  if (months < 12) return `${months}mo ago`
+
+  const years = Math.max(0, differenceInYears(now, date))
+  return `${years}y ago`
+}
+
+function getFreshnessMeta(date: Date | null): FreshnessMeta {
+  if (!date) {
+    return { className: "text-muted-foreground", isStale: false }
   }
 
+  const now = new Date()
+  const hours = differenceInHours(now, date)
+  const days = differenceInDays(now, date)
+
+  if (hours < 24) {
+    return { className: "text-emerald-500", isStale: false }
+  }
+
+  if (days <= 7) {
+    return { className: "text-muted-foreground", isStale: false }
+  }
+
+  if (days > 30) {
+    return { className: "text-orange-500", isStale: true }
+  }
+
+  return { className: "text-amber-500", isStale: false }
+}
+
+export function RefreshColumn({ keyword, id, lastUpdated, className }: RefreshColumnProps) {
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const updateRow = useKeywordStore((state) => state.updateRow)
+  const setCredits = useKeywordStore((state) => state.setCredits)
+  const country = useKeywordStore((state) => state.search.country)
+  const numericId = Number(id)
+  const keywordRow = useKeywordStore((state) =>
+    state.keywords.find((row) => row.id === numericId)
+  )
+  const rowRefreshing = keywordRow?.isRefreshing ?? false
+  const refreshing = isRefreshing || rowRefreshing
+
+  const lastUpdatedDate = useMemo(() => {
+    if (!lastUpdated) return null
+    if (lastUpdated instanceof Date) return Number.isNaN(lastUpdated.getTime()) ? null : lastUpdated
+    const parsed = parseISO(lastUpdated)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }, [lastUpdated])
+
+  const freshness = getFreshnessMeta(lastUpdatedDate)
+  const timeAgoLabel = refreshing ? "Refreshing..." : formatRelativeTime(lastUpdatedDate)
+
+  const handleRefresh = useCallback(async () => {
+    if (refreshing) return
+
+    setIsRefreshing(true)
+    updateRow(id, { isRefreshing: true })
+
+    try {
+      const result = await refreshKeywordAction({
+        keyword: keywordRow?.keyword ?? keyword,
+        keywordId: Number.isFinite(numericId) ? numericId : undefined,
+        country: country || "US",
+        volume: keywordRow?.volume ?? 0,
+        cpc: keywordRow?.cpc ?? 0,
+        intent: keywordRow?.intent,
+      })
+
+      const payload = result?.data?.data
+      const newBalance = result?.data?.newBalance
+      if (!result?.data?.success || !payload) {
+        throw new Error(result?.serverError || "Refresh failed")
+      }
+
+      updateRow(id, {
+        weakSpots: payload.serpData.weakSpots,
+        weakSpot: payload.keyword.weakSpot,
+        serpFeatures: payload.serpData.serpFeatures,
+        geoScore: payload.keyword.geoScore ?? payload.serpData.geoScore,
+        hasAio: payload.serpData.hasAio,
+        rtv: payload.rtvData.rtv,
+        rtvBreakdown: payload.rtvData.breakdown,
+        lastUpdated: new Date(payload.lastUpdated),
+        isRefreshing: false,
+      } as Partial<Keyword>)
+
+      if (typeof newBalance === "number") {
+        setCredits(newBalance)
+      }
+
+      toast.success(`Refreshed "${keyword}"`, {
+        description: "Data updated. 1 credit used.",
+      })
+    } catch (error) {
+      updateRow(id, { isRefreshing: false })
+      toast.error("Refresh failed", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [country, id, keyword, keywordRow, numericId, refreshing, setCredits, updateRow])
+
+  const timeLabel = (
+    <span className={cn("text-[11px] font-medium tabular-nums", freshness.className)}>
+      {timeAgoLabel}
+    </span>
+  )
+
   return (
-    <div className={cn("flex items-center gap-1", className)}>
-      {onRefresh && (
+    <div className={cn("flex items-center justify-end gap-2", className)}>
+      {freshness.isStale ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={onRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw
-                className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")}
-              />
-            </Button>
+            <span>{timeLabel}</span>
           </TooltipTrigger>
-          <TooltipContent>
-            {isRefreshing ? "Refreshing..." : "Refresh data"}
-            {lastUpdated && !isRefreshing && (
-              <span className="text-muted-foreground ml-1">
-                • {formatLastUpdated(lastUpdated)}
-              </span>
-            )}
-          </TooltipContent>
+          <TooltipContent side="top">Data Stale</TooltipContent>
         </Tooltip>
+      ) : (
+        timeLabel
       )}
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
-            <MoreVertical className="h-3.5 w-3.5" />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {onFavorite && (
-            <DropdownMenuItem onClick={onFavorite}>
-              <Star className="mr-2 h-4 w-4" />
-              Add to favorites
-            </DropdownMenuItem>
-          )}
-          {onCopy && (
-            <DropdownMenuItem onClick={onCopy}>
-              <Copy className="mr-2 h-4 w-4" />
-              Copy keyword
-            </DropdownMenuItem>
-          )}
-          {(onFavorite || onCopy) && onDelete && <DropdownMenuSeparator />}
-          {onDelete && (
-            <DropdownMenuItem
-              onClick={onDelete}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Remove
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          {refreshing ? "Refreshing..." : "Refresh keyword"}
+        </TooltipContent>
+      </Tooltip>
     </div>
   )
 }
+
+export default RefreshColumn

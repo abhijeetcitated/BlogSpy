@@ -5,7 +5,7 @@
 // Matches keyword-table.tsx & keyword-magic-content.tsx
 // ============================================
 
-import type { SortDirection as SharedSortDirection, SearchIntent } from "@/src/types/shared"
+import type { SortDirection as SharedSortDirection, SearchIntent } from "@/types/shared"
 
 // Re-export shared types for convenience
 export type SortDirection = SharedSortDirection

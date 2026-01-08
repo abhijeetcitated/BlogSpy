@@ -119,8 +119,8 @@ export const SocialTrackerSidebar = memo(function SocialTrackerSidebar({
         </CardHeader>
         <CardContent className="p-3 sm:p-4 pt-0">
           <ul className="space-y-1.5 sm:space-y-2">
-            {tips.map((tip, i) => (
-              <li key={i} className="text-[10px] sm:text-xs text-muted-foreground flex items-start gap-2">
+            {tips.map((tip) => (
+              <li key={tip} className="text-[10px] sm:text-xs text-muted-foreground flex items-start gap-2">
                 <span className="text-amber-500">•</span>
                 {tip}
               </li>
@@ -165,8 +165,8 @@ export const SocialTrackerSidebar = memo(function SocialTrackerSidebar({
         </CardHeader>
         <CardContent className="p-3 sm:p-4 pt-0">
           <div className="space-y-1.5 sm:space-y-2">
-            {audienceInsights.map((insight, i) => (
-              <p key={i} className="text-[10px] sm:text-xs text-muted-foreground">• {insight}</p>
+            {audienceInsights.map((insight) => (
+              <p key={insight} className="text-[10px] sm:text-xs text-muted-foreground">• {insight}</p>
             ))}
           </div>
         </CardContent>

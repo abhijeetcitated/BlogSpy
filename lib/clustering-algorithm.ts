@@ -698,7 +698,7 @@ export function generateTopicClusters(keywords: ClusterKeyword[]): ClusteringRes
       totalPillarPages: topics.length,
       totalSubpages,
       totalUncategorized: uncategorized.length,
-      coveragePercent: Math.round((coveredKeywords / keywords.length) * 100),
+      coveragePercent: keywords.length > 0 ? Math.round((coveredKeywords / keywords.length) * 100) : 0,
       avgConfidence,
       apiCallsSaved
     }

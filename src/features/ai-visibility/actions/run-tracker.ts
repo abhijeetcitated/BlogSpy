@@ -3,20 +3,39 @@
  * 📊 RUN TRACKER - Server Action for Google AIO & Rankings
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
- * Next.js Server Action to track Google rankings via DataForSEO
+ * REFACTORED: Now uses authAction wrapper for consistent auth/rate-limiting.
  * 
  * Usage:
  * ```tsx
- * const { checkGoogleAIO, getRankings } = await import("@/features/ai-visibility/actions/run-tracker")
- * const result = await checkGoogleAIO("blogspy.io", "best SEO tools")
+ * const result = await checkGoogleAIO({ brandDomain: "blogspy.io", query: "best SEO tools" })
  * ```
  */
 
 "use server"
 
-import { createServerClient } from "@/src/lib/supabase/server"
+import { authAction, z } from "@/src/lib/safe-action"
 import { createTrackerService } from "../services/tracker.service"
 import type { GoogleAIOResult, RankingResult, CitationResult } from "../types"
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// SCHEMAS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+const singleQuerySchema = z.object({
+  brandDomain: z.string().min(1, "Brand domain is required"),
+  query: z.string().min(1, "Query is required"),
+})
+
+const multiQuerySchema = z.object({
+  brandDomain: z.string().min(1, "Brand domain is required"),
+  queries: z.array(z.string()).min(1, "At least one query is required"),
+})
+
+const siriReadinessSchema = z.object({
+  brandDomain: z.string().min(1, "Brand domain is required"),
+  query: z.string().min(1, "Query is required"),
+  applebotAllowed: z.boolean(),
+})
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // RESPONSE TYPES
@@ -42,151 +61,90 @@ function getDataForSEOCredentials(): { login: string; password: string } {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// SERVER ACTIONS
+// SERVER ACTIONS (using authAction wrapper)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 /**
  * Check if brand appears in Google AI Overview
  */
-export async function checkGoogleAIO(
-  brandDomain: string,
-  query: string
-): Promise<TrackerActionResponse<GoogleAIOResult>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return {
-        success: false,
-        error: "Unauthorized: Please login to use this feature.",
-      }
+export const checkGoogleAIO = authAction
+  .schema(singleQuerySchema)
+  .action(async ({ parsedInput }): Promise<TrackerActionResponse<GoogleAIOResult>> => {
+    try {
+      const credentials = getDataForSEOCredentials()
+      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
+      const result = await trackerService.checkGoogleAIO(parsedInput.query)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error("[checkGoogleAIO] Error:", error)
+      return { success: false, error: "Failed to check Google AIO" }
     }
-
-    const credentials = getDataForSEOCredentials()
-    const trackerService = createTrackerService(credentials, brandDomain)
-    const result = await trackerService.checkGoogleAIO(query)
-    return { success: true, data: result }
-  } catch (error) {
-    console.error("[checkGoogleAIO] Error:", error)
-    return { success: false, error: "Failed to check Google AIO" }
-  }
-}
+  })
 
 /**
  * Get Google ranking for a single query
  */
-export async function getRanking(
-  brandDomain: string,
-  query: string
-): Promise<TrackerActionResponse<RankingResult>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return {
-        success: false,
-        error: "Unauthorized: Please login to use this feature.",
-      }
+export const getRanking = authAction
+  .schema(singleQuerySchema)
+  .action(async ({ parsedInput }): Promise<TrackerActionResponse<RankingResult>> => {
+    try {
+      const credentials = getDataForSEOCredentials()
+      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
+      const result = await trackerService.getRanking(parsedInput.query)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error("[getRanking] Error:", error)
+      return { success: false, error: "Failed to get ranking" }
     }
-
-    const credentials = getDataForSEOCredentials()
-    const trackerService = createTrackerService(credentials, brandDomain)
-    const result = await trackerService.getRanking(query)
-    return { success: true, data: result }
-  } catch (error) {
-    console.error("[getRanking] Error:", error)
-    return { success: false, error: "Failed to get ranking" }
-  }
-}
+  })
 
 /**
  * Get Google rankings for multiple queries
  */
-export async function getRankings(
-  brandDomain: string,
-  queries: string[]
-): Promise<TrackerActionResponse<RankingResult[]>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return {
-        success: false,
-        error: "Unauthorized: Please login to use this feature.",
-      }
+export const getRankings = authAction
+  .schema(multiQuerySchema)
+  .action(async ({ parsedInput }): Promise<TrackerActionResponse<RankingResult[]>> => {
+    try {
+      const credentials = getDataForSEOCredentials()
+      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
+      const result = await trackerService.getRankings(parsedInput.queries)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error("[getRankings] Error:", error)
+      return { success: false, error: "Failed to get rankings" }
     }
-
-    const credentials = getDataForSEOCredentials()
-    const trackerService = createTrackerService(credentials, brandDomain)
-    const result = await trackerService.getRankings(queries)
-    return { success: true, data: result }
-  } catch (error) {
-    console.error("[getRankings] Error:", error)
-    return { success: false, error: "Failed to get rankings" }
-  }
-}
+  })
 
 /**
  * Check citations across multiple queries
  */
-export async function checkCitations(
-  brandDomain: string,
-  queries: string[]
-): Promise<TrackerActionResponse<CitationResult[]>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return {
-        success: false,
-        error: "Unauthorized: Please login to use this feature.",
-      }
+export const checkCitations = authAction
+  .schema(multiQuerySchema)
+  .action(async ({ parsedInput }): Promise<TrackerActionResponse<CitationResult[]>> => {
+    try {
+      const credentials = getDataForSEOCredentials()
+      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
+      const result = await trackerService.checkCitations(parsedInput.queries)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error("[checkCitations] Error:", error)
+      return { success: false, error: "Failed to check citations" }
     }
-
-    const credentials = getDataForSEOCredentials()
-    const trackerService = createTrackerService(credentials, brandDomain)
-    const result = await trackerService.checkCitations(queries)
-    return { success: true, data: result }
-  } catch (error) {
-    console.error("[checkCitations] Error:", error)
-    return { success: false, error: "Failed to check citations" }
-  }
-}
+  })
 
 /**
  * Calculate Apple Siri readiness
  */
-export async function checkSiriReadiness(
-  brandDomain: string,
-  query: string,
-  applebotAllowed: boolean
-): Promise<TrackerActionResponse<{ status: "ready" | "at-risk" | "not-ready"; score: number }>> {
-  try {
-    // 🔒 AUTH CHECK: Verify user is logged in
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return {
-        success: false,
-        error: "Unauthorized: Please login to use this feature.",
-      }
+export const checkSiriReadiness = authAction
+  .schema(siriReadinessSchema)
+  .action(async ({ parsedInput }): Promise<TrackerActionResponse<{ status: "ready" | "at-risk" | "not-ready"; score: number }>> => {
+    try {
+      const credentials = getDataForSEOCredentials()
+      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
+      const result = await trackerService.calculateSiriReadiness(parsedInput.query, parsedInput.applebotAllowed)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error("[checkSiriReadiness] Error:", error)
+      return { success: false, error: "Failed to check Siri readiness" }
     }
-
-    const credentials = getDataForSEOCredentials()
-    const trackerService = createTrackerService(credentials, brandDomain)
-    const result = await trackerService.calculateSiriReadiness(query, applebotAllowed)
-    return { success: true, data: result }
-  } catch (error) {
-    console.error("[checkSiriReadiness] Error:", error)
-    return { success: false, error: "Failed to check Siri readiness" }
-  }
-}
+  })

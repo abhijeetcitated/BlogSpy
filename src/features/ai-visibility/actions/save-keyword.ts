@@ -3,24 +3,37 @@
  * 🔍 SAVE KEYWORD ACTION - Track Keywords for AI Visibility
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
- * Server actions to manage tracked keywords for AI visibility monitoring.
+ * REFACTORED: Now uses authAction wrapper for consistent auth/rate-limiting.
  */
 
 "use server"
 
+import { authAction, z } from "@/src/lib/safe-action"
 import { createServerClient } from "@/src/lib/supabase/server"
 import type { TrackedKeyword } from "../types"
 import type { Json } from "@/types/supabase"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// TYPES
+// SCHEMAS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface AddKeywordInput {
-  keyword: string
-  category?: string
-  configId?: string  // Optional for demo mode - will be auto-generated
-}
+const addKeywordSchema = z.object({
+  keyword: z.string().min(1, "Keyword is required"),
+  category: z.string().optional(),
+  configId: z.string().optional(),
+})
+
+const getKeywordsSchema = z.object({
+  configId: z.string().min(1, "Config ID is required"),
+})
+
+const deleteKeywordSchema = z.object({
+  keywordId: z.string().uuid("Invalid keyword ID"),
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 export interface KeywordResponse<T = TrackedKeyword> {
   success: boolean
@@ -29,178 +42,143 @@ export interface KeywordResponse<T = TrackedKeyword> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// ADD KEYWORD ACTION
+// SERVER ACTIONS (using authAction wrapper)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 /**
  * Adds a new keyword to track in AI visibility
  */
-export async function addTrackedKeyword(
-  input: AddKeywordInput
-): Promise<KeywordResponse<TrackedKeyword>> {
-  try {
-    const supabase = await createServerClient()
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return {
-        success: false,
-        error: "You must be logged in",
+export const addTrackedKeyword = authAction
+  .schema(addKeywordSchema)
+  .action(async ({ parsedInput, ctx }): Promise<KeywordResponse<TrackedKeyword>> => {
+    try {
+      const supabase = await createServerClient()
+      const userId = ctx.userId
+
+      // Use provided configId or generate one for demo mode
+      const configId = parsedInput.configId || `demo_${userId}`
+
+      // Check if keyword already exists for this config
+      const { data: existing } = await supabase
+        .from("ai_visibility_keywords")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("config_id", configId)
+        .eq("keyword", parsedInput.keyword.toLowerCase())
+        .single()
+
+      if (existing) {
+        return {
+          success: false,
+          error: "This keyword is already being tracked",
+        }
       }
-    }
 
-    // Use provided configId or generate one for demo mode
-    const configId = input.configId || `demo_${user.id}`
+      // Insert new keyword
+      const { data, error } = await supabase
+        .from("ai_visibility_keywords")
+        .insert({
+          user_id: userId,
+          config_id: configId,
+          keyword: parsedInput.keyword,
+          category: parsedInput.category || null,
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single()
 
-    // Check if keyword already exists for this config
-    const { data: existing } = await supabase
-      .from("ai_visibility_keywords")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("config_id", configId)
-      .eq("keyword", input.keyword.toLowerCase())
-      .single()
-
-    if (existing) {
-      return {
-        success: false,
-        error: "This keyword is already being tracked",
+      if (error) {
+        console.error("[addTrackedKeyword] Error:", error)
+        return {
+          success: false,
+          error: "Failed to add keyword",
+        }
       }
-    }
 
-    // Insert new keyword
-    const { data, error } = await supabase
-      .from("ai_visibility_keywords")
-      .insert({
-        user_id: user.id,
-        config_id: configId,
-        keyword: input.keyword,
-        category: input.category || null,
-        created_at: new Date().toISOString(),
-      })
-      .select()
-      .single()
-
-    if (error) {
+      return {
+        success: true,
+        data: mapDbToKeyword(data),
+      }
+    } catch (error) {
       console.error("[addTrackedKeyword] Error:", error)
       return {
         success: false,
-        error: "Failed to add keyword",
+        error: "An unexpected error occurred",
       }
     }
-
-    return {
-      success: true,
-      data: mapDbToKeyword(data),
-    }
-  } catch (error) {
-    console.error("[addTrackedKeyword] Error:", error)
-    return {
-      success: false,
-      error: "An unexpected error occurred",
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// GET KEYWORDS ACTION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+  })
 
 /**
  * Gets all tracked keywords for a config
  */
-export async function getTrackedKeywords(
-  configId: string
-): Promise<KeywordResponse<TrackedKeyword[]>> {
-  try {
-    const supabase = await createServerClient()
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return {
-        success: false,
-        error: "You must be logged in",
+export const getTrackedKeywords = authAction
+  .schema(getKeywordsSchema)
+  .action(async ({ parsedInput, ctx }): Promise<KeywordResponse<TrackedKeyword[]>> => {
+    try {
+      const supabase = await createServerClient()
+      const userId = ctx.userId
+
+      const { data, error } = await supabase
+        .from("ai_visibility_keywords")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("config_id", parsedInput.configId)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("[getTrackedKeywords] Error:", error)
+        return {
+          success: false,
+          error: "Failed to fetch keywords",
+        }
       }
-    }
 
-    const { data, error } = await supabase
-      .from("ai_visibility_keywords")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("config_id", configId)
-      .order("created_at", { ascending: false })
-
-    if (error) {
+      return {
+        success: true,
+        data: data.map(mapDbToKeyword),
+      }
+    } catch (error) {
       console.error("[getTrackedKeywords] Error:", error)
       return {
         success: false,
-        error: "Failed to fetch keywords",
+        error: "An unexpected error occurred",
       }
     }
-
-    return {
-      success: true,
-      data: data.map(mapDbToKeyword),
-    }
-  } catch (error) {
-    console.error("[getTrackedKeywords] Error:", error)
-    return {
-      success: false,
-      error: "An unexpected error occurred",
-    }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// DELETE KEYWORD ACTION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+  })
 
 /**
  * Deletes a tracked keyword
  */
-export async function deleteTrackedKeyword(
-  keywordId: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const supabase = await createServerClient()
-    
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return {
-        success: false,
-        error: "You must be logged in",
+export const deleteTrackedKeyword = authAction
+  .schema(deleteKeywordSchema)
+  .action(async ({ parsedInput, ctx }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const supabase = await createServerClient()
+      const userId = ctx.userId
+
+      const { error } = await supabase
+        .from("ai_visibility_keywords")
+        .delete()
+        .eq("id", parsedInput.keywordId)
+        .eq("user_id", userId)
+
+      if (error) {
+        console.error("[deleteTrackedKeyword] Error:", error)
+        return {
+          success: false,
+          error: "Failed to delete keyword",
+        }
       }
-    }
 
-    const { error } = await supabase
-      .from("ai_visibility_keywords")
-      .delete()
-      .eq("id", keywordId)
-      .eq("user_id", user.id)
-
-    if (error) {
+      return { success: true }
+    } catch (error) {
       console.error("[deleteTrackedKeyword] Error:", error)
       return {
         success: false,
-        error: "Failed to delete keyword",
+        error: "An unexpected error occurred",
       }
     }
-
-    return { success: true }
-  } catch (error) {
-    console.error("[deleteTrackedKeyword] Error:", error)
-    return {
-      success: false,
-      error: "An unexpected error occurred",
-    }
-  }
-}
+  })
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // HELPER

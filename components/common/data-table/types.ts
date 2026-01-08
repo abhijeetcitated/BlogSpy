@@ -1,6 +1,6 @@
 // Data Table Types
 
-import type { SortDirection as SharedSortDirection } from "@/src/types/shared"
+import type { SortDirection as SharedSortDirection } from "@/types/shared"
 
 // Re-export shared types for convenience
 export type SortDirection = SharedSortDirection

@@ -2,7 +2,7 @@
 // COMPETITOR GAP & FORUM INTEL - Type Definitions
 // ============================================
 
-import type { SortDirection as SharedSortDirection, TrendDirection as SharedTrendDirection } from "@/src/types/shared"
+import type { SortDirection as SharedSortDirection, TrendDirection as SharedTrendDirection } from "@/types/shared"
 
 // Re-export shared types
 export type SortDirection = SharedSortDirection

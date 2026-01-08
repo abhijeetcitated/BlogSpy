@@ -2,6 +2,9 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * AI VISIBILITY ACTIONS - Barrel Export
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 
+ * REFACTORED: All actions now use authAction wrapper for consistent auth/rate-limiting.
+ * Types are exported but input types are now defined via Zod schemas internally.
  */
 
 export {
@@ -9,6 +12,7 @@ export {
   checkRobotsTxt,
   checkLlmsTxt,
   checkSchemaOrg,
+  type AuditActionResponse,
 } from "./run-audit"
 
 export {
@@ -29,7 +33,6 @@ export {
   saveVisibilityConfig,
   getVisibilityConfig,
   deleteVisibilityConfig,
-  type SaveConfigInput,
   type SaveConfigResponse,
   type GetConfigResponse,
 } from "./save-config"
@@ -38,7 +41,6 @@ export {
   addTrackedKeyword,
   getTrackedKeywords,
   deleteTrackedKeyword,
-  type AddKeywordInput,
   type KeywordResponse,
 } from "./save-keyword"
 
@@ -46,8 +48,6 @@ export {
   runVisibilityCheck,
   checkPlatformNow,
   batchVisibilityCheck,
-  type RunVisibilityCheckInput,
-  type CheckPlatformInput,
   type VisibilityActionResponse,
 } from "./run-citation"
 

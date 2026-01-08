@@ -11,18 +11,14 @@ import "server-only"
 export {
   // Types - Safe DTOs
   type UserDTO,
-  type UserProfileDTO,
+  type UserProfile,
   
   // Public API - Safe to pass to Client Components
   getCurrentUser,
+  getUserById,
   getUserProfile,
-  
-  // Auth Helpers
-  requireAuth,
-  requireAdmin,
-  
-  // Internal API - Tainted (server-only operations)
-  _getUserWithSensitiveData,
+  hasRole,
+  isAdmin,
 } from "./user"
 
 // ============================================
@@ -38,20 +34,20 @@ export default async function Page() {
   return <ClientComponent user={user} />  // ✅ OK - UserDTO is safe
 }
 
-// ❌ UNSAFE: This will throw a React error
-import { _getUserWithSensitiveData } from "@/src/lib/dal"
+// ✅ Server-side data access with taint protection
+import { getUserById } from "@/src/lib/dal"
 
-export default async function Page() {
-  const sensitiveUser = await _getUserWithSensitiveData(userId)
-  return <ClientComponent data={sensitiveUser} />  // ❌ THROWS - Tainted!
+export default async function AdminPage() {
+  const serverData = await getUserById(userId)  // Tainted internally
+  // Can use serverData here on server, but can't pass raw to client
+  return <AdminView credits={serverData?.credits} />  // ✅ Pass primitives only
 }
 
-// ✅ CORRECT: Use sensitive data server-side only
-import { _getUserWithSensitiveData } from "@/src/lib/dal"
+// ✅ CORRECT: Require authenticated user
+import { requireCurrentUser } from "@/src/lib/dal"
 
-async function verifyPassword(userId: string, password: string) {
-  const sensitiveData = await _getUserWithSensitiveData(userId)
-  const isValid = await bcrypt.compare(password, sensitiveData.passwordHash)
-  return isValid  // ✅ OK - Only returning boolean, not sensitive data
+export default async function ProtectedPage() {
+  const user = await requireCurrentUser()  // Throws if not authenticated
+  return <Dashboard user={user} />
 }
 */

@@ -12,8 +12,10 @@
 // ============================================
 
 import { z } from "zod"
-import { action } from "@/lib/safe-action"  // Public action for dev, switch to authAction for prod
-import type { AmazonProduct, AmazonData, DrawerDataResponse } from "../types"
+import { authAction } from "@/src/lib/safe-action"
+import type { AmazonProduct, AmazonData, DrawerDataResponse, YouTubeResult, CommunityResult } from "../types"
+
+import { fetchYouTubeData, fetchRedditData, fetchPinterestData } from "../services/social.service"
 
 // ============================================
 // ZOD VALIDATION SCHEMA
@@ -78,20 +80,25 @@ function generateMockAmazonData(keyword: string): AmazonData {
 }
 
 // ============================================
-// 🛡️ SECURED SERVER ACTION
+// 🔐 SECURED SERVER ACTION
 // ============================================
 
-export const fetchAmazonData = action
+function isServerMockMode(): boolean {
+  // NOTE: `NEXT_PUBLIC_USE_MOCK_DATA` is deprecated for server gating; kept for backward-compatible dev.
+  return process.env.USE_MOCK_DATA === "true" || process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+}
+
+export const fetchAmazonData = authAction
   .schema(FetchAmazonDataSchema)
-  .action(async ({ parsedInput }): Promise<DrawerDataResponse<AmazonData>> => {
+  .action(async ({ parsedInput, ctx }): Promise<DrawerDataResponse<AmazonData>> => {
     const { keyword, country } = parsedInput
 
-    console.log(`[fetchAmazonData] Fetching for: "${keyword}" in ${country}`)
+    console.log(`[fetchAmazonData] user=${ctx.userId} country=${country}`)
 
     // ─────────────────────────────────────────
     // MOCK MODE (for development/testing)
     // ─────────────────────────────────────────
-    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true") {
+    if (isServerMockMode()) {
       console.log("[fetchAmazonData] Using MOCK data mode")
 
       try {
@@ -99,16 +106,7 @@ export const fetchAmazonData = action
         const delay = 800 + Math.random() * 700
         await new Promise((resolve) => setTimeout(resolve, delay))
 
-        // Simulate random failures (10% chance) for testing error handling
-        if (Math.random() < 0.1) {
-          console.log("[fetchAmazonData] Simulating random failure for testing")
-          return {
-            success: false,
-            error: "Simulated API failure for testing error handling",
-            isRetryable: true,
-            source: "mock",
-          }
-        }
+        // Keep mock stable/reliable for dev UX; no random failures.
 
         const mockData = generateMockAmazonData(keyword)
 
@@ -192,7 +190,60 @@ export const fetchAmazonData = action
   })
 
 // ============================================
+// 🛡️ SOCIAL INSIGHTS (YouTube + Community)
+// ============================================
+
+const FetchSocialInsightsSchema = z.object({
+  keyword: z.string().min(1, "Keyword is required").max(200, "Keyword too long"),
+  country: z.string().length(2).default("US"),
+})
+
+export const fetchSocialInsights = authAction
+  .schema(FetchSocialInsightsSchema)
+  .action(
+    async ({ parsedInput, ctx }): Promise<
+      DrawerDataResponse<{ youtube: YouTubeResult[]; community: CommunityResult[] }>
+    > => {
+      const { keyword, country } = parsedInput
+
+      console.log(`[fetchSocialInsights] user=${ctx.userId} country=${country}`)
+
+      try {
+        const [yt, reddit, pinterest] = await Promise.all([
+          fetchYouTubeData(keyword, country),
+          fetchRedditData(keyword),
+          fetchPinterestData(keyword),
+        ])
+
+        const community: CommunityResult[] = [
+          ...(reddit.success ? (reddit.data ?? []) : []),
+          ...(pinterest.success ? (pinterest.data?.pins ?? []) : []),
+        ]
+
+        // Partial failure is allowed: return success with empty slices per failing API.
+        return {
+          success: true,
+          data: {
+            youtube: yt.success ? (yt.data ?? []) : [],
+            community,
+          },
+          source:
+            yt.source === "mock" || reddit.source === "mock" || pinterest.source === "mock" ? "mock" : "dataforseo",
+        }
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to fetch social insights",
+          isRetryable: true,
+          source: "dataforseo",
+        }
+      }
+    }
+  )
+
+// ============================================
 // EXPORT TYPE FOR CLIENT USE
 // ============================================
 
 export type FetchAmazonDataAction = typeof fetchAmazonData
+export type FetchSocialInsightsAction = typeof fetchSocialInsights

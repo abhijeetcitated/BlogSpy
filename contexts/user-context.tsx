@@ -1,23 +1,67 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './auth-context';
 import type { UserCredits, UserProfile, NotificationSettings } from '@/types/user';
+import {
+  fetchUserAction,
+  updateProfileAction,
+  updateNotificationsAction,
+} from '@/src/features/settings/actions/user-actions';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { DemoUser } from '@/types/user';
 
-// Demo data
-const DEMO_CREDITS: UserCredits = {
-  total: 2000,
-  used: 150,
-  remaining: 1850,
-  resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// DEFAULT VALUES (used only when no data is available)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+const DEFAULT_CREDITS: UserCredits = {
+  total: 0,
+  used: 0,
+  remaining: 0,
+  resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
 };
 
-const DEMO_NOTIFICATIONS: NotificationSettings = {
+const DEFAULT_NOTIFICATIONS: NotificationSettings = {
   email: true,
   rankingAlerts: true,
   weeklyReport: true,
   productUpdates: false,
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// HELPER: Extract user data from SupabaseUser or DemoUser
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+function extractUserData(authUser: SupabaseUser | DemoUser) {
+  // Check if it's a DemoUser (has 'name' property directly)
+  if ('name' in authUser && typeof authUser.name === 'string') {
+    const demoUser = authUser as DemoUser;
+    return {
+      id: demoUser.id,
+      email: demoUser.email,
+      name: demoUser.name,
+      avatar: undefined,
+      plan: demoUser.plan,
+      credits: demoUser.credits,
+    };
+  }
+  
+  // It's a SupabaseUser
+  const supaUser = authUser as SupabaseUser;
+  return {
+    id: supaUser.id,
+    email: supaUser.email || '',
+    name: supaUser.user_metadata?.full_name || supaUser.email?.split('@')[0] || 'User',
+    avatar: supaUser.user_metadata?.avatar_url,
+    plan: 'FREE' as const,
+    credits: 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// CONTEXT TYPE
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 interface UserContextType {
   profile: UserProfile | null;
@@ -25,111 +69,190 @@ interface UserContextType {
   isLoading: boolean;
   updateProfile: (data: Partial<UserProfile>) => Promise<boolean>;
   updateNotifications: (settings: NotificationSettings) => Promise<boolean>;
+  refreshProfile: () => Promise<void>;
   refreshCredits: () => Promise<void>;
   useCredits: (amount: number) => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// USER PROVIDER
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { user, isDemoMode } = useAuth();
+  const { user, isAuthenticated, isDemoMode } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [credits, setCredits] = useState<UserCredits>(DEMO_CREDITS);
+  const [credits, setCredits] = useState<UserCredits>(DEFAULT_CREDITS);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user profile when user changes
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  // FETCH PROFILE FROM SERVER
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+
+  const refreshProfile = useCallback(async () => {
+    if (!isAuthenticated || !user) {
+      setProfile(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Call the server action to fetch real user data
+      const result = await fetchUserAction({});
+
+      if (result?.data?.success && result.data.data) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userData = result.data.data as any;
+
+        // Build profile from server data
+        const serverProfile: UserProfile = {
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          avatar: userData.avatarUrl || undefined,
+          plan: userData.plan || 'FREE',
+          credits: userData.credits || 0,
+          createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+          updatedAt: new Date(),
+          company: userData.company || '',
+          website: userData.website || '',
+          timezone: userData.timezone || 'America/New_York',
+          notifications: userData.notifications || DEFAULT_NOTIFICATIONS,
+        };
+
+        setProfile(serverProfile);
+
+        // Update credits from server
+        setCredits({
+          total: userData.credits || 1000,
+          used: 0,
+          remaining: userData.credits || 1000,
+          resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        });
+      } else {
+        // Fallback: Use auth user data if server fetch fails
+        console.warn('[UserContext] Server fetch failed, using auth user data');
+        const fallbackData = extractUserData(user);
+        setProfile({
+          id: fallbackData.id,
+          email: fallbackData.email,
+          name: fallbackData.name,
+          avatar: fallbackData.avatar,
+          plan: fallbackData.plan,
+          credits: fallbackData.credits,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          company: '',
+          website: '',
+          timezone: 'America/New_York',
+          notifications: DEFAULT_NOTIFICATIONS,
+        });
+      }
+    } catch (error) {
+      console.error('[UserContext] Failed to load profile:', error);
+      // Fallback to auth user data on error
+      if (user) {
+        const fallbackData = extractUserData(user);
+        setProfile({
+          id: fallbackData.id,
+          email: fallbackData.email,
+          name: fallbackData.name,
+          avatar: fallbackData.avatar,
+          plan: fallbackData.plan,
+          credits: fallbackData.credits,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          company: '',
+          website: '',
+          timezone: 'America/New_York',
+          notifications: DEFAULT_NOTIFICATIONS,
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, user]);
+
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  // LOAD PROFILE ON AUTH CHANGE
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) {
-        setProfile(null);
-        setIsLoading(false);
-        return;
-      }
+    refreshProfile();
+  }, [refreshProfile]);
 
-      setIsLoading(true);
-      try {
-        if (isDemoMode) {
-          // Use demo profile
-          setProfile({
-            ...user,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            company: 'Demo Company',
-            website: 'https://example.com',
-            timezone: 'America/New_York',
-            notifications: DEMO_NOTIFICATIONS,
-          } as UserProfile);
-          setCredits(DEMO_CREDITS);
-        } else {
-          // In production, fetch from API
-          // const response = await api.get<UserProfile>('/api/user/profile');
-          // if (response.success && response.data) {
-          //   setProfile(response.data);
-          // }
-        }
-      } catch (error) {
-        console.error('Failed to load profile:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, [user, isDemoMode]);
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  // UPDATE PROFILE
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
 
   const updateProfile = async (data: Partial<UserProfile>): Promise<boolean> => {
     if (!profile) return false;
 
     try {
-      // In demo mode, just update local state
-      if (isDemoMode) {
-        setProfile({ ...profile, ...data, updatedAt: new Date() });
+      // Call server action to persist changes
+      const result = await updateProfileAction({
+        name: data.name || profile.name,
+        company: data.company,
+        website: data.website,
+        timezone: data.timezone,
+      });
+
+      if (result?.data?.success) {
+        // Update local state with server response
+        setProfile(prev => prev ? {
+          ...prev,
+          ...data,
+          updatedAt: new Date(),
+        } : null);
         return true;
       }
 
-      // In production, call API
-      // const response = await api.patch<UserProfile>('/api/user/profile', data);
-      // if (response.success && response.data) {
-      //   setProfile(response.data);
-      //   return true;
-      // }
+      console.error('[UserContext] Update failed:', result?.data?.error);
       return false;
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error('[UserContext] Failed to update profile:', error);
       return false;
     }
   };
+
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  // UPDATE NOTIFICATIONS
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
 
   const updateNotifications = async (settings: NotificationSettings): Promise<boolean> => {
     if (!profile) return false;
 
     try {
-      // In demo mode, just update local state
-      if (isDemoMode) {
-        setProfile({ ...profile, notifications: settings, updatedAt: new Date() });
+      // Call server action to persist notification settings
+      const result = await updateNotificationsAction(settings);
+
+      if (result?.data?.success) {
+        // Update local state
+        setProfile(prev => prev ? {
+          ...prev,
+          notifications: settings,
+          updatedAt: new Date(),
+        } : null);
         return true;
       }
 
-      // In production, call API
+      console.error('[UserContext] Notifications update failed:', result?.data?.error);
       return false;
     } catch (error) {
-      console.error('Failed to update notifications:', error);
+      console.error('[UserContext] Failed to update notifications:', error);
       return false;
     }
   };
 
-  const refreshCredits = async (): Promise<void> => {
-    if (isDemoMode) {
-      // Reset demo credits
-      setCredits(DEMO_CREDITS);
-      return;
-    }
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  // CREDITS MANAGEMENT
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
 
-    // In production, fetch from API
-    // const response = await api.get<UserCredits>('/api/user/credits');
-    // if (response.success && response.data) {
-    //   setCredits(response.data);
-    // }
+  const refreshCredits = async (): Promise<void> => {
+    // Credits are refreshed as part of profile fetch
+    await refreshProfile();
   };
 
   const useCredits = (amount: number): boolean => {
@@ -146,12 +269,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  // CONTEXT VALUE
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+
   const value: UserContextType = {
     profile,
     credits,
     isLoading,
     updateProfile,
     updateNotifications,
+    refreshProfile,
     refreshCredits,
     useCredits,
   };
@@ -162,6 +290,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     </UserContext.Provider>
   );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// HOOK
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 export function useUser() {
   const context = useContext(UserContext);

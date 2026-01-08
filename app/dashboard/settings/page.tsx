@@ -3,6 +3,12 @@
 import { useState } from "react"
 import { ErrorBoundary } from "@/components/common/error-boundary"
 import { 
+  STACK_SPACING, 
+  RESPONSIVE_CLASSES,
+  TEXT_SIZES,
+  CARD_PADDING
+} from "@/src/styles"
+import { 
   User, 
   Bell, 
   Palette, 
@@ -87,17 +93,17 @@ export default function SettingsPage() {
 
   return (
     <ErrorBoundary>
-    <div className="p-6 space-y-6">
+    <div className={STACK_SPACING.default}>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className={RESPONSIVE_CLASSES.pageHeader}>
         <div>
-          <h1 className="text-2xl font-bold text-white">Settings</h1>
-          <p className="text-slate-400 mt-1">Manage your account settings and preferences</p>
+          <h1 className={`${TEXT_SIZES.sectionTitle} font-bold text-white`}>Settings</h1>
+          <p className="text-slate-400 mt-1 text-sm sm:text-base">Manage your account settings and preferences</p>
         </div>
         <Button 
           onClick={handleSave} 
           disabled={isSaving}
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
         >
           {saved ? (
             <>
@@ -114,47 +120,54 @@ export default function SettingsPage() {
       </div>
 
       {/* Settings Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-slate-800 p-1">
-          <TabsTrigger value="profile" className="data-[state=active]:bg-slate-700">
-            <User className="w-4 h-4 mr-2" />
-            Profile
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-slate-700">
-            <Bell className="w-4 h-4 mr-2" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="preferences" className="data-[state=active]:bg-slate-700">
-            <Palette className="w-4 h-4 mr-2" />
-            Preferences
-          </TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-slate-700">
-            <Shield className="w-4 h-4 mr-2" />
-            Security
-          </TabsTrigger>
-          <TabsTrigger value="api" className="data-[state=active]:bg-slate-700">
-            <Key className="w-4 h-4 mr-2" />
-            API Keys
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className={STACK_SPACING.default}>
+        <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+          <TabsList className="bg-slate-800 p-1 inline-flex min-w-max sm:min-w-0">
+            <TabsTrigger value="profile" className="data-[state=active]:bg-slate-700 text-xs sm:text-sm">
+              <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+              <span className="hidden xs:inline">Profile</span>
+              <span className="xs:hidden">👤</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-slate-700 text-xs sm:text-sm">
+              <Bell className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+              <span className="hidden xs:inline">Notifications</span>
+              <span className="xs:hidden">🔔</span>
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="data-[state=active]:bg-slate-700 text-xs sm:text-sm">
+              <Palette className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+              <span className="hidden xs:inline">Preferences</span>
+              <span className="xs:hidden">🎨</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="data-[state=active]:bg-slate-700 text-xs sm:text-sm">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+              <span className="hidden xs:inline">Security</span>
+              <span className="xs:hidden">🔒</span>
+            </TabsTrigger>
+            <TabsTrigger value="api" className="data-[state=active]:bg-slate-700 text-xs sm:text-sm">
+              <Key className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+              <span className="hidden xs:inline">API Keys</span>
+              <span className="xs:hidden">🔑</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6">
+        <TabsContent value="profile" className={STACK_SPACING.default}>
           <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Profile Information</CardTitle>
-              <CardDescription>Update your personal details</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-white text-base sm:text-lg">Profile Information</CardTitle>
+              <CardDescription className="text-sm">Update your personal details</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
               {/* Avatar */}
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                 <img 
                   src={mockUser.avatar} 
                   alt="Avatar" 
-                  className="w-16 h-16 rounded-full bg-slate-700"
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-700"
                 />
                 <div>
-                  <Button variant="outline" size="sm" className="border-slate-600">
+                  <Button variant="outline" size="sm" className="border-slate-600 text-xs sm:text-sm">
                     Change Avatar
                   </Button>
                   <p className="text-xs text-slate-400 mt-1">JPG, PNG. Max 2MB</p>
@@ -200,17 +213,17 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-6">
+        <TabsContent value="notifications" className={STACK_SPACING.default}>
           <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Email Notifications</CardTitle>
-              <CardDescription>Choose what emails you want to receive</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-white text-base sm:text-lg">Email Notifications</CardTitle>
+              <CardDescription className="text-sm">Choose what emails you want to receive</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-white">Rank Changes</p>
-                  <p className="text-sm text-slate-400">Get notified when your rankings change significantly</p>
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
+              <div className="flex items-start sm:items-center justify-between gap-3 py-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm sm:text-base">Rank Changes</p>
+                  <p className="text-xs sm:text-sm text-slate-400">Get notified when your rankings change significantly</p>
                 </div>
                 <Switch 
                   checked={formData.emailNotifications}
@@ -218,10 +231,10 @@ export default function SettingsPage() {
                 />
               </div>
               
-              <div className="flex items-center justify-between py-2 border-t border-slate-700">
-                <div>
-                  <p className="text-white">Weekly Report</p>
-                  <p className="text-sm text-slate-400">Receive a weekly summary of your SEO performance</p>
+              <div className="flex items-start sm:items-center justify-between gap-3 py-2 border-t border-slate-700">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm sm:text-base">Weekly Report</p>
+                  <p className="text-xs sm:text-sm text-slate-400">Receive a weekly summary of your SEO performance</p>
                 </div>
                 <Switch 
                   checked={formData.weeklyReport}
@@ -229,18 +242,18 @@ export default function SettingsPage() {
                 />
               </div>
               
-              <div className="flex items-center justify-between py-2 border-t border-slate-700">
-                <div>
-                  <p className="text-white">Content Decay Alerts</p>
-                  <p className="text-sm text-slate-400">Get alerted when content starts losing traffic</p>
+              <div className="flex items-start sm:items-center justify-between gap-3 py-2 border-t border-slate-700">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm sm:text-base">Content Decay Alerts</p>
+                  <p className="text-xs sm:text-sm text-slate-400">Get alerted when content starts losing traffic</p>
                 </div>
                 <Switch defaultChecked />
               </div>
               
-              <div className="flex items-center justify-between py-2 border-t border-slate-700">
-                <div>
-                  <p className="text-white">Marketing Emails</p>
-                  <p className="text-sm text-slate-400">Tips, product updates, and special offers</p>
+              <div className="flex items-start sm:items-center justify-between gap-3 py-2 border-t border-slate-700">
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm sm:text-base">Marketing Emails</p>
+                  <p className="text-xs sm:text-sm text-slate-400">Tips, product updates, and special offers</p>
                 </div>
                 <Switch 
                   checked={formData.marketingEmails}
@@ -252,24 +265,24 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-6">
+        <TabsContent value="preferences" className={STACK_SPACING.default}>
           <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Default Settings</CardTitle>
-              <CardDescription>Configure your default preferences for searches</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-white text-base sm:text-lg">Default Settings</CardTitle>
+              <CardDescription className="text-sm">Configure your default preferences for searches</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
               {/* Default Location */}
               <div className="space-y-2">
-                <label className="text-sm text-slate-300 flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
+                <label className="text-xs sm:text-sm text-slate-300 flex items-center gap-2">
+                  <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
                   Default Location
                 </label>
                 <Select 
                   value={formData.defaultLocation}
                   onValueChange={(v) => updateFormData("defaultLocation", v)}
                 >
-                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">
@@ -284,12 +297,12 @@ export default function SettingsPage() {
 
               {/* Default Language */}
               <div className="space-y-2">
-                <label className="text-sm text-slate-300">Default Language</label>
+                <label className="text-xs sm:text-sm text-slate-300">Default Language</label>
                 <Select 
                   value={formData.defaultLanguage}
                   onValueChange={(v) => updateFormData("defaultLanguage", v)}
                 >
-                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">
@@ -304,15 +317,15 @@ export default function SettingsPage() {
 
               {/* Theme */}
               <div className="space-y-2">
-                <label className="text-sm text-slate-300 flex items-center gap-2">
-                  <Palette className="w-4 h-4" />
+                <label className="text-xs sm:text-sm text-slate-300 flex items-center gap-2">
+                  <Palette className="w-3 h-3 sm:w-4 sm:h-4" />
                   Theme
                 </label>
                 <Select 
                   value={formData.theme}
                   onValueChange={(v) => updateFormData("theme", v)}
                 >
-                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+                  <SelectTrigger className="bg-slate-900 border-slate-700 text-white text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">
@@ -327,15 +340,15 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6">
+        <TabsContent value="security" className={STACK_SPACING.default}>
           <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Change Password</CardTitle>
-              <CardDescription>Update your password to keep your account secure</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-white text-base sm:text-lg">Change Password</CardTitle>
+              <CardDescription className="text-sm">Update your password to keep your account secure</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
               <div className="space-y-2">
-                <label className="text-sm text-slate-300">Current Password</label>
+                <label className="text-xs sm:text-sm text-slate-300">Current Password</label>
                 <div className="relative">
                   <Input 
                     type={showPassword ? "text" : "password"}
@@ -355,28 +368,28 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-slate-300">New Password</label>
+                <label className="text-xs sm:text-sm text-slate-300">New Password</label>
                 <Input 
                   type="password"
                   value={formData.newPassword}
                   onChange={(e) => updateFormData("newPassword", e.target.value)}
-                  className="bg-slate-900 border-slate-700 text-white"
+                  className="bg-slate-900 border-slate-700 text-white text-sm"
                   placeholder="Enter new password"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-slate-300">Confirm New Password</label>
+                <label className="text-xs sm:text-sm text-slate-300">Confirm New Password</label>
                 <Input 
                   type="password"
                   value={formData.confirmPassword}
                   onChange={(e) => updateFormData("confirmPassword", e.target.value)}
-                  className="bg-slate-900 border-slate-700 text-white"
+                  className="bg-slate-900 border-slate-700 text-white text-sm"
                   placeholder="Confirm new password"
                 />
               </div>
 
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Button className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto text-sm">
                 Update Password
               </Button>
             </CardContent>
@@ -384,19 +397,19 @@ export default function SettingsPage() {
 
           {/* Sessions */}
           <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">Active Sessions</CardTitle>
-              <CardDescription>Manage your active sessions across devices</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-white text-base sm:text-lg">Active Sessions</CardTitle>
+              <CardDescription className="text-sm">Manage your active sessions across devices</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg">
+            <CardContent className="space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 bg-slate-900/50 rounded-lg">
                 <div>
-                  <p className="text-white">Current Session</p>
-                  <p className="text-sm text-slate-400">Windows • Chrome • Mumbai, India</p>
+                  <p className="text-white text-sm sm:text-base">Current Session</p>
+                  <p className="text-xs sm:text-sm text-slate-400">Windows • Chrome • Mumbai, India</p>
                 </div>
-                <Badge className="bg-emerald-500/20 text-emerald-400">Active</Badge>
+                <Badge className="bg-emerald-500/20 text-emerald-400 w-fit">Active</Badge>
               </div>
-              <Button variant="outline" className="border-red-500/50 text-red-400 hover:bg-red-500/10">
+              <Button variant="outline" className="border-red-500/50 text-red-400 hover:bg-red-500/10 w-full sm:w-auto text-sm">
                 Sign Out All Other Sessions
               </Button>
             </CardContent>
@@ -404,37 +417,37 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* API Keys Tab */}
-        <TabsContent value="api" className="space-y-6">
+        <TabsContent value="api" className={STACK_SPACING.default}>
           <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader>
-              <CardTitle className="text-white">API Keys</CardTitle>
-              <CardDescription>Manage API keys for programmatic access</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-white text-base sm:text-lg">API Keys</CardTitle>
+              <CardDescription className="text-sm">Manage API keys for programmatic access</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
               {mockUser.plan === "enterprise" ? (
                 <>
-                  <div className="p-4 bg-slate-900/50 rounded-lg space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-white font-mono text-sm">sk_live_****************************</p>
-                      <Button variant="ghost" size="sm" className="text-slate-400">
+                  <div className="p-3 sm:p-4 bg-slate-900/50 rounded-lg space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <p className="text-white font-mono text-xs sm:text-sm truncate">sk_live_****************************</p>
+                      <Button variant="ghost" size="sm" className="text-slate-400 w-fit">
                         Copy
                       </Button>
                     </div>
                     <p className="text-xs text-slate-400">Created: Dec 1, 2024 • Last used: 2 hours ago</p>
                   </div>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700">
-                    <Key className="w-4 h-4 mr-2" />
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto text-sm">
+                    <Key className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Generate New API Key
                   </Button>
                 </>
               ) : (
-                <div className="text-center py-8">
-                  <Key className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-white font-medium">API Access is Enterprise Only</p>
-                  <p className="text-sm text-slate-400 mt-1 mb-4">
+                <div className="text-center py-6 sm:py-8">
+                  <Key className="w-10 h-10 sm:w-12 sm:h-12 text-slate-600 mx-auto mb-3 sm:mb-4" />
+                  <p className="text-white font-medium text-sm sm:text-base">API Access is Enterprise Only</p>
+                  <p className="text-xs sm:text-sm text-slate-400 mt-1 mb-4">
                     Upgrade to Enterprise to get API access
                   </p>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-sm">
                     Upgrade to Enterprise
                   </Button>
                 </div>

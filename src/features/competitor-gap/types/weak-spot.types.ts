@@ -2,7 +2,7 @@
 // WEAK SPOT TYPES
 // ============================================
 
-import type { SortDirection as SharedSortDirection, SearchIntent } from "@/src/types/shared"
+import type { SortDirection as SharedSortDirection, SearchIntent } from "@/types/shared"
 
 // Re-export shared types
 export type SortDirection = SharedSortDirection

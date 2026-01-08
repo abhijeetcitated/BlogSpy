@@ -110,7 +110,7 @@ export function CreditTransactionHistory({
         </CardHeader>
         <CardContent className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3">
+            <div key={`skeleton-${i}`} className="flex items-center gap-3">
               <Skeleton className="h-8 w-8 rounded-lg" />
               <div className="flex-1 space-y-1">
                 <Skeleton className="h-4 w-3/4" />

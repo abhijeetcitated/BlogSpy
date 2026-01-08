@@ -2,6 +2,9 @@
 
 import type { ClusterData } from "../types"
 
+// Re-export keyword pool constants
+export * from "./keyword-pool.constants"
+
 export const VIEW_MODE_OPTIONS = [
   { value: "graph", label: "Graph" },
   { value: "list", label: "List" },

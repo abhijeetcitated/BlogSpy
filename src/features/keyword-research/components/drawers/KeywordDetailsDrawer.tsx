@@ -12,7 +12,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { X, MapPin, ExternalLink } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { X, MapPin, ExternalLink, Info, ShoppingCart, DollarSign, Navigation, Calculator } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Sheet,
@@ -22,6 +23,14 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -31,6 +40,7 @@ import { ErrorBoundary } from "@/components/common/error-boundary"
 import { OverviewTab } from "./OverviewTab"
 import { CommerceTab } from "./CommerceTab"
 import { SocialTab } from "./SocialTab"
+import { RtvFormulaDialog } from "./RtvFormulaDialog"
 
 import type { Keyword } from "../../types"
 
@@ -83,20 +93,43 @@ export function KeywordDetailsDrawer({
     return "text-red-600"
   }
 
-  // Get intent badge variant
-  const getIntentVariant = (intent: string) => {
-    switch (intent.toLowerCase()) {
-      case "informational":
-        return "secondary"
-      case "commercial":
-        return "default"
-      case "transactional":
-        return "destructive"
-      case "navigational":
-        return "outline"
-      default:
-        return "secondary"
-    }
+  // Intent configuration matching table column colors
+  type IntentCode = "I" | "C" | "T" | "N"
+  const intentConfig: Record<IntentCode, {
+    label: string
+    icon: typeof Info
+    color: string
+    bgColor: string
+    borderColor: string
+  }> = {
+    I: {
+      label: "Informational",
+      icon: Info,
+      color: "text-blue-600",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20",
+    },
+    C: {
+      label: "Commercial",
+      icon: ShoppingCart,
+      color: "text-purple-600",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/20",
+    },
+    T: {
+      label: "Transactional",
+      icon: DollarSign,
+      color: "text-green-600",
+      bgColor: "bg-green-500/10",
+      borderColor: "border-green-500/20",
+    },
+    N: {
+      label: "Navigational",
+      icon: Navigation,
+      color: "text-orange-600",
+      bgColor: "bg-orange-500/10",
+      borderColor: "border-orange-500/20",
+    },
   }
 
   return (
@@ -139,15 +172,25 @@ export function KeywordDetailsDrawer({
 
           {/* Intent badges */}
           <div className="flex flex-wrap gap-1.5 mt-3">
-            {keyword.intent.map((intent) => (
-              <Badge
-                key={intent}
-                variant={getIntentVariant(intent)}
-                className="text-xs"
-              >
-                {intent}
-              </Badge>
-            ))}
+            {keyword.intent.map((intentCode) => {
+              const config = intentConfig[intentCode as IntentCode]
+              if (!config) return null
+              
+              return (
+                <Badge
+                  key={intentCode}
+                  variant="outline"
+                  className={cn(
+                    "h-6 px-2 text-xs font-medium border rounded-full",
+                    config.bgColor,
+                    config.borderColor,
+                    config.color
+                  )}
+                >
+                  {intentCode}
+                </Badge>
+              )
+            })}
           </div>
 
           {/* Action buttons */}
@@ -162,10 +205,13 @@ export function KeywordDetailsDrawer({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onAnalyzeClick?.(keyword)}
+              onClick={() => {
+                const encodedKeyword = encodeURIComponent(keyword.keyword)
+                window.location.href = `/keyword-overview?keyword=${encodedKeyword}`
+              }}
               className="flex-1"
             >
-              🔍 Analyze SERP
+              📊 Keyword Overview
             </Button>
           </div>
         </SheetHeader>

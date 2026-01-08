@@ -101,8 +101,8 @@ export function ClusterListView({ clusters, selectedCluster, onSelectCluster }: 
             {isSelected && cluster.keywords.length > 0 && (
               <div className="mt-2 sm:mt-3 ml-4 sm:ml-6 pt-2 sm:pt-3 border-t border-zinc-200 dark:border-zinc-700">
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                  {cluster.keywords.slice(0, 3).map((kw, idx) => (
-                    <span key={idx} className="text-[10px] sm:text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md border border-zinc-200 dark:border-zinc-700 truncate max-w-[120px] sm:max-w-none">
+                  {cluster.keywords.slice(0, 3).map((kw) => (
+                    <span key={kw.keyword} className="text-[10px] sm:text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md border border-zinc-200 dark:border-zinc-700 truncate max-w-[120px] sm:max-w-none">
                       {kw.keyword}
                     </span>
                   ))}

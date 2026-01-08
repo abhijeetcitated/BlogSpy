@@ -163,8 +163,8 @@ export function PricingModal() {
 
                     {/* Features */}
                     <ul className="space-y-2 mb-5 flex-1">
-                      {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2">
                           <Check
                             className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${
                               plan.highlighted ? "text-emerald-400" : "text-muted-foreground"

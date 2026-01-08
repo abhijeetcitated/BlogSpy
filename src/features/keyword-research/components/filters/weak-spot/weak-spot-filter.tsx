@@ -15,16 +15,18 @@ interface WeakSpotFilterProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   tempHasWeakSpot: boolean | null // null = any, true = only with weak spots, false = only without
-  tempWeakSpotTypes: string[] // ["reddit", "quora"]
+  tempWeakSpotTypes: string[] // ["reddit", "quora", "pinterest"]
   onTempHasWeakSpotChange: (value: boolean | null) => void
   onToggleWeakSpotType: (type: string) => void
   onApply: () => void
 }
 
 const WEAK_SPOT_TYPES = [
-  { value: "reddit", label: "Reddit", color: "bg-orange-500", icon: "🔗" },
-  { value: "quora", label: "Quora", color: "bg-red-500", icon: "❓" },
+  { value: "reddit", label: "Reddit", color: "bg-orange-500", icon: "R" },
+  { value: "quora", label: "Quora", color: "bg-red-500", icon: "Q" },
+  { value: "pinterest", label: "Pinterest", color: "bg-rose-500", icon: "P" },
 ]
+
 
 export function WeakSpotFilter({
   open,
@@ -67,7 +69,7 @@ export function WeakSpotFilter({
           </div>
           
           <div className="text-xs text-muted-foreground">
-            Filter keywords where Reddit/Quora is ranking high (easy to outrank).
+            Filter keywords where Reddit, Quora, or Pinterest ranks high.
           </div>
 
           <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-2">

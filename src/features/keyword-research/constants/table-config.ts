@@ -12,10 +12,10 @@ import {
   Calculator,
   CloudSun,
 } from "lucide-react"
-import type { SortDirection } from "@/src/types/shared"
+import type { SortDirection } from "@/types/shared"
 
 // Re-export SortDirection for backward compatibility
-export type { SortDirection } from "@/src/types/shared"
+export type { SortDirection } from "@/types/shared"
 
 // Intent Configuration for display - Strong colors for both dark and light mode
 export const INTENT_CONFIG: Record<string, { color: string; label: string; tooltip: string; description: string }> = {

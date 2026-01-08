@@ -243,7 +243,7 @@ export interface CommunityDecayData {
  */
 export interface WeakSpotData {
   hasWeakSpot: boolean
-  type: "reddit" | "quora" | "forum" | "ugc" | null
+  type: "reddit" | "quora" | "pinterest" | "forum" | "ugc" | null
   rank: number | null
   url: string | null
   age: number | null // days
@@ -299,20 +299,25 @@ export interface ExportOptions {
  * Transform API keyword to local Keyword type
  */
 export function transformAPIKeyword(apiKeyword: APIKeyword): Keyword {
+  // Convert API weakSpot to new weakSpots format
+  const weakSpots = {
+    reddit: apiKeyword.weakSpot.type === "reddit" ? apiKeyword.weakSpot.rank : null,
+    quora: apiKeyword.weakSpot.type === "quora" ? apiKeyword.weakSpot.rank : null,
+    pinterest: apiKeyword.weakSpot.type === "pinterest" ? apiKeyword.weakSpot.rank : null,
+  }
+
   return {
     id: parseInt(apiKeyword.id, 10) || Math.random() * 1000000,
     keyword: apiKeyword.keyword,
     intent: apiKeyword.intent.all,
     volume: apiKeyword.volume,
     trend: apiKeyword.trend.values,
-    weakSpot: {
-      type: apiKeyword.weakSpot.type as "reddit" | "quora" | null,
-      rank: apiKeyword.weakSpot.rank ?? undefined,
-    },
+    weakSpots,
     kd: apiKeyword.kd,
     cpc: apiKeyword.cpc,
     serpFeatures: apiKeyword.serp.features.map((f) => f.type) as SERPFeature[],
     geoScore: apiKeyword.geoScore.score,
+    hasAio: apiKeyword.aioAnalysis?.hasAIOverview ?? apiKeyword.serp.features.some((f) => f.type === "ai_overview"),
   }
 }
 

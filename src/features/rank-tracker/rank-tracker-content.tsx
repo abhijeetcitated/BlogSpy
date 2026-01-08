@@ -78,6 +78,7 @@ import { Sparkline } from "@/components/charts"
 import { cn } from "@/lib/utils"
 import { PixelRankBadge } from "@/components/ui/pixel-rank-badge"
 import { generateMockPixelRank } from "@/lib/pixel-calculator"
+import { STACK_SPACING } from "@/src/styles"
 
 import { MOCK_RANK_DATA } from "./__mocks__"
 import { MOCK_MULTI_PLATFORM_DATA, generatePlatformStats, getCountryStats } from "./__mocks__/multi-platform-data"
@@ -432,7 +433,7 @@ export function RankTrackerContent() {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background">
-        <div className="space-y-4 sm:space-y-6">
+        <div className={STACK_SPACING.default}>
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3">

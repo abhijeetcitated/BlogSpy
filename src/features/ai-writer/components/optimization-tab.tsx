@@ -42,9 +42,9 @@ export function OptimizationTab({
   onWriteConclusion,
 }: OptimizationTabProps) {
   return (
-    <div className="p-3 sm:p-4 space-y-6">
+    <div className="flex-1 overflow-y-auto p-4 space-y-6 m-0">
       {/* Content Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div className="p-3 rounded-lg bg-muted/30 border border-border">
           <p className="text-xs text-muted-foreground mb-1">Words</p>
           <p className="text-xl font-bold text-foreground">
@@ -109,7 +109,7 @@ export function OptimizationTab({
                 "text-xs transition-colors",
                 keyword.used
                   ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                  : "bg-muted border-border text-muted-foreground"
+                  : "bg-slate-800 border-slate-700 text-muted-foreground"
               )}
             >
               {keyword.text}
@@ -130,7 +130,7 @@ export function OptimizationTab({
             size="sm"
             onClick={onGenerateFAQ}
             disabled={isAIGenerating}
-            className="justify-start gap-2 h-9 bg-card/50 border-border hover:bg-card hover:border-emerald-500/50"
+            className="justify-start gap-2 h-9 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-emerald-500/50"
           >
             {aiAction === "faq" && isAIGenerating ? (
               <Loader2 className="h-4 w-4 text-emerald-400 animate-spin" />
@@ -144,7 +144,7 @@ export function OptimizationTab({
             size="sm"
             onClick={onWriteConclusion}
             disabled={isAIGenerating}
-            className="justify-start gap-2 h-9 bg-card/50 border-border hover:bg-card hover:border-cyan-500/50"
+            className="justify-start gap-2 h-9 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-cyan-500/50"
           >
             {aiAction === "conclusion" && isAIGenerating ? (
               <Loader2 className="h-4 w-4 text-cyan-400 animate-spin" />
@@ -157,7 +157,7 @@ export function OptimizationTab({
             variant="outline"
             size="sm"
             disabled={isAIGenerating}
-            className="justify-start gap-2 h-9 bg-card/50 border-border hover:bg-card hover:border-yellow-500/50"
+            className="justify-start gap-2 h-9 bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-yellow-500/50"
           >
             <CheckCircle2 className="h-4 w-4 text-yellow-400" />
             Fix Grammar
@@ -180,7 +180,7 @@ export function OptimizationTab({
             </p>
             <Button
               size="sm"
-              className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-background font-medium"
+              className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-medium"
             >
               Draft Better Definition
               <ArrowRight className="h-3.5 w-3.5" />

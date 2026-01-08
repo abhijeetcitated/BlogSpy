@@ -234,10 +234,10 @@ export function MetaPanel({
   )
 
   return (
-    <Card className="bg-card/50 border-border overflow-hidden">
+    <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
       {/* Header */}
       <div 
-        className="flex items-center justify-between px-4 py-3 bg-card border-b border-border cursor-pointer"
+        className="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-3">
@@ -297,7 +297,7 @@ export function MetaPanel({
               value={metaTitle}
               onChange={(e) => setMetaTitle(e.target.value)}
               className={cn(
-                "text-sm bg-background/50",
+                "text-sm bg-slate-900/50",
                 !validation.title.isValid && "border-amber-500/50"
               )}
               placeholder="SEO-optimized page title..."
@@ -353,7 +353,7 @@ export function MetaPanel({
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
               className={cn(
-                "text-sm bg-background/50 min-h-[80px] resize-none",
+                "text-sm bg-slate-900/50 min-h-[80px] resize-none",
                 !validation.description.isValid && "border-amber-500/50"
               )}
               placeholder="Compelling meta description for search results..."
@@ -386,7 +386,7 @@ export function MetaPanel({
               <Input
                 value={slug}
                 onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
-                className="text-sm bg-background/50 font-mono flex-1"
+                className="text-sm bg-slate-900/50 font-mono flex-1"
                 placeholder="url-slug"
               />
             </div>
@@ -410,7 +410,7 @@ export function MetaPanel({
             <Input
               value={focusKeyword}
               onChange={(e) => setFocusKeyword(e.target.value)}
-              className="text-sm bg-background/50"
+              className="text-sm bg-slate-900/50"
               placeholder="Primary keyword to target..."
             />
           </div>
@@ -426,7 +426,7 @@ export function MetaPanel({
                   <Badge
                     key={i}
                     variant="outline"
-                    className="text-xs bg-background/50 border-border"
+                    className="text-xs bg-slate-900/50 border-slate-600"
                   >
                     {kw}
                   </Badge>
@@ -440,7 +440,7 @@ export function MetaPanel({
           </div>
 
           {/* Schema Markup */}
-          <div className="space-y-3 pt-3 border-t border-border">
+          <div className="space-y-3 pt-3 border-t border-slate-700">
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-purple-400" />
               Schema Markup (Structured Data)

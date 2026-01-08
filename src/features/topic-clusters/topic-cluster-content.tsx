@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
+import { STACK_SPACING, PAGE_PADDING } from "@/src/styles"
 
 // ============================================
 // TYPES - Advanced Schema
@@ -1009,7 +1010,7 @@ export function TopicClusterContent() {
 
   return (
     <div className="min-h-full transition-colors">
-      <div className="max-w-[1800px] mx-auto space-y-4 px-3 sm:px-4 md:px-6 py-4">
+      <div className={`max-w-[1800px] mx-auto ${STACK_SPACING.default} ${PAGE_PADDING.default}`}>
         
         {/* Credit Badge Row */}
         <div className="flex items-center justify-between gap-3">

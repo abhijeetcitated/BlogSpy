@@ -32,6 +32,7 @@ import type { DeviceView, KeywordMetrics } from "./types"
 import type { CTRStealingFeature } from "@/types/rtv.types"
 import type { GEOScoreComponents } from "@/types/geo.types"
 import type { SERPResult } from "./types"
+import { PAGE_PADDING, STACK_SPACING } from "@/src/styles"
 
 // ============================================
 // TYPES
@@ -131,7 +132,7 @@ export function KeywordOverviewContent({ keyword = "AI Agents" }: KeywordOvervie
 
   return (
     <ErrorBoundary fallback={<KeywordOverviewError error="Something went wrong" onRetry={refetch} />}>
-      <div className="flex-1 p-4 lg:p-6 space-y-4 lg:space-y-6 overflow-x-hidden">
+      <div className={`flex-1 ${PAGE_PADDING.default} ${STACK_SPACING.default} overflow-x-hidden`}>
         {/* Header with Refresh */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">

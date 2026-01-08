@@ -215,28 +215,18 @@ export function createColumns(options: {
     },
 
     // ─────────────────────────────────────────
-    // COLUMN 8: Weak Spot (Reddit/Quora Icon + Rank)
+    // COLUMN 8: Weak Spot (All 3 platforms: Reddit, Quora, Pinterest)
     // ─────────────────────────────────────────
     {
-      accessorKey: "weakSpot",
+      accessorKey: "weakSpots",
       header: "Weak Spot",
-      cell: ({ row }) => {
-        const weakSpot = row.original.weakSpot
-        // Map weakSpot.type to level
-        const level = weakSpot?.type ? (weakSpot.rank && weakSpot.rank <= 5 ? "high" : weakSpot.rank && weakSpot.rank <= 10 ? "medium" : "low") : "none"
-        const reasons = weakSpot?.type ? [`${weakSpot.type} ranks #${weakSpot.rank || "??"}`] : undefined
-        return (
-          <WeakSpotColumn 
-            level={level} 
-            score={weakSpot?.rank}
-            reasons={reasons}
-          />
-        )
-      },
+      cell: ({ row }) => (
+        <WeakSpotColumn weakSpots={row.original.weakSpots} />
+      ),
       enableSorting: false,
-      size: 90,
+      size: 160,
       meta: {
-        className: "w-[90px]",
+        className: "w-[160px]",
       } as ColumnMeta,
     },
 
@@ -254,7 +244,9 @@ export function createColumns(options: {
           {column.getIsSorted() === "asc" ? " ↑" : column.getIsSorted() === "desc" ? " ↓" : ""}
         </button>
       ),
-      cell: ({ row }) => <GeoColumn geoScore={row.original.geoScore} />,
+      cell: ({ row }) => (
+        <GeoColumn geoScore={row.original.geoScore} hasAio={row.original.hasAio} />
+      ),
       enableSorting: true,
       sortingFn: "basic",
       size: 70,
@@ -271,7 +263,7 @@ export function createColumns(options: {
       header: "SERP",
       cell: ({ row }) => (
         <SerpColumn 
-          features={row.original.serpFeatures as never[]} 
+          features={row.original.serpFeatures ?? []} 
           maxDisplay={3}
         />
       ),

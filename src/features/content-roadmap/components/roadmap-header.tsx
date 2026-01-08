@@ -32,7 +32,7 @@ export function RoadmapHeader({
   totalPotential,
 }: RoadmapHeaderProps) {
   return (
-    <div className="sticky top-0 z-20 bg-card border-b border-border p-4">
+    <div className="sticky top-0 z-20 bg-slate-900 border-b border-slate-800 p-4">
       <div className="flex flex-col gap-4">
         {/* Top Row */}
         <div className="flex items-center justify-between">
@@ -46,7 +46,7 @@ export function RoadmapHeader({
                 placeholder="Search tasks..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-9 h-9 w-64 bg-muted border-border focus:border-purple-500 placeholder:text-muted-foreground"
+                className="pl-9 h-9 w-64 bg-slate-800/50 border-slate-700 focus:border-purple-500 placeholder:text-slate-500"
               />
             </div>
 

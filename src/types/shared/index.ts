@@ -2,7 +2,7 @@
  * Shared Types - Single Source of Truth
  * 
  * This module contains common types used across multiple features.
- * Import from '@/src/types/shared' to use these types.
+ * Import from '@/types/shared' to use these types.
  */
 
 // ============================================
@@ -87,6 +87,11 @@ export interface CommonFilterState extends BaseFilterState {
   includeTerms: string[];
   excludeTerms: string[];
 }
+
+/**
+ * Default shared filter state alias.
+ */
+export type FilterState = CommonFilterState;
 
 /**
  * Pagination state

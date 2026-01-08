@@ -342,7 +342,7 @@ function analyzeKeywords(
   }
   
   // Calculate quality metrics
-  const coveragePercent = Math.round((usedIds.size / keywords.length) * 100)
+  const coveragePercent = keywords.length > 0 ? Math.round((usedIds.size / keywords.length) * 100) : 0
   
   let qualityScore = 0
   if (pillars.length > 0) qualityScore += 20
