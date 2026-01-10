@@ -22,11 +22,11 @@ export * from "./config"
 // Types
 export * from "./types"
 
-// Services
-export * from "./services"
-
 // Hooks
 export * from "./hooks"
 
 // Components
 export * from "./components"
+
+// ⚠️ Server-only exports
+// Import from [`server.ts`](src/features/social-tracker/credits/server.ts:1) in Server Components / Route Handlers.

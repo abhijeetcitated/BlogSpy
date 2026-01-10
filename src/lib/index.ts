@@ -12,14 +12,8 @@
  * ```
  */
 
-// Database (Supabase)
-export * from "./supabase"
+// Client-safe exports only.
+// - Client entrypoint: [`client.ts`](src/lib/client.ts:1)
+// - Server entrypoint: [`server.ts`](src/lib/server.ts:1)
 
-// AI (OpenRouter)
-export * from "./ai"
-
-// SEO Data (DataForSEO)
-export * from "./seo"
-
-// Payments (Lemon Squeezy)
-export * from "./payments"
+export * from "./client"

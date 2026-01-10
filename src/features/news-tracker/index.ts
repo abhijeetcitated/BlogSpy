@@ -38,11 +38,11 @@ export * from "./constants"
 // Components
 export * from "./components"
 
-// Services
-export * from "./services"
-
 // Hooks
 export * from "./hooks"
 
 // Configuration
 export * from "./config"
+
+// ⚠️ Server-only exports
+// Import from [`server.ts`](src/features/news-tracker/server.ts:1) in Server Components / Route Handlers.
