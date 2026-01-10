@@ -25,17 +25,19 @@ import { refreshKeywordAction } from "../../../../actions/refresh-keyword"
 // ============================================
 
 interface RefreshCreditsHeaderProps {
-  selectedCount: number
+  selectedCount?: number
 }
 
-export function RefreshCreditsHeader({ selectedCount }: RefreshCreditsHeaderProps) {
-  const [isBulkRefreshing, setIsBulkRefreshing] = useState(false)
-
+export function RefreshCreditsHeader({ selectedCount: selectedCountProp }: RefreshCreditsHeaderProps) {
   // Zustand store
   const keywords = useKeywordStore((state) => state.keywords)
   const selectedIds = useKeywordStore((state) => state.selectedIds)
   const updateKeyword = useKeywordStore((state) => state.updateKeyword)
   const setCredits = useKeywordStore((state) => state.setCredits)
+
+  // Use prop if provided, otherwise derive from store
+  const selectedCount = selectedCountProp ?? selectedIds.size
+  const [isBulkRefreshing, setIsBulkRefreshing] = useState(false)
 
   // Handle bulk refresh
   const handleBulkRefresh = useCallback(async () => {

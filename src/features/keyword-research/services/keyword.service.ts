@@ -4,7 +4,7 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
  * Core data fetching logic for Keyword Explorer.
- * - Mock mode: Returns realistic test data
+ * - Mock mode: Returns realistic test data (pre-enriched with RTV)
  * - Real mode: Calls DataForSEO Labs API
  */
 
@@ -74,8 +74,7 @@ export async function fetchKeywords(
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 800))
 
-    // Return ALL mock keywords for demo - no filtering
-    // This ensures users always see results in the UI
+    // MOCK_KEYWORDS are pre-enriched with RTV at definition time
     return MOCK_KEYWORDS
   }
 

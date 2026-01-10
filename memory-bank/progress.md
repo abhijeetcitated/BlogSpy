@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-01-10 - Keyword Explorer Forensic Documentation (Hindi)
+
+### Completed
+
+- [x] Consolidated a true hierarchical feature tree + wiring evidence into [`docs/KEYWORD_EXPLORER_FORENSIC_REPORT_HI.md`](docs/KEYWORD_EXPLORER_FORENSIC_REPORT_HI.md:1)
+- [x] Documented dual table architecture (legacy vs TanStack), drawer cache TTL, server action orchestration, and DataForSEO endpoint map with evidence links
+- [x] Recorded high-risk issues for follow-up: legacy table render-loop/hydration risk, credits mismatch (Social/Bulk), and DB schema assumptions in refresh action
+
+---
+
 ## 2026-01-06 - VS Code MCP Config Portability
 
 ### Completed

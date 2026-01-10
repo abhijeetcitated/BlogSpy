@@ -1,1 +1,2 @@
-export { calendarEvents, calendarEvents as mockCalendarEvents, getEventsForNiche } from "./events"
+// Calendar Events Mock Data
+export { calendarEvents, getEventsForNiche } from "./events"

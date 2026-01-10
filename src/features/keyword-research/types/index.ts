@@ -43,7 +43,12 @@ export interface Keyword {
   /** Realizable Traffic Value (volume after SERP feature loss) */
   rtv?: number
   /** Breakdown of traffic loss by SERP feature */
-  rtvBreakdown?: Array<{ label: string; value: number }>
+  rtvBreakdown?: Array<{ 
+    label: string
+    value: number
+    icon?: "bot" | "map" | "snippet" | "ad" | "video"
+    color?: string
+  }>
   geoScore?: number
   hasAio?: boolean
   // Refresh tracking

@@ -2,11 +2,16 @@
 // KEYWORD RESEARCH - Mock Keywords Data
 // ============================================
 // Realistic mock data for development/testing
+// Pre-enriched with RTV calculations
 // ============================================
 
 import type { Keyword } from "../types"
+import { calculateRtv } from "../utils/rtv-calculator"
 
-export const MOCK_KEYWORDS: Keyword[] = [
+/**
+ * Raw mock keyword data (without RTV)
+ */
+const RAW_MOCK_KEYWORDS: Omit<Keyword, "rtv" | "rtvBreakdown">[] = [
   {
     id: 1,
     keyword: "best seo tools",
@@ -218,3 +223,30 @@ export const MOCK_KEYWORDS: Keyword[] = [
     dataSource: "mock",
   },
 ]
+
+/**
+ * Enrich a keyword with calculated RTV data
+ */
+function enrichWithRtv(keyword: Omit<Keyword, "rtv" | "rtvBreakdown">): Keyword {
+  const rtvResult = calculateRtv({
+    volume: keyword.volume,
+    cpc: keyword.cpc,
+    serpFeatures: keyword.serpFeatures,
+  })
+  
+  return {
+    ...keyword,
+    rtv: rtvResult.rtv,
+    rtvBreakdown: rtvResult.breakdown.map(b => ({
+      label: b.label,
+      value: Math.abs(b.value), // Store as positive for display
+      icon: b.icon,
+      color: b.color,
+    })),
+  } as Keyword
+}
+
+/**
+ * Pre-enriched mock keywords with RTV calculations
+ */
+export const MOCK_KEYWORDS: Keyword[] = RAW_MOCK_KEYWORDS.map(enrichWithRtv)

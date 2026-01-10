@@ -1,12 +1,7 @@
 // ============================================
-// KEYWORD DETAILS DRAWER - Commerce Tab (Robust)
+// KEYWORD DETAILS DRAWER - Commerce Tab (Redesigned)
 // ============================================
-// Displays commerce/e-commerce opportunities for the keyword
-// Features:
-// - State machine: idle → loading → success/error
-// - Server action integration with error handling
-// - Retry functionality
-// - Credit-based loading UI
+// Product-focused UI with compact metrics and hero product grid
 // ============================================
 
 "use client"
@@ -21,7 +16,9 @@ import {
   RefreshCw,
   AlertTriangle,
   Lock,
-  Zap
+  Zap,
+  ExternalLink,
+  TrendingUp
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -42,6 +39,7 @@ import { useKeywordStore } from "../../store"
 
 interface CommerceTabProps {
   keyword: Keyword
+  onRefresh?: () => void
 }
 
 // ============================================
@@ -57,11 +55,8 @@ function LockedState({
   isLoading: boolean 
 }) {
   return (
-    <Card className="relative overflow-hidden bg-linear-to-br from-orange-500/5 to-yellow-500/5 border-orange-500/20">
-      {/* Blur overlay */}
-      <div className="absolute inset-0 backdrop-blur-[2px] bg-background/30 z-10" />
-      
-      <CardContent className="relative z-20 p-8 text-center">
+    <Card className="relative overflow-hidden bg-gradient-to-br from-orange-500/5 to-yellow-500/5 border-orange-500/20">
+      <CardContent className="p-8 text-center">
         <div className="h-16 w-16 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
           <Lock className="h-8 w-8 text-orange-500" />
         </div>
@@ -73,7 +68,7 @@ function LockedState({
           onClick={onLoad}
           disabled={isLoading}
           size="lg"
-          className="bg-linear-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white gap-2"
+          className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white gap-2"
         >
           {isLoading ? (
             <>
@@ -99,13 +94,12 @@ function LockedState({
 function LoadingState() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-20 w-full" />
+      <Skeleton className="h-16 w-full" />
+      <div className="grid grid-cols-2 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-64 w-full" />
         ))}
       </div>
-      <Skeleton className="h-16 w-full" />
-      <Skeleton className="h-48 w-full" />
     </div>
   )
 }
@@ -142,44 +136,123 @@ function ErrorState({
   )
 }
 
-/** Product card component */
-function ProductCard({ product }: { product: AmazonProduct }) {
-  const getAffiliateBadge = (potential: string) => {
-    switch (potential) {
-      case "high": return { color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20", label: "High" }
-      case "medium": return { color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", label: "Medium" }
-      default: return { color: "bg-muted text-muted-foreground", label: "Low" }
+/** Compact Market Insight Bar */
+function MarketInsightBar({ amazonData }: { amazonData: AmazonData }) {
+  const getCompetitionColor = (level: string) => {
+    switch (level) {
+      case "low": return "text-emerald-500"
+      case "medium": return "text-yellow-500"
+      case "high": return "text-red-500"
+      default: return "text-muted-foreground"
     }
   }
 
-  const badge = getAffiliateBadge(product.affiliatePotential)
-
   return (
-    <div className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-2 hover:bg-muted/50 transition-colors">
-      <div className="flex items-start justify-between gap-2">
-        <span className="text-sm font-medium line-clamp-2 flex-1">
-          {product.title}
-        </span>
-        <Badge variant="outline" className={cn("shrink-0 text-xs", badge.color)}>
-          {badge.label}
-        </Badge>
+    <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
+      <div className="flex items-center gap-2">
+        <DollarSign className="h-5 w-5 text-emerald-500" />
+        <div>
+          <div className="text-xs text-muted-foreground">Avg Price</div>
+          <div className="text-lg font-bold">${amazonData.avgPrice.toFixed(2)}</div>
+        </div>
       </div>
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="text-emerald-500 font-semibold">
-          ${product.price.toFixed(2)}
-        </span>
-        <span className="flex items-center gap-1">
-          <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-          {product.rating.toFixed(1)}
-        </span>
-        <span>{product.reviews.toLocaleString()} reviews</span>
-        {product.isPrime && (
-          <Badge variant="secondary" className="text-[10px] bg-blue-500/10 text-blue-500">
-            Prime
-          </Badge>
-        )}
+      
+      <div className="h-8 w-px bg-border" />
+      
+      <div className="flex items-center gap-2">
+        <Package className="h-5 w-5 text-primary" />
+        <div>
+          <div className="text-xs text-muted-foreground">Products</div>
+          <div className="text-lg font-bold">{amazonData.totalProducts.toLocaleString()}</div>
+        </div>
+      </div>
+      
+      <div className="h-8 w-px bg-border" />
+      
+      <div className="flex items-center gap-2">
+        <TrendingUp className="h-5 w-5 text-blue-500" />
+        <div>
+          <div className="text-xs text-muted-foreground">Competition</div>
+          <div className={cn("text-lg font-bold", getCompetitionColor(amazonData.competitionLevel))}>
+            {amazonData.competitionLevel.charAt(0).toUpperCase() + amazonData.competitionLevel.slice(1)}
+          </div>
+        </div>
       </div>
     </div>
+  )
+}
+
+/** Product card component - redesigned */
+function ProductCard({ product }: { product: AmazonProduct }) {
+  const isBestSeller = product.reviews > 1000
+  const [imageError, setImageError] = React.useState(false)
+
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+      <CardContent className="p-0">
+        {/* Product Image */}
+        <div className="relative aspect-square bg-muted/30 flex items-center justify-center overflow-hidden">
+          {!imageError ? (
+            <img
+              src={product.imageUrl}
+              alt={product.title}
+              className="w-full h-full object-contain p-4"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+              <Package className="h-12 w-12" />
+              <span className="text-xs">No Image</span>
+            </div>
+          )}
+          {isBestSeller && (
+            <Badge className="absolute top-2 right-2 bg-orange-500 text-white border-none">
+              <Star className="h-3 w-3 mr-1 fill-white" />
+              Best Seller
+            </Badge>
+          )}
+          {product.isPrime && (
+            <Badge className="absolute top-2 left-2 bg-blue-500 text-white border-none text-xs">
+              Prime
+            </Badge>
+          )}
+        </div>
+
+        {/* Product Details */}
+        <div className="p-4 space-y-3">
+          {/* Title */}
+          <h4 className="text-sm font-medium line-clamp-2 min-h-[2.5rem]">
+            {product.title}
+          </h4>
+
+          {/* Rating */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+              <span className="font-semibold text-foreground">{product.rating.toFixed(1)}</span>
+            </div>
+            <span>•</span>
+            <span>{product.reviews.toLocaleString()} reviews</span>
+          </div>
+
+          {/* Price */}
+          <div className="text-2xl font-bold text-emerald-500">
+            ${product.price.toFixed(2)}
+          </div>
+
+          {/* Action Button - Amazon Brand Colors */}
+          <Button
+            className="w-full gap-2 bg-gradient-to-b from-[#f7dfa5] to-[#f0c14b] hover:from-[#f5d78e] hover:to-[#e7b53f] text-[#111] font-semibold border border-[#a88734] shadow-sm transition-all"
+            asChild
+          >
+            <a href={product.productUrl} target="_blank" rel="noopener noreferrer">
+              View on Amazon
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -187,7 +260,7 @@ function ProductCard({ product }: { product: AmazonProduct }) {
 // MAIN COMPONENT
 // ============================================
 
-export function CommerceTab({ keyword }: CommerceTabProps) {
+export function CommerceTab({ keyword, onRefresh }: CommerceTabProps) {
   // ─────────────────────────────────────────
   // STATE MACHINE
   // ─────────────────────────────────────────
@@ -257,6 +330,7 @@ export function CommerceTab({ keyword }: CommerceTabProps) {
         setDrawerCache(keyword.keyword, "commerce", result.data.data)
         setAmazonData(result.data.data)
         setState("success")
+        onRefresh?.()
       } else {
         // Handle structured error from server action
         const errorMsg = result?.data?.error || result?.serverError || "Failed to fetch Amazon data"
@@ -280,15 +354,6 @@ export function CommerceTab({ keyword }: CommerceTabProps) {
     if (score >= 70) return "text-emerald-500"
     if (score >= 50) return "text-yellow-500"
     return "text-red-500"
-  }
-
-  const getCompetitionColor = (level: string) => {
-    switch (level) {
-      case "low": return "text-emerald-500 bg-emerald-500/10"
-      case "medium": return "text-yellow-500 bg-yellow-500/10"
-      case "high": return "text-red-500 bg-red-500/10"
-      default: return "text-muted-foreground bg-muted"
-    }
   }
 
   // ─────────────────────────────────────────
@@ -381,49 +446,13 @@ export function CommerceTab({ keyword }: CommerceTabProps) {
       {/* SUCCESS: Show Amazon data */}
       {state === "success" && amazonData && (
         <>
-          {/* Summary Stats */}
-          <div className="grid grid-cols-3 gap-3">
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-3 text-center">
-                <DollarSign className="h-5 w-5 text-emerald-500 mx-auto mb-1" />
-                <div className="text-lg font-bold">${amazonData.avgPrice.toFixed(2)}</div>
-                <div className="text-xs text-muted-foreground">Avg Price</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-3 text-center">
-                <Star className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-                <div className="text-lg font-bold">{amazonData.avgRating.toFixed(1)}</div>
-                <div className="text-xs text-muted-foreground">Avg Rating</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/50 border-border/50">
-              <CardContent className="p-3 text-center">
-                <Package className="h-5 w-5 text-primary mx-auto mb-1" />
-                <div className="text-lg font-bold">{amazonData.totalProducts}</div>
-                <div className="text-xs text-muted-foreground">Products</div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Market Insight Bar */}
+          <MarketInsightBar amazonData={amazonData} />
 
-          {/* Competition Level */}
-          <Card className="bg-card/50 border-border/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Amazon Competition</span>
-                <Badge className={getCompetitionColor(amazonData.competitionLevel)}>
-                  {amazonData.competitionLevel.charAt(0).toUpperCase() + amazonData.competitionLevel.slice(1)}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top Products */}
-          <Card className="bg-card/50 border-border/50">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Top Products
-              </CardTitle>
+          {/* Product Grid (2 columns) */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-muted-foreground">Top Products</h3>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -433,19 +462,25 @@ export function CommerceTab({ keyword }: CommerceTabProps) {
                 <RefreshCw className="h-3 w-3" />
                 Refresh
               </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {amazonData.products.length > 0 ? (
-                amazonData.products.map((product) => (
+            </div>
+            
+            {amazonData.products.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4">
+                {amazonData.products.map((product) => (
                   <ProductCard key={product.asin} product={product} />
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No products found for this keyword
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="bg-muted/30 border-dashed">
+                <CardContent className="p-8 text-center">
+                  <Package className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    No products found for this keyword
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </>
       )}
     </div>

@@ -196,221 +196,227 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
   const intents = (keyword.intent ?? []) as IntentCode[]
 
   return (
-    <div className="space-y-4">
-      <RtvBreakdown volume={volume} rtv={rtvValue} loss={loss} breakdown={rtvBreakdown} />
+    <div className="grid grid-cols-12 gap-3 sm:gap-4 h-full p-0.5 sm:p-1">
+      {/* Left: Dense dashboard (RTV + core metrics) */}
+      <div className="col-span-12 lg:col-span-8 flex flex-col min-h-0 gap-3 sm:gap-4">
+        <div className="shrink-0">
+          <RtvBreakdown
+            volume={volume}
+            rtv={rtvValue}
+            loss={loss}
+            breakdown={rtvBreakdown}
+            serpFeatures={keyword.serpFeatures as string[]}
+          />
+        </div>
 
-      {/* SEARCH INTENT CARD */}
-      {intents.length > 0 && (
-        <Card className="bg-card/50 border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-foreground">Search Intent</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              What users are looking for when they search this keyword
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3 flex-wrap">
-              {intents.map((intentCode) => {
-                const config = intentConfig[intentCode]
-                if (!config) return null
-                const Icon = config.icon
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {/* Trend Card */}
+          <Card className="border-border bg-transparent">
+            <CardHeader className="pb-1 px-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Trend
+                </CardTitle>
+                <div className="inline-flex items-center gap-1.5 text-[11px]">
+                  {React.createElement(trendIcon, {
+                    className: cn(
+                      "h-3.5 w-3.5",
+                      trendGrowth > 3
+                        ? "text-emerald-400"
+                        : trendGrowth < -3
+                          ? "text-rose-400"
+                          : "text-muted-foreground"
+                    ),
+                  })}
+                  <span
+                    className={cn(
+                      "tabular-nums font-medium",
+                      trendGrowth > 3
+                        ? "text-emerald-400"
+                        : trendGrowth < -3
+                          ? "text-rose-400"
+                          : "text-muted-foreground"
+                    )}
+                  >
+                    {`${trendGrowth >= 0 ? "+" : ""}${trendGrowth.toFixed(1)}%`}
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
 
-                return (
-                  <Tooltip key={intentCode}>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "h-8 px-3 font-medium border cursor-default",
-                          config.bgColor,
-                          config.borderColor,
-                          config.color
-                        )}
-                      >
-                        <Icon className="h-3.5 w-3.5 mr-1.5" />
-                        {config.label}
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="text-xs">
-                        <div className="font-semibold mb-1">{config.label} Intent</div>
-                        <div className="text-muted-foreground">
-                          {intentCode === "I" && "Users want information or answers"}
-                          {intentCode === "C" && "Users are researching products/services"}
-                          {intentCode === "T" && "Users are ready to buy or take action"}
-                          {intentCode === "N" && "Users want to find a specific site"}
-                        </div>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            <CardContent className="space-y-2 pt-2 px-4 pb-4">
+              <div className="text-[11px] text-muted-foreground/60">Last 12 months</div>
+              <div className="h-[64px] w-full">
+                <ResponsiveContainer width="100%" height={64}>
+                  <LineChart data={trendData} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+                    <XAxis dataKey="i" hide />
+                    <YAxis hide domain={[0, "dataMax"]} />
+                    <RechartsTooltip
+                      cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
+                      contentStyle={{
+                        background: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: 8,
+                        color: "hsl(var(--popover-foreground))",
+                        fontSize: 11,
+                      }}
+                      labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                      formatter={(value: unknown) => [formatInt(Number(value) || 0), "Volume"]}
+                      labelFormatter={(label) => `Month ${Number(label) + 1}`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="v"
+                      stroke="#6366f1"
+                      strokeWidth={2}
+                      dot={false}
+                      isAnimationActive={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* METRIC GRID - 3 Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Trend Card */}
-        <Card className="border-border bg-transparent">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Trend</CardTitle>
-              <div className="inline-flex items-center gap-1.5 text-xs">
-                {React.createElement(trendIcon, {
-                  className: cn(
-                    "h-3.5 w-3.5",
-                    trendGrowth > 3 ? "text-emerald-400" : trendGrowth < -3 ? "text-rose-400" : "text-muted-foreground"
-                  ),
-                })}
-                <span
+          {/* KD Card */}
+          <Card className="border-border bg-transparent">
+            <CardHeader className="pb-1 px-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  KD
+                </CardTitle>
+                <span className="text-[11px] text-muted-foreground/60">0–100</span>
+              </div>
+            </CardHeader>
+
+            <CardContent className="flex flex-col items-center justify-center space-y-1.5 pt-2 px-4 pb-4">
+              <KdGauge value={kd} />
+              <div className="text-sm font-medium text-foreground/80">
+                {kd <= 29 ? "Easy" : kd <= 49 ? "Moderate" : kd <= 69 ? "Hard" : "Very Hard"}
+              </div>
+              <div className="text-[11px] text-center text-muted-foreground/60">Lower is easier to rank</div>
+            </CardContent>
+          </Card>
+
+          {/* GEO Score Card */}
+          <Card className="border-border bg-transparent">
+            <CardHeader className="pb-1 px-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  GEO
+                </CardTitle>
+                {aioActive ? (
+                  <Badge
+                    variant="outline"
+                    className="border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px]"
+                  >
+                    <Bot className="h-3 w-3 mr-1" />
+                    AI
+                  </Badge>
+                ) : (
+                  <span className="text-[11px] text-muted-foreground/60">Traditional</span>
+                )}
+              </div>
+            </CardHeader>
+
+            <CardContent className="flex flex-col items-center justify-center space-y-1.5 pt-2 px-4 pb-4">
+              <div className="flex items-center gap-3">
+                <Bot
                   className={cn(
-                    "tabular-nums font-medium",
-                    trendGrowth > 3 ? "text-emerald-400" : trendGrowth < -3 ? "text-rose-400" : "text-muted-foreground"
+                    "h-7 w-7",
+                    aioActive ? "text-purple-400" : "text-muted-foreground/40"
+                  )}
+                />
+                <div
+                  className={cn(
+                    "text-3xl font-bold tabular-nums",
+                    aioActive ? "text-purple-300" : "text-primary/70"
                   )}
                 >
-                  {`${trendGrowth >= 0 ? "+" : ""}${trendGrowth.toFixed(1)}%`}
+                  {Math.round(geoScore)}%
+                </div>
+              </div>
+              <div className="text-[11px] text-center text-muted-foreground/60">AI answer readiness</div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Right: Compact cards (intent + scrollable secondary panels) */}
+      <div className="col-span-12 lg:col-span-4 flex flex-col min-h-0 gap-3 sm:gap-4">
+        {intents.length > 0 && (
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader className="pb-2 px-4">
+              <CardTitle className="text-sm font-semibold text-foreground">Search Intent</CardTitle>
+              <p className="text-[11px] text-muted-foreground">What users want for this query</p>
+            </CardHeader>
+            <CardContent className="pt-0 px-4 pb-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                {intents.map((intentCode) => {
+                  const config = intentConfig[intentCode]
+                  if (!config) return null
+                  const Icon = config.icon
+
+                  return (
+                    <Tooltip key={intentCode}>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "h-7 px-2.5 text-xs font-medium border cursor-default",
+                            config.bgColor,
+                            config.borderColor,
+                            config.color
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5 mr-1.5" />
+                          {config.label}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="text-xs">
+                          <div className="font-semibold mb-1">{config.label} Intent</div>
+                          <div className="text-muted-foreground">
+                            {intentCode === "I" && "Users want information or answers"}
+                            {intentCode === "C" && "Users are researching products/services"}
+                            {intentCode === "T" && "Users are ready to buy or take action"}
+                            {intentCode === "N" && "Users want to find a specific site"}
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="bg-card/50 border-border flex flex-col min-h-0">
+          <CardHeader className="pb-2 px-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Weak Spots
+              </CardTitle>
+              <div className="inline-flex items-center gap-1.5 text-xs">
+                <Eye className="h-3.5 w-3.5 text-violet-500" />
+                <span className="tabular-nums font-semibold text-violet-600 dark:text-violet-400">
+                  {weakSignals.length}
                 </span>
               </div>
             </div>
           </CardHeader>
-
-          <CardContent className="space-y-2">
-            <div className="text-xs text-muted-foreground/60">Last 12 months</div>
-            <div className="h-[80px] w-full">
-              <ResponsiveContainer width="100%" height={80}>
-                <LineChart data={trendData} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
-                  <XAxis dataKey="i" hide />
-                  <YAxis hide domain={[0, "dataMax"]} />
-                  <RechartsTooltip
-                    cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      color: "hsl(var(--popover-foreground))",
-                      fontSize: 11,
-                    }}
-                    labelStyle={{ color: "hsl(var(--muted-foreground))" }}
-                    formatter={(value: unknown) => [formatInt(Number(value) || 0), "Volume"]}
-                    labelFormatter={(label) => `Month ${Number(label) + 1}`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="v"
-                    stroke="#6366f1"
-                    strokeWidth={2}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* KD Card */}
-        <Card className="border-border bg-transparent">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Keyword Difficulty
-              </CardTitle>
-              <span className="text-xs text-muted-foreground/60">0–100</span>
-            </div>
-          </CardHeader>
-
-          <CardContent className="flex flex-col items-center justify-center space-y-2">
-            <KdGauge value={kd} />
-            <div className="text-sm font-medium text-foreground/80">
-              {kd <= 29
-                ? "Easy"
-                : kd <= 49
-                ? "Moderate"
-                : kd <= 69
-                ? "Hard"
-                : "Very Hard"}
-            </div>
-            <div className="text-[11px] text-center text-muted-foreground/60">
-              Lower is easier to rank
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* GEO Score Card */}
-        <Card className="border-border bg-transparent">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                GEO Score
-              </CardTitle>
-              {aioActive ? (
-                <Badge
-                  variant="outline"
-                  className="border-purple-500/30 bg-purple-500/10 text-purple-300 text-[10px]"
-                >
-                  <Bot className="h-3 w-3 mr-1" />
-                  AI Active
-                </Badge>
-              ) : (
-                <span className="text-xs text-muted-foreground/60">Traditional</span>
-              )}
-            </div>
-          </CardHeader>
-
-          <CardContent className="flex flex-col items-center justify-center space-y-2">
-            <div className="flex items-center gap-3">
-              <Bot
-                className={cn(
-                  "h-8 w-8",
-                  aioActive ? "text-purple-400" : "text-muted-foreground/40"
-                )}
-              />
-              <div
-                className={cn(
-                  "text-4xl font-bold tabular-nums",
-                  aioActive ? "text-purple-300" : "text-primary/70"
-                )}
-              >
-                {Math.round(geoScore)}%
+          <CardContent className="flex-1 min-h-0 sm:overflow-y-auto pr-2 px-4 pb-4 space-y-2">
+            {weakSignals.length > 2 ? (
+              <div className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-medium text-violet-700 dark:text-violet-300">
+                🎯 High Opportunity
               </div>
-            </div>
-            <div className="text-[11px] text-center text-muted-foreground/60">
-              AI answer readiness
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* WEAK SPOT ANALYSIS */}
-      <Card className="bg-card/50 border-border">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Weak Spot Analysis
-            </CardTitle>
-            <div className="inline-flex items-center gap-1.5 text-xs">
-              <Eye className="h-3.5 w-3.5 text-violet-500" />
-              <span className="tabular-nums font-semibold text-violet-600 dark:text-violet-400">{weakSignals.length}</span>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-3">
-          {weakSignals.length > 2 && (
-            <div className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-sm font-medium text-violet-700 dark:text-violet-300">
-              🎯 High Opportunity: Multiple forums ranking
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-foreground">Platforms in top 10</div>
+            ) : null}
 
             {weakSignals.length === 0 ? (
-              <div className="text-sm text-muted-foreground">No weak platforms detected in the top 10.</div>
+              <div className="text-sm text-muted-foreground">No weak platforms in top 10.</div>
             ) : (
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                 {weakSignals.map((s) => {
                   const href = s.url || googleSearchUrlFor(s.platform)
                   const label = `${titleCase(s.platform)}`
@@ -421,13 +427,15 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
                       href={href}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-violet-500/30 bg-violet-500/5 hover:bg-violet-500/15 hover:border-violet-500/50 transition-all group"
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-violet-500/30 bg-violet-500/5 hover:bg-violet-500/15 hover:border-violet-500/50 transition-all group"
                       title={s.url ? "Open result" : "Search Google"}
                     >
                       <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-violet-500 text-[11px] font-bold text-white shadow-sm">
                         #{s.rank}
                       </span>
-                      <span className="text-sm font-medium text-violet-700 dark:text-violet-300 group-hover:text-violet-600 dark:group-hover:text-violet-200">{label}</span>
+                      <span className="text-sm font-medium text-violet-700 dark:text-violet-300 group-hover:text-violet-600 dark:group-hover:text-violet-200">
+                        {label}
+                      </span>
                     </a>
                   )
                 })}
@@ -435,37 +443,36 @@ export function OverviewTab({ keyword }: OverviewTabProps) {
             )}
 
             <p className="text-[11px] text-muted-foreground">
-              Click a platform to open the ranking result or search Google
+              Click a platform to open result/search
             </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* SERP FEATURES */}
-      <Card className="bg-card/50 border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            SERP Features
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {(keyword.serpFeatures ?? []).length > 0 ? (
-              (keyword.serpFeatures ?? []).map((feature) => (
-                <Badge
-                  key={feature}
-                  variant="outline"
-                  className="border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-xs font-medium hover:bg-indigo-500/20 transition-colors"
-                >
-                  {String(feature)}
-                </Badge>
-              ))
-            ) : (
-              <div className="text-sm text-muted-foreground">No special SERP features detected.</div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        <Card className="bg-card/50 border-border flex flex-col min-h-0">
+          <CardHeader className="pb-2 px-4">
+            <CardTitle className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              SERP Features
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 min-h-0 sm:overflow-y-auto pr-2 px-4 pb-4">
+            <div className="flex flex-wrap gap-2">
+              {(keyword.serpFeatures ?? []).length > 0 ? (
+                (keyword.serpFeatures ?? []).map((feature) => (
+                  <Badge
+                    key={feature}
+                    variant="outline"
+                    className="border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-xs font-medium hover:bg-indigo-500/20 transition-colors"
+                  >
+                    {String(feature)}
+                  </Badge>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground">No special SERP features.</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

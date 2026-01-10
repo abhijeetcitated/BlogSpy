@@ -146,8 +146,6 @@ export {
   MatchTypeToggle,
   // Table
   KeywordTable,
-  KeywordTableRow,
-  KeywordTableHeader,
   KeywordTableFooter,
   ActionBar,
   // Column components

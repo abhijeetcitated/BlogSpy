@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local/editor + tool state
+.vscode/
+.kilocode/
+
+# local backups & generated audits/trees
+/backups/
+/assets/citated-home.png
+/*_TREE*.txt
+/*_TREE*.md
+/blogspy-*.txt
+/blogspy-*.md
+/BLOGSPY_*.txt
+/BLOGSPY_*.md
+/project-tree-structure.txt
+/KEYWORD_EXPLORER_BLUEPRINT.md
+/KEYWORD_EXPLORER_*.md

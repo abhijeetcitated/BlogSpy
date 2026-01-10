@@ -18,7 +18,6 @@ interface KeywordResearchResultsProps {
   filterText: string
   activeFilterCount: number
   isSearching: boolean
-  country?: string
   isGuest?: boolean
 }
 
@@ -27,7 +26,6 @@ export function KeywordResearchResults({
   filterText,
   activeFilterCount,
   isSearching,
-  country,
   isGuest = false,
 }: KeywordResearchResultsProps) {
   // Zustand store for drawer
@@ -92,7 +90,6 @@ export function KeywordResearchResults({
       <div className="flex-1 h-full min-h-0 border border-border/50 rounded-lg bg-card overflow-hidden">
         <KeywordTable
           keywords={filteredKeywords}
-          country={country}
           isGuest={isGuest}
           onKeywordClick={handleKeywordClick}
         />

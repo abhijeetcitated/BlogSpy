@@ -1,5 +1,2 @@
-// ============================================
-// KEYWORD MAGIC - Mock Data Barrel Export
-// ============================================
-
+// Keyword Research Mock Data
 export { MOCK_KEYWORDS } from "./keyword-data"

@@ -63,6 +63,26 @@ export const publicAction = baseClient
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 export const authAction = baseClient.use(async ({ next }) => {
+  // ═══════════════════════════════════════════════════════════════
+  // MOCK MODE: Bypass authentication for development
+  // ═══════════════════════════════════════════════════════════════
+  const isMockMode = process.env.USE_MOCK_DATA === "true" ||
+                     process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+  
+  if (isMockMode) {
+    console.log("[authAction] MOCK MODE: Bypassing authentication")
+    const ctx: ActionContext = {
+      userId: "mock-user-dev-123",
+      email: "dev@ozmeum.com",
+      role: "user",
+    }
+    return next({ ctx })
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PRODUCTION MODE: Real Supabase authentication
+  // ═══════════════════════════════════════════════════════════════
+  
   // Get Supabase client
   const supabase = await createClient()
 

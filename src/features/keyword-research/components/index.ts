@@ -31,11 +31,9 @@ export { BulkModeToggle, BulkKeywordsInput, SearchInput, SearchSuggestions } fro
 // ============================================
 // TABLE
 // ============================================
-export { 
-  KeywordTable, 
-  KeywordTableRow,
-  KeywordTableHeader, 
-  KeywordTableFooter, 
+export {
+  KeywordTable,
+  KeywordTableFooter,
   // Action bar
   ActionBar,
   BulkActions,

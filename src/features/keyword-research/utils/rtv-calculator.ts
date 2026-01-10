@@ -1,15 +1,33 @@
-import { detectTrafficStealers, type TrafficStealers } from "./serp-parser"
+// ============================================================
+// RTV (Realizable Traffic Value) Calculator
+// ============================================================
+// Search volume is misleading - AI Overview, Featured Snippets,
+// Local Pack, Ads all steal clicks before organic results.
+// RTV = Volume × (1 - TotalLoss%)
+// ============================================================
 
+/**
+ * RTV Breakdown Item with UI metadata
+ */
 export type RtvBreakdownItem = {
+  /** Display label (e.g. "AI Overview") */
   label: string;
-  /** Loss contribution in percentage points (0..100). */
+  /** Loss percentage as negative number (e.g. -50) */
   value: number;
+  /** Icon identifier for UI: "bot" | "map" | "snippet" | "ad" | "video" */
+  icon: "bot" | "map" | "snippet" | "ad" | "video";
+  /** Tailwind color class for UI */
+  color: string;
 };
 
 export type RtvResult = {
+  /** Realizable Traffic Value (actual achievable clicks) */
   rtv: number;
-  /** Total loss as a fraction (0..1). */
+  /** Total loss as a fraction (0..0.85) */
   lossPercentage: number;
+  /** Total loss as percentage points (0..85) */
+  lossPercent: number;
+  /** Breakdown of losses with UI metadata */
   breakdown: RtvBreakdownItem[];
 };
 
@@ -20,6 +38,36 @@ export type SerpFeatureInput =
   | null
   | undefined;
 
+// ============================================================
+// LOSS RULES (Strict Math)
+// ============================================================
+// - ai_overview         => 50%
+// - local_pack          => 30%
+// - featured_snippet    => 20% (ignored if AI exists)
+// - paid/shopping/cpc>1 => 15%
+// - video               => 10%
+// - MAX TOTAL CAP       => 85%
+// ============================================================
+
+const LOSS_RULES = {
+  ai_overview: { loss: 50, label: "AI Overview", icon: "bot" as const, color: "text-red-500" },
+  local_pack: { loss: 30, label: "Local Map Pack", icon: "map" as const, color: "text-orange-500" },
+  featured_snippet: { loss: 20, label: "Featured Snippet", icon: "snippet" as const, color: "text-amber-500" },
+  paid_ads: { loss: 15, label: "Paid Ads / Shopping", icon: "ad" as const, color: "text-pink-500" },
+  video: { loss: 10, label: "Video Carousel", icon: "video" as const, color: "text-yellow-500" },
+} as const;
+
+const MAX_LOSS_CAP = 85;
+
+// ============================================================
+// Helper Functions
+// ============================================================
+
+function toFiniteNumber(value: unknown, fallback: number): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 function normalizeSerpFeatures(input: unknown): SerpFeatureInput {
   if (input == null) return undefined;
   if (typeof input === "string") return input;
@@ -28,22 +76,8 @@ function normalizeSerpFeatures(input: unknown): SerpFeatureInput {
   return undefined;
 }
 
-function clamp(n: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, n));
-}
-
-function roundInt(n: number): number {
-  return Math.round(n);
-}
-
-function toFiniteNumber(value: unknown, fallback: number): number {
-  const n = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
-
 function hasSerpFeature(features: SerpFeatureInput, key: string): boolean {
   const k = key.toLowerCase();
-
   if (!features) return false;
 
   if (typeof features === "string") {
@@ -55,14 +89,8 @@ function hasSerpFeature(features: SerpFeatureInput, key: string): boolean {
   }
 
   if (typeof features === "object") {
-    // Supports both boolean flags (e.g. { ai_overview: true })
-    // and rich objects (e.g. { type: 'ai_overview', ... }).
     const record = features as Record<string, unknown>;
-
-    if (k in record) {
-      return Boolean(record[k]);
-    }
-
+    if (k in record) return Boolean(record[k]);
     return Object.entries(record).some(([name, v]) => {
       if (name.toLowerCase().includes(k)) return Boolean(v);
       if (typeof v === "string") return v.toLowerCase().includes(k);
@@ -73,185 +101,195 @@ function hasSerpFeature(features: SerpFeatureInput, key: string): boolean {
   return false;
 }
 
+// ============================================================
+// CORE RTV CALCULATOR
+// ============================================================
+
 export type RtvInputs = {
   volume: number;
   cpc?: number | null;
-  /**
-   * Accepts flexible inputs from multiple sources:
-   * - string (e.g. "ai_overview")
-   * - string[]
-   * - record/flags
-   */
   serpFeatures?: unknown;
 };
 
 /**
- * Calculate Realizable Traffic Value (RTV) from raw SERP items
- *
- * Clean API that accepts raw SERP items array directly.
- * Uses detectTrafficStealers() for feature detection.
- *
- * @param volume - Search volume for the keyword
- * @param serpItems - Raw SERP items array from DataForSEO
- * @param cpc - Cost per click (optional, used to detect paid competition)
- * @returns RTV calculation result with breakdown
- */
-export function calculateRTV(volume: number, serpItems: unknown[], cpc: number = 0): RtvResult {
-  const vol = Math.max(0, Number.isFinite(volume) ? volume : 0)
-  const cost = Number.isFinite(cpc) ? cpc : 0
-  
-  // Detect traffic-stealing features
-  const stealers = detectTrafficStealers(Array.isArray(serpItems) ? serpItems : [])
-  
-  const breakdown: RtvBreakdownItem[] = []
-  let loss = 0
-  
-  // Apply loss rules
-  if (stealers.hasAIO) {
-    loss += 0.5  // 50%
-    breakdown.push({ label: "AI Overview", value: 50 })
-  }
-  
-  if (stealers.hasLocal) {
-    loss += 0.3  // 30%
-    breakdown.push({ label: "Local Map Pack", value: 30 })
-  }
-  
-  // Featured Snippet: Only if NO AI Overview
-  if (stealers.hasSnippet && !stealers.hasAIO) {
-    loss += 0.2  // 20%
-    breakdown.push({ label: "Featured Snippet", value: 20 })
-  }
-  
-  // Paid Ads: Either explicit ads OR high CPC
-  if (stealers.hasAds || cost > 1.0) {
-    loss += 0.15  // 15%
-    breakdown.push({ label: "Paid Ads / Shopping", value: 15 })
-  }
-  
-  if (stealers.hasVideo) {
-    loss += 0.1  // 10%
-    breakdown.push({ label: "Video Carousel", value: 10 })
-  }
-  
-  // Cap at 85%
-  const cappedLoss = Math.min(loss, 0.85)
-  
-  // Scale breakdown if we hit the cap
-  const scale = loss > 0 ? cappedLoss / loss : 1
-  const scaledBreakdown = breakdown
-    .map((b) => ({ ...b, value: Math.round(b.value * scale) }))
-    .filter((b) => b.value > 0)
-  
-  const rtv = Math.round(vol * (1 - cappedLoss))
-  
-  return {
-    rtv,
-    lossPercentage: cappedLoss,
-    breakdown: scaledBreakdown,
-  }
-}
-
-/**
- * RTV = Volume × (1 − TotalLoss)
- *
- * Legacy flexible API that accepts various input formats.
- *
- * @deprecated Use calculateRTV() instead for cleaner API
- *
- * Designed to match (and be resilient to) DataForSEO-like keys.
- * Accepted inputs:
- * - volume: number
- * - cpc: number | null
- * - serpFeatures: string[] (or other flexible shapes; normalized internally)
- *
- * Loss rules:
- * - "ai_overview" => 50%
- * - "featured_snippet" => 20%
- * - "video" OR "video_carousel" => 10%
- * - "paid" OR cpc > 1 => 15%
+ * Calculate Realizable Traffic Value (RTV)
+ * 
+ * RTV = Volume × (1 - TotalLoss%)
+ * 
+ * @param inputs - Object with volume, cpc, and serpFeatures
+ * @returns RtvResult with rtv, lossPercentage, lossPercent, and breakdown
+ * 
+ * Loss Rules:
+ * - ai_overview         => 50%
+ * - local_pack          => 30%
+ * - featured_snippet    => 20% (ignored if AI exists)
+ * - paid/shopping/cpc>1 => 15%
+ * - video               => 10%
+ * - MAX TOTAL CAP       => 85%
  */
 export function calculateRtv(inputs: RtvInputs): RtvResult {
   const volume = Math.max(0, toFiniteNumber(inputs.volume, 0));
   const cpc = toFiniteNumber(inputs.cpc, 0);
   const serp = normalizeSerpFeatures(inputs.serpFeatures);
 
-  // AI Overview: -50% (sabse bada traffic chor)
+  // Detect SERP features
   const hasAi =
     hasSerpFeature(serp, "ai_overview") ||
     hasSerpFeature(serp, "ai overview") ||
     hasSerpFeature(serp, "aio");
 
-  // Local Map Pack: -30% (user dukaan dhundh raha hai)
   const hasLocalPack =
     hasSerpFeature(serp, "local_pack") ||
     hasSerpFeature(serp, "local pack") ||
     hasSerpFeature(serp, "local_map") ||
     hasSerpFeature(serp, "maps");
 
-  // Featured Snippet: -20% (Position 0)
   const hasSnippet =
     hasSerpFeature(serp, "featured_snippet") ||
     hasSerpFeature(serp, "featured snippet");
 
-  // Paid Ads / Shopping: -15%
-  const hasPaidFeature = 
+  const hasPaidFeature =
     hasSerpFeature(serp, "paid") ||
     hasSerpFeature(serp, "shopping") ||
     hasSerpFeature(serp, "shopping_ads") ||
     hasSerpFeature(serp, "top_ads");
   const hasAds = hasPaidFeature || cpc > 1;
 
-  // Video Carousel: -10%
   const hasVideo =
     hasSerpFeature(serp, "video_carousel") ||
     hasSerpFeature(serp, "video");
 
+  // Build breakdown with strict loss rules
   const breakdown: RtvBreakdownItem[] = [];
+  let totalLoss = 0;
 
-  let loss = 0;
-
-  // Loss percentages based on SEO research
+  // AI Overview: -50%
   if (hasAi) {
-    loss += 0.5;  // 50%
-    breakdown.push({ label: "AI Overview", value: 50 });
+    totalLoss += LOSS_RULES.ai_overview.loss;
+    breakdown.push({
+      label: LOSS_RULES.ai_overview.label,
+      value: -LOSS_RULES.ai_overview.loss,
+      icon: LOSS_RULES.ai_overview.icon,
+      color: LOSS_RULES.ai_overview.color,
+    });
   }
 
+  // Local Map Pack: -30%
   if (hasLocalPack) {
-    loss += 0.3;  // 30%
-    breakdown.push({ label: "Local Map Pack", value: 30 });
+    totalLoss += LOSS_RULES.local_pack.loss;
+    breakdown.push({
+      label: LOSS_RULES.local_pack.label,
+      value: -LOSS_RULES.local_pack.loss,
+      icon: LOSS_RULES.local_pack.icon,
+      color: LOSS_RULES.local_pack.color,
+    });
   }
 
-  // Featured Snippet: Only add loss if NO AI Overview present (per spec)
+  // Featured Snippet: -20% (ONLY if no AI Overview)
   if (hasSnippet && !hasAi) {
-    loss += 0.2;  // 20%
-    breakdown.push({ label: "Featured Snippet", value: 20 });
+    totalLoss += LOSS_RULES.featured_snippet.loss;
+    breakdown.push({
+      label: LOSS_RULES.featured_snippet.label,
+      value: -LOSS_RULES.featured_snippet.loss,
+      icon: LOSS_RULES.featured_snippet.icon,
+      color: LOSS_RULES.featured_snippet.color,
+    });
   }
 
+  // Paid Ads / Shopping: -15%
   if (hasAds) {
-    loss += 0.15;  // 15%
-    breakdown.push({ label: "Paid Ads / Shopping", value: 15 });
+    totalLoss += LOSS_RULES.paid_ads.loss;
+    breakdown.push({
+      label: LOSS_RULES.paid_ads.label,
+      value: -LOSS_RULES.paid_ads.loss,
+      icon: LOSS_RULES.paid_ads.icon,
+      color: LOSS_RULES.paid_ads.color,
+    });
   }
 
+  // Video Carousel: -10%
   if (hasVideo) {
-    loss += 0.1;  // 10%
-    breakdown.push({ label: "Video Carousel", value: 10 });
+    totalLoss += LOSS_RULES.video.loss;
+    breakdown.push({
+      label: LOSS_RULES.video.label,
+      value: -LOSS_RULES.video.loss,
+      icon: LOSS_RULES.video.icon,
+      color: LOSS_RULES.video.color,
+    });
   }
 
-  // Maximum cap at 85% (traffic kabhi pura 0 nahi hota)
-  const cappedLoss = clamp(loss, 0, 0.85);
+  // Cap at 85%
+  const cappedLoss = Math.min(totalLoss, MAX_LOSS_CAP);
 
-  // If we hit the cap, scale breakdown down proportionally to keep sums consistent.
-  const scale = loss > 0 ? cappedLoss / loss : 1;
-  const scaledBreakdown = breakdown
-    .map((b) => ({ ...b, value: roundInt(b.value * scale) }))
-    .filter((b) => b.value > 0);
+  // Scale breakdown if we hit the cap
+  let scaledBreakdown = breakdown;
+  if (totalLoss > MAX_LOSS_CAP && totalLoss > 0) {
+    const scale = cappedLoss / totalLoss;
+    scaledBreakdown = breakdown.map((b) => ({
+      ...b,
+      value: -Math.round(Math.abs(b.value) * scale),
+    }));
+  }
 
-  const rtv = roundInt(volume * (1 - cappedLoss));
+  // Calculate RTV
+  const rtv = Math.floor(volume * (1 - cappedLoss / 100));
 
   return {
     rtv,
-    lossPercentage: cappedLoss,
+    lossPercentage: cappedLoss / 100,
+    lossPercent: cappedLoss,
     breakdown: scaledBreakdown,
   };
+}
+
+/**
+ * Calculate RTV from raw SERP items array
+ * 
+ * Uses detectTrafficStealers() for feature detection from DataForSEO response.
+ * 
+ * @param volume - Search volume for the keyword
+ * @param serpItems - Raw SERP items array from DataForSEO
+ * @param cpc - Cost per click (optional)
+ * @returns RtvResult with breakdown
+ */
+export function calculateRTV(volume: number, serpItems: unknown[], cpc: number = 0): RtvResult {
+  const vol = Math.max(0, Number.isFinite(volume) ? volume : 0);
+  const cost = Number.isFinite(cpc) ? cpc : 0;
+
+  // Detect traffic-stealing features from SERP items inline
+  // (avoids circular dependency with serp-parser)
+  const items = Array.isArray(serpItems) ? serpItems : [];
+  
+  let hasAIO = false;
+  let hasLocal = false;
+  let hasSnippet = false;
+  let hasAds = false;
+  let hasVideo = false;
+
+  for (const item of items) {
+    if (typeof item !== "object" || item === null) continue;
+    const obj = item as Record<string, unknown>;
+    const itemType = String(obj.type || "").toLowerCase();
+    
+    if (itemType.includes("ai_overview") || itemType.includes("ai overview")) hasAIO = true;
+    if (itemType.includes("local_pack") || itemType.includes("local pack") || itemType.includes("maps")) hasLocal = true;
+    if (itemType.includes("featured_snippet") || itemType.includes("featured snippet")) hasSnippet = true;
+    if (itemType.includes("paid") || itemType.includes("shopping") || itemType.includes("ads")) hasAds = true;
+    if (itemType.includes("video")) hasVideo = true;
+  }
+
+  // Convert detections to serpFeatures array
+  const serpFeatures: string[] = [];
+  if (hasAIO) serpFeatures.push("ai_overview");
+  if (hasLocal) serpFeatures.push("local_pack");
+  if (hasSnippet) serpFeatures.push("featured_snippet");
+  if (hasAds) serpFeatures.push("paid");
+  if (hasVideo) serpFeatures.push("video");
+
+  // Use main calculator
+  return calculateRtv({
+    volume: vol,
+    cpc: cost,
+    serpFeatures,
+  });
 }

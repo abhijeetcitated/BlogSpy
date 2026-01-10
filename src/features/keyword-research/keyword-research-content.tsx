@@ -308,7 +308,6 @@ export function KeywordResearchContent() {
         filterText={filters.searchText}
         activeFilterCount={activeFilterCount}
         isSearching={loading.searching}
-        country={selectedCountry?.code}
         isGuest={isGuest}
       />
     </div>

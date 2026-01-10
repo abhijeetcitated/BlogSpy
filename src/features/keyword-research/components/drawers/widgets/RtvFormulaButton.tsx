@@ -40,38 +40,44 @@ export function RtvFormulaButton({
           Formula
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 space-y-3">
+      <PopoverContent align="end" className="w-80 space-y-3">
         <div className="text-sm font-semibold">RTV Calculation</div>
 
-        <div className="rounded-md bg-muted/50 p-2 text-center font-mono text-sm">
+        <div className="rounded-md bg-muted/50 p-2 text-center font-mono text-sm whitespace-nowrap">
           RTV = Volume × (100% - Loss)
         </div>
 
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">
+        <div className="flex items-center justify-between gap-4 text-xs">
+          <span className="text-muted-foreground whitespace-nowrap">
             Volume: <span className="font-semibold text-foreground">{formatInt(safeVolume)}</span>
           </span>
-          <span className="text-rose-500 font-semibold">Loss: {lossPct}%</span>
-          <span className="text-emerald-500 font-semibold">RTV: {formatInt(safeRtv)}</span>
+          <span className="text-rose-500 font-semibold whitespace-nowrap">Loss: {lossPct}%</span>
+          <span className="text-emerald-500 font-semibold whitespace-nowrap">RTV: {formatInt(safeRtv)}</span>
         </div>
 
         <Separator />
 
         <div className="space-y-2">
           <div className="text-xs uppercase text-muted-foreground">LOSS BREAKDOWN</div>
-          <div className="space-y-1">
-            {breakdown.map((item) => (
-              <div key={item.label} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-red-500" />
-                  <span className="text-foreground">{item.label}</span>
+          {breakdown.length === 0 ? (
+            <div className="text-xs text-muted-foreground/60 italic">
+              No SERP suppressors detected for this keyword.
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {breakdown.map((item) => (
+                <div key={item.label} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-rose-500" />
+                    <span className="text-foreground">{item.label}</span>
+                  </div>
+                  <span className="text-rose-500 font-semibold">
+                    -{Math.round(Math.abs(item.value))}%
+                  </span>
                 </div>
-                <span className="text-rose-500 font-semibold">
-                  -{Math.round(Math.abs(item.value))}%
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>
