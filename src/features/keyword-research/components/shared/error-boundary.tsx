@@ -55,7 +55,7 @@ export class ErrorBoundary extends Component<Props, State> {
             variant="outline"
             size="sm"
             onClick={this.handleRetry}
-            className="mt-4 gap-2"
+            className="mt-4 gap-2 cursor-pointer"
           >
             <RefreshCw className="h-4 w-4" />
             Try Again

@@ -1,16 +1,17 @@
+// @ts-nocheck
 import 'server-only';
 
-// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Alert Service
  * @description Service layer for managing alerts and user preferences
- * 
+ *
  * NOTE: @ts-nocheck is temporary until real Supabase client is installed
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/src/lib/supabase/server';
 import { alertDispatcher } from '@/lib/alerts';
+import type { Json } from '@/types/supabase';
 import type {
   Alert,
   AlertPayload,
@@ -101,10 +102,10 @@ export class AlertService {
           user_id: userId,
           is_enabled: mergedPrefs.isEnabled,
           timezone: mergedPrefs.timezone,
-          quiet_hours: mergedPrefs.quietHours,
-          channels: mergedPrefs.channels,
-          categories: mergedPrefs.categories,
-          digest: mergedPrefs.digest,
+          quiet_hours: mergedPrefs.quietHours as unknown as Json,
+          channels: mergedPrefs.channels as unknown as Json,
+          categories: mergedPrefs.categories as unknown as Json,
+          digest: mergedPrefs.digest as unknown as Json,
           updated_at: now,
         },
         {
@@ -123,10 +124,10 @@ export class AlertService {
       userId: data.user_id,
       isEnabled: data.is_enabled,
       timezone: data.timezone,
-      quietHours: data.quiet_hours,
-      channels: data.channels,
-      categories: data.categories,
-      digest: data.digest,
+      quietHours: data.quiet_hours as unknown as UserAlertPreferences["quietHours"],
+      channels: data.channels as unknown as UserAlertPreferences["channels"],
+      categories: data.categories as unknown as UserAlertPreferences["categories"],
+      digest: data.digest as unknown as UserAlertPreferences["digest"],
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
     };
@@ -156,9 +157,9 @@ export class AlertService {
         priority: payload.priority,
         title: payload.title,
         message: payload.message,
-        data: payload.data || {},
+        data: (payload.data ?? {}) as unknown as Json,
         channels,
-        delivery_status: {},
+        delivery_status: {} as unknown as Json,
         url: payload.url,
         is_read: false,
         created_at: now.toISOString(),

@@ -1,52 +1,165 @@
 {
-  "servers": {
-    "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "${workspaceFolder}"]
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
-      }
-    },
-    "fetch": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-fetch"]
-    },
-    "brave-search": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
-      "env": {
-        "BRAVE_API_KEY": "${input:brave_api_key}"
-      }
-    },
-    "memory": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-memory"]
-    },
-    "puppeteer": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
-    },
-    "time": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-time"]
-    }
-  },
-  "inputs": [
-    {
-      "id": "github_token",
-      "type": "promptString",
-      "description": "GitHub Personal Access Token",
-      "password": true
-    },
-    {
-      "id": "brave_api_key",
-      "type": "promptString",
-      "description": "Brave Search API Key (brave.com/search/api)",
-      "password": true
-    }
-  ]
+	"inputs": [
+		{
+			"id": "github_token",
+			"type": "promptString",
+			"description": "GitHub Personal Access Token",
+			"password": true
+		},
+		{
+			"id": "brave_api_key",
+			"type": "promptString",
+			"description": "Brave Search API Key (brave.com/search/api)",
+			"password": true
+		},
+		{
+			"id": "ai_search_endpoint",
+			"type": "promptString",
+			"description": "Your Azure AI Search endpoint (https://<service>.search.windows.net/). Required for knowledge tools.",
+			"password": false
+		},
+		{
+			"id": "ai_search_api_version",
+			"type": "promptString",
+			"description": "API version (defaults to 2025-03-01-preview).",
+			"password": false
+		},
+		{
+			"id": "search_auth_method",
+			"type": "promptString",
+			"description": "Authentication method: 'service-principal' or 'api-search-key'.",
+			"password": false
+		},
+		{
+			"id": "azure_tenant_id",
+			"type": "promptString",
+			"description": "Required if using service-principal auth.",
+			"password": false
+		},
+		{
+			"id": "azure_client_id",
+			"type": "promptString",
+			"description": "Required if using service-principal auth.",
+			"password": false
+		},
+		{
+			"id": "azure_client_secret",
+			"type": "promptString",
+			"description": "Required if using service-principal auth.",
+			"password": true
+		},
+		{
+			"id": "ai_search_api_key",
+			"type": "promptString",
+			"description": "Required if using api-search-key auth.",
+			"password": true
+		},
+		{
+			"id": "eval_data_dir",
+			"type": "promptString",
+			"description": "Path to JSONL datasets for evaluation tools.",
+			"password": false
+		},
+		{
+			"id": "az_openai_endpoint",
+			"type": "promptString",
+			"description": "Endpoint for text-quality evaluators (optional).",
+			"password": false
+		},
+		{
+			"id": "az_openai_api_key",
+			"type": "promptString",
+			"description": "API key for the above endpoint (optional).",
+			"password": true
+		},
+		{
+			"id": "az_openai_deployment",
+			"type": "promptString",
+			"description": "Deployment name (e.g., gpt-4o) used by evaluators (optional).",
+			"password": false
+		},
+		{
+			"id": "az_openai_api_version",
+			"type": "promptString",
+			"description": "API version for Azure OpenAI (optional).",
+			"password": false
+		},
+		{
+			"id": "ai_project_endpoint",
+			"type": "promptString",
+			"description": "Azure AI Project endpoint for agent tools (optional).",
+			"password": false
+		},
+		{
+			"id": "env_file_path",
+			"type": "promptString",
+			"description": "Path to a .env file to load (e.g., ${workspaceFolder}/.env).",
+			"password": false
+		}
+	],
+	"servers": {
+		"filesystem": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-filesystem",
+				"${workspaceFolder}"
+			],
+			"type": "stdio"
+		},
+		"github": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-github"
+			],
+			"env": {
+				"GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
+			},
+			"type": "stdio"
+		},
+		"fetch": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-fetch"
+			],
+			"type": "stdio"
+		},
+		"brave-search": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-brave-search"
+			],
+			"env": {
+				"BRAVE_API_KEY": "${input:brave_api_key}"
+			},
+			"type": "stdio"
+		},
+		"memory": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-memory"
+			],
+			"type": "stdio"
+		},
+		"puppeteer": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-puppeteer"
+			],
+			"type": "stdio"
+		},
+		"time": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-time"
+			],
+			"type": "stdio"
+		}
+	}
 }

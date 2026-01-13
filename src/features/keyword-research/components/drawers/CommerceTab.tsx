@@ -274,6 +274,7 @@ export function CommerceTab({ keyword, onRefresh }: CommerceTabProps) {
   // ─────────────────────────────────────────
   const getCachedData = useKeywordStore((s) => s.getCachedData)
   const setDrawerCache = useKeywordStore((s) => s.setDrawerCache)
+  const country = useKeywordStore((s) => s.search.country)
 
   // ─────────────────────────────────────────
   // CACHE CHECK ON MOUNT
@@ -281,7 +282,7 @@ export function CommerceTab({ keyword, onRefresh }: CommerceTabProps) {
   React.useEffect(() => {
     if (!keyword?.keyword) return
     
-    const cached = getCachedData(keyword.keyword, "commerce") as AmazonData | null
+    const cached = getCachedData(country, keyword.keyword, "commerce") as AmazonData | null
     if (cached) {
       setAmazonData(cached)
       setState("success")
@@ -307,7 +308,7 @@ export function CommerceTab({ keyword, onRefresh }: CommerceTabProps) {
   // ─────────────────────────────────────────
   const loadAmazonData = async () => {
     // 1. Check cache first (FREE)
-    const cached = getCachedData(keyword.keyword, "commerce") as AmazonData | null
+    const cached = getCachedData(country, keyword.keyword, "commerce") as AmazonData | null
     if (cached) {
       setAmazonData(cached)
       setState("success")
@@ -321,13 +322,13 @@ export function CommerceTab({ keyword, onRefresh }: CommerceTabProps) {
     try {
       const result = await fetchAmazonData({
         keyword: keyword.keyword,
-        country: "US"
+        country,
       })
 
       // Check result structure
       if (result?.data?.success && result.data.data) {
         // Store in cache for future use
-        setDrawerCache(keyword.keyword, "commerce", result.data.data)
+        setDrawerCache(country, keyword.keyword, "commerce", result.data.data)
         setAmazonData(result.data.data)
         setState("success")
         onRefresh?.()

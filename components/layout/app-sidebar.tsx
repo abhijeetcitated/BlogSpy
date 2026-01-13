@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useProfile, useCredits } from "@/hooks/use-user"
 import { useAuth } from "@/contexts/auth-context"
+import { FEATURE_FLAGS } from "@/src/config/feature-flags"
 import {
   Search,
   Flame,
@@ -215,16 +216,20 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {researchItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="gap-3">
-                    <Link href={item.href}>
-                      <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {researchItems.map((item) => {
+                if (item.title === "Affiliate Finder" && !FEATURE_FLAGS.AFFILIATE_FINDER) return null
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild className="gap-3">
+                      <Link href={item.href}>
+                        <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -257,16 +262,22 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {creationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="gap-3">
-                    <Link href={item.href}>
-                      <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {creationItems.map((item) => {
+                if (item.title === "AI Writer" && !FEATURE_FLAGS.AI_WRITER) return null
+                if (item.title === "Snippet Stealer" && !FEATURE_FLAGS.SNIPPET_STEALER) return null
+                if (item.title === "On-Page Checker" && !FEATURE_FLAGS.ON_PAGE_CHECKER) return null
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild className="gap-3">
+                      <Link href={item.href}>
+                        <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -278,16 +289,23 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {trackingItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="gap-3">
-                    <Link href={item.href}>
-                      <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {trackingItems.map((item) => {
+                if (item.title === "News Tracker" && !FEATURE_FLAGS.NEWS_TRACKER) return null
+                if (item.title === "Community Tracker" && !FEATURE_FLAGS.COMMUNITY_TRACKER) return null
+                if (item.title === "Social Tracker" && !FEATURE_FLAGS.SOCIAL_TRACKER) return null
+                if (item.title === "Commerce Tracker" && !FEATURE_FLAGS.COMMERCE_TRACKER) return null
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild className="gap-3">
+                      <Link href={item.href}>
+                        <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

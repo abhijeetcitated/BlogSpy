@@ -13,6 +13,8 @@
 
 import { z } from "zod"
 import { authAction } from "@/src/lib/safe-action"
+import { createServerClient } from "@/src/lib/supabase/server"
+import { normalizeCountryCode } from "../utils/country-normalizer"
 import type { AmazonProduct, AmazonData, DrawerDataResponse, YouTubeResult, CommunityResult } from "../types"
 
 import { fetchYouTubeData, fetchRedditData, fetchPinterestData } from "../services/social.service"
@@ -23,7 +25,7 @@ import { fetchYouTubeData, fetchRedditData, fetchPinterestData } from "../servic
 
 const FetchAmazonDataSchema = z.object({
   keyword: z.string().min(1, "Keyword is required").max(200, "Keyword too long"),
-  country: z.string().length(2).default("US"),
+  country: z.string().default("US").transform(normalizeCountryCode),
 })
 
 // ============================================
@@ -86,6 +88,94 @@ function generateMockAmazonData(keyword: string): AmazonData {
 function isServerMockMode(): boolean {
   // NOTE: `NEXT_PUBLIC_USE_MOCK_DATA` is deprecated for server gating; kept for backward-compatible dev.
   return process.env.USE_MOCK_DATA === "true" || process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+}
+
+async function fetchUserCreditsRemaining(userId: string): Promise<number> {
+  if (isServerMockMode()) {
+    return 77
+  }
+
+  const supabase = await createServerClient()
+  const { data: credits, error } = await supabase
+    .from("user_credits")
+    .select("credits_total, credits_used")
+    .eq("user_id", userId)
+    .single()
+
+  if (error || !credits) return 0
+  const total = credits.credits_total ?? 0
+  const used = credits.credits_used ?? 0
+  return Math.max(0, total - used)
+}
+
+/**
+ * Deduct credits for a keyword research action.
+ *
+ * Requirement: use `await deductCredit(userId, 1, 'social_unlock')` before any external fetch.
+ * Returns `true` when deducted, `false` when insufficient/unavailable.
+ */
+async function deductCredit(userId: string, amount: 1, reason: "social_unlock"): Promise<boolean> {
+  if (isServerMockMode()) {
+    console.log("[fetchSocialInsights] Mock mode - skipping credit deduction")
+    return true
+  }
+
+  const supabase = await createServerClient()
+
+  const attemptRpc = async (rpcName: string): Promise<boolean> => {
+    const { data, error } = await (supabase as typeof supabase & {
+      rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+    }).rpc(rpcName, {
+      p_user_id: userId,
+      p_amount: amount,
+      p_feature: reason,
+      p_description: "Social tab unlock (YouTube + community)",
+    })
+
+    if (error) {
+      console.error(`[fetchSocialInsights] ${rpcName} RPC error:`, error.message)
+      return false
+    }
+
+    const result = Array.isArray(data) ? data[0] : data
+    if (result?.success === false || result === false) {
+      return false
+    }
+
+    return true
+  }
+
+  const deducted = await attemptRpc("deduct_credits")
+  if (deducted) return true
+
+  const used = await attemptRpc("use_credits")
+  if (used) return true
+
+  const { data: credits, error: creditsError } = await supabase
+    .from("user_credits")
+    .select("credits_total, credits_used")
+    .eq("user_id", userId)
+    .single()
+
+  if (creditsError || !credits) {
+    return false
+  }
+
+  const remaining = (credits.credits_total ?? 0) - (credits.credits_used ?? 0)
+  if (remaining < amount) {
+    return false
+  }
+
+  const { error: updateError } = await supabase
+    .from("user_credits")
+    .update({ credits_used: (credits.credits_used ?? 0) + amount })
+    .eq("user_id", userId)
+
+  if (updateError) {
+    return false
+  }
+
+  return true
 }
 
 export const fetchAmazonData = authAction
@@ -195,18 +285,27 @@ export const fetchAmazonData = authAction
 
 const FetchSocialInsightsSchema = z.object({
   keyword: z.string().min(1, "Keyword is required").max(200, "Keyword too long"),
-  country: z.string().length(2).default("US"),
+  country: z.string().default("US").transform(normalizeCountryCode),
+  force: z.boolean().default(false),
 })
 
 export const fetchSocialInsights = authAction
   .schema(FetchSocialInsightsSchema)
   .action(
     async ({ parsedInput, ctx }): Promise<
-      DrawerDataResponse<{ youtube: YouTubeResult[]; community: CommunityResult[] }>
+      DrawerDataResponse<{ youtube: YouTubeResult[]; community: CommunityResult[] }> & { newBalance: number; force: boolean }
     > => {
-      const { keyword, country } = parsedInput
+      const { keyword, country, force } = parsedInput
 
       console.log(`[fetchSocialInsights] user=${ctx.userId} country=${country}`)
+
+      // Deduct 1 credit BEFORE any external calls.
+      const deducted = await deductCredit(ctx.userId, 1, "social_unlock")
+      if (!deducted) {
+        throw new Error("Insufficient Credits")
+      }
+
+      const newBalance = await fetchUserCreditsRemaining(ctx.userId)
 
       try {
         const [yt, reddit, pinterest] = await Promise.all([
@@ -229,6 +328,8 @@ export const fetchSocialInsights = authAction
           },
           source:
             yt.source === "mock" || reddit.source === "mock" || pinterest.source === "mock" ? "mock" : "dataforseo",
+          newBalance,
+          force,
         }
       } catch (error) {
         return {
@@ -236,6 +337,8 @@ export const fetchSocialInsights = authAction
           error: error instanceof Error ? error.message : "Failed to fetch social insights",
           isRetryable: true,
           source: "dataforseo",
+          newBalance,
+          force,
         }
       }
     }

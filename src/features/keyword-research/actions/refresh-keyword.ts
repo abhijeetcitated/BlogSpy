@@ -10,6 +10,8 @@
 import { z } from "zod"
 import { authAction } from "@/src/lib/safe-action"
 import { createServerClient } from "@/src/lib/supabase/server"
+import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
+import { normalizeCountryCode } from "../utils/country-normalizer"
 import { liveSerpService } from "../services/live-serp"
 import { calculateRtv } from "../utils/rtv-calculator"
 import type { Keyword, SERPFeature } from "../types"
@@ -17,35 +19,45 @@ import type { Keyword, SERPFeature } from "../types"
 const RefreshKeywordSchema = z.object({
   keyword: z.string().min(1, "Keyword is required").max(200, "Keyword too long"),
   keywordId: z.number().optional(), // Optional: If provided, updates existing keyword in DB
-  country: z.string().length(2, "Country must be 2-letter code").default("US"),
+  country: z.string().default("US").transform(normalizeCountryCode),
   volume: z.number().default(0), // Existing volume for RTV calculation
   cpc: z.number().default(0), // Existing CPC for RTV calculation
   intent: z.array(z.enum(["I", "C", "T", "N"])).optional(), // User intent for GEO score
 })
 
-export interface RefreshKeywordResponse {
-  success: true
-  data: {
-    keyword: Partial<Keyword>
-    serpData: {
-      weakSpots: {
-        reddit: number | null
-        quora: number | null
-        pinterest: number | null
+export type RefreshKeywordResponse =
+  | {
+      success: true
+      data: {
+        keyword: Partial<Keyword>
+        serpData: {
+          weakSpots: {
+            reddit: number | null
+            quora: number | null
+            pinterest: number | null
+          }
+          serpFeatures: SERPFeature[]
+          hasAio: boolean
+          hasSnippet: boolean
+          geoScore: number
+        }
+        rtvData: {
+          rtv: number
+          lossPercentage: number
+          breakdown: Array<{ label: string; value: number }>
+        }
+        lastUpdated: string
       }
-      serpFeatures: SERPFeature[]
-      hasAio: boolean
-      hasSnippet: boolean
-      geoScore: number
+      newBalance: number
     }
-    rtvData: {
-      rtv: number
-      lossPercentage: number
-      breakdown: Array<{ label: string; value: number }>
+  | {
+      error: "API_ERROR"
+      refunded: true
     }
-    lastUpdated: string
-  }
-  newBalance: number
+
+export type RefreshKeywordActionResult = {
+  data?: RefreshKeywordResponse
+  serverError?: string
 }
 
 function isServerMockMode(): boolean {
@@ -74,7 +86,7 @@ async function fetchUserCreditsRemaining(userId: string): Promise<number> {
  * Step 1: Deduct 1 credit via Supabase RPC
  * Primary: `deduct_credits` (per spec), fallback: `use_credits`
  */
-async function deductCredit(userId: string): Promise<void> {
+async function deductCredit(userId: string, amount: number = 1, reason: string = "keyword_refresh"): Promise<void> {
   if (isServerMockMode()) {
     console.log("[RefreshKeyword] Mock mode - skipping credit deduction")
     return
@@ -88,9 +100,12 @@ async function deductCredit(userId: string): Promise<void> {
       rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
     }).rpc(rpcName, {
       p_user_id: userId,
-      p_amount: 1,
-      p_feature: "keyword_refresh",
-      p_description: "Live SERP refresh",
+      p_amount: amount,
+      p_feature: reason,
+      p_description:
+        amount < 0
+          ? "Refund for failed live SERP refresh"
+          : "Live SERP refresh",
     })
 
     if (error) {
@@ -112,7 +127,7 @@ async function deductCredit(userId: string): Promise<void> {
   const used = await attemptRpc("use_credits")
   if (used) return
 
-  await fallbackDeductCredit(userId, supabase)
+  await fallbackDeductCredit(userId, supabase, amount)
 }
 
 /**
@@ -120,7 +135,8 @@ async function deductCredit(userId: string): Promise<void> {
  */
 async function fallbackDeductCredit(
   userId: string,
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  amount: number
 ): Promise<void> {
   const { data: credits, error: creditsError } = await supabase
     .from("user_credits")
@@ -133,13 +149,17 @@ async function fallbackDeductCredit(
   }
 
   const creditsRemaining = (credits.credits_total ?? 0) - (credits.credits_used ?? 0)
-  if (creditsRemaining < 1) {
+
+  if (amount > 0 && creditsRemaining < amount) {
     throw new Error("Insufficient credits")
   }
 
+  // Refunds are represented as negative amounts, meaning we subtract from credits_used.
+  const nextUsed = Math.max(0, (credits.credits_used ?? 0) + amount)
+
   const { error: updateError } = await supabase
     .from("user_credits")
-    .update({ credits_used: (credits.credits_used ?? 0) + 1 })
+    .update({ credits_used: nextUsed })
     .eq("user_id", userId)
 
   if (updateError) {
@@ -181,7 +201,7 @@ function resolveWeakSpot(weakSpots: SerpDataPayload["weakSpots"]): {
 }
 
 async function updateKeywordInDb(
-  keywordId: number,
+  input: { keywordId: number; keywordText: string; countryCode: string },
   serpData: SerpDataPayload,
   rtvData: { rtv: number; lossPercentage: number; breakdown: Array<{ label: string; value: number }> },
   lastUpdated: string
@@ -194,28 +214,59 @@ async function updateKeywordInDb(
   const supabase = await createServerClient()
   const weakSpot = resolveWeakSpot(serpData.weakSpots)
 
-  const { error } = await (supabase as typeof supabase & {
-    from: (table: string) => {
-      update: (values: Record<string, unknown>) => { eq: (column: string, value: number) => Promise<{ error: { message: string } | null }> }
-    }
-  })
-    .from("keywords")
-    .update({
-      serp_data: serpData,
-      serp_features: serpData.serpFeatures,
-      weak_spots: serpData.weakSpots,
-      weak_spot: weakSpot,
-      geo_score: serpData.geoScore,
-      has_aio: serpData.hasAio,
-      rtv: rtvData.rtv,
-      rtv_breakdown: rtvData.breakdown,
-      rtv_data: rtvData,
-      last_updated: lastUpdated,
-    })
-    .eq("id", keywordId)
+  const payload = {
+    serp_data: serpData,
+    serp_features: serpData.serpFeatures,
+    weak_spots: serpData.weakSpots,
+    weak_spot: weakSpot,
+    geo_score: serpData.geoScore,
+    has_aio: serpData.hasAio,
+    rtv: rtvData.rtv,
+    rtv_breakdown: rtvData.breakdown,
+    rtv_data: rtvData,
+    last_updated: lastUpdated,
+  }
 
-  if (error) {
-    console.error("[RefreshKeyword] DB update failed:", error.message)
+  // Best-effort: prefer composite key (keyword_text + country_code) for strict country isolation.
+  // If schema doesn't support it, fall back to id-based update.
+  type KeywordsTableUpdate = (values: Record<string, unknown>) => {
+    eq: (column: string, value: string | number) => {
+      eq: (column: string, value: string | number) => Promise<{ error: { message: string } | null }>
+    }
+  }
+
+  type KeywordsTableUpdateSingleEq = (values: Record<string, unknown>) => {
+    eq: (column: string, value: string | number) => Promise<{ error: { message: string } | null }>
+  }
+
+  const keywordsTable = (supabase as typeof supabase & {
+    from: (table: string) => {
+      update: KeywordsTableUpdate & KeywordsTableUpdateSingleEq
+    }
+  }).from("keywords")
+
+  let error: { message: string } | null = null
+
+  try {
+    const res = await (keywordsTable.update as KeywordsTableUpdate)(payload)
+      .eq("keyword_text", input.keywordText)
+      .eq("country_code", input.countryCode)
+
+    error = res.error
+  } catch {
+    // Ignore and fall back
+    error = null
+  }
+
+  if (!error) {
+    // Either composite succeeded or nothing to do.
+    // However, if composite matched 0 rows, Supabase doesn't surface as error; still fall back to id if present.
+    if (!input.keywordId) return
+  }
+
+  const fallback = await (keywordsTable.update as KeywordsTableUpdateSingleEq)(payload).eq("id", input.keywordId)
+  if (fallback.error) {
+    console.error("[RefreshKeyword] DB update failed:", fallback.error.message)
   }
 }
 
@@ -228,13 +279,29 @@ export const refreshKeywordAction = authAction
     const { keyword, keywordId, country, volume, cpc } = parsedInput
 
     // Step 1: Deduct 1 credit
-    await deductCredit(ctx.userId)
+    await deductCredit(ctx.userId, 1, "keyword_refresh")
 
     const newBalance = await fetchUserCreditsRemaining(ctx.userId)
 
-    // Step 2: Fetch live SERP data
-    const locationCode = getLocationCode(country)
-    const serpResult = await liveSerpService.fetchLiveSerp(keyword, locationCode)
+    // Step 2: Fetch live SERP data (external API)
+    const locationCode = getDataForSEOLocationCode(country)
+
+    let serpResult: Awaited<ReturnType<(typeof liveSerpService)["fetchLiveSerp"]>>
+    try {
+      serpResult = await liveSerpService.fetchLiveSerp(keyword, locationCode)
+    } catch (error) {
+      console.error("[RefreshKeyword] External API failed:", error)
+
+      // Refund: if API fails AFTER credit deduction.
+      // Requirement: `await deductCredit(userId, -1, 'refund_api_error')`.
+      try {
+        await deductCredit(ctx.userId, -1, "refund_api_error")
+      } catch (refundError) {
+        console.error("[RefreshKeyword] Refund failed:", refundError)
+      }
+
+      return { error: "API_ERROR", refunded: true }
+    }
 
     // Step 3: Calculate RTV with new SERP features
     const rtvResult = calculateRtv({
@@ -260,9 +327,16 @@ export const refreshKeywordAction = authAction
 
     const lastUpdated = new Date().toISOString()
 
-    // Step 4: Update database if keywordId provided
-    if (keywordId) {
-      await updateKeywordInDb(keywordId, serpData, rtvData, lastUpdated)
+    // Step 4: Update database (best-effort). Do not fail refresh if DB update fails.
+    try {
+      await updateKeywordInDb(
+        { keywordId: keywordId ?? 0, keywordText: keyword, countryCode: country },
+        serpData,
+        rtvData,
+        lastUpdated
+      )
+    } catch (dbError) {
+      console.error("[RefreshKeyword] DB update failed:", dbError)
     }
 
     const weakSpot = resolveWeakSpot(serpData.weakSpots)
@@ -274,6 +348,7 @@ export const refreshKeywordAction = authAction
         keyword: {
           id: keywordId,
           keyword,
+          countryCode: country,
           weakSpots: serpResult.weakSpots,
           weakSpot,
           serpFeatures: serpResult.serpFeatures,
@@ -292,25 +367,6 @@ export const refreshKeywordAction = authAction
     }
   })
 
-// ============================================
-// LOCATION CODE HELPER
-// ============================================
-
-function getLocationCode(country: string): number {
-  const locationMap: Record<string, number> = {
-    us: 2840,
-    gb: 2826,
-    ca: 2124,
-    au: 2036,
-    de: 2276,
-    fr: 2250,
-    in: 2356,
-    br: 2076,
-    es: 2724,
-    it: 2380,
-  }
-  return locationMap[country.toLowerCase()] || 2840
-}
 
 // ============================================
 // GET USER CREDITS

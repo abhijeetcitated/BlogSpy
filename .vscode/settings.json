@@ -115,5 +115,6 @@
     "editor.suggestOnTriggerCharacters": true,
     "editor.acceptSuggestionOnEnter": "on",
     "editor.tabCompletion": "on",
-    "editor.wordBasedSuggestions": "off"
-}r
+    "editor.wordBasedSuggestions": "off",
+    "editor.defaultFoldingRangeProvider": "GitHub.copilot-chat"
+}

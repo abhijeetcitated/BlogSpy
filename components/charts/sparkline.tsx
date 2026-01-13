@@ -1,12 +1,18 @@
 "use client"
 
+import React from "react"
+
 interface SparklineProps {
   data: number[]
   width?: number
   height?: number
 }
 
-export function Sparkline({ data, width = 50, height = 20 }: SparklineProps) {
+export const Sparkline = React.memo(function Sparkline({
+  data,
+  width = 50,
+  height = 20,
+}: SparklineProps) {
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
@@ -33,4 +39,4 @@ export function Sparkline({ data, width = 50, height = 20 }: SparklineProps) {
       />
     </svg>
   )
-}
+})

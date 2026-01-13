@@ -61,7 +61,7 @@ export function ResultsHeader({
             size="sm"
             onClick={onRefresh}
             disabled={isLoading}
-            className="gap-1.5"
+            className="gap-1.5 cursor-pointer disabled:cursor-not-allowed"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>

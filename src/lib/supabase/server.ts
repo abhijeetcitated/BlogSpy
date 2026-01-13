@@ -9,9 +9,9 @@
  * @example
  * ```tsx
  * // In Server Component or Server Action
- * import { createServerClient } from "@/lib/supabase/server"
- * 
- * const supabase = await createServerClient()
+ * import { createClient } from "@/src/lib/supabase/server"
+ *
+ * const supabase = await createClient()
  * const { data } = await supabase.from("users").select("*")
  * ```
  */
@@ -84,6 +84,14 @@ export async function createServerClient() {
   })
 }
 
+/**
+ * Backwards-compatible alias.
+ * Prefer `createServerClient()` in new code.
+ */
+export async function createClient() {
+  return createServerClient()
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // ADMIN CLIENT (Service Role - Use with caution!)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -96,6 +104,7 @@ export async function createServerClient() {
  */
 export function createAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  // Canonical env var (required by this codebase): SUPABASE_SERVICE_ROLE_KEY
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl) {
@@ -105,7 +114,7 @@ export function createAdminClient() {
   if (!supabaseServiceKey) {
     throw new Error(
       "❌ Missing SUPABASE_SERVICE_ROLE_KEY environment variable. " +
-      "This is required for admin operations."
+        "This is required for admin operations."
     )
   }
 

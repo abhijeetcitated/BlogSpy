@@ -9,7 +9,7 @@
 
 import "server-only"
 import { experimental_taintObjectReference, experimental_taintUniqueValue } from "react"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/src/lib/supabase/server"
 
 // ============================================
 // TYPES
@@ -87,7 +87,7 @@ export async function getUserById(userId: string): Promise<SafeUser | null> {
     email: user.email,
     name: user.name,
     avatarUrl: user.avatar_url,
-    role: user.role || "user",
+    role: (user.role as SafeUser["role"]) || "user",
     createdAt: new Date(user.created_at),
   }
 }
@@ -147,7 +147,7 @@ export async function getUserWithSensitiveData(userId: string): Promise<UserWith
     email: user.email,
     name: user.name,
     avatarUrl: user.avatar_url,
-    role: user.role || "user",
+    role: (user.role as SafeUser["role"]) || "user",
     createdAt: new Date(user.created_at),
     passwordHash: user.password_hash || "",
     apiKeys: user.api_keys || [],
@@ -194,7 +194,7 @@ export async function verifyApiKey(apiKey: string): Promise<SafeUser | null> {
     email: user.email,
     name: user.name,
     avatarUrl: user.avatar_url,
-    role: user.role || "user",
+    role: (user.role as SafeUser["role"]) || "user",
     createdAt: new Date(user.created_at),
   }
 }

@@ -15,7 +15,7 @@ import {
   DEFAULT_SERVER_ERROR_MESSAGE,
 } from "next-safe-action"
 import { z } from "zod"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/src/lib/supabase/server"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TYPES

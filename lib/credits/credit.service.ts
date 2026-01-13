@@ -17,7 +17,7 @@
  */
 
 import "server-only"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/src/lib/supabase/server"
 import { logger } from "@/lib/logger"
 
 // ============================================
@@ -330,7 +330,7 @@ class CreditService {
    */
   async getTransactionHistory(
     userId: string,
-    options: { limit?: number; offset?: number; type?: string } = {}
+    options: { limit?: number; offset?: number; type?: CreditTransaction["type"] } = {}
   ): Promise<CreditTransaction[]> {
     try {
       const supabase = await createClient()

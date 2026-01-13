@@ -33,6 +33,8 @@ import { Button } from "@/components/ui/button"
 
 import { generateMockSocialOpportunity } from "@/lib/social-opportunity-calculator"
 
+import { toast } from "sonner"
+
 import type { CommunityResult, DrawerDataState, Keyword, YouTubeResult } from "../../types"
 import { fetchSocialInsights } from "../../actions/fetch-drawer-data"
 import { useKeywordStore } from "../../store"
@@ -117,7 +119,7 @@ function LockedState({
 
         <div className="space-y-1">
           <div className="text-sm font-medium text-foreground">
-            Unlock Social Intelligence for "{keywordLabel}"
+            Unlock Social Intelligence for {"\""}{keywordLabel}{"\""}
           </div>
           <div className="text-xs text-muted-foreground">YouTube strategy • Reddit heat • Pinterest visuals</div>
         </div>
@@ -265,6 +267,8 @@ export function SocialTab({ keyword }: SocialTabProps) {
   // Cache (Zustand)
   const getCachedData = useKeywordStore((s) => s.getCachedData)
   const setDrawerCache = useKeywordStore((s) => s.setDrawerCache)
+  const setCredits = useKeywordStore((s) => s.setCredits)
+  const country = useKeywordStore((s) => s.search.country)
 
   const processYouTubeData = React.useCallback((youtubeData: YouTubeResult[]) => {
     if (youtubeData.length === 0) {
@@ -287,7 +291,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
     // Reset platform focus per keyword
     setActivePlatform("youtube")
 
-    const cached = getCachedData(keyword.keyword, "social") as SocialDataPayload | null
+    const cached = getCachedData(country, keyword.keyword, "social") as SocialDataPayload | null
     if (cached) {
       setData(cached)
       setState("success")
@@ -301,9 +305,11 @@ export function SocialTab({ keyword }: SocialTabProps) {
 
   const socialOpp = generateMockSocialOpportunity(keyword.id, keyword.keyword)
 
-  const loadSocialData = async () => {
-    const cached = getCachedData(keyword.keyword, "social") as SocialDataPayload | null
-    if (cached) {
+  const loadSocialData = async (opts?: { force?: boolean }) => {
+    const force = opts?.force === true
+
+    const cached = getCachedData(country, keyword.keyword, "social") as SocialDataPayload | null
+    if (cached && !force) {
       setData(cached)
       setState("success")
       processYouTubeData(cached.youtube ?? [])
@@ -314,20 +320,71 @@ export function SocialTab({ keyword }: SocialTabProps) {
     setError(null)
 
     try {
-      const res = await fetchSocialInsights({ keyword: keyword.keyword, country: "US" })
+      const res = await fetchSocialInsights({ keyword: keyword.keyword, country, force })
 
-      if (res?.data?.success && res.data.data) {
-        setDrawerCache(keyword.keyword, "social", res.data.data)
-        setData(res.data.data)
-        setState("success")
-        processYouTubeData(res.data.data.youtube ?? [])
+      const serverError = res?.serverError
+      if (typeof serverError === "string" && serverError.toLowerCase().includes("authentication")) {
+        toast.error("Sign in required", {
+          description: "Social insights use credits and require an account.",
+          action: {
+            label: "Sign In",
+            onClick: () => {
+              window.location.href = "/login"
+            },
+          },
+          duration: 5000,
+        })
+
+        setError("Authentication required")
+        setState("error")
         return
       }
 
-      setError(res?.data?.error || res?.serverError || "Failed to fetch social data")
+      if (res?.data?.success && res.data.data) {
+        setDrawerCache(country, keyword.keyword, "social", res.data.data)
+        setData(res.data.data)
+        setState("success")
+        processYouTubeData(res.data.data.youtube ?? [])
+
+        const newBalance = (res.data as unknown as { newBalance?: unknown }).newBalance
+        if (typeof newBalance === "number") {
+          setCredits(newBalance)
+        }
+
+        return
+      }
+
+      const message = res?.data?.error || serverError || "Failed to fetch social data"
+
+      if (typeof message === "string" && message.toLowerCase().includes("insufficient")) {
+        toast.error("Insufficient credits", {
+          description: "Loading social data uses 1 credit.",
+        })
+      }
+
+      setError(message)
       setState("error")
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to fetch social data")
+      const message = e instanceof Error ? e.message : "Failed to fetch social data"
+
+      if (message.toLowerCase().includes("authentication")) {
+        toast.error("Sign in required", {
+          description: "Social insights use credits and require an account.",
+          action: {
+            label: "Sign In",
+            onClick: () => {
+              window.location.href = "/login"
+            },
+          },
+          duration: 5000,
+        })
+      } else if (message.toLowerCase().includes("insufficient")) {
+        toast.error("Insufficient credits", {
+          description: "Loading social data uses 1 credit.",
+        })
+      }
+
+      setError(message)
       setState("error")
     }
   }
@@ -406,7 +463,9 @@ export function SocialTab({ keyword }: SocialTabProps) {
       </div>
 
       {/* State: Idle (Locked) */}
-      {state === "idle" ? <LockedState keywordLabel={keyword.keyword} onLoad={loadSocialData} isLoading={false} /> : null}
+      {state === "idle" ? (
+        <LockedState keywordLabel={keyword.keyword} onLoad={() => loadSocialData({ force: true })} isLoading={false} />
+      ) : null}
 
       {/* State: Loading */}
       {state === "loading" ? (
@@ -451,7 +510,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
             <div className="mt-3">
               <Button
                 variant="outline"
-                onClick={loadSocialData}
+                onClick={() => loadSocialData({ force: true })}
                 className="border-border bg-transparent hover:bg-accent transition-all duration-200"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -659,7 +718,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
           <div className="pt-2">
             <Button
               variant="outline"
-              onClick={loadSocialData}
+              onClick={() => loadSocialData({ force: true })}
               className={cn(
                 "h-10 w-full",
                 "border-primary/30 text-primary hover:bg-primary/10",

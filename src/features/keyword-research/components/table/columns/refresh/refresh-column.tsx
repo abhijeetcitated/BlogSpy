@@ -5,6 +5,7 @@
 // ============================================
 
 import { useCallback, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   differenceInDays,
   differenceInHours,
@@ -20,7 +21,11 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-import { refreshKeywordAction } from "../../../../actions/refresh-keyword"
+import {
+  refreshKeywordAction,
+  type RefreshKeywordResponse,
+  type RefreshKeywordActionResult,
+} from "../../../../actions/refresh-keyword"
 import { useKeywordStore } from "../../../../store"
 import type { Keyword } from "../../../../types"
 
@@ -29,6 +34,7 @@ interface RefreshColumnProps {
   id: string
   lastUpdated?: string | Date | null
   className?: string
+  isGuest?: boolean
 }
 
 type FreshnessMeta = {
@@ -81,7 +87,8 @@ function getFreshnessMeta(date: Date | null): FreshnessMeta {
   return { className: "text-amber-500", isStale: false }
 }
 
-export function RefreshColumn({ keyword, id, lastUpdated, className }: RefreshColumnProps) {
+export function RefreshColumn({ keyword, id, lastUpdated, className, isGuest = false }: RefreshColumnProps) {
+  const router = useRouter()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const updateRow = useKeywordStore((state) => state.updateRow)
   const setCredits = useKeywordStore((state) => state.setCredits)
@@ -106,11 +113,23 @@ export function RefreshColumn({ keyword, id, lastUpdated, className }: RefreshCo
   const handleRefresh = useCallback(async () => {
     if (refreshing) return
 
+    if (isGuest) {
+      toast.error("Sign up to refresh keywords", {
+        description: "Demo mode shows sample data. Create a free account to refresh live SERP + RTV.",
+        action: {
+          label: "Sign Up Free",
+          onClick: () => router.push("/register"),
+        },
+        duration: 5000,
+      })
+      return
+    }
+
     setIsRefreshing(true)
     updateRow(id, { isRefreshing: true })
 
     try {
-      const result = await refreshKeywordAction({
+      const rawResult: RefreshKeywordActionResult | RefreshKeywordResponse = await refreshKeywordAction({
         keyword: keywordRow?.keyword ?? keyword,
         keywordId: Number.isFinite(numericId) ? numericId : undefined,
         country: country || "US",
@@ -119,11 +138,42 @@ export function RefreshColumn({ keyword, id, lastUpdated, className }: RefreshCo
         intent: keywordRow?.intent,
       })
 
-      const payload = result?.data?.data
-      const newBalance = result?.data?.newBalance
-      if (!result?.data?.success || !payload) {
-        throw new Error(result?.serverError || "Refresh failed")
+      const serverError =
+        typeof rawResult === "object" &&
+        rawResult !== null &&
+        "serverError" in rawResult &&
+        typeof (rawResult as { serverError?: unknown }).serverError === "string"
+          ? (rawResult as { serverError: string }).serverError
+          : undefined
+
+      // next-safe-action returns { data?: RefreshKeywordResponse }, but some call sites
+      // may pass through RefreshKeywordResponse directly. Support both shapes.
+      const actionPayload: unknown =
+        typeof rawResult === "object" && rawResult !== null && "data" in rawResult
+          ? (rawResult as { data?: unknown }).data
+          : rawResult
+
+      if (!actionPayload || typeof actionPayload !== "object") {
+        throw new Error(serverError || "Refresh failed")
       }
+
+      // Structured error path (refund-on-failure hardening)
+      if (
+        "error" in actionPayload &&
+        (actionPayload as { error?: unknown }).error === "API_ERROR" &&
+        (actionPayload as { refunded?: unknown }).refunded === true
+      ) {
+        throw new Error("API error. Credit refunded.")
+      }
+
+      // Success path
+      if (!("success" in actionPayload) || (actionPayload as { success?: unknown }).success !== true) {
+        throw new Error(serverError || "Refresh failed")
+      }
+
+      const actionData = actionPayload as Extract<RefreshKeywordResponse, { success: true }>
+      const payload = actionData.data
+      const newBalance = actionData.newBalance
 
       updateRow(id, {
         weakSpots: payload.serpData.weakSpots,
@@ -152,16 +202,22 @@ export function RefreshColumn({ keyword, id, lastUpdated, className }: RefreshCo
     } finally {
       setIsRefreshing(false)
     }
-  }, [country, id, keyword, keywordRow, numericId, refreshing, setCredits, updateRow])
+  }, [country, id, isGuest, keyword, keywordRow, numericId, refreshing, router, setCredits, updateRow])
 
   const timeLabel = (
-    <span className={cn("text-[11px] font-medium tabular-nums", freshness.className)}>
+    <span
+      className={cn(
+        "max-w-[120px] truncate text-right text-[11px] font-medium tabular-nums",
+        freshness.className
+      )}
+      title={timeAgoLabel}
+    >
       {timeAgoLabel}
     </span>
   )
 
   return (
-    <div className={cn("flex items-center justify-end gap-2", className)}>
+    <div className={cn("flex min-w-0 items-center justify-end gap-2 whitespace-nowrap", className)}>
       {freshness.isStale ? (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -178,11 +234,11 @@ export function RefreshColumn({ keyword, id, lastUpdated, className }: RefreshCo
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-7 w-7 cursor-pointer disabled:cursor-not-allowed"
             onClick={handleRefresh}
             disabled={refreshing}
           >
-            <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
+            <RefreshCw className={cn("h-3.5 w-3.5 text-gray-500", refreshing && "animate-spin")} />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="top">

@@ -11,6 +11,7 @@
 import "server-only"
 
 import { getDataForSEOClient, type DataForSEOResponse } from "@/src/lib/seo/dataforseo"
+import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
 import { mapKeywordData, type RawRelatedKeywordItem } from "../utils/data-mapper"
 import type { Keyword } from "../types"
 import { MOCK_KEYWORDS } from "../data/mock-keywords"
@@ -23,21 +24,6 @@ function isMockMode(): boolean {
   return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
 }
 
-function getLocationCode(country: string): number {
-  const locationMap: Record<string, number> = {
-    us: 2840,
-    gb: 2826,
-    ca: 2124,
-    au: 2036,
-    de: 2276,
-    fr: 2250,
-    in: 2356,
-    br: 2076,
-    es: 2724,
-    it: 2380,
-  }
-  return locationMap[country.toLowerCase()] || 2840
-}
 
 // Mapping logic lives in [`mapKeywordData()`](src/features/keyword-research/utils/data-mapper.ts:187)
 // so the service stays thin and type-safe.
@@ -83,7 +69,7 @@ export async function fetchKeywords(
   // ─────────────────────────────────────────
   try {
     const dataforseo = getDataForSEOClient()
-    const locationCode = getLocationCode(country)
+    const locationCode = getDataForSEOLocationCode(country)
 
     const { data } = await dataforseo.post<DataForSEOResponse<RelatedKeywordsResult>>(
       "/dataforseo_labs/google/related_keywords/live",
@@ -321,7 +307,7 @@ async function getKeywordDetails(keyword: string, country: string = "us"): Promi
       weakSpots: { reddit: null, quora: null, pinterest: null },
       kd: Math.floor(Math.random() * 100),
       cpc: parseFloat((Math.random() * 10).toFixed(2)),
-      serpFeatures: ["snippet"],
+      serpFeatures: ["featured_snippet"],
       geoScore: Math.floor(Math.random() * 100),
       hasAio: Math.random() > 0.5,
       dataSource: "mock",

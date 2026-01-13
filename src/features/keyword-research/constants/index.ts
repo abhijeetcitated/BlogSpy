@@ -4,9 +4,10 @@
 
 import type { Country, KDLevel, IntentOption, VolumePreset } from "../types"
 
+// NOTE: "Worldwide" option removed because Live SERP API requires a specific location_code for accurate Weak Spot detection.
 export const POPULAR_COUNTRIES: Country[] = [
   { code: "US", name: "United States", flag: "🇺🇸" },
-  { code: "UK", name: "United Kingdom", flag: "🇬🇧" },
+  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
   { code: "CA", name: "Canada", flag: "🇨🇦" },
   { code: "AU", name: "Australia", flag: "🇦🇺" },
   { code: "IN", name: "India", flag: "🇮🇳" },

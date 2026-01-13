@@ -40,5 +40,34 @@
 
 - Resolved Next.js build blocker: `next build` fails when both a Middleware file and a Proxy file exist.
   - Root cause: Next.js detected both [`middleware.ts`](middleware.ts:1) and [`proxy.ts`](proxy.ts:1).
-  - Fix: removed [`middleware.ts`](middleware.ts:1) and kept request-time routing in [`proxy.ts`](proxy.ts:1) (Next.js “Proxy (Middleware)” output).
+  - Fix: removed [`middleware.ts`](middleware.ts:1) and kept request-time routing in [`proxy.ts`](proxy.ts:1) (Next.js "Proxy (Middleware)" output).
 - Verified production build on constrained resources: `NEXT_PRIVATE_MAX_WORKERS=2` + `NODE_OPTIONS=--max-old-space-size=2048`.
+
+## 2026-01-12
+
+- Implemented feature flagging system for phased launch control without deleting code files.
+  - Central config: [`src/config/feature-flags.ts`](src/config/feature-flags.ts:1) (only 8 features disabled; everything else stays enabled).
+  - Updated sidebar navigation: [`components/layout/app-sidebar.tsx`](components/layout/app-sidebar.tsx:1) to hide **only** these 8 OFF-flag items:
+    - Tracking: news-tracker, community-tracker, social-tracker, commerce-tracker
+    - Creation: ai-writer, snippet-stealer, on-page
+    - Research: affiliate-finder
+  - Any existing route guards continue to key off the same flags; monetization features remain enabled.
+  - Fixed React Hook rules violation in [`app/dashboard/creation/ai-writer/page.tsx`](app/dashboard/creation/ai-writer/page.tsx:1) by moving guard before Suspense boundary.
+  - Build verified: `npm run build` successful with no TypeScript errors.
+  - **Phase 1 Launch Ready**: 20 features enabled, 8 features hidden from UI and returning 404 on direct access, zero file deletions.
+
+## 2026-01-13
+
+- **P0 Fix: Velocity Chart Disappearing**
+  - Root cause: [`normalizeToGodView()`](src/features/trend-spotter/components/velocity-chart.tsx:151) returned empty array when no API data was provided, leaving chart blank.
+  - Fix: Added failsafe mock data fallback at line 344 in [`velocity-chart.tsx`](src/features/trend-spotter/components/velocity-chart.tsx:344) — if `normalizedData.length === 0`, inject hardcoded 6-month trend data with all 4 series (web, youtube, news, shopping) + forecast extension.
+  - The existing `lineStyle()` spotlight logic was already correct (defaults to `strokeOpacity: 1` when `isSpotlightOn === false`).
+  - Build verified: `npm run build` successful.
+
+- **TrendSpotter UI Wiring & Calendar Fixes**
+  - Calendar Popover: Replaced bare `<Calendar>` icon button with full [`<Popover>`](src/features/trend-spotter/trend-spotter.tsx:265) wrapping `<Calendar mode="single" numberOfMonths={1}>` + `PopoverContent className="w-auto p-0"`.
+  - Auto-analysis: Added `useEffect` hook (lines 115-130) that triggers `handleAnalyze()` on mount and debounces (300ms) when `selectedCountryCode`, `selectedPlatform`, or `selectedTimeframe` changes.
+  - Country/Platform/Timeframe now reactively update the chart — changing country to Germany triggers new API call and chart re-render.
+  - Linear regression forecast logic already existed in [`trend-math.ts`](src/features/trend-spotter/utils/trend-math.ts:64) using last 6 points.
+  - X-axis date formatting already handled by [`formatXAxisTick()`](src/features/trend-spotter/components/velocity-chart.tsx:77) → shows month abbreviations.
+  - Build verified: `npm run build` successful (exit 0).

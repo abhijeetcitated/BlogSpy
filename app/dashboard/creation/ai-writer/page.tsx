@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { FEATURE_FLAGS } from "@/config/feature-flags"
+import { notFound } from "next/navigation"
 
 // Inner component that uses useSearchParams
 function AIWriterRedirect() {
@@ -26,6 +28,11 @@ function AIWriterRedirect() {
 
 // Wrapper with Suspense boundary for useSearchParams
 export default function AIWriterRedirectPage() {
+  // Feature flag guard - moved to wrapper to avoid Hook rules violation
+  if (!FEATURE_FLAGS.AI_WRITER) {
+    return notFound()
+  }
+
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center h-64">

@@ -155,7 +155,7 @@ export const SupabaseConfig = {
   },
   
   get serviceRoleKey(): string | undefined {
-    return process.env.SUPABASE_SERVICE_ROLE_KEY
+    return process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
   },
   
   get isConfigured(): boolean {

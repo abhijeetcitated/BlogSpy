@@ -37,20 +37,20 @@ const SERP_FEATURE_OPTIONS: { value: SERPFeature; label: string; icon: typeof Vi
   // High Impact Features
   { value: "ai_overview", label: "AI Overview", icon: Bot, color: "text-indigo-400" },
   { value: "featured_snippet", label: "Featured Snippet", icon: FileText, color: "text-amber-500" },
-  { value: "faq", label: "FAQ / PAA", icon: HelpCircle, color: "text-blue-400" },
-  
+  { value: "people_also_ask", label: "FAQ / PAA", icon: HelpCircle, color: "text-blue-400" },
+
   // Media Features
-  { value: "video", label: "Video", icon: Video, color: "text-red-500" },
-  { value: "image", label: "Image Pack", icon: ImageIcon, color: "text-pink-400" },
-  
+  { value: "video_pack", label: "Video", icon: Video, color: "text-red-500" },
+  { value: "image_pack", label: "Image Pack", icon: ImageIcon, color: "text-pink-400" },
+
   // Commerce Features
-  { value: "shopping", label: "Shopping", icon: ShoppingCart, color: "text-green-400" },
-  { value: "ad", label: "Ads", icon: Megaphone, color: "text-yellow-500" },
-  
+  { value: "shopping_ads", label: "Shopping", icon: ShoppingCart, color: "text-green-400" },
+  { value: "ads_top", label: "Ads", icon: Megaphone, color: "text-yellow-500" },
+
   // Local & News
-  { value: "local", label: "Local Pack", icon: MapPin, color: "text-orange-400" },
-  { value: "news", label: "News", icon: Newspaper, color: "text-cyan-400" },
-  
+  { value: "local_pack", label: "Local Pack", icon: MapPin, color: "text-orange-400" },
+  { value: "top_stories", label: "News", icon: Newspaper, color: "text-cyan-400" },
+
   // Other Features
   { value: "reviews", label: "Reviews", icon: Trophy, color: "text-yellow-400" },
 ]

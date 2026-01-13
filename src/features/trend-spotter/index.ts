@@ -5,7 +5,7 @@
 // Only import from this file in other parts of the app.
 
 // Main component
-export { TrendSpotter } from "./trend-spotter"
+export { TrendSpotter } from "./components/trend-spotter"
 
 // Sub-components (for advanced use cases)
 export { 
@@ -54,6 +54,7 @@ export {
   seasonIcons,
   seasonColors,
   nicheToCategories,
+  PLATFORM_OPTIONS,
   geoUrl,
 } from "./constants"
 
@@ -65,4 +66,11 @@ export {
   filterCalendarEvents,
   orderCalendarFromCurrentMonth,
   calculateCalendarStats,
+  calculateForecast,
+  calculateViralityScore,
+  extractTrendSeries,
+  buildVelocityChartData,
 } from "./utils"
+
+// Services (feature-local API clients)
+export { analyzeTrendSpotter } from "./services"

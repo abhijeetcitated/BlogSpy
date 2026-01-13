@@ -13,7 +13,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-type SerpFeature = "featured_snippet" | "video"
+import type { SERPFeature } from "../../../../types"
+
+type SerpFeature = Extract<SERPFeature, "featured_snippet" | "video_pack">
 
 interface SerpColumnProps {
   features: string[]
@@ -31,7 +33,7 @@ const serpConfig: Record<SerpFeature, {
     icon: Star,
     color: "text-yellow-500",
   },
-  video: {
+  video_pack: {
     label: "Video",
     icon: Video,
     color: "text-red-500",
@@ -47,10 +49,10 @@ export function SerpColumn({
     .map((feature) => {
       const value = feature.toLowerCase()
       if (value === "snippet") return "featured_snippet"
-      if (value === "video_carousel") return "video"
+      if (value === "video" || value === "video_carousel") return "video_pack"
       return value
     })
-    .filter((feature): feature is SerpFeature => feature === "featured_snippet" || feature === "video")
+    .filter((feature): feature is SerpFeature => feature === "featured_snippet" || feature === "video_pack")
 
   if (normalized.length === 0) {
     return <span className="text-muted-foreground">-</span>

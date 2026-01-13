@@ -2,46 +2,54 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { 
-  Search, 
+import {
+  Search,
   Loader2,
-  Monitor, 
-  Youtube, 
-  Newspaper, 
-  ShoppingBag, 
-  Calendar, 
-  Zap, 
+  Calendar as CalendarIcon,
+  Zap,
   Flame,
   CalendarDays,
   Rocket,
   Sparkles,
   Lock,
-  Crown
+  Crown,
 } from "lucide-react"
+import { format } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 import { SearchableCountryDropdown } from "./components/searchable-country-dropdown"
 import { VelocityChart } from "./components/velocity-chart"
+
+import { PLATFORM_OPTIONS } from "./constants"
+import {
+  calculateForecast,
+  calculateViralityScore,
+  buildVelocityChartData,
+  extractTrendSeries,
+  type DataForSEOTrendsItem,
+} from "./utils"
+import { analyzeTrendSpotter } from "./services/trend-spotter.api"
+import type { TrendSpotterPlatformType } from "./services/trend-spotter.api"
+import type { VelocityDataPoint } from "./types"
+
 import { GeographicInterest } from "./components/geographic-interest"
 import { NewsContext } from "./components/news-context"
 import { RelatedDataLists } from "./components/related-data-lists"
 import { ContentTypeSuggester } from "./components/content-type-suggester"
 import { TrendAlertButton } from "./components/trend-alert-button"
 
-// Platform configuration
-const platforms = [
-  { value: "web", label: "Web", icon: Monitor, iconColor: "text-blue-400" },
-  { value: "youtube", label: "YouTube", icon: Youtube, iconColor: "text-red-500" },
-  { value: "news", label: "News", icon: Newspaper, iconColor: "text-green-400" },
-  { value: "shopping", label: "Shopping", icon: ShoppingBag, iconColor: "text-orange-400" },
-]
-
-type PlatformValue = (typeof platforms)[number]["value"]
+type PlatformValue = TrendSpotterPlatformType
 
 export function TrendSpotter() {
   // Main search state
@@ -50,13 +58,20 @@ export function TrendSpotter() {
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformValue>("web")
   const [selectedTimeframe, setSelectedTimeframe] = useState("30d")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const analyzeTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [customDate, setCustomDate] = useState<Date | undefined>(undefined)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+
+  const [chartData, setChartData] = useState<VelocityDataPoint[]>([])
+  const [viralityScore, setViralityScore] = useState<number | null>(null)
+
+  const analyzeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasInitialized = useRef(false)
   
   // Geographic section state (cascading)
   const [geoCountryCode, setGeoCountryCode] = useState<string | null>("IN")
   const [geoCity, setGeoCity] = useState<string | null>(null)
 
-  const handleAnalyze = useCallback(() => {
+  const handleAnalyze = useCallback(async () => {
     if (!searchQuery.trim()) return
 
     if (analyzeTimerRef.current) {
@@ -64,12 +79,36 @@ export function TrendSpotter() {
     }
 
     setIsAnalyzing(true)
-    analyzeTimerRef.current = setTimeout(() => {
+
+    try {
+      const countryCode = selectedCountryCode ?? "US"
+
+      const res = await analyzeTrendSpotter({
+        keyword: searchQuery.trim(),
+        location: countryCode,
+        type: selectedPlatform,
+        timeframe: selectedTimeframe,
+      })
+
+      if (!res.success || !res.data) {
+        return
+      }
+
+      const items: DataForSEOTrendsItem[] = res.data.items ?? []
+      const { labels, values } = extractTrendSeries(items)
+
+      const forecast = calculateForecast(values, 3)
+      const score = calculateViralityScore(values)
+
+      setViralityScore(score)
+      setChartData(buildVelocityChartData(labels, values, forecast))
+    } finally {
       setIsAnalyzing(false)
       analyzeTimerRef.current = null
-    }, 900)
-  }, [searchQuery])
+    }
+  }, [searchQuery, selectedCountryCode, selectedPlatform, selectedTimeframe])
 
+  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (analyzeTimerRef.current) {
@@ -77,6 +116,22 @@ export function TrendSpotter() {
       }
     }
   }, [])
+
+  // Auto-analyze on initial load and when key parameters change
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true
+      handleAnalyze()
+      return
+    }
+
+    // Debounce re-analysis when country/platform/timeframe changes
+    const timeoutId = setTimeout(() => {
+      handleAnalyze()
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [selectedCountryCode, selectedPlatform, selectedTimeframe, handleAnalyze])
 
   return (
     <div className="min-h-full space-y-4 md:space-y-6">
@@ -168,13 +223,25 @@ export function TrendSpotter() {
 
         {/* Platform Toggle Pills */}
         <div className="flex w-full sm:w-auto flex-wrap md:flex-nowrap items-center rounded-lg border border-border bg-card p-1 order-4 sm:order-3 gap-1 md:gap-0">
-          {platforms.map((platform) => {
-            const isActive = selectedPlatform === platform.value
+          {PLATFORM_OPTIONS.map((platform) => {
+            const platformValue = platform.value as PlatformValue
+            const isActive = selectedPlatform === platformValue
+
+            const title =
+              platformValue === "news"
+                ? "Source: Google News"
+                : platformValue === "shopping"
+                  ? "Source: Google Shopping"
+                  : platformValue === "youtube"
+                    ? "Source: YouTube Search"
+                    : undefined
+
             return (
               <button
                 key={platform.value}
-                onClick={() => setSelectedPlatform(platform.value)}
+                onClick={() => setSelectedPlatform(platformValue)}
                 aria-pressed={isActive}
+                title={title}
                 className={cn(
                   "flex flex-1 md:flex-initial items-center justify-center gap-1.5 px-2 lg:px-3 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-all border",
                   isActive
@@ -211,9 +278,30 @@ export function TrendSpotter() {
               {tf}
             </button>
           ))}
-          <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hidden sm:block">
-            <Calendar className="h-4 w-4" />
-          </button>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hidden sm:block">
+                <CalendarIcon className="h-4 w-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={customDate}
+                onSelect={(date) => {
+                  setCustomDate(date)
+                  setCalendarOpen(false)
+                }}
+                numberOfMonths={1}
+                initialFocus
+              />
+              {customDate && (
+                <div className="px-3 pb-3 text-xs text-muted-foreground">
+                  Selected: {format(customDate, "MMM d, yyyy")}
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Analyze Button */}
@@ -237,7 +325,7 @@ export function TrendSpotter() {
       </div>
 
       {/* Velocity Chart */}
-      <VelocityChart searchQuery={searchQuery} />
+      <VelocityChart searchQuery={searchQuery} data={chartData} viralityScore={viralityScore ?? undefined} />
 
       {/* Geographic Intelligence */}
       <GeographicInterest

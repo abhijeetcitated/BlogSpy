@@ -9,7 +9,8 @@ import 'server-only';
  * NOTE: @ts-nocheck is temporary until real Supabase client is installed
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/src/lib/supabase/server';
+import type { Json } from '@/types/supabase';
 import { googleOAuthClient, createGSCClient, GOOGLE_SCOPES } from '@/lib/google';
 import type {
   GSCIntegration,
@@ -56,7 +57,7 @@ export class GSCService {
       refreshToken: data.refresh_token,
       expiresAt: new Date(data.expires_at),
       selectedProperty: data.selected_property,
-      properties: data.properties || [],
+      properties: (data.properties as unknown as GSCProperty[]) ?? [],
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
     };
@@ -86,7 +87,7 @@ export class GSCService {
           access_token: tokens.accessToken,
           refresh_token: tokens.refreshToken,
           expires_at: expiresAt.toISOString(),
-          properties: properties || [],
+          properties: (properties ?? []) as unknown as Json,
           updated_at: new Date().toISOString(),
         },
         {
@@ -107,7 +108,7 @@ export class GSCService {
       refreshToken: data.refresh_token,
       expiresAt: new Date(data.expires_at),
       selectedProperty: data.selected_property,
-      properties: data.properties || [],
+      properties: (data.properties as unknown as GSCProperty[]) ?? [],
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
     };
@@ -218,7 +219,7 @@ export class GSCService {
     await supabase
       .from('user_integrations')
       .update({
-        properties,
+        properties: properties as unknown as Json,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
@@ -354,7 +355,7 @@ export class GSCService {
       id: data.id,
       userId: data.user_id,
       property: data.property,
-      status: data.status,
+      status: data.status as GSCSyncJob["status"],
       startDate: data.start_date,
       endDate: data.end_date,
       rowsProcessed: data.rows_processed,

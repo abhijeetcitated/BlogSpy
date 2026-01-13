@@ -11,6 +11,7 @@
 
 import { dataForSEOClient } from "@/services/dataforseo/client"
 
+import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
 import type { CommunityResult, DrawerDataResponse, YouTubeResult } from "../types"
 
 type DataForSEOSerpResultItem = {
@@ -78,28 +79,6 @@ function formatK(num: number): string {
   return `${num}`
 }
 
-function getLocationCode(countryCode: string): number {
-  const locationMap: Record<string, number> = {
-    US: 2840,
-    GB: 2826,
-    CA: 2124,
-    AU: 2036,
-    DE: 2276,
-    FR: 2250,
-    IN: 2356,
-    BR: 2076,
-    ES: 2724,
-    IT: 2380,
-    NL: 2528,
-    JP: 2392,
-    MX: 2484,
-    SG: 2702,
-    AE: 2784,
-    ZA: 2710,
-  }
-
-  return locationMap[countryCode.toUpperCase()] ?? 2840
-}
 
 function pickFirstResult<T>(data: T | T[] | undefined): T | undefined {
   if (!data) return undefined
@@ -235,7 +214,7 @@ export async function fetchYouTubeData(
     const payload = [
       {
         keyword,
-        location_code: getLocationCode(country),
+        location_code: getDataForSEOLocationCode(country),
         language_code: "en",
         depth: 20,
         calculate_rectangles: false,

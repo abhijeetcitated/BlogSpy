@@ -4,13 +4,10 @@
 // TREND COLUMN - Trend sparkline display
 // ============================================
 
+import React from "react"
 import { cn } from "@/lib/utils"
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface TrendColumnProps {
   data: number[]
@@ -19,7 +16,7 @@ interface TrendColumnProps {
   className?: string
 }
 
-export function TrendColumn({
+export const TrendColumn = React.memo(function TrendColumn({
   data,
   showSparkline = true,
   showChange = true,
@@ -84,4 +81,4 @@ export function TrendColumn({
       </TooltipContent>
     </Tooltip>
   )
-}
+})

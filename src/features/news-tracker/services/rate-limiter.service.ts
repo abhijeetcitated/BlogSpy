@@ -35,6 +35,11 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
     windowMs: 60 * 1000, // per minute
     blockDurationMs: 120 * 1000,
   },
+  keywordResearchSearch: {
+    limit: 10,           // 10 requests
+    windowMs: 60 * 1000, // per minute
+    blockDurationMs: 60 * 1000,
+  },
   purchaseCredits: {
     limit: 5,            // 5 purchases
     windowMs: 60 * 60 * 1000, // per hour

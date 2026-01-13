@@ -1,12 +1,13 @@
-import { Snowflake, Flower2, Sun, Leaf } from "lucide-react"
-import type { 
-  Country, 
-  SourceConfig, 
-  CategoryConfig, 
+import { Snowflake, Flower2, Sun, Leaf, Monitor, Youtube, Newspaper, ShoppingBag } from "lucide-react"
+import type {
+  Country,
+  SourceConfig,
+  CategoryConfig,
   TrafficImpactConfig,
   EventSource,
   EventCategory,
-  Season
+  Season,
+  PlatformOption,
 } from "../types"
 
 // ============================================
@@ -146,6 +147,17 @@ export const nicheToCategories: Record<string, EventCategory[]> = {
   "Fashion": ["Fashion"],
   "Education": ["Education"],
 }
+
+// ============================================
+// PLATFORM OPTIONS (Trend Spotter Control Bar)
+// ============================================
+
+export const PLATFORM_OPTIONS: PlatformOption[] = [
+  { value: "web", label: "Web Search", icon: Monitor, iconColor: "text-blue-400" },
+  { value: "youtube", label: "YouTube Demand", icon: Youtube, iconColor: "text-red-500" },
+  { value: "news", label: "Viral Signals", icon: Newspaper, iconColor: "text-green-400" },
+  { value: "shopping", label: "Buyer Intent", icon: ShoppingBag, iconColor: "text-orange-400" },
+]
 
 // ============================================
 // MAP CONFIGURATION

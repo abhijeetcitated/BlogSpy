@@ -84,8 +84,16 @@ function normalize(str: string): string {
 function normalizeSerpFeatureValue(feature: string): string {
   const value = normalize(feature)
 
+  // Canonical SERP feature standardization.
+  // Keep this aligned with [`normalizeSerpFeatureType()`](src/features/keyword-research/utils/serp-feature-normalizer.ts:29).
   if (value === "snippet") return "featured_snippet"
-  if (value === "video_carousel") return "video"
+  if (value === "video" || value === "videos" || value === "video_carousel") return "video_pack"
+  if (value === "image" || value === "images") return "image_pack"
+  if (value === "local" || value === "maps" || value === "maps_search" || value === "map") return "local_pack"
+  if (value === "shopping" || value === "shopping_results") return "shopping_ads"
+  if (value === "ad" || value === "ads" || value === "paid" || value === "top_ads") return "ads_top"
+  if (value === "faq" || value === "paa") return "people_also_ask"
+  if (value === "news") return "top_stories"
 
   return value
 }

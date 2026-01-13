@@ -13,13 +13,14 @@ interface DemoWrapperProps {
   dashboardPath: string
 }
 
-export function DemoWrapper({ 
-  children, 
-  featureName, 
+export function DemoWrapper({
+  children,
+  featureName,
   featureDescription,
-  dashboardPath 
+  dashboardPath
 }: DemoWrapperProps) {
   const [showBanner, setShowBanner] = useState(true)
+  const [showCta, setShowCta] = useState(true)
 
   return (
     <div className="relative">
@@ -57,37 +58,51 @@ export function DemoWrapper({
       </div>
 
       {/* Bottom CTA Card */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
-        <Card className="bg-slate-900/95 backdrop-blur border-slate-700 shadow-2xl">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-emerald-500/20 rounded-lg">
-                <Lock className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-white font-semibold text-sm">
-                  Unlock Full {featureName}
-                </h4>
-                <p className="text-slate-400 text-xs mt-1">
-                  {featureDescription}
-                </p>
-                <div className="flex gap-2 mt-3">
-                  <Link href="/register" className="flex-1">
-                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-sm h-8">
-                      Start Free Trial
-                    </Button>
-                  </Link>
-                  <Link href="/login">
-                    <Button variant="outline" className="border-slate-600 text-slate-300 text-sm h-8">
-                      Login
-                    </Button>
-                  </Link>
+      {showCta && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+          <Card className="bg-slate-900/95 backdrop-blur border-slate-700 shadow-2xl">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-emerald-500/20 rounded-lg">
+                  <Lock className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="text-white font-semibold text-sm">
+                        Unlock Full {featureName}
+                      </h4>
+                      <p className="text-slate-400 text-xs mt-1">
+                        {featureDescription}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCta(false)}
+                      className="text-slate-400 hover:text-slate-200 transition-colors"
+                      aria-label="Dismiss"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Link href="/register" className="flex-1">
+                      <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-sm h-8">
+                        Start Free Trial
+                      </Button>
+                    </Link>
+                    <Link href="/login">
+                      <Button variant="outline" className="border-slate-600 text-slate-300 text-sm h-8">
+                        Login
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

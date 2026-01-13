@@ -8,6 +8,7 @@
 import "server-only"
 
 import { dataForSEOClient, type ApiResponse } from "@/services/dataforseo/client"
+import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
 import { mapKeywordData, mapBulkKeywords, type RawLabsKeyword } from "../utils/data-mapper"
 import type { Keyword } from "../types"
 
@@ -79,7 +80,7 @@ function buildLabsPayload(options: KeywordDiscoveryOptions): object[] {
 
   const payload: Record<string, unknown> = {
     keyword,
-    location_code: getLocationCode(country),
+    location_code: getDataForSEOLocationCode(country),
     language_code: language,
     limit,
     include_serp_info: true,
@@ -106,25 +107,6 @@ function buildLabsPayload(options: KeywordDiscoveryOptions): object[] {
   return [payload]
 }
 
-/**
- * Map country code to DataForSEO location code
- */
-function getLocationCode(country: string): number {
-  const locationMap: Record<string, number> = {
-    US: 2840,  // United States
-    GB: 2826,  // United Kingdom
-    CA: 2124,  // Canada
-    AU: 2036,  // Australia
-    IN: 2356,  // India
-    DE: 2276,  // Germany
-    FR: 2250,  // France
-    ES: 2724,  // Spain
-    IT: 2380,  // Italy
-    BR: 2076,  // Brazil
-  }
-
-  return locationMap[country.toUpperCase()] ?? 2840 // Default to US
-}
 
 /**
  * Fetch bulk keywords using DataForSEO Labs API
@@ -227,7 +209,7 @@ export async function fetchKeywordSuggestions(
   try {
     const payload = [{
       keyword: query.trim(),
-      location_code: getLocationCode(country),
+      location_code: getDataForSEOLocationCode(country),
       language_code: "en",
       limit,
       include_serp_info: true,
@@ -288,7 +270,7 @@ export async function fetchKeywordsForSite(
   try {
     const payload = [{
       target: domain.replace(/^https?:\/\//, "").replace(/\/$/, ""),
-      location_code: getLocationCode(country),
+      location_code: getDataForSEOLocationCode(country),
       language_code: "en",
       limit,
       include_serp_info: true,

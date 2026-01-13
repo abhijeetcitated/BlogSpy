@@ -16,7 +16,7 @@
 import "server-only"
 
 import { experimental_taintObjectReference, experimental_taintUniqueValue } from "react"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/src/lib/supabase/server"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TYPES

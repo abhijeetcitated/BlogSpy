@@ -11,15 +11,15 @@ const nextConfig: NextConfig = {
   // React Compiler (React 19) - automatic memoization
   reactCompiler: true,
 
-  // Partial Prerendering (Instant Shell)
-  cacheComponents: true,
+  // Partial Prerendering (Instant Shell) - disabled temporarily for dev stability
+  // cacheComponents: true,
 
   // ============================================
   // TURBOPACK (Next.js 16 default)
   // ============================================
-  turbopack: {
-    // Turbopack configuration (empty = use defaults)
-  },
+  // turbopack: {
+  //   // Turbopack configuration (empty = use defaults)
+  // },
 
   // ============================================
   // IMAGE OPTIMIZATION
@@ -130,12 +130,25 @@ const nextConfig: NextConfig = {
   // EXPERIMENTAL FEATURES (2026 Enterprise Security)
   // ============================================
   experimental: {
-    // Enable optimized package imports
+    // Enable optimized package imports - reduces bundle size significantly
     optimizePackageImports: [
       "lucide-react",
       "@radix-ui/react-icons",
+      "@radix-ui/react-tooltip",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-select",
+      "@radix-ui/react-tabs",
+      "@radix-ui/react-popover",
       "recharts",
       "date-fns",
+      "lodash",
+      "clsx",
+      "tailwind-merge",
+      "@tanstack/react-query",
+      "@tanstack/react-table",
+      "zod",
+      "sonner",
     ],
     // Enable React Taint API to prevent sensitive data leaks
     taint: true,
@@ -145,6 +158,16 @@ const nextConfig: NextConfig = {
         "localhost:3000",
         "blogspy.com",
       ],
+    },
+  },
+
+  // ============================================
+  // TURBOPACK DEV OPTIMIZATION
+  // ============================================
+  turbopack: {
+    // Resolve aliases for faster imports
+    resolveAlias: {
+      "@": "./",
     },
   },
 

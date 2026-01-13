@@ -16,44 +16,18 @@ import {
   getPaginationRowModel,
   type SortingState,
   type RowSelectionState,
-  createColumnHelper,
 } from "@tanstack/react-table"
-import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Check, Copy, Download, Lock, Share2 } from "lucide-react"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Sparkline, KDRing } from "@/components/charts"
-import {
-  Download,
-  Copy,
-  Check,
-  Share2,
-  Lock,
-  Bot,
-  Video,
-  FileText,
-  ImageIcon,
-  ShoppingCart,
-  MapPin,
-  Newspaper,
-  HelpCircle,
-  Star,
-  Megaphone,
-  ArrowUpRight,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
-} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 import type { Keyword } from "../../types"
-import { MOCK_KEYWORDS } from "../../__mocks__/keyword-data"
-import { INTENT_CONFIG } from "../../constants/table-config"
 import { CreditBalance } from "../header/CreditBalance"
 import { downloadKeywordsCSV } from "../../utils/export-utils"
-import { WeakSpotColumn } from "./columns/weak-spot/weak-spot-column"
-import { RefreshColumn } from "./columns/refresh"
-import { RefreshCreditsHeader } from "./columns/refresh/RefreshCreditsHeader"
+import { useKeywordStore } from "../../store"
+import { createKeywordColumns } from "./columns/columns"
 
 export interface KeywordTableProps {
   keywords?: Keyword[]
@@ -64,8 +38,6 @@ export interface KeywordTableProps {
 
 const PAGE_SIZE = 50
 
-// Column helper for type-safe column definitions
-const columnHelper = createColumnHelper<Keyword>()
 
 export function KeywordTable({
   keywords: keywordsProp,
@@ -98,7 +70,7 @@ export function KeywordTable({
   )
 
   // Use prop data directly - no local state copy (fixes infinite loop)
-  const data = keywordsProp ?? MOCK_KEYWORDS
+  const data = keywordsProp ?? []
 
   // UI State
   const [isExporting, setIsExporting] = useState(false)
@@ -118,10 +90,14 @@ export function KeywordTable({
   // ============================================
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
+  // Keep Zustand selection in sync (used by RefreshCreditsHeader)
+  const setSelectedIds = useKeywordStore((state) => state.setSelectedIds)
+
   // Reset selection when data changes (prevents stale selections across searches/filters)
   useEffect(() => {
     setRowSelection({})
-  }, [data])
+    setSelectedIds([])
+  }, [data, setSelectedIds])
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -136,373 +112,9 @@ export function KeywordTable({
   }, [])
 
   // ============================================
-  // COLUMN DEFINITIONS (with exact legacy JSX)
+  // COLUMN DEFINITIONS
   // ============================================
-  const columns = useMemo(
-    () => [
-      // 1. Checkbox
-      columnHelper.display({
-        id: "select",
-        header: ({ table }) => (
-          <div className="flex items-center justify-center">
-            <Checkbox
-              checked={
-                table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
-              }
-              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-              aria-label="Select all"
-            />
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div
-            className="flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label={`Select ${row.original.keyword}`}
-            />
-          </div>
-        ),
-        size: 40,
-      }),
-
-      // 2. Keyword
-      columnHelper.accessor("keyword", {
-        header: "Keyword",
-        cell: ({ row }) => (
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold group-hover:text-amber-400 transition-colors">
-            {row.original.keyword}
-            <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-amber-400 transition-all" />
-          </span>
-        ),
-        size: 220,
-      }),
-
-      // 3. Intent
-      columnHelper.accessor("intent", {
-        header: "Intent",
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center gap-0.5">
-            {row.original.intent.map((int, idx) => (
-              <Tooltip key={int + idx}>
-                <TooltipTrigger asChild>
-                  <span
-                    className={cn(
-                      "inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-semibold border cursor-default",
-                      INTENT_CONFIG[int].color
-                    )}
-                  >
-                    {INTENT_CONFIG[int].label}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  {INTENT_CONFIG[int].tooltip}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-        ),
-        enableSorting: false,
-        size: 70,
-      }),
-
-      // 4. Volume
-      columnHelper.accessor("volume", {
-        header: ({ column }) => (
-          <button
-            className="flex items-center gap-1 hover:text-foreground transition-colors"
-            onClick={column.getToggleSortingHandler()}
-          >
-            Volume
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3 opacity-50" />
-            )}
-          </button>
-        ),
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center font-mono text-sm tabular-nums">
-            {row.original.volume.toLocaleString()}
-          </div>
-        ),
-        size: 80,
-      }),
-
-      // 5. Trend
-      columnHelper.accessor("trend", {
-        header: "Trend",
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center">
-            <Sparkline data={row.original.trend} />
-          </div>
-        ),
-        enableSorting: false,
-        size: 80,
-      }),
-
-      // 6. KD
-      columnHelper.accessor("kd", {
-        header: ({ column }) => (
-          <button
-            className="flex items-center gap-1 hover:text-foreground transition-colors"
-            onClick={column.getToggleSortingHandler()}
-          >
-            KD
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3 opacity-50" />
-            )}
-          </button>
-        ),
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center">
-            <KDRing value={row.original.kd} />
-          </div>
-        ),
-        size: 60,
-      }),
-
-      // 7. CPC
-      columnHelper.accessor("cpc", {
-        header: ({ column }) => (
-          <button
-            className="flex items-center gap-1 hover:text-foreground transition-colors"
-            onClick={column.getToggleSortingHandler()}
-          >
-            CPC
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3 opacity-50" />
-            )}
-          </button>
-        ),
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center font-mono text-sm tabular-nums">
-            ${row.original.cpc.toFixed(2)}
-          </div>
-        ),
-        size: 60,
-      }),
-
-      // 8. Weak Spot
-      columnHelper.accessor("weakSpots", {
-        header: "Weak Spot",
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center">
-            <WeakSpotColumn weakSpots={row.original.weakSpots} />
-          </div>
-        ),
-        enableSorting: false,
-        size: 180,
-      }),
-
-      // 9. GEO Score
-      columnHelper.accessor("geoScore", {
-        header: ({ column }) => (
-          <button
-            className="flex items-center gap-1 hover:text-foreground transition-colors"
-            onClick={column.getToggleSortingHandler()}
-          >
-            GEO
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="h-3 w-3" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="h-3 w-3" />
-            ) : (
-              <ArrowUpDown className="h-3 w-3 opacity-50" />
-            )}
-          </button>
-        ),
-        cell: ({ row }) => {
-          const hasAio = row.original.hasAio ?? row.original.serpFeatures?.includes("ai_overview")
-          const geoScore = row.original.geoScore
-
-          return (
-            <div className="flex items-center justify-center">
-              {geoScore !== undefined && geoScore > 0 ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className={cn(
-                        "inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold",
-                        geoScore >= 70
-                          ? "bg-emerald-500/20 text-emerald-500"
-                          : geoScore >= 40
-                            ? "bg-amber-500/20 text-amber-500"
-                            : "bg-red-500/20 text-red-500"
-                      )}
-                    >
-                      {hasAio && <Bot className="h-3 w-3" />}
-                      {geoScore}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs">
-                    <p className="font-medium">GEO Score: {geoScore}/100</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {geoScore >= 70
-                        ? "High potential to appear in AI answers"
-                        : geoScore >= 40
-                          ? "Moderate AI visibility potential"
-                          : "Low AI visibility - focus on traditional SEO"}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <span className="text-muted-foreground/50 text-xs">—</span>
-              )}
-            </div>
-          )
-        },
-        size: 60,
-      }),
-
-      // 10. SERP Features
-      columnHelper.accessor("serpFeatures", {
-        header: "SERP",
-        cell: ({ row }) => {
-          const displaySerpFeatures = row.original.serpFeatures || []
-
-          const getFeatureIcon = (feature: string) => {
-            switch (feature) {
-              case "ai_overview":
-                return <Bot className="h-3.5 w-3.5" />
-              case "video":
-                return <Video className="h-3.5 w-3.5" />
-              case "snippet":
-              case "featured_snippet":
-                return <FileText className="h-3.5 w-3.5" />
-              case "image":
-                return <ImageIcon className="h-3.5 w-3.5" />
-              case "shopping":
-                return <ShoppingCart className="h-3.5 w-3.5" />
-              case "local":
-                return <MapPin className="h-3.5 w-3.5" />
-              case "news":
-                return <Newspaper className="h-3.5 w-3.5" />
-              case "faq":
-                return <HelpCircle className="h-3.5 w-3.5" />
-              case "reviews":
-                return <Star className="h-3.5 w-3.5" />
-              case "ad":
-                return <Megaphone className="h-3.5 w-3.5" />
-              default:
-                return <FileText className="h-3.5 w-3.5" />
-            }
-          }
-
-          const getFeatureColor = (feature: string) => {
-            switch (feature) {
-              case "ai_overview":
-                return "text-indigo-400"
-              case "video":
-                return "text-red-500"
-              case "snippet":
-              case "featured_snippet":
-                return "text-amber-500"
-              case "image":
-                return "text-pink-400"
-              case "shopping":
-                return "text-green-400"
-              case "local":
-                return "text-orange-400"
-              case "news":
-                return "text-cyan-400"
-              case "faq":
-                return "text-blue-400"
-              case "reviews":
-                return "text-yellow-400"
-              case "ad":
-                return "text-yellow-500"
-              default:
-                return "text-muted-foreground"
-            }
-          }
-
-          const getFeatureLabel = (feature: string) => {
-            switch (feature) {
-              case "ai_overview":
-                return "AI Overview"
-              case "snippet":
-              case "featured_snippet":
-                return "Featured Snippet"
-              case "faq":
-                return "FAQ / PAA"
-              default:
-                return feature.charAt(0).toUpperCase() + feature.slice(1)
-            }
-          }
-
-          return (
-            <div className="flex items-center justify-center">
-              {displaySerpFeatures.length > 0 ? (
-                <div className="flex items-center justify-center gap-0.5 flex-wrap">
-                  {displaySerpFeatures.slice(0, 3).map((feature, idx) => (
-                    <Tooltip key={`${feature}-${idx}`}>
-                      <TooltipTrigger asChild>
-                        <span
-                          className={cn(
-                            "inline-flex items-center justify-center w-5 h-5 cursor-default",
-                            getFeatureColor(feature)
-                          )}
-                        >
-                          {getFeatureIcon(feature)}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
-                        {getFeatureLabel(feature)}
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                  {displaySerpFeatures.length > 3 && (
-                    <span className="text-[10px] text-muted-foreground">
-                      +{displaySerpFeatures.length - 3}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <span className="text-muted-foreground/50 text-xs">—</span>
-              )}
-            </div>
-          )
-        },
-        enableSorting: false,
-        size: 100,
-      }),
-
-      // 11. Refresh
-      columnHelper.display({
-        id: "refresh",
-        header: () => <RefreshCreditsHeader />,
-        cell: ({ row }) => (
-          <div onClick={(e) => e.stopPropagation()}>
-            <RefreshColumn
-              id={String(row.original.id)}
-              keyword={row.original.keyword}
-              lastUpdated={
-                row.original.lastUpdated instanceof Date
-                  ? row.original.lastUpdated.toISOString()
-                  : row.original.lastUpdated ?? null
-              }
-            />
-          </div>
-        ),
-        size: 50,
-      }),
-    ],
-    []
-  )
+  const columns = useMemo(() => createKeywordColumns({ isGuest }), [isGuest])
 
   // ============================================
   // TANSTACK TABLE INSTANCE
@@ -532,6 +144,11 @@ export function KeywordTable({
   const selectedRowIds = useMemo(() => {
     return Object.keys(rowSelection).map((id) => parseInt(id, 10))
   }, [rowSelection])
+
+  // Sync TanStack selection -> Zustand selection (for bulk refresh header)
+  useEffect(() => {
+    setSelectedIds(selectedRowIds)
+  }, [selectedRowIds, setSelectedIds])
 
   // Sync selection changes to parent
   useEffect(() => {
@@ -581,6 +198,9 @@ export function KeywordTable({
   }, [guardAction, selectedRowIds, data, setIsCopied])
 
   const handleExportToTopicCluster = useCallback(() => {
+    // Requirement: route differs by auth (guest vs authenticated)
+    const destination = isGuest ? "/topic-clusters" : "/dashboard/strategy/topic-clusters"
+
     guardAction("export to Topic Clusters", () => {
       const keywordsToExport = selectedRowIds.length > 0
         ? data.filter((k) => selectedRowIds.includes(k.id))
@@ -599,9 +219,9 @@ export function KeywordTable({
       localStorage.setItem("keyword-explorer-export", JSON.stringify(exportData))
       localStorage.setItem("keyword-explorer-export-time", new Date().toISOString())
 
-      router.push("/topic-clusters")
+      router.push(destination)
     })
-  }, [guardAction, selectedRowIds, data, router])
+  }, [data, guardAction, isGuest, router, selectedRowIds])
 
   const handleExportCSV = useCallback(() => {
     guardAction("export CSV", () => {
@@ -684,10 +304,14 @@ export function KeywordTable({
               variant="default"
               size="sm"
               onClick={handleExportToTopicCluster}
-              className="col-span-1 md:w-auto h-7 gap-1.5 text-xs bg-violet-600 hover:bg-violet-700"
+              className={cn(
+                "col-span-1 md:w-auto h-7 gap-1.5 text-xs",
+                "bg-[#F59E0B] hover:bg-[#D97706] text-black font-bold",
+                "border border-[#B45309] shadow-sm transition-all active:scale-95"
+              )}
             >
-              {isGuest && <Lock className="h-3 w-3" />}
-              <Share2 className="h-3.5 w-3.5" />
+              {isGuest && <Lock className="h-3 w-3 text-black" />}
+              <Share2 className="h-3.5 w-3.5 text-black" />
               {selectedRowIds.length > 0
                 ? `To Clusters (${selectedRowIds.length})`
                 : "To Topic Clusters"}
@@ -706,29 +330,26 @@ export function KeywordTable({
             className="w-full text-sm table-fixed min-w-[1200px]"
             style={{ borderCollapse: "separate", borderSpacing: 0 }}
           >
-            {/* Column widths - PRESERVED */}
+            {/* Column widths (single source of truth: TanStack column sizing) */}
             <colgroup>
-              <col style={{ width: "40px" }} />   {/* 1. Checkbox */}
-              <col style={{ width: "220px" }} />  {/* 2. Keyword */}
-              <col style={{ width: "70px" }} />   {/* 3. Intent */}
-              <col style={{ width: "80px" }} />   {/* 4. Volume */}
-              <col style={{ width: "80px" }} />   {/* 5. Trend */}
-              <col style={{ width: "60px" }} />   {/* 6. KD */}
-              <col style={{ width: "60px" }} />   {/* 7. CPC */}
-              <col style={{ width: "180px" }} />  {/* 8. Weak Spot */}
-              <col style={{ width: "60px" }} />   {/* 9. GEO */}
-              <col style={{ width: "100px" }} />  {/* 10. SERP */}
-              <col style={{ width: "50px" }} />   {/* 11. Refresh */}
+              {table.getVisibleLeafColumns().map((column) => (
+                <col key={column.id} style={{ width: `${column.getSize()}px` }} />
+              ))}
             </colgroup>
 
             {/* HEADER - Using TanStack but with legacy styling */}
-            <thead className="sticky top-0 z-10 bg-muted">
+            <thead className="bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-2 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide text-center border-b border-border"
+                      style={{ width: `${header.getSize()}px` }}
+                      className={cn(
+                        "px-2 py-2 text-xs font-medium uppercase tracking-wide text-center border-b border-border",
+                        "text-gray-700 dark:text-gray-400",
+                        "sticky top-0 z-10 bg-muted"
+                      )}
                     >
                       {header.isPlaceholder
                         ? null
@@ -748,7 +369,7 @@ export function KeywordTable({
                   key={row.id}
                   onClick={() => onKeywordClick?.(row.original)}
                   className={cn(
-                    "border-b border-border transition-colors cursor-pointer group",
+                    "border-b border-border cursor-pointer group",
                     index % 2 === 1 && "bg-muted/10",
                     row.getIsSelected() && "bg-amber-500/10"
                   )}
@@ -756,9 +377,11 @@ export function KeywordTable({
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
+                      style={{ width: `${cell.column.getSize()}px` }}
                       className={cn(
-                        "px-2 py-2 align-middle",
-                        cell.column.id === "keyword" ? "text-left font-medium text-foreground" : "text-center"
+                        "px-2 py-2 align-middle text-center",
+                        cell.column.id === "keyword" && "font-medium text-foreground",
+                        cell.column.id === "refresh" && "whitespace-nowrap"
                       )}
                     >
                       {typeof cell.column.columnDef.cell === "function"

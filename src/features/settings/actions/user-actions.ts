@@ -9,9 +9,9 @@
  * Uses next-safe-action for type-safe, authenticated operations.
  */
 
-import { authAction, z } from "@/lib/safe-action"
+import { authAction, z } from "@/src/lib/safe-action"
 import { getCurrentUser, type UserDTO } from "@/src/lib/dal"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/src/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -106,12 +106,14 @@ export const fetchUserAction = authAction
         company: profile?.company || undefined,
         website: profile?.website || undefined,
         timezone: profile?.timezone || "America/New_York",
-        notifications: profile?.notifications || {
-          email: true,
-          rankingAlerts: true,
-          weeklyReport: true,
-          productUpdates: false,
-        },
+        notifications:
+          (profile?.notifications as unknown as Record<string, boolean> | null) ||
+          {
+            email: true,
+            rankingAlerts: true,
+            weeklyReport: true,
+            productUpdates: false,
+          },
       }
 
       return {
@@ -183,10 +185,10 @@ export const updateProfileAction = authAction
         success: true,
         data: {
           id: data.id,
-          name: data.name,
-          company: data.company,
-          website: data.website,
-          timezone: data.timezone,
+          name: data.name ?? name,
+          company: data.company ?? undefined,
+          website: data.website ?? undefined,
+          timezone: data.timezone ?? undefined,
           updatedAt: new Date(data.updated_at),
         },
       }
@@ -216,7 +218,7 @@ export const updateNotificationsAction = authAction
       const { error } = await supabase
         .from("users")
         .update({
-          notifications: parsedInput,
+          notifications: parsedInput as unknown as import("@/types/supabase").Json,
           updated_at: new Date().toISOString(),
         })
         .eq("id", ctx.userId)

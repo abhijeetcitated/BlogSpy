@@ -66,7 +66,7 @@ export function exportToCSV(keywords: Keyword[], options?: ExportOptionsExtended
         case "kd": return kw.kd
         case "cpc": return kw.cpc.toFixed(2)
         case "intent": return kw.intent.join(", ")
-        case "trend": return kw.trend?.length > 1 ? Math.round(((kw.trend[kw.trend.length - 1] - kw.trend[0]) / kw.trend[0]) * 100) : 0
+        case "trend": return calculateTrendPercent(kw.trend)
         case "geoScore": return kw.geoScore || 0
         case "serpFeatures": return kw.serpFeatures?.join("; ") || ""
         default: return ""
@@ -112,7 +112,7 @@ export function exportToTSV(keywords: Keyword[]): string {
       kw.kd,
       kw.cpc.toFixed(2),
       kw.intent.join(", "),
-      kw.trend?.length > 1 ? Math.round(((kw.trend[kw.trend.length - 1] - kw.trend[0]) / kw.trend[0]) * 100) : 0,
+      calculateTrendPercent(kw.trend),
       kw.geoScore || 0,
     ].join("\t")
   )
@@ -177,6 +177,17 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       document.body.removeChild(textarea)
     }
   }
+}
+
+function calculateTrendPercent(trend: number[] | null | undefined): number {
+  if (!trend || trend.length < 2) return 0
+
+  const first = trend[0]
+  const last = trend[trend.length - 1]
+
+  if (first === 0) return 0
+
+  return Math.round(((last - first) / first) * 100)
 }
 
 /**

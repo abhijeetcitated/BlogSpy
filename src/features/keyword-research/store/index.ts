@@ -9,6 +9,7 @@ import { create } from "zustand"
 import { devtools, persist } from "zustand/middleware"
 import type { Keyword, MatchType, BulkMode, Country, SERPFeature } from "../types"
 import type { SortDirection as SharedSortDirection } from "@/types/shared"
+import { normalizeCountryCode } from "../utils/country-normalizer"
 
 // ============================================
 // SORT CONFIG
@@ -57,6 +58,7 @@ export interface KeywordFilters {
 // ============================================
 export interface SearchState {
   seedKeyword: string
+  /** Normalized ISO-3166-1 alpha-2 (e.g. "US", "GB", "IN") */
   country: string
   mode: BulkMode
   bulkKeywords: string
@@ -83,7 +85,8 @@ export interface DrawerCacheEntry {
 }
 
 export interface DrawerCache {
-  [keyword: string]: DrawerCacheEntry
+  /** Cache key: `${countryCode}:${keyword}` */
+  [cacheKey: string]: DrawerCacheEntry
 }
 
 // Cache TTL: 5 minutes (in milliseconds)
@@ -168,6 +171,7 @@ export interface KeywordState {
   
   // Search actions
   setSeedKeyword: (keyword: string) => void
+  /** Accepts ISO code or alias; stored as normalized code */
   setCountry: (country: string) => void
   setMode: (mode: BulkMode) => void
   setBulkKeywords: (keywords: string) => void
@@ -198,9 +202,9 @@ export interface KeywordState {
   closeKeywordDrawer: () => void
   
   // Drawer cache actions
-  setDrawerCache: (keyword: string, type: DrawerCacheType, data: unknown) => void
-  getCachedData: (keyword: string, type: DrawerCacheType) => unknown | null
-  clearDrawerCache: (keyword?: string) => void
+  setDrawerCache: (country: string, keyword: string, type: DrawerCacheType, data: unknown) => void
+  getCachedData: (country: string, keyword: string, type: DrawerCacheType) => unknown | null
+  clearDrawerCache: (country?: string, keyword?: string) => void
   
   // Sort actions
   setSort: (field: SortField, direction?: SortDirection) => void
@@ -214,6 +218,7 @@ export interface KeywordState {
   prevPage: () => void
   
   // Selection actions
+  setSelectedIds: (ids: number[]) => void
   selectKeyword: (id: number) => void
   deselectKeyword: (id: number) => void
   toggleKeyword: (id: number) => void
@@ -248,9 +253,19 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
     })),
 
   setCountry: (country) =>
-    set((state) => ({
-      search: { ...state.search, country },
-    })),
+    set((state) => {
+      let normalized = "US"
+      try {
+        normalized = normalizeCountryCode(country)
+      } catch {
+        // Keep store stable; default to US if UI passes unsupported/empty value.
+        normalized = "US"
+      }
+
+      return {
+        search: { ...state.search, country: normalized },
+      }
+    }),
 
   setMode: (mode) =>
     set((state) => ({
@@ -343,40 +358,64 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
   closeKeywordDrawer: () => set({ selectedKeyword: null }),
 
   // Drawer cache actions
-  setDrawerCache: (keyword, type, data) =>
-    set((state) => ({
-      drawerCache: {
-        ...state.drawerCache,
-        [keyword]: {
-          ...state.drawerCache[keyword],
-          [type]: data,
-          fetchedAt: Date.now(),
-        },
-      },
-    })),
+  setDrawerCache: (country, keyword, type, data) =>
+    set((state) => {
+      const countryCode = normalizeCountryCode(country)
+      const cacheKey = `${countryCode}:${keyword}`
 
-  getCachedData: (keyword, type) => {
+      return {
+        drawerCache: {
+          ...state.drawerCache,
+          [cacheKey]: {
+            ...state.drawerCache[cacheKey],
+            [type]: data,
+            fetchedAt: Date.now(),
+          },
+        },
+      }
+    }),
+
+  getCachedData: (country, keyword, type) => {
     const state = get()
-    const entry = state.drawerCache[keyword]
+    const countryCode = normalizeCountryCode(country)
+    const cacheKey = `${countryCode}:${keyword}`
+
+    const entry = state.drawerCache[cacheKey]
     if (!entry) return null
-    
+
     // Check if cache is expired (5 min TTL)
     const fetchedAt = entry.fetchedAt ?? 0
     if (Date.now() - fetchedAt > DRAWER_CACHE_TTL) {
       return null
     }
-    
+
     return entry[type] ?? null
   },
 
-  clearDrawerCache: (keyword) =>
+  clearDrawerCache: (country, keyword) =>
     set((state) => {
-      if (keyword) {
-        // Clear specific keyword cache
+      // Clear specific entry
+      if (country && keyword) {
+        const countryCode = normalizeCountryCode(country)
+        const cacheKey = `${countryCode}:${keyword}`
         const newCache = { ...state.drawerCache }
-        delete newCache[keyword]
+        delete newCache[cacheKey]
         return { drawerCache: newCache }
       }
+
+      // Clear all for country
+      if (country && !keyword) {
+        const countryCode = normalizeCountryCode(country)
+        const prefix = `${countryCode}:`
+        const newCache: DrawerCache = {}
+        for (const [k, v] of Object.entries(state.drawerCache)) {
+          if (!k.startsWith(prefix)) {
+            newCache[k] = v
+          }
+        }
+        return { drawerCache: newCache }
+      }
+
       // Clear all cache
       return { drawerCache: {} }
     }),
@@ -433,6 +472,8 @@ export const useKeywordStore = create<KeywordState>()((set, get) => ({
     }),
 
   // Selection actions
+  setSelectedIds: (ids) => set({ selectedIds: new Set(ids) }),
+
   selectKeyword: (id) =>
     set((state) => {
       const newSet = new Set(state.selectedIds)

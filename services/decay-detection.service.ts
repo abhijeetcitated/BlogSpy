@@ -9,7 +9,7 @@ import 'server-only';
  * NOTE: @ts-nocheck is temporary until real Supabase client is installed
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/src/lib/supabase/server';
 import { decayCalculator, trendAnalyzer } from '@/lib/decay-detection';
 import { gscService } from './gsc.service';
 import { ga4Service } from './ga4.service';
@@ -81,13 +81,13 @@ export class DecayDetectionService {
       url: d.url,
       title: d.title,
       overallScore: d.overall_score,
-      level: d.level,
-      trend: d.trend,
+      level: d.level as DecayLevel,
+      trend: d.trend as DecayScore["trend"],
       trafficDecay: d.traffic_decay,
       positionDecay: d.position_decay,
       ctrDecay: d.ctr_decay,
       engagementDecay: d.engagement_decay,
-      comparisonPeriod: d.comparison_period,
+      comparisonPeriod: d.comparison_period as unknown as DecayScore["comparisonPeriod"],
       calculatedAt: new Date(d.calculated_at),
       createdAt: new Date(d.created_at),
       updatedAt: new Date(d.updated_at),
@@ -119,13 +119,13 @@ export class DecayDetectionService {
       url: data.url,
       title: data.title,
       overallScore: data.overall_score,
-      level: data.level,
-      trend: data.trend,
+      level: data.level as DecayLevel,
+      trend: data.trend as DecayScore["trend"],
       trafficDecay: data.traffic_decay,
       positionDecay: data.position_decay,
       ctrDecay: data.ctr_decay,
       engagementDecay: data.engagement_decay,
-      comparisonPeriod: data.comparison_period,
+      comparisonPeriod: data.comparison_period as unknown as DecayScore["comparisonPeriod"],
       calculatedAt: new Date(data.calculated_at),
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
@@ -181,13 +181,13 @@ export class DecayDetectionService {
       url: data.url,
       title: data.title,
       overallScore: data.overall_score,
-      level: data.level,
-      trend: data.trend,
+      level: data.level as DecayLevel,
+      trend: data.trend as DecayScore["trend"],
       trafficDecay: data.traffic_decay,
       positionDecay: data.position_decay,
       ctrDecay: data.ctr_decay,
       engagementDecay: data.engagement_decay,
-      comparisonPeriod: data.comparison_period,
+      comparisonPeriod: data.comparison_period as unknown as DecayScore["comparisonPeriod"],
       calculatedAt: new Date(data.calculated_at),
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
@@ -229,7 +229,7 @@ export class DecayDetectionService {
       id: d.id,
       decayScoreId: d.decay_score_id,
       score: d.score,
-      level: d.level,
+      level: d.level as DecayLevel,
       recordedAt: new Date(d.recorded_at),
     }));
   }
@@ -400,7 +400,7 @@ export class DecayDetectionService {
     return {
       id: data.id,
       userId: data.user_id,
-      status: data.status,
+      status: data.status as DecayBatchJob["status"],
       totalUrls: data.total_urls,
       processedUrls: data.processed_urls,
       decayingUrls: data.decaying_urls,

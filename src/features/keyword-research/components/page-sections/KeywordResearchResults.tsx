@@ -8,10 +8,32 @@
 // ============================================
 
 import type { Keyword } from "../../types"
-import { KeywordTable } from "../table"
+import dynamic from "next/dynamic"
 import { useKeywordStore } from "../../store"
-import { KeywordDrawer } from "../drawers"
 import { Loader2, SearchX, Sparkles } from "lucide-react"
+
+const KeywordTable = dynamic(
+  async () => {
+    const mod = await import("../table")
+    return mod.KeywordTable
+  },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center py-10">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    ),
+  }
+)
+
+const KeywordDrawer = dynamic(
+  async () => {
+    const mod = await import("../drawers")
+    return mod.KeywordDrawer
+  },
+  { ssr: false }
+)
 
 interface KeywordResearchResultsProps {
   filteredKeywords: Keyword[]
@@ -30,6 +52,13 @@ export function KeywordResearchResults({
 }: KeywordResearchResultsProps) {
   // Zustand store for drawer
   const openKeywordDrawer = useKeywordStore((state) => state.openKeywordDrawer)
+  const selectedCountryCode = useKeywordStore((state) => state.search.country)
+
+  // Strict country isolation: only display rows for the currently selected country.
+  // We attach `countryCode` at the action boundary; defensively allow missing values.
+  const countryFilteredKeywords = filteredKeywords.filter(
+    (kw) => !kw.countryCode || kw.countryCode === selectedCountryCode
+  )
 
   // Handle row click → open drawer
   const handleKeywordClick = (keyword: Keyword) => {
@@ -46,7 +75,7 @@ export function KeywordResearchResults({
   }
 
   // Empty state - no keywords match filters
-  if (filteredKeywords.length === 0) {
+  if (countryFilteredKeywords.length === 0) {
     const hasFilters = filterText.length > 0 || activeFilterCount > 0
     
     return (
@@ -82,14 +111,14 @@ export function KeywordResearchResults({
       {/* Results count */}
       <div className="flex items-center justify-between mb-2 px-1 shrink-0">
         <span className="text-xs text-muted-foreground">
-          {filteredKeywords.length.toLocaleString()} keywords found
+          {countryFilteredKeywords.length.toLocaleString()} keywords found
         </span>
       </div>
       
       {/* Table - flex-1 with h-full min-h-0 passes height down for sticky to work */}
       <div className="flex-1 h-full min-h-0 border border-border/50 rounded-lg bg-card overflow-hidden">
         <KeywordTable
-          keywords={filteredKeywords}
+          keywords={countryFilteredKeywords}
           isGuest={isGuest}
           onKeywordClick={handleKeywordClick}
         />

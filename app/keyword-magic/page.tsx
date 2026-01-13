@@ -1,6 +1,4 @@
 import { Suspense } from "react"
-import { AppSidebar } from "@/components/layout"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { KeywordResearchContent } from "@/components/features"
 import { DemoWrapper } from "@/components/common/demo-wrapper"
 
@@ -24,16 +22,11 @@ export default function KeywordResearchDemoPage() {
       featureDescription="Access unlimited keyword research with real-time data, competitor analysis, and export features."
       dashboardPath="/dashboard/research/keyword-magic"
     >
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
-            <Suspense fallback={<KeywordResearchLoading />}>
-              <KeywordResearchContent />
-            </Suspense>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <Suspense fallback={<KeywordResearchLoading />}>
+          <KeywordResearchContent />
+        </Suspense>
+      </div>
     </DemoWrapper>
   )
 }

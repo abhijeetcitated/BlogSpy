@@ -13,9 +13,35 @@ import type {
 export type { SortDirection } from "@/types/shared"
 
 /**
- * SERP Feature type - valid values for keyword SERP features
+ * Canonical SERP feature keys used across the app.
+ *
+ * NOTE: Keep this list aligned with:
+ * - DataForSEO mapping ([`live-serp.ts`](src/features/keyword-research/services/live-serp.ts:1))
+ * - Normalization ([`serp-feature-normalizer.ts`](src/features/keyword-research/utils/serp-feature-normalizer.ts:1))
+ * - Filters ([`serp-filter.tsx`](src/features/keyword-research/components/filters/serp/serp-filter.tsx:1))
+ * - RTV ([`rtv-calculator.ts`](src/features/keyword-research/utils/rtv-calculator.ts:1))
  */
-export type SERPFeature = CTRStealingFeature | "snippet" | "faq" | "reviews" | "image" | "video" | "shopping" | "ad" | "local" | "news"
+export type SerpFeatureType =
+  | "ai_overview"
+  | "featured_snippet"
+  | "people_also_ask"
+  | "video_pack"
+  | "image_pack"
+  | "local_pack"
+  | "shopping_ads"
+  | "ads_top"
+  | "knowledge_panel"
+  | "top_stories"
+  | "direct_answer"
+  | "reviews"
+
+/**
+ * SERP Feature type - valid values for keyword SERP features
+ *
+ * Historically this accepted a mix of canonical + legacy UI keys.
+ * Final hardening phase standardizes everything to canonical keys.
+ */
+export type SERPFeature = SerpFeatureType
 
 /**
  * WeakSpots - Ranks for Reddit, Quora, Pinterest in top 10 SERP
@@ -30,6 +56,8 @@ export interface WeakSpots {
 export interface Keyword {
   id: number
   keyword: string
+  /** Normalized ISO-3166-1 alpha-2 for strict country isolation (e.g. "US", "GB", "IN") */
+  countryCode?: string
   intent: ("I" | "C" | "T" | "N")[]
   volume: number
   trend: number[]

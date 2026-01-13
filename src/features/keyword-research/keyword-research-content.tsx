@@ -12,11 +12,12 @@ import React, { useMemo, useCallback, useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { useDebounce } from "@/hooks/use-debounce"
-import { createBrowserClient } from "@supabase/ssr"
 import { Sparkles } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 
 // Zustand store
 import { useKeywordStore, type KeywordFilters } from "./store"
+import { normalizeCountryCode } from "./utils/country-normalizer"
 
 // Feature imports
 import type { Country, MatchType, BulkMode, SERPFeature } from "./types"
@@ -75,26 +76,10 @@ export function KeywordResearchContent() {
   // ============================================
   // GUEST MODE CHECK (PLG Flow)
   // ============================================
-  const [isGuest, setIsGuest] = useState(true) // Default to guest
-  
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        
-        if (supabaseUrl && supabaseAnonKey) {
-          const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
-          const { data: { user } } = await supabase.auth.getUser()
-          setIsGuest(!user)
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error)
-        setIsGuest(true)
-      }
-    }
-    checkAuth()
-  }, [])
+  // IMPORTANT: Do not run an extra Supabase network call here.
+  // Use the global auth context to avoid slowing down first page load.
+  const { isAuthenticated } = useAuth()
+  const isGuest = !isAuthenticated
 
   // ============================================
   // URL PARAMS (for sharing/bookmarking)
@@ -104,13 +89,26 @@ export function KeywordResearchContent() {
   
   // Initialize from URL params if present
   const initialSearch = searchParams.get("q") || ""
-  const initialCountryCode = searchParams.get("country") || null
-  
+  const initialCountryCodeRaw = searchParams.get("country") || null
+
+  // Normalize the URL country param (UK → GB) before matching.
+  // This prevents older shared URLs (?country=UK) from breaking once we standardized on GB.
+  const initialCountryCode = useMemo(() => {
+    if (!initialCountryCodeRaw) return null
+
+    try {
+      // normalizeCountryCode also trims/uppercases/validates.
+      return normalizeCountryCode(initialCountryCodeRaw)
+    } catch {
+      return null
+    }
+  }, [initialCountryCodeRaw])
+
   // Find initial country
   const initialCountry = useMemo(() => {
     if (initialCountryCode) {
       const all = [...POPULAR_COUNTRIES, ...ALL_COUNTRIES]
-      return all.find(c => c.code === initialCountryCode) || POPULAR_COUNTRIES[0]
+      return all.find((c) => c.code === initialCountryCode) || POPULAR_COUNTRIES[0]
     }
     return POPULAR_COUNTRIES[0] // Default to US
   }, [initialCountryCode])
@@ -121,20 +119,21 @@ export function KeywordResearchContent() {
   const {
     // Data
     keywords: storeKeywords,
-    
+    setKeywords,
+
     // Search state
     search,
     setSeedKeyword,
     setCountry,
     setMode,
     setBulkKeywords,
-    
+
     // Filters
     filters,
     setFilter,
     setFilters,
     resetFilters,
-    
+
     // Loading
     loading,
     setSearching,
@@ -143,6 +142,12 @@ export function KeywordResearchContent() {
   // Local UI state for country popover
   const [countryOpen, setCountryOpen] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(initialCountry)
+
+  // ============================================
+  // DEMO MODE
+  // ============================================
+  // Demo (guest) should not auto-populate keywords on page load.
+  // Keywords appear only after the user runs a seed search in the header.
 
   // ============================================
   // DERIVED STATE
@@ -263,6 +268,7 @@ export function KeywordResearchContent() {
       )}
       
       <KeywordResearchHeader
+        isGuest={isGuest}
         selectedCountry={selectedCountry}
         countryOpen={countryOpen}
         onCountryOpenChange={setCountryOpen}
@@ -284,8 +290,9 @@ export function KeywordResearchContent() {
           <>
             {/* Row 1: Search Input */}
             <KeywordResearchSearch
-              filterText={filters.searchText}
-              onFilterTextChange={(text: string) => setFilter("searchText", text)}
+              mode="filter"
+              value={filters.searchText}
+              onChange={(text: string) => setFilter("searchText", text)}
             />
 
             {/* Row 2: Filter Popovers */}

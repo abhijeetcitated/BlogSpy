@@ -4,6 +4,7 @@
 // Logic for parsing SERP results to detect weak spots and features
 // ============================================
 
+import { normalizeSerpFeatureType } from "./serp-feature-normalizer"
 import type { WeakSpots, SERPFeature } from "../types"
 
 /**
@@ -12,7 +13,7 @@ import type { WeakSpots, SERPFeature } from "../types"
  * Kept as a simple constant so other modules (UI/services) can reuse the same
  * allowlist without importing regex patterns.
  */
-export const WEAK_DOMAINS = ["reddit.com", "quora.com", "pinterest.com"] as const
+export const WEAK_DOMAINS = ["reddit.com", "quora.com", "pinterest.com", "pinterest.co.uk"] as const
 
 export type WeakDomain = (typeof WEAK_DOMAINS)[number]
 
@@ -78,27 +79,28 @@ export function detectSerpFeaturesSimple(
   items: unknown[],
   itemTypes: string[]
 ): { video: boolean; snippet: boolean; shopping: boolean; ai_overview: boolean } {
-  const types = (Array.isArray(itemTypes) ? itemTypes : [])
-    .filter((t): t is string => typeof t === "string")
-    .map((t) => t.toLowerCase())
+  const typeFeatures = (Array.isArray(itemTypes) ? itemTypes : [])
+    .map((t) => normalizeSerpFeatureType(t))
+    .filter((t): t is SERPFeature => t !== null)
 
-  const itemTypeSet = new Set(types)
+  const itemTypeSet = new Set(typeFeatures)
 
-  let video = itemTypeSet.has("video")
-  let snippet = itemTypeSet.has("featured_snippet") || itemTypeSet.has("snippet")
-  let shopping = itemTypeSet.has("shopping")
+  let video = itemTypeSet.has("video_pack")
+  let snippet = itemTypeSet.has("featured_snippet")
+  let shopping = itemTypeSet.has("shopping_ads")
   let ai_overview = itemTypeSet.has("ai_overview")
 
   if (Array.isArray(items)) {
     for (const raw of items) {
       if (!raw || typeof raw !== "object") continue
       const item = raw as { type?: unknown }
-      const t = typeof item.type === "string" ? item.type.toLowerCase() : ""
+      const f = normalizeSerpFeatureType(item.type)
+      if (!f) continue
 
-      if (!video && (t === "video" || t.includes("video"))) video = true
-      if (!snippet && (t === "featured_snippet" || t.includes("snippet"))) snippet = true
-      if (!shopping && (t === "shopping" || t.includes("shopping") || t.includes("product"))) shopping = true
-      if (!ai_overview && (t === "ai_overview" || t.includes("ai_"))) ai_overview = true
+      if (!video && f === "video_pack") video = true
+      if (!snippet && f === "featured_snippet") snippet = true
+      if (!shopping && f === "shopping_ads") shopping = true
+      if (!ai_overview && f === "ai_overview") ai_overview = true
 
       if (video && snippet && shopping && ai_overview) break
     }
@@ -162,20 +164,8 @@ const PLATFORM_PATTERNS: Record<WeakSpotPlatform, RegExp> = {
   pinterest: /pinterest\.(com|co\.\w{2})/i,
 }
 
-/**
- * SERP type to feature mapping
- */
-const SERP_TYPE_MAP: Record<string, SERPFeature> = {
-  video: "video",
-  featured_snippet: "snippet",
-  ai_overview: "ai_overview",
-  people_also_ask: "faq",
-  local_pack: "local",
-  shopping: "shopping",
-  top_stories: "news",
-  images: "image",
-  reviews: "reviews",
-}
+// Feature normalization is centralized in:
+// [`normalizeSerpFeatureType`](src/features/keyword-research/utils/serp-feature-normalizer.ts:1)
 
 /**
  * Detect weak spots (Reddit, Quora, Pinterest) in SERP results
@@ -287,54 +277,19 @@ export function detectSerpFeatures(items: RawSerpItem[]): DetectedFeatures {
   const featuresSet = new Set<SERPFeature>()
 
   for (const item of items) {
-    const itemType = item.type?.toLowerCase() || ""
+    const f = normalizeSerpFeatureType(item.type)
+    if (!f) continue
 
-    // Check direct type mapping
-    const mappedFeature = SERP_TYPE_MAP[itemType]
-    if (mappedFeature) {
-      featuresSet.add(mappedFeature)
-    }
+    featuresSet.add(f)
 
-    // Special checks for specific features
-    if (itemType.includes("video") || itemType === "video") {
-      result.hasVideo = true
-      featuresSet.add("video")
-    }
-
-    if (itemType === "featured_snippet" || itemType.includes("snippet")) {
-      result.hasSnippet = true
-      featuresSet.add("snippet")
-    }
-
-    if (itemType === "ai_overview" || itemType.includes("ai_")) {
-      result.hasAIO = true
-      featuresSet.add("ai_overview")
-    }
-
-    if (itemType === "people_also_ask" || itemType === "faq") {
-      result.hasFaq = true
-      featuresSet.add("faq")
-    }
-
-    if (itemType === "local_pack" || itemType.includes("local")) {
-      result.hasLocalPack = true
-      featuresSet.add("local")
-    }
-
-    if (itemType === "shopping" || itemType.includes("product")) {
-      result.hasShopping = true
-      featuresSet.add("shopping")
-    }
-
-    if (itemType === "top_stories" || itemType === "news") {
-      result.hasNews = true
-      featuresSet.add("news")
-    }
-
-    if (itemType === "images" || itemType === "image_pack") {
-      result.hasImages = true
-      featuresSet.add("image")
-    }
+    if (f === "video_pack") result.hasVideo = true
+    if (f === "featured_snippet") result.hasSnippet = true
+    if (f === "ai_overview") result.hasAIO = true
+    if (f === "people_also_ask") result.hasFaq = true
+    if (f === "local_pack") result.hasLocalPack = true
+    if (f === "shopping_ads") result.hasShopping = true
+    if (f === "top_stories") result.hasNews = true
+    if (f === "image_pack") result.hasImages = true
   }
 
   result.features = Array.from(featuresSet)
@@ -421,37 +376,15 @@ export function detectTrafficStealers(items: unknown[]): TrafficStealers {
     if (!raw || typeof raw !== "object") continue
 
     const item = raw as { type?: unknown }
-    const type = typeof item.type === "string" ? item.type.toLowerCase() : ""
+    const f = normalizeSerpFeatureType(item.type)
+    if (!f) continue
 
-    // AI Overview detection
-    if (!result.hasAIO && (type === "ai_overview" || type.includes("ai_"))) {
-      result.hasAIO = true
-    }
-
-    // Local Pack detection
-    if (!result.hasLocal && (type === "local_pack" || type.includes("local") || type.includes("map"))) {
-      result.hasLocal = true
-    }
-
-    // Featured Snippet detection
-    if (!result.hasSnippet && (type === "featured_snippet" || type.includes("snippet"))) {
-      result.hasSnippet = true
-    }
-
-    // Paid Ads detection
-    if (!result.hasAds && (type === "paid" || type.includes("ad") || type === "top_ads")) {
-      result.hasAds = true
-    }
-
-    // Video detection
-    if (!result.hasVideo && (type === "video" || type === "video_carousel" || type.includes("video"))) {
-      result.hasVideo = true
-    }
-
-    // Shopping detection
-    if (!result.hasShopping && (type === "shopping" || type.includes("shopping") || type.includes("product"))) {
-      result.hasShopping = true
-    }
+    if (!result.hasAIO && f === "ai_overview") result.hasAIO = true
+    if (!result.hasLocal && f === "local_pack") result.hasLocal = true
+    if (!result.hasSnippet && f === "featured_snippet") result.hasSnippet = true
+    if (!result.hasAds && f === "ads_top") result.hasAds = true
+    if (!result.hasVideo && f === "video_pack") result.hasVideo = true
+    if (!result.hasShopping && f === "shopping_ads") result.hasShopping = true
 
     // Early exit if all detected
     if (result.hasAIO && result.hasLocal && result.hasSnippet && result.hasAds && result.hasVideo && result.hasShopping) {

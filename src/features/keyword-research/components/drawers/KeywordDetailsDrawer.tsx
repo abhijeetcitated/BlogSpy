@@ -70,8 +70,6 @@ export function KeywordDetailsDrawer({
   onAnalyzeClick,
 }: KeywordDetailsDrawerProps) {
   const [activeTab, setActiveTab] = React.useState("overview")
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_isLoading, _setIsLoading] = React.useState(false)
 
   // Reset tab when drawer opens with new keyword
   React.useEffect(() => {
@@ -225,8 +223,13 @@ export function KeywordDetailsDrawer({
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  const encodedKeyword = encodeURIComponent(keyword.keyword)
-                  window.location.href = `/keyword-overview?keyword=${encodedKeyword}`
+                  // Route uses a slug (lowercase, spaces -> hyphens)
+                  const slug = keyword.keyword
+                    .trim()
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")
+
+                  window.location.href = `/dashboard/research/overview/${encodeURIComponent(slug)}`
                 }}
                 className="h-9 w-full sm:w-auto sm:px-4"
               >

@@ -9,6 +9,7 @@ import type { Keyword, WeakSpots, SERPFeature } from "../types"
 import { calculateGeoScore, countKeywordWords } from "./geo-calculator"
 import { detectWeakSpots, detectSerpFeatures, type RawSerpItem } from "./serp-parser"
 import { calculateRTV } from "./rtv-calculator"
+import { normalizeSerpFeatureTypes } from "./serp-feature-normalizer"
 
 /**
  * Data source type
@@ -129,29 +130,7 @@ function extractTrend(monthlySearches?: Array<{ search_volume: number }>): numbe
  * Map SERP item types to SERPFeature array
  */
 function mapSerpTypes(types?: string[]): SERPFeature[] {
-  if (!types || !Array.isArray(types)) return []
-
-  const typeMap: Record<string, SERPFeature> = {
-    featured_snippet: "snippet",
-    video: "video",
-    ai_overview: "ai_overview",
-    people_also_ask: "faq",
-    local_pack: "local",
-    shopping: "shopping",
-    top_stories: "news",
-    images: "image",
-    reviews: "reviews",
-  }
-
-  const features: SERPFeature[] = []
-  for (const type of types) {
-    const mapped = typeMap[type.toLowerCase()]
-    if (mapped && !features.includes(mapped)) {
-      features.push(mapped)
-    }
-  }
-
-  return features
+  return normalizeSerpFeatureTypes(types)
 }
 
 /**
@@ -229,7 +208,7 @@ export function mapKeywordData(
     ])
 
     const hasAio = serpFeatures.includes("ai_overview") || detected.hasAIO
-    const hasSnippet = serpFeatures.includes("snippet") || detected.hasSnippet
+    const hasSnippet = serpFeatures.includes("featured_snippet") || detected.hasSnippet
 
     const weakSpots = detectWeakSpots(serpItems)
 
@@ -290,7 +269,7 @@ export function mapKeywordData(
     (labs.serp_info?.serp_item_types?.some(t => t.toLowerCase().includes("ai")) ?? false)
 
   // Check for snippet
-  const hasSnippet = serpFeatures.includes("snippet")
+  const hasSnippet = serpFeatures.includes("featured_snippet")
 
   // Calculate GEO score
   const wordCount = countKeywordWords(keyword)

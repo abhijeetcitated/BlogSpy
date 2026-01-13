@@ -12,7 +12,9 @@
 import "server-only"
 
 import { getDataForSEOClient, type DataForSEOResponse } from "@/src/lib/seo/dataforseo"
+import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
 import { calculateGeoScore, countKeywordWords } from "../utils/geo-calculator"
+import { normalizeSerpFeatureType } from "../utils/serp-feature-normalizer"
 import type { SERPFeature } from "../types"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -62,40 +64,8 @@ const WEAK_SPOT_DOMAINS: Record<keyof WeakSpots, string[]> = {
   pinterest: ["pinterest.com", "www.pinterest.com", "in.pinterest.com"],
 }
 
-/**
- * Valid SERPFeature values for type-safe mapping
- * Maps DataForSEO item_types to our SERPFeature union type
- */
-const SERP_FEATURE_MAP: Record<string, SERPFeature> = {
-  // CTRStealingFeature values
-  ai_overview: "ai_overview",
-  featured_snippet: "featured_snippet",
-  people_also_ask: "people_also_ask",
-  video_carousel: "video_carousel",
-  image_pack: "image_pack",
-  local_pack: "local_pack",
-  shopping_ads: "shopping_ads",
-  top_ads: "top_ads",
-  knowledge_panel: "knowledge_panel",
-  knowledge_graph: "knowledge_panel",  // alias
-  top_stories: "top_stories",
-  direct_answer: "direct_answer",
-  answer_box: "direct_answer",  // alias
-  calculator: "calculator",
-  weather: "weather",
-  sports: "sports",
-  // Additional SERPFeature values
-  snippet: "snippet",
-  faq: "faq",
-  reviews: "reviews",
-  image: "image",
-  video: "video",
-  shopping: "shopping",
-  ad: "ad",
-  paid: "ad",  // alias
-  local: "local",
-  news: "news",
-}
+// SERP feature normalization is centralized in:
+// [`normalizeSerpFeatureType`](src/features/keyword-research/utils/serp-feature-normalizer.ts:1)
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -141,9 +111,8 @@ function extractSerpFeatures(itemTypes: string[]): SERPFeature[] {
   const seen = new Set<SERPFeature>()
 
   for (const itemType of itemTypes) {
-    const normalized = itemType.toLowerCase()
-    const mappedFeature = SERP_FEATURE_MAP[normalized]
-    
+    const mappedFeature = normalizeSerpFeatureType(itemType)
+
     if (mappedFeature && !seen.has(mappedFeature)) {
       features.push(mappedFeature)
       seen.add(mappedFeature)
@@ -157,23 +126,17 @@ function extractSerpFeatures(itemTypes: string[]): SERPFeature[] {
  * Check if AI Overview is present
  */
 function hasAiOverview(itemTypes: string[]): boolean {
-  const normalizedTypes = itemTypes.map((t) => t.toLowerCase())
-  return normalizedTypes.some((t) => 
-    t === "ai_overview" || 
-    t.includes("ai_overview") ||
-    t === "featured_snippet" && normalizedTypes.includes("ai")
-  )
+  return itemTypes.some((t) => normalizeSerpFeatureType(t) === "ai_overview")
 }
 
 /**
  * Check if Featured Snippet is present
  */
 function hasFeaturedSnippet(itemTypes: string[]): boolean {
-  const normalizedTypes = itemTypes.map((t) => t.toLowerCase())
-  return normalizedTypes.some((t) => 
-    t === "featured_snippet" || 
-    t.includes("answer_box")
-  )
+  return itemTypes.some((t) => {
+    const feature = normalizeSerpFeatureType(t)
+    return feature === "featured_snippet" || feature === "direct_answer"
+  })
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -246,25 +209,6 @@ export async function fetchLiveSerp(
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// LOCATION CODE HELPER
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-function getLocationCode(country: string): number {
-  const locationMap: Record<string, number> = {
-    us: 2840,
-    gb: 2826,
-    ca: 2124,
-    au: 2036,
-    de: 2276,
-    fr: 2250,
-    in: 2356,
-    br: 2076,
-    es: 2724,
-    it: 2380,
-  }
-  return locationMap[country.toLowerCase()] || 2840
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // REFRESH LIVE SERP (Action-friendly wrapper)
@@ -292,7 +236,7 @@ export interface RefreshLiveSerpResult {
  */
 export async function refreshLiveSerp(input: RefreshLiveSerpInput): Promise<RefreshLiveSerpResult> {
   const { keyword, country = "us", intent } = input
-  const locationCode = getLocationCode(country)
+  const locationCode = getDataForSEOLocationCode(country)
 
   // Fetch live SERP data
   const serpData = await fetchLiveSerp(keyword, locationCode)

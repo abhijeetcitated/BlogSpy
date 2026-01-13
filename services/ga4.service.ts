@@ -9,7 +9,8 @@ import 'server-only';
  * NOTE: @ts-nocheck is temporary until real Supabase client is installed
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/src/lib/supabase/server';
+import type { Json } from '@/types/supabase';
 import { googleOAuthClient, createGA4Client, GOOGLE_SCOPES } from '@/lib/google';
 import type {
   GA4Integration,
@@ -56,7 +57,7 @@ export class GA4Service {
       refreshToken: data.refresh_token,
       expiresAt: new Date(data.expires_at),
       selectedPropertyId: data.selected_property,
-      properties: data.properties || [],
+      properties: (data.properties as unknown as GA4Property[]) ?? [],
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
     };
@@ -86,7 +87,7 @@ export class GA4Service {
           access_token: tokens.accessToken,
           refresh_token: tokens.refreshToken,
           expires_at: expiresAt.toISOString(),
-          properties: properties || [],
+          properties: (properties ?? []) as unknown as Json,
           updated_at: new Date().toISOString(),
         },
         {
@@ -107,7 +108,7 @@ export class GA4Service {
       refreshToken: data.refresh_token,
       expiresAt: new Date(data.expires_at),
       selectedPropertyId: data.selected_property,
-      properties: data.properties || [],
+      properties: (data.properties as unknown as GA4Property[]) ?? [],
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
     };
@@ -225,7 +226,7 @@ export class GA4Service {
     await supabase
       .from('user_integrations')
       .update({
-        properties,
+        properties: properties as unknown as Json,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
