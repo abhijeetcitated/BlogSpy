@@ -32,7 +32,17 @@ export type TrendDirection = SharedTrendDirection
 /**
  * Sorting Fields for Keywords Table (feature-specific)
  */
-export type CompetitorGapSortField = "keyword" | "volume" | "kd" | "yourRank" | "competitorRank" | "trend" | "engagement" | "opportunity" | null
+export type CompetitorGapSortField =
+  | "keyword"
+  | "volume"
+  | "cpc"
+  | "kd"
+  | "yourRank"
+  | "competitorRank"
+  | "trend"
+  | "engagement"
+  | "opportunity"
+  | null
 export type SortField = CompetitorGapSortField
 
 /**

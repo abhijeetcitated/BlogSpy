@@ -1,7 +1,16 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Users, Sparkles } from "lucide-react"
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+  type RowSelectionState,
+  type SortingState,
+} from "@tanstack/react-table"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -29,6 +38,13 @@ interface ForumIntelTableProps {
   onAddToCalendar?: (post: ForumIntelPost) => void
 }
 
+type ColumnMeta = {
+  headerClassName?: string
+  cellClassName?: string
+}
+
+const columnHelper = createColumnHelper<ForumIntelPost>()
+
 export function ForumIntelTable({
   posts,
   selectedRows,
@@ -40,8 +56,10 @@ export function ForumIntelTable({
   onWriteArticle,
   onAddToCalendar,
 }: ForumIntelTableProps) {
-  
-  const allSelected = posts.length > 0 && selectedRows.size === posts.length
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Math.max(posts.length, 1),
+  })
 
   const handleWrite = useCallback((post: ForumIntelPost) => {
     if (onWriteArticle) {
@@ -68,6 +86,193 @@ export function ForumIntelTable({
     })
   }
 
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: 0,
+      pageSize: Math.max(posts.length, 1),
+    }))
+  }, [posts.length])
+
+  const rowSelection = useMemo<RowSelectionState>(() => {
+    const selection: RowSelectionState = {}
+    selectedRows.forEach((id) => {
+      selection[id] = true
+    })
+    return selection
+  }, [selectedRows])
+
+  const sortingState = useMemo<SortingState>(() => {
+    if (!sortField) return []
+    return [{ id: sortField, desc: sortDirection === "desc" }]
+  }, [sortField, sortDirection])
+
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "select",
+        header: () => null,
+        cell: () => null,
+        meta: {
+          headerClassName: "w-12 pl-3 sm:pl-4 md:pl-6 pr-2 py-4",
+          cellClassName: "pl-3 sm:pl-4 md:pl-6 pr-2 py-4",
+        },
+      }),
+      columnHelper.accessor("topic", {
+        header: () => (
+          <span className="text-xs font-semibold text-muted-foreground">Topic / Question</span>
+        ),
+        cell: ({ row }) => (
+          <div className="max-w-md">
+            <span className="text-sm font-medium text-foreground line-clamp-2">
+              {row.original.topic}
+            </span>
+            {row.original.opportunityLevel === "high" && (
+              <div className="flex items-center gap-1 mt-1.5 text-[10px] text-emerald-600 dark:text-emerald-400">
+                <Sparkles className="w-3 h-3" />
+                <span>High opportunity</span>
+              </div>
+            )}
+          </div>
+        ),
+        meta: {
+          headerClassName: "px-4 py-4 text-left",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.display({
+        id: "source",
+        header: () => (
+          <span className="text-xs font-semibold text-muted-foreground">Source</span>
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <SourceBadge source={row.original.source} subSource={row.original.subSource} />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-28 px-4 py-4 text-center",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.accessor("upvotes", {
+        header: () => (
+          <SortHeader
+            label="Engagement"
+            field="engagement"
+            currentField={sortField}
+            direction={sortDirection}
+            onSort={onSort}
+            className="justify-center"
+          />
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <EngagementDisplay upvotes={row.original.upvotes} comments={row.original.comments} />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-32 px-4 py-4",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.display({
+        id: "competition",
+        header: () => (
+          <span className="text-xs font-semibold text-muted-foreground">Competition</span>
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <CompetitionBadge
+              level={row.original.competitionLevel}
+              articles={row.original.existingArticles}
+            />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-28 px-4 py-4 text-center",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.accessor("opportunityScore", {
+        header: () => (
+          <SortHeader
+            label="Opportunity"
+            field="opportunity"
+            currentField={sortField}
+            direction={sortDirection}
+            onSort={onSort}
+            className="justify-center"
+          />
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <OpportunityScore score={row.original.opportunityScore} />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-28 px-4 py-4",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: () => (
+          <span className="text-xs font-semibold text-muted-foreground">Actions</span>
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center gap-1">
+            <RelatedKeywordsButton
+              keywords={row.original.relatedKeywords}
+              onCopyAll={() => copyAllKeywords(row.original.relatedKeywords)}
+            />
+            <ActionsDropdown
+              post={row.original}
+              onWrite={() => handleWrite(row.original)}
+              onAddToCalendar={() => handleAddToCalendar(row.original)}
+              onViewSource={() => window.open(row.original.url, "_blank")}
+            />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-28 pl-4 pr-3 sm:pr-4 md:pr-6 py-4 text-center",
+          cellClassName: "pl-4 pr-3 sm:pr-4 md:pr-6 py-4",
+        },
+      }),
+    ],
+    [handleAddToCalendar, handleWrite, onSort, sortDirection, sortField]
+  )
+
+  const table = useReactTable({
+    data: posts,
+    columns,
+    state: {
+      sorting: sortingState,
+      rowSelection,
+      pagination,
+    },
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    manualSorting: true,
+    enableRowSelection: true,
+    getRowId: (row) => row.id,
+  })
+
+  const pageRows = table.getPaginationRowModel().rows
+  const allPageSelected = pageRows.length > 0 && pageRows.every((row) => selectedRows.has(row.id))
+  const somePageSelected = pageRows.some((row) => selectedRows.has(row.id))
+
+  const handleSelectAll = (checked: boolean) => {
+    if (pageRows.length === posts.length) {
+      onSelectAll(checked)
+      return
+    }
+    pageRows.forEach((row) => {
+      onSelectRow(row.id, checked)
+    })
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden -mx-3 sm:-mx-4 md:-mx-6">
       <BulkActionsBar
@@ -80,122 +285,62 @@ export function ForumIntelTable({
           <table className="w-full">
           <thead className="sticky top-0 z-10">
             <tr className="bg-background border-b border-border">
-              <th className="w-12 pl-3 sm:pl-4 md:pl-6 pr-2 py-4">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={(checked) => onSelectAll(!!checked)}
-                  className="border-emerald-500/50 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
-                />
-              </th>
-              <th className="px-4 py-4 text-left">
-                <span className="text-xs font-semibold text-muted-foreground">Topic / Question</span>
-              </th>
-              <th className="w-28 px-4 py-4 text-center">
-                <span className="text-xs font-semibold text-muted-foreground">Source</span>
-              </th>
-              <th className="w-32 px-4 py-4">
-                <SortHeader
-                  label="Engagement"
-                  field="engagement"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onSort={onSort}
-                  className="justify-center"
-                />
-              </th>
-              <th className="w-28 px-4 py-4 text-center">
-                <span className="text-xs font-semibold text-muted-foreground">Competition</span>
-              </th>
-              <th className="w-28 px-4 py-4">
-                <SortHeader
-                  label="Opportunity"
-                  field="opportunity"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onSort={onSort}
-                  className="justify-center"
-                />
-              </th>
-              <th className="w-28 pl-4 pr-3 sm:pr-4 md:pr-6 py-4 text-center">
-                <span className="text-xs font-semibold text-muted-foreground">Actions</span>
-              </th>
+              {table.getHeaderGroups().map((headerGroup) =>
+                headerGroup.headers.map((header) => {
+                  const meta = header.column.columnDef.meta as ColumnMeta | undefined
+                  if (header.column.id === "select") {
+                    return (
+                      <th key={header.id} className={meta?.headerClassName}>
+                        <Checkbox
+                          checked={allPageSelected ? true : somePageSelected ? "indeterminate" : false}
+                          onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                          className="border-emerald-500/50 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                        />
+                      </th>
+                    )
+                  }
+                  return (
+                    <th key={header.id} className={meta?.headerClassName}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  )
+                })
+              )}
             </tr>
           </thead>
 
           <tbody className="divide-y divide-border">
-            {posts.map((post) => (
+            {pageRows.map((row) => (
               <tr
-                key={post.id}
+                key={row.id}
                 className={cn(
                   "group transition-all duration-150",
-                  selectedRows.has(post.id) 
+                  selectedRows.has(row.id)
                     ? "bg-emerald-500/5 dark:bg-emerald-500/10" 
                     : "hover:bg-muted/50"
                 )}
               >
-                <td className="pl-3 sm:pl-4 md:pl-6 pr-2 py-4">
-                  <Checkbox
-                    checked={selectedRows.has(post.id)}
-                    onCheckedChange={(checked) => onSelectRow(post.id, !!checked)}
-                    className="border-emerald-500/50 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
-                  />
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="max-w-md">
-                    <span className="text-sm font-medium text-foreground line-clamp-2">
-                      {post.topic}
-                    </span>
-                    {post.opportunityLevel === "high" && (
-                      <div className="flex items-center gap-1 mt-1.5 text-[10px] text-emerald-600 dark:text-emerald-400">
-                        <Sparkles className="w-3 h-3" />
-                        <span>High opportunity</span>
-                      </div>
-                    )}
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="flex justify-center">
-                    <SourceBadge source={post.source} subSource={post.subSource} />
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="flex justify-center">
-                    <EngagementDisplay upvotes={post.upvotes} comments={post.comments} />
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="flex justify-center">
-                    <CompetitionBadge 
-                      level={post.competitionLevel} 
-                      articles={post.existingArticles} 
-                    />
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="flex justify-center">
-                    <OpportunityScore score={post.opportunityScore} />
-                  </div>
-                </td>
-
-                <td className="pl-4 pr-3 sm:pr-4 md:pr-6 py-4">
-                  <div className="flex items-center justify-center gap-1">
-                    <RelatedKeywordsButton 
-                      keywords={post.relatedKeywords}
-                      onCopyAll={() => copyAllKeywords(post.relatedKeywords)}
-                    />
-                    <ActionsDropdown
-                      post={post}
-                      onWrite={() => handleWrite(post)}
-                      onAddToCalendar={() => handleAddToCalendar(post)}
-                      onViewSource={() => window.open(post.url, "_blank")}
-                    />
-                  </div>
-                </td>
+                {row.getVisibleCells().map((cell) => {
+                  const meta = cell.column.columnDef.meta as ColumnMeta | undefined
+                  if (cell.column.id === "select") {
+                    return (
+                      <td key={cell.id} className={meta?.cellClassName}>
+                        <Checkbox
+                          checked={selectedRows.has(row.id)}
+                          onCheckedChange={(checked) => onSelectRow(row.id, !!checked)}
+                          className="border-emerald-500/50 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                        />
+                      </td>
+                    )
+                  }
+                  return (
+                    <td key={cell.id} className={meta?.cellClassName}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>

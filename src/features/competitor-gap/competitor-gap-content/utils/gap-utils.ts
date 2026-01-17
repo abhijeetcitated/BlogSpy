@@ -58,6 +58,9 @@ export function sortGapKeywords(
       case "kd":
         comparison = a.kd - b.kd
         break
+      case "cpc":
+        comparison = (a.cpc ?? 0) - (b.cpc ?? 0)
+        break
       case "yourRank":
         comparison = (a.yourRank ?? 999) - (b.yourRank ?? 999)
         break

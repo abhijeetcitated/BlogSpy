@@ -1,7 +1,16 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Target } from "lucide-react"
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+  type RowSelectionState,
+  type SortingState,
+} from "@tanstack/react-table"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -33,6 +42,13 @@ interface GapAnalysisTableProps {
   onWriteArticle?: (keyword: GapKeyword) => void
 }
 
+type ColumnMeta = {
+  headerClassName?: string
+  cellClassName?: string
+}
+
+const columnHelper = createColumnHelper<GapKeyword>()
+
 export function GapAnalysisTable({
   keywords,
   selectedRows,
@@ -47,8 +63,10 @@ export function GapAnalysisTable({
   onClearSelection,
   onWriteArticle,
 }: GapAnalysisTableProps) {
-  
-  const allSelected = keywords.length > 0 && selectedRows.size === keywords.length
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: Math.max(keywords.length, 1),
+  })
 
   const handleWrite = useCallback((keyword: GapKeyword) => {
     if (onWriteArticle) {
@@ -58,10 +76,285 @@ export function GapAnalysisTable({
     }
   }, [onWriteArticle])
 
-  const formatVolume = (vol: number) => {
-    if (vol >= 1000000) return `${(vol / 1000000).toFixed(1)}M`
-    if (vol >= 1000) return `${(vol / 1000).toFixed(1)}K`
-    return vol.toString()
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: 0,
+      pageSize: Math.max(keywords.length, 1),
+    }))
+  }, [keywords.length])
+
+  const volumeFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      }),
+    []
+  )
+
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    []
+  )
+
+  const rowSelection = useMemo<RowSelectionState>(() => {
+    const selection: RowSelectionState = {}
+    selectedRows.forEach((id) => {
+      selection[id] = true
+    })
+    return selection
+  }, [selectedRows])
+
+  const sortingState = useMemo<SortingState>(() => {
+    if (!sortField) return []
+    return [{ id: sortField, desc: sortDirection === "desc" }]
+  }, [sortField, sortDirection])
+
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "select",
+        header: () => null,
+        cell: () => null,
+        meta: {
+          headerClassName: "w-12 pl-3 sm:pl-4 md:pl-6 pr-2 py-4",
+          cellClassName: "pl-3 sm:pl-4 md:pl-6 pr-2 py-4",
+        },
+      }),
+      columnHelper.accessor("keyword", {
+        header: () => (
+          <SortHeader
+            label="Keyword"
+            field="keyword"
+            currentField={sortField}
+            direction={sortDirection}
+            onSort={onSort}
+          />
+        ),
+        cell: ({ row }) => (
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium text-foreground">
+              {row.original.keyword}
+            </span>
+            <div>
+              <IntentBadge intent={row.original.intent} />
+            </div>
+          </div>
+        ),
+        meta: {
+          headerClassName: "px-4 py-4 text-left",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.display({
+        id: "status",
+        header: () => (
+          <span className="text-xs font-semibold text-muted-foreground">Gap Status</span>
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <GapBadge gapType={row.original.gapType} />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-28 px-4 py-4 text-center",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.display({
+        id: "rankings",
+        header: () => (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-xs font-semibold text-muted-foreground cursor-help border-b border-dashed border-muted-foreground/50">
+                Rankings
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">
+              <div className="space-y-1">
+                <p>
+                  <span className="text-emerald-600 dark:text-emerald-400">You</span>{" "}
+                  / <span className="text-red-600 dark:text-red-400">C1</span> /{" "}
+                  <span className="text-orange-600 dark:text-orange-400">C2</span>
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <RanksDisplay
+              yourRank={row.original.yourRank}
+              comp1Rank={row.original.comp1Rank}
+              comp2Rank={row.original.comp2Rank}
+            />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-36 px-4 py-4 text-center",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.accessor("volume", {
+        header: () => (
+          <SortHeader
+            label="Volume"
+            field="volume"
+            currentField={sortField}
+            direction={sortDirection}
+            onSort={onSort}
+            className="justify-center"
+          />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm font-bold text-foreground tabular-nums">
+            {volumeFormatter.format(row.original.volume)}
+          </span>
+        ),
+        meta: {
+          headerClassName: "w-24 px-4 py-4",
+          cellClassName: "px-4 py-4 text-center",
+        },
+      }),
+      columnHelper.accessor("cpc", {
+        header: () => (
+          <SortHeader
+            label="CPC"
+            field="cpc"
+            currentField={sortField}
+            direction={sortDirection}
+            onSort={onSort}
+            className="justify-center"
+          />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm font-semibold text-foreground tabular-nums">
+            {currencyFormatter.format(row.original.cpc ?? 0)}
+          </span>
+        ),
+        meta: {
+          headerClassName: "w-24 px-4 py-4",
+          cellClassName: "px-4 py-4 text-center",
+        },
+      }),
+      columnHelper.accessor("kd", {
+        header: () => (
+          <SortHeader
+            label="Difficulty"
+            field="kd"
+            currentField={sortField}
+            direction={sortDirection}
+            onSort={onSort}
+            className="justify-center"
+          />
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <KDBar kd={row.original.kd} />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-32 px-4 py-4",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.accessor("trend", {
+        header: () => (
+          <SortHeader
+            label="Trend"
+            field="trend"
+            currentField={sortField}
+            direction={sortDirection}
+            onSort={onSort}
+            className="justify-center"
+          />
+        ),
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <TrendIndicator trend={row.original.trend} />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-20 px-4 py-4",
+          cellClassName: "px-4 py-4",
+        },
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: () => (
+          <span className="text-xs font-semibold text-muted-foreground">Actions</span>
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center gap-1">
+            <AITipButton tip={row.original.aiTip} onWrite={() => handleWrite(row.original)} />
+            <ActionsDropdown
+              keyword={row.original}
+              isAdded={addedKeywords.has(row.original.id)}
+              onWrite={() => handleWrite(row.original)}
+              onAddToCalendar={() => onAddToRoadmap(row.original)}
+              onViewSerp={() =>
+                window.open(
+                  `https://google.com/search?q=${encodeURIComponent(row.original.keyword)}`,
+                  "_blank"
+                )
+              }
+              onCopy={() => navigator.clipboard.writeText(row.original.keyword)}
+            />
+          </div>
+        ),
+        meta: {
+          headerClassName: "w-28 pl-4 pr-3 sm:pr-4 md:pr-6 py-4 text-center",
+          cellClassName: "pl-4 pr-3 sm:pr-4 md:pr-6 py-4",
+        },
+      }),
+    ],
+    [
+      addedKeywords,
+      currencyFormatter,
+      handleWrite,
+      onAddToRoadmap,
+      onSort,
+      sortDirection,
+      sortField,
+      volumeFormatter,
+    ]
+  )
+
+  const table = useReactTable({
+    data: keywords,
+    columns,
+    state: {
+      sorting: sortingState,
+      rowSelection,
+      pagination,
+    },
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    manualSorting: true,
+    enableRowSelection: true,
+    getRowId: (row) => row.id,
+  })
+
+  const pageRows = table.getPaginationRowModel().rows
+  const allPageSelected = pageRows.length > 0 && pageRows.every((row) => selectedRows.has(row.id))
+  const somePageSelected = pageRows.some((row) => selectedRows.has(row.id))
+
+  const handleSelectAll = (checked: boolean) => {
+    if (pageRows.length === keywords.length) {
+      onSelectAll(checked)
+      return
+    }
+    pageRows.forEach((row) => {
+      onSelectRow(row.id, checked)
+    })
   }
 
   return (
@@ -77,155 +370,62 @@ export function GapAnalysisTable({
           <table className="w-full">
           <thead className="sticky top-0 z-10">
             <tr className="bg-background border-b border-border">
-              <th className="w-12 pl-3 sm:pl-4 md:pl-6 pr-2 py-4">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={(checked) => onSelectAll(!!checked)}
-                  className="border-amber-500/50 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                />
-              </th>
-              <th className="px-4 py-4 text-left">
-                <SortHeader
-                  label="Keyword"
-                  field="keyword"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onSort={onSort}
-                />
-              </th>
-              <th className="w-28 px-4 py-4 text-center">
-                <span className="text-xs font-semibold text-muted-foreground">Gap Status</span>
-              </th>
-              <th className="w-36 px-4 py-4 text-center">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-xs font-semibold text-muted-foreground cursor-help border-b border-dashed border-muted-foreground/50">
-                      Rankings
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-xs">
-                    <div className="space-y-1">
-                      <p><span className="text-emerald-600 dark:text-emerald-400">You</span> / <span className="text-red-600 dark:text-red-400">C1</span> / <span className="text-orange-600 dark:text-orange-400">C2</span></p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </th>
-              <th className="w-24 px-4 py-4">
-                <SortHeader
-                  label="Volume"
-                  field="volume"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onSort={onSort}
-                  className="justify-center"
-                />
-              </th>
-              <th className="w-32 px-4 py-4">
-                <SortHeader
-                  label="Difficulty"
-                  field="kd"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onSort={onSort}
-                  className="justify-center"
-                />
-              </th>
-              <th className="w-20 px-4 py-4">
-                <SortHeader
-                  label="Trend"
-                  field="trend"
-                  currentField={sortField}
-                  direction={sortDirection}
-                  onSort={onSort}
-                  className="justify-center"
-                />
-              </th>
-              <th className="w-28 pl-4 pr-3 sm:pr-4 md:pr-6 py-4 text-center">
-                <span className="text-xs font-semibold text-muted-foreground">Actions</span>
-              </th>
+              {table.getHeaderGroups().map((headerGroup) =>
+                headerGroup.headers.map((header) => {
+                  const meta = header.column.columnDef.meta as ColumnMeta | undefined
+                  if (header.column.id === "select") {
+                    return (
+                      <th key={header.id} className={meta?.headerClassName}>
+                        <Checkbox
+                          checked={allPageSelected ? true : somePageSelected ? "indeterminate" : false}
+                          onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                          className="border-amber-500/50 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                        />
+                      </th>
+                    )
+                  }
+                  return (
+                    <th key={header.id} className={meta?.headerClassName}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  )
+                })
+              )}
             </tr>
           </thead>
 
           <tbody className="divide-y divide-border">
-            {keywords.map((keyword) => (
+            {pageRows.map((row) => (
               <tr
-                key={keyword.id}
+                key={row.id}
                 className={cn(
                   "group transition-all duration-150",
-                  selectedRows.has(keyword.id) 
-                    ? "bg-amber-500/5 dark:bg-amber-500/10" 
+                  selectedRows.has(row.id)
+                    ? "bg-amber-500/5 dark:bg-amber-500/10"
                     : "hover:bg-muted/50"
                 )}
               >
-                <td className="pl-3 sm:pl-4 md:pl-6 pr-2 py-4">
-                  <Checkbox
-                    checked={selectedRows.has(keyword.id)}
-                    onCheckedChange={(checked) => onSelectRow(keyword.id, !!checked)}
-                    className="border-amber-500/50 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="space-y-1.5">
-                    <span className="text-sm font-medium text-foreground">
-                      {keyword.keyword}
-                    </span>
-                    <div>
-                      <IntentBadge intent={keyword.intent} />
-                    </div>
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="flex justify-center">
-                    <GapBadge gapType={keyword.gapType} />
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="flex justify-center">
-                    <RanksDisplay
-                      yourRank={keyword.yourRank}
-                      comp1Rank={keyword.comp1Rank}
-                      comp2Rank={keyword.comp2Rank}
-                    />
-                  </div>
-                </td>
-
-                <td className="px-4 py-4 text-center">
-                  <span className="text-sm font-bold text-foreground tabular-nums">
-                    {formatVolume(keyword.volume)}
-                  </span>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="flex justify-center">
-                    <KDBar kd={keyword.kd} />
-                  </div>
-                </td>
-
-                <td className="px-4 py-4">
-                  <div className="flex justify-center">
-                    <TrendIndicator trend={keyword.trend} />
-                  </div>
-                </td>
-
-                <td className="pl-4 pr-3 sm:pr-4 md:pr-6 py-4">
-                  <div className="flex items-center justify-center gap-1">
-                    <AITipButton 
-                      tip={keyword.aiTip} 
-                      onWrite={() => handleWrite(keyword)}
-                    />
-                    <ActionsDropdown
-                      keyword={keyword}
-                      isAdded={addedKeywords.has(keyword.id)}
-                      onWrite={() => handleWrite(keyword)}
-                      onAddToCalendar={() => onAddToRoadmap(keyword)}
-                      onViewSerp={() => window.open(`https://google.com/search?q=${encodeURIComponent(keyword.keyword)}`, "_blank")}
-                      onCopy={() => navigator.clipboard.writeText(keyword.keyword)}
-                    />
-                  </div>
-                </td>
+                {row.getVisibleCells().map((cell) => {
+                  const meta = cell.column.columnDef.meta as ColumnMeta | undefined
+                  if (cell.column.id === "select") {
+                    return (
+                      <td key={cell.id} className={meta?.cellClassName}>
+                        <Checkbox
+                          checked={selectedRows.has(row.id)}
+                          onCheckedChange={(checked) => onSelectRow(row.id, !!checked)}
+                          className="border-amber-500/50 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                        />
+                      </td>
+                    )
+                  }
+                  return (
+                    <td key={cell.id} className={meta?.cellClassName}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>
