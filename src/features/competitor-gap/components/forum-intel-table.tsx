@@ -114,8 +114,8 @@ export function ForumIntelTable({
         header: () => null,
         cell: () => null,
         meta: {
-          headerClassName: "w-12 pl-3 sm:pl-4 md:pl-6 pr-2 py-4",
-          cellClassName: "pl-3 sm:pl-4 md:pl-6 pr-2 py-4",
+          headerClassName: "w-12",
+          cellClassName: "w-12",
         },
       }),
       columnHelper.accessor("topic", {
@@ -136,8 +136,8 @@ export function ForumIntelTable({
           </div>
         ),
         meta: {
-          headerClassName: "px-4 py-4 text-left",
-          cellClassName: "px-4 py-4",
+          headerClassName: "text-left",
+          cellClassName: "text-left",
         },
       }),
       columnHelper.display({
@@ -151,8 +151,8 @@ export function ForumIntelTable({
           </div>
         ),
         meta: {
-          headerClassName: "w-28 px-4 py-4 text-center",
-          cellClassName: "px-4 py-4",
+          headerClassName: "w-28 text-center",
+          cellClassName: "text-center",
         },
       }),
       columnHelper.accessor("upvotes", {
@@ -172,8 +172,8 @@ export function ForumIntelTable({
           </div>
         ),
         meta: {
-          headerClassName: "w-32 px-4 py-4",
-          cellClassName: "px-4 py-4",
+          headerClassName: "w-32 text-center",
+          cellClassName: "text-center",
         },
       }),
       columnHelper.display({
@@ -190,8 +190,8 @@ export function ForumIntelTable({
           </div>
         ),
         meta: {
-          headerClassName: "w-28 px-4 py-4 text-center",
-          cellClassName: "px-4 py-4",
+          headerClassName: "w-28 text-center",
+          cellClassName: "text-center",
         },
       }),
       columnHelper.accessor("opportunityScore", {
@@ -211,8 +211,8 @@ export function ForumIntelTable({
           </div>
         ),
         meta: {
-          headerClassName: "w-28 px-4 py-4",
-          cellClassName: "px-4 py-4",
+          headerClassName: "w-28 text-center",
+          cellClassName: "text-center",
         },
       }),
       columnHelper.display({
@@ -235,8 +235,8 @@ export function ForumIntelTable({
           </div>
         ),
         meta: {
-          headerClassName: "w-28 pl-4 pr-3 sm:pr-4 md:pr-6 py-4 text-center",
-          cellClassName: "pl-4 pr-3 sm:pr-4 md:pr-6 py-4",
+          headerClassName: "w-28 text-center",
+          cellClassName: "text-center",
         },
       }),
     ],
@@ -281,8 +281,9 @@ export function ForumIntelTable({
       />
 
       <div className="flex-1 overflow-auto">
-        <div className="min-w-[800px]">
-          <table className="w-full">
+        <div className="rounded-md border border-white/10 bg-zinc-950">
+          <div className="min-w-[800px]">
+            <table className="w-full">
           <thead className="sticky top-0 z-10">
             <tr className="bg-background border-b border-border">
               {table.getHeaderGroups().map((headerGroup) =>
@@ -290,7 +291,13 @@ export function ForumIntelTable({
                   const meta = header.column.columnDef.meta as ColumnMeta | undefined
                   if (header.column.id === "select") {
                     return (
-                      <th key={header.id} className={meta?.headerClassName}>
+                      <th
+                        key={header.id}
+                        className={cn(
+                          "h-10 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 uppercase text-xs tracking-wider text-gray-500 font-bold",
+                          meta?.headerClassName
+                        )}
+                      >
                         <Checkbox
                           checked={allPageSelected ? true : somePageSelected ? "indeterminate" : false}
                           onCheckedChange={(checked) => handleSelectAll(!!checked)}
@@ -300,7 +307,13 @@ export function ForumIntelTable({
                     )
                   }
                   return (
-                    <th key={header.id} className={meta?.headerClassName}>
+                    <th
+                      key={header.id}
+                      className={cn(
+                        "h-10 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 uppercase text-xs tracking-wider text-gray-500 font-bold",
+                        meta?.headerClassName
+                      )}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -316,9 +329,9 @@ export function ForumIntelTable({
               <tr
                 key={row.id}
                 className={cn(
-                  "group transition-all duration-150",
+                  "border-b border-white/5 transition-colors hover:bg-white/5 data-[state=selected]:bg-muted",
                   selectedRows.has(row.id)
-                    ? "bg-emerald-500/5 dark:bg-emerald-500/10" 
+                    ? "bg-emerald-500/5 dark:bg-emerald-500/10"
                     : "hover:bg-muted/50"
                 )}
               >
@@ -326,7 +339,13 @@ export function ForumIntelTable({
                   const meta = cell.column.columnDef.meta as ColumnMeta | undefined
                   if (cell.column.id === "select") {
                     return (
-                      <td key={cell.id} className={meta?.cellClassName}>
+                      <td
+                        key={cell.id}
+                        className={cn(
+                          "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-sm text-gray-300 whitespace-nowrap",
+                          meta?.cellClassName
+                        )}
+                      >
                         <Checkbox
                           checked={selectedRows.has(row.id)}
                           onCheckedChange={(checked) => onSelectRow(row.id, !!checked)}
@@ -336,7 +355,13 @@ export function ForumIntelTable({
                     )
                   }
                   return (
-                    <td key={cell.id} className={meta?.cellClassName}>
+                    <td
+                      key={cell.id}
+                      className={cn(
+                        "p-4 align-middle [&:has([role=checkbox])]:pr-0 text-sm text-gray-300 whitespace-nowrap",
+                        meta?.cellClassName
+                      )}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   )
@@ -345,6 +370,7 @@ export function ForumIntelTable({
             ))}
           </tbody>
         </table>
+          </div>
         </div>
 
         {posts.length === 0 && (
