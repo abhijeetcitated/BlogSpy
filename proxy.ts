@@ -12,12 +12,25 @@
  * ============================================
  */
 
+import arcjet, { detectBot, shield } from "@arcjet/next"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 // ============================================
 // SECURITY HEADERS
 // ============================================
+
+const arcjetKey = process.env.ARCJET_KEY
+const aj = arcjet({
+  key: arcjetKey ?? "",
+  rules: [
+    shield({ mode: "LIVE" }),
+    detectBot({
+      mode: "LIVE",
+      allow: ["CATEGORY:SEARCH_ENGINE"],
+    }),
+  ],
+})
 
 const SECURITY_HEADERS: Record<string, string> = {
   "X-XSS-Protection": "1; mode=block",
@@ -158,6 +171,21 @@ export default function proxy(request: NextRequest) {
   if (isStaticAsset(pathname)) {
     return NextResponse.next()
   }
+
+  if (arcjetKey) {
+    return aj.protect(request).then((decision) => {
+      if (decision.isDenied()) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
+      return handleRequest(request)
+    })
+  }
+
+  return handleRequest(request)
+}
+
+function handleRequest(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
   // ============================================
   // HANDLE CORS PREFLIGHT FOR API ROUTES
