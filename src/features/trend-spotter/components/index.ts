@@ -9,6 +9,7 @@ export { RelatedDataLists } from "./related-data-lists"
 export { TrendCalendar } from "./trend-calendar"
 export { PublishTiming } from "./publish-timing"
 export { ContentTypeSuggester } from "./content-type-suggester"
+export { ContentStrategy } from "./content-strategy"
 export { TrendAlertButton } from "./trend-alert-button"
 
 // Premium SVG Icons

@@ -18,8 +18,8 @@ function MapLoading() {
 // Dynamic import with SSR disabled - react-simple-maps requires window object
 export const WorldMap = dynamic(
   () => import("./world-map-client").then((mod) => mod.WorldMap),
-  { 
+  {
     ssr: false,
-    loading: () => <MapLoading />
+    loading: () => <MapLoading />,
   }
 )

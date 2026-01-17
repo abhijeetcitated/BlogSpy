@@ -7,94 +7,108 @@
  * - Deterministic outputs
  */
 
-/**
- * Simple linear regression (least squares) for y = m*x + b.
- *
- * @returns slope m and intercept b
- */
-function linearRegression(x: number[], y: number[]): { m: number; b: number } {
-  if (x.length !== y.length) {
-    throw new Error("x and y must have the same length")
-  }
-  if (x.length === 0) {
-    return { m: 0, b: 0 }
-  }
+export type ViralityResult = {
+  percentChange: number
+  label: "Breakout" | "Rising" | "Stable"
+}
 
-  const n = x.length
+export type GeoVolumeInput = {
+  id: string
+  value: number
+}
+
+export type GeoVolumeOutput = GeoVolumeInput & {
+  estimated_volume: number
+}
+
+/**
+ * Forecasts the next N values using least-squares regression
+ * on the last 50% of data points.
+ */
+export function calculateForecast(data: number[], monthsAhead: number): number[] {
+  const cleaned = data.filter((v) => Number.isFinite(v))
+  if (cleaned.length === 0 || monthsAhead <= 0) return []
+
+  const start = Math.floor(cleaned.length / 2)
+  const recent = cleaned.slice(start)
+  if (recent.length === 0) return []
 
   let sumX = 0
   let sumY = 0
   let sumXX = 0
   let sumXY = 0
 
-  for (let i = 0; i < n; i += 1) {
-    const xi = x[i] ?? 0
-    const yi = y[i] ?? 0
-
-    sumX += xi
-    sumY += yi
-    sumXX += xi * xi
-    sumXY += xi * yi
+  for (let i = 0; i < recent.length; i += 1) {
+    const x = i
+    const y = recent[i] ?? 0
+    sumX += x
+    sumY += y
+    sumXX += x * x
+    sumXY += x * y
   }
 
-  const denom = n * sumXX - sumX * sumX
-  if (denom === 0) {
-    // All x are the same (shouldn't happen with a normal sequence), fallback to flat line at avg(y)
-    const avgY = sumY / n
-    return { m: 0, b: avgY }
-  }
+  const denom = recent.length * sumXX - sumX * sumX
+  const slope = denom === 0 ? 0 : (recent.length * sumXY - sumX * sumY) / denom
+  const intercept = (sumY - slope * sumX) / recent.length
 
-  const m = (n * sumXY - sumX * sumY) / denom
-  const b = (sumY - m * sumX) / n
-
-  return { m, b }
+  return Array.from({ length: monthsAhead }, (_, i) => {
+    const x = recent.length + i
+    const value = slope * x + intercept
+    return Number.isFinite(value) ? value : 0
+  })
 }
 
 /**
- * Predicts the next `monthsAhead` data points.
+ * Distributes total volume proportionally to geo scores.
  *
- * Spec:
- * - Use Linear Regression
- * - Fit using the last 6 points (or fewer if not available)
- * - Predict the next 3 points (callers can pass 3; monthsAhead is configurable)
- *
- * @example
- * const forecast = calculateForecast([10,12,15,18,22,28], 3)
+ * Math:
+ * - TotalScore = sum(values)
+ * - estimated_volume = (value / TotalScore) * totalVolume
  */
-export function calculateForecast(dataPoints: number[], monthsAhead: number): number[] {
-  const ahead = Math.max(0, Math.floor(monthsAhead))
-  if (ahead === 0) return []
-
-  const cleaned = dataPoints.filter((v) => Number.isFinite(v))
-  if (cleaned.length === 0) {
-    return Array.from({ length: ahead }, () => 0)
+export function distributeVolume(
+  geoData: GeoVolumeInput[],
+  totalVolume: number
+): GeoVolumeOutput[] {
+  if (!Number.isFinite(totalVolume) || totalVolume <= 0) {
+    return geoData.map((item) => ({ ...item, estimated_volume: 0 }))
   }
 
-  const windowSize = Math.min(6, cleaned.length)
-  const yWindow = cleaned.slice(cleaned.length - windowSize)
+  const totalScore = geoData.reduce((sum, item) => {
+    return sum + (Number.isFinite(item.value) ? item.value : 0)
+  }, 0)
 
-  // x indices are 0..windowSize-1
-  const xWindow = yWindow.map((_, idx) => idx)
-
-  const { m, b } = linearRegression(xWindow, yWindow)
-
-  const startX = windowSize
-  const forecast: number[] = []
-
-  for (let i = 0; i < ahead; i += 1) {
-    const x = startX + i
-    const y = m * x + b
-
-    // Defensive: Google Trends is 0..100; callers may want raw.
-    // Here we clamp at 0 to avoid negative predictions.
-    forecast.push(Math.max(0, y))
+  if (totalScore <= 0) {
+    return geoData.map((item) => ({ ...item, estimated_volume: 0 }))
   }
 
-  return forecast
+  return geoData.map((item) => {
+    const ratio = Number.isFinite(item.value) ? item.value / totalScore : 0
+    return { ...item, estimated_volume: Math.round(ratio * totalVolume) }
+  })
 }
 
 /**
- * Virality score:
+ * Virality:
+ * Percentage growth of the current value vs an average baseline.
+ *
+ * percentChange = ((current - avg) / avg) * 100
+ */
+export function calculateVirality(current: number, avg: number): ViralityResult {
+  if (!Number.isFinite(current) || !Number.isFinite(avg) || avg === 0) {
+    return { percentChange: 0, label: "Stable" }
+  }
+
+  const percentChange = ((current - avg) / avg) * 100
+
+  let label: ViralityResult["label"] = "Stable"
+  if (percentChange > 50) label = "Breakout"
+  else if (percentChange > 20) label = "Rising"
+
+  return { percentChange, label }
+}
+
+/**
+ * Legacy virality score:
  * Percentage growth of the last point vs the average of the previous 3.
  *
  * score = ((last - avg(prev3)) / avg(prev3)) * 100
@@ -110,8 +124,6 @@ export function calculateViralityScore(dataPoints: number[]): number {
 
   const avgPrev = prev.reduce((acc, v) => acc + v, 0) / prev.length
   if (avgPrev === 0) {
-    // If baseline is 0, treat any positive last as a 100%+ style breakout.
-    // Return 0 for last=0, else 100.
     return last === 0 ? 0 : 100
   }
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import {
   Search,
@@ -40,14 +40,20 @@ import {
   type DataForSEOTrendsItem,
 } from "./utils"
 import { analyzeTrendSpotter } from "./services/trend-spotter.api"
-import type { TrendSpotterPlatformType } from "./services/trend-spotter.api"
+import type {
+  TrendSpotterPlatformType,
+  TrendSpotterRelated,
+  TrendSpotterMapEntry,
+} from "./services/trend-spotter.api"
 import type { VelocityDataPoint } from "./types"
+import type { DataPoint, ForecastPoint } from "./utils"
 
 import { GeographicInterest } from "./components/geographic-interest"
 import { NewsContext } from "./components/news-context"
 import { RelatedDataLists } from "./components/related-data-lists"
 import { ContentTypeSuggester } from "./components/content-type-suggester"
 import { TrendAlertButton } from "./components/trend-alert-button"
+import { PublishTiming } from "./components/publish-timing"
 
 type PlatformValue = TrendSpotterPlatformType
 
@@ -56,13 +62,24 @@ export function TrendSpotter() {
   const [searchQuery, setSearchQuery] = useState("AI Agents")
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null)
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformValue>("web")
+  const [activePlatform, setActivePlatform] = useState<PlatformValue>("web")
   const [selectedTimeframe, setSelectedTimeframe] = useState("30d")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [customDate, setCustomDate] = useState<Date | undefined>(undefined)
   const [calendarOpen, setCalendarOpen] = useState(false)
 
   const [chartData, setChartData] = useState<VelocityDataPoint[]>([])
+  const [forecastData, setForecastData] = useState<ForecastPoint[]>([])
+  const [globalVolume, setGlobalVolume] = useState<number | null>(null)
   const [viralityScore, setViralityScore] = useState<number | null>(null)
+  const [platformVolumes, setPlatformVolumes] = useState<Record<PlatformValue, number | null>>({
+    web: null,
+    youtube: null,
+    news: null,
+    shopping: null,
+  })
+  const [mapData, setMapData] = useState<TrendSpotterMapEntry[]>([])
+  const [relatedData, setRelatedData] = useState<TrendSpotterRelated | null>(null)
 
   const analyzeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasInitialized = useRef(false)
@@ -94,19 +111,58 @@ export function TrendSpotter() {
         return
       }
 
-      const items: DataForSEOTrendsItem[] = res.data.items ?? []
+      const platformData = res.data.platforms?.[selectedPlatform]
+      const items: DataForSEOTrendsItem[] =
+        platformData?.chart.items ?? res.data.items ?? []
       const { labels, values } = extractTrendSeries(items)
 
-      const forecast = calculateForecast(values, 3)
+      const history: DataPoint[] = labels.map((label, index) => ({
+        date: label,
+        value: values[index] ?? 0,
+      }))
+      const forecast = calculateForecast(history, 3)
       const score = calculateViralityScore(values)
 
       setViralityScore(score)
-      setChartData(buildVelocityChartData(labels, values, forecast))
+      const resolvedVolume =
+        typeof res.data.global_volume === "number" && Number.isFinite(res.data.global_volume)
+          ? res.data.global_volume
+          : null
+      setGlobalVolume(resolvedVolume)
+      setPlatformVolumes((prev) => ({
+        ...prev,
+        [selectedPlatform]: resolvedVolume,
+      }))
+      setMapData(platformData?.map ?? [])
+      setRelatedData(platformData?.related ?? null)
+      setForecastData(forecast)
+      setChartData(buildVelocityChartData(labels, values, []))
     } finally {
       setIsAnalyzing(false)
       analyzeTimerRef.current = null
     }
   }, [searchQuery, selectedCountryCode, selectedPlatform, selectedTimeframe])
+
+  const publishForecastData = useMemo(
+    () =>
+      forecastData.map((point) => ({
+        date: point.date,
+        value: point.forecast,
+      })),
+    [forecastData]
+  )
+
+  const relatedListPayload = useMemo(() => {
+    if (!relatedData) return undefined
+    return {
+      result: [
+        {
+          related_topics: { top: relatedData.topics.top },
+          related_queries: { rising: relatedData.queries.rising },
+        },
+      ],
+    }
+  }, [relatedData])
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -216,7 +272,7 @@ export function TrendSpotter() {
         <div className="order-3 sm:order-2">
           <SearchableCountryDropdown
             value={selectedCountryCode}
-            onChange={setSelectedCountryCode}
+            onChange={(country) => setSelectedCountryCode(country?.code ?? null)}
             triggerClassName="min-w-[120px] sm:min-w-[160px]"
           />
         </div>
@@ -225,7 +281,21 @@ export function TrendSpotter() {
         <div className="flex w-full sm:w-auto flex-wrap md:flex-nowrap items-center rounded-lg border border-border bg-card p-1 order-4 sm:order-3 gap-1 md:gap-0">
           {PLATFORM_OPTIONS.map((platform) => {
             const platformValue = platform.value as PlatformValue
-            const isActive = selectedPlatform === platformValue
+            const isActive = activePlatform === platformValue
+            const activeStyles: Record<PlatformValue, { button: string }> = {
+              web: {
+                button: "bg-blue-500/20 border-blue-500/40",
+              },
+              youtube: {
+                button: "bg-red-500/20 border-red-500/40",
+              },
+              news: {
+                button: "bg-green-500/20 border-green-500/40",
+              },
+              shopping: {
+                button: "bg-orange-500/20 border-orange-500/40",
+              },
+            }
 
             const title =
               platformValue === "news"
@@ -239,23 +309,33 @@ export function TrendSpotter() {
             return (
               <button
                 key={platform.value}
-                onClick={() => setSelectedPlatform(platformValue)}
+                onClick={() => {
+                  setSelectedPlatform(platformValue)
+                  setActivePlatform(platformValue)
+                }}
                 aria-pressed={isActive}
                 title={title}
                 className={cn(
-                  "flex flex-1 md:flex-initial items-center justify-center gap-1.5 px-2 lg:px-3 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-all border",
+                  "group flex flex-1 md:flex-initial items-center justify-center gap-1.5 px-2 lg:px-3 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-all border",
                   isActive
-                    ? "bg-amber-500/20 text-amber-400 border-amber-500/50"
-                    : "text-muted-foreground hover:text-foreground border-transparent"
+                    ? activeStyles[platformValue].button
+                    : "bg-transparent border-transparent"
                 )}
               >
                 <platform.icon
                   className={cn(
                     "h-3.5 w-3.5",
-                    isActive ? "text-amber-400" : platform.iconColor
+                    platform.iconColor
                   )}
                 />
-                <span className="hidden lg:inline">{platform.label}</span>
+                <span
+                  className={cn(
+                    "hidden lg:inline",
+                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                  )}
+                >
+                  {platform.label}
+                </span>
               </button>
             )
           })}
@@ -325,7 +405,17 @@ export function TrendSpotter() {
       </div>
 
       {/* Velocity Chart */}
-      <VelocityChart searchQuery={searchQuery} data={chartData} viralityScore={viralityScore ?? undefined} />
+      <VelocityChart
+        searchQuery={searchQuery}
+        data={chartData}
+        forecastData={forecastData}
+        globalVolume={globalVolume ?? undefined}
+        viralityScore={viralityScore ?? undefined}
+        activePlatform={activePlatform}
+        timeframe={selectedTimeframe}
+      />
+
+      <PublishTiming searchQuery={searchQuery} forecastData={publishForecastData} />
 
       {/* Geographic Intelligence */}
       <GeographicInterest
@@ -333,16 +423,23 @@ export function TrendSpotter() {
         setGeoCountryCode={setGeoCountryCode}
         geoCity={geoCity}
         setGeoCity={setGeoCity}
+        globalVolume={globalVolume}
+        mapData={mapData}
       />
 
       {/* News Context Section */}
       <NewsContext />
 
       {/* Content Type Suggester */}
-      <ContentTypeSuggester searchQuery={searchQuery} />
+      <ContentTypeSuggester
+        searchQuery={searchQuery}
+        chartData={chartData}
+        webVolume={platformVolumes.web}
+        youtubeVolume={platformVolumes.youtube}
+      />
 
       {/* Related Topics + Breakout Queries */}
-      <RelatedDataLists searchQuery={searchQuery} />
+      <RelatedDataLists searchQuery={searchQuery} data={relatedListPayload} />
 
       {/* Unlock Content Calendar - Bottom Card */}
       <Card className="relative overflow-hidden bg-linear-to-br from-purple-500/5 via-pink-500/5 to-amber-500/5 border-purple-500/20">

@@ -109,6 +109,82 @@ export const cityDataByCountry: Record<string, CityData[]> = {
 }
 
 // ============================================
+// REGION DATABASE (Full list for search)
+// ============================================
+export const regionDatabaseByCountry: Record<string, string[]> = {
+  IN: [
+    "Maharashtra",
+    "Delhi",
+    "Karnataka",
+    "Tamil Nadu",
+    "Telangana",
+    "Gujarat",
+    "Uttar Pradesh",
+    "Rajasthan",
+    "West Bengal",
+    "Punjab",
+    "Haryana",
+    "Kerala",
+    "Madhya Pradesh",
+    "Bihar",
+    "Odisha",
+  ],
+  US: [
+    "California",
+    "Texas",
+    "New York",
+    "Florida",
+    "Washington",
+    "Illinois",
+    "Pennsylvania",
+    "Ohio",
+    "Georgia",
+    "Virginia",
+    "Arizona",
+    "North Carolina",
+  ],
+  UK: [
+    "London",
+    "Manchester",
+    "Birmingham",
+    "Leeds",
+    "Glasgow",
+    "Liverpool",
+    "Bristol",
+    "Sheffield",
+    "Edinburgh",
+  ],
+  CA: [
+    "Ontario",
+    "British Columbia",
+    "Quebec",
+    "Alberta",
+    "Manitoba",
+    "Saskatchewan",
+    "Nova Scotia",
+    "New Brunswick",
+  ],
+  AU: [
+    "New South Wales",
+    "Victoria",
+    "Queensland",
+    "Western Australia",
+    "South Australia",
+    "Tasmania",
+    "Northern Territory",
+    "Australian Capital Territory",
+  ],
+  DEFAULT: [
+    "Region 1",
+    "Region 2",
+    "Region 3",
+    "Region 4",
+    "Region 5",
+    "Region 6",
+  ],
+}
+
+// ============================================
 // VELOCITY CHART DATA
 // ============================================
 export const velocityData: VelocityDataPoint[] = [
@@ -169,12 +245,12 @@ export const relatedTopics: RelatedTopic[] = [
 // BREAKOUT QUERIES
 // ============================================
 export const breakoutQueries: BreakoutQuery[] = [
-  { query: "best ai agents 2024", growth: "+2400%", isBreakout: true },
-  { query: "how to build ai agents", growth: "+1800%", isBreakout: true },
-  { query: "ai agents vs chatbots", growth: "+960%", isBreakout: false },
-  { query: "ai agents for business", growth: "+1200%", isBreakout: true },
-  { query: "free ai agent tools", growth: "+780%", isBreakout: false },
-  { query: "ai agents tutorial", growth: "+1500%", isBreakout: true },
+  { query: "best ai agents 2024", growth: "+2400%", isBreakout: true, status: "Rising", hasAio: true },
+  { query: "how to build ai agents", growth: "+1800%", isBreakout: true, status: "Rising", hasAio: true },
+  { query: "ai agents vs chatbots", growth: "+960%", isBreakout: false, status: "Top", hasAio: false },
+  { query: "ai agents for business", growth: "+1200%", isBreakout: true, status: "Rising", hasAio: true },
+  { query: "free ai agent tools", growth: "+780%", isBreakout: false, status: "Rising", hasAio: false },
+  { query: "ai agents tutorial", growth: "+1500%", isBreakout: true, status: "Rising", hasAio: true },
 ]
 
 // ============================================
@@ -223,7 +299,7 @@ export const contentTypeData: ContentTypeData = {
       matchScore: 45,
       stars: 2,
       actionLabel: "Script",
-      actionUrl: "/dashboard/creation/ai-writer?type=script",
+      actionUrl: "/dashboard/creation/ai-writer?source=trend-spotter&type=standalone&format=script&editor=ozmeum",
     },
     {
       type: "social",

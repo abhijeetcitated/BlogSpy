@@ -1,0 +1,71 @@
+flowchart LR
+  A[app/trend-spotter/page.tsx] --> F[components/features/index.ts]
+  B[app/trends/page.tsx] --> F
+  C[app/dashboard/research/trends/page.tsx] --> F
+  F --> G[components/features/trend-spotter/index.ts]
+  G --> H[src/features/trend-spotter/index.ts]
+
+  H --> I[components/trend-spotter.tsx]
+  H --> J[components/index.ts]
+  H --> K[types/index.ts]
+  H --> L[constants/index.ts]
+  H --> M[utils/index.ts]
+  H --> N[services/index.ts]
+
+  I --> V[components/velocity-chart.tsx]
+  I --> W[components/geographic-interest.tsx]
+  I --> X[components/triggering-events.tsx]
+  I --> Y[components/related-data-lists.tsx]
+  I --> Z[components/content-type-suggester.tsx]
+  I --> AA[components/publish-timing.tsx]
+  I --> AB[components/trend-alert-button.tsx]
+  I --> AC[components/searchable-country-dropdown.tsx]
+  I --> M
+  I --> L
+  I --> AD[services/trend-spotter.api.ts]
+
+  W --> AE[components/world-map.tsx]
+  W --> AC
+  W --> AF[components/cascading-city-dropdown.tsx]
+  AE --> AG[components/world-map-client.tsx]
+
+  J --> AE
+  J --> AC
+  J --> AF
+  J --> V
+  J --> W
+  J --> Y
+  J --> AH[components/trend-calendar.tsx]
+  J --> AA
+  J --> Z
+  J --> AB
+
+  AH --> AI[components/calendar/index.ts]
+  AI --> AJ[components/calendar/CalendarHeader.tsx]
+  AI --> AK[components/calendar/CalendarFilters.tsx]
+  AI --> AL[components/calendar/MonthCard.tsx]
+  AI --> AM[components/calendar/EventItem.tsx]
+  AI --> AN[components/calendar/CalendarFooter.tsx]
+
+  X --> AO[lib/feature-guard.tsx]
+
+  M --> AP[utils/date-utils.ts]
+  M --> AQ[utils/calendar-utils.ts]
+  M --> AR[utils/forecast-engine.ts]
+  M --> AS[utils/trend-math.ts]
+  M --> AT[utils/trend-transform.ts]
+  M --> AU[utils/trend-logic.ts]
+
+  N --> AD
+  AD --> AV[lib/api-client]
+
+  AX[app/api/trend-spotter/analyze/route.ts] --> AY[services/trend-api.ts]
+  AX --> AR
+  AX --> AT
+  AX --> AZ[src/lib/supabase/server]
+  AX --> BA[lib/credits]
+  AY --> BB[src/lib/dataforseo/locations.ts]
+
+  W --> BC[__mocks__/geo-data.ts]
+  Y --> BC
+  AH --> BD[__mocks__/calendar-data.ts]

@@ -1,17 +1,19 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useEffect, useState, useCallback } from "react"
 import {
   ComposableMap,
   Geographies,
   Geography,
   Marker,
+  ZoomableGroup,
 } from "react-simple-maps"
 import { scaleLinear } from "d3-scale"
 import { Loader2 } from "lucide-react"
 
 import type { TooltipState } from "../types"
 import { geoUrl } from "../constants"
+import { ALL_COUNTRIES } from "../constants/map-coordinates"
 import { countryInterestData, mapMarkers } from "../__mocks__"
 
 // D3 Color Scale for Heatmap (Blue gradient)
@@ -19,15 +21,35 @@ const colorScale = scaleLinear<string>()
   .domain([0, 50, 100])
   .range(["#1e293b", "#1e40af", "#3b82f6"]) // Slate-800 -> Blue-800 -> Blue-500
 
-export function WorldMap() {
+type WorldMapProps = {
+  activeCountryCode?: string | null
+}
+
+export function WorldMap({ activeCountryCode }: WorldMapProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+  const [position, setPosition] = useState<{ coordinates: [number, number]; zoom: number }>({
+    coordinates: [0, 20],
+    zoom: 1,
+  })
   const [tooltip, setTooltip] = useState<TooltipState>({
     show: false,
     content: "",
     x: 0,
     y: 0,
   })
+
+  useEffect(() => {
+    const key = (activeCountryCode || "WORLD").toUpperCase()
+    const target =
+      ALL_COUNTRIES.find((country) => country.code === key) ||
+      ALL_COUNTRIES.find((country) => country.code === "WORLD")
+    if (!target) {
+      setPosition({ coordinates: [0, 20], zoom: 1 })
+      return
+    }
+    setPosition({ coordinates: target.coordinates, zoom: target.zoom })
+  }, [activeCountryCode])
 
   const handleMouseEnter = useCallback(
     (geo: { properties: { name: string } }, event: React.MouseEvent) => {
@@ -65,6 +87,11 @@ export function WorldMap() {
     if (!data) return "#1e293b" // Slate-800 for no data
     return colorScale(data.percentage)
   }, [])
+
+  const activeCountryInfo =
+    activeCountryCode && activeCountryCode !== "WORLD"
+      ? ALL_COUNTRIES.find((country) => country.code === activeCountryCode)
+      : null
 
   // Error state
   if (hasError) {
@@ -106,70 +133,97 @@ export function WorldMap() {
         }}
         className="w-full h-full"
       >
-        <Geographies 
-          geography={geoUrl}
-          parseGeographies={(geos) => {
-            if (geos && geos.length > 0) {
-              setIsLoading(false)
-            }
-            return geos
-          }}
+        <ZoomableGroup
+          center={position.coordinates}
+          zoom={position.zoom}
         >
-          {({ geographies }) =>
-            geographies.map((geo) => {
-              const countryName = geo.properties.name
-              const hasData = !!countryInterestData[countryName]
-              const fillColor = getCountryColor(countryName)
+          <Geographies 
+            geography={geoUrl}
+            parseGeographies={(geos) => {
+              if (geos && geos.length > 0) {
+                setIsLoading(false)
+              }
+              return geos
+            }}
+          >
+            {({ geographies }) =>
+              geographies.map((geo) => {
+                const countryName = geo.properties.name
+                const hasData = !!countryInterestData[countryName]
+                const fillColor = getCountryColor(countryName)
 
-              return (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  fill={fillColor}
-                  stroke="#334155"
-                  strokeWidth={0.5}
-                  onMouseEnter={(e) => handleMouseEnter(geo, e)}
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={handleMouseLeave}
-                  style={{
-                    default: {
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                    },
-                    hover: {
-                      fill: hasData ? "#60a5fa" : "#475569",
-                      stroke: "#93c5fd",
-                      strokeWidth: 1.5,
-                      outline: "none",
-                      cursor: "pointer",
-                      filter: "brightness(1.2)",
-                    },
-                    pressed: {
-                      outline: "none",
-                    },
-                  }}
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    fill={fillColor}
+                    stroke="#334155"
+                    strokeWidth={0.5}
+                    onMouseEnter={(e) => handleMouseEnter(geo, e)}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    style={{
+                      default: {
+                        outline: "none",
+                        transition: "all 0.2s ease",
+                      },
+                      hover: {
+                        fill: hasData ? "#60a5fa" : "#475569",
+                        stroke: "#93c5fd",
+                        strokeWidth: 1.5,
+                        outline: "none",
+                        cursor: "pointer",
+                        filter: "brightness(1.2)",
+                      },
+                      pressed: {
+                        outline: "none",
+                      },
+                    }}
+                  />
+                )
+              })
+            }
+          </Geographies>
+
+          {/* Animated hotspot markers */}
+          {!isLoading && mapMarkers.map(({ name, coordinates, intensity }) => (
+            <Marker key={name} coordinates={coordinates}>
+              <circle
+                r={6 * intensity}
+                fill="#3b82f6"
+                fillOpacity={0.5}
+                stroke="#60a5fa"
+                strokeWidth={2}
+                className="animate-pulse"
+                style={{
+                  filter: "drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))",
+                }}
+              />
+            </Marker>
+          ))}
+
+          {activeCountryInfo && (
+            <Marker coordinates={activeCountryInfo.coordinates}>
+              <circle r={8} fill="#F59E0B" fillOpacity="0.3" className="animate-ping" />
+              <g
+                fill="none"
+                stroke="#F59E0B"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                transform="translate(-12, -24)"
+              >
+                <line x1="4" x2="4" y1="22" y2="15" />
+                <path
+                  d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+                  fill="#F59E0B"
+                  fillOpacity="0.2"
                 />
-              )
-            })
-          }
-        </Geographies>
-
-        {/* Animated hotspot markers */}
-        {!isLoading && mapMarkers.map(({ name, coordinates, intensity }) => (
-          <Marker key={name} coordinates={coordinates}>
-            <circle
-              r={6 * intensity}
-              fill="#3b82f6"
-              fillOpacity={0.5}
-              stroke="#60a5fa"
-              strokeWidth={2}
-              className="animate-pulse"
-              style={{
-                filter: "drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))",
-              }}
-            />
-          </Marker>
-        ))}
+              </g>
+              <circle r={2} fill="#F59E0B" />
+            </Marker>
+          )}
+        </ZoomableGroup>
       </ComposableMap>
 
       {/* Custom Tooltip */}

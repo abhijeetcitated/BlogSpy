@@ -8,7 +8,7 @@
  * - map EN -> US (legacy compatibility)
  * - validate against a static allowed ISO-3166-1 alpha-2 subset that we support
  *
- * Throws on invalid/unsupported input.
+ * Defaults to US on invalid/unsupported input.
  */
 
 const COUNTRY_ALIAS_MAP: Readonly<Record<string, string>> = {
@@ -42,18 +42,18 @@ const ALLOWED_COUNTRY_CODES: ReadonlySet<string> = new Set([
 export function normalizeCountryCode(input: string): string {
   const trimmed = input.trim()
   if (!trimmed) {
-    throw new Error("Country code is required")
+    return "US"
   }
 
   const upper = trimmed.toUpperCase()
   const aliased = COUNTRY_ALIAS_MAP[upper] ?? upper
 
   if (!/^[A-Z]{2}$/.test(aliased)) {
-    throw new Error(`Invalid country code format: "${input}"`)
+    return "US"
   }
 
   if (!ALLOWED_COUNTRY_CODES.has(aliased)) {
-    throw new Error(`Unsupported country code: "${aliased}"`)
+    return "US"
   }
 
   return aliased

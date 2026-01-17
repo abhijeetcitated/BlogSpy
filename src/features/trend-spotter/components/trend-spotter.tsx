@@ -1,11 +1,12 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import {
   Search,
   Loader2,
-  Calendar,
+  Calendar as CalendarIcon,
   Zap,
   Flame,
   CalendarDays,
@@ -14,6 +15,7 @@ import {
   Lock,
   Crown,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -21,14 +23,15 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar as RangeCalendar } from "@/components/ui/calendar"
+import { Calendar } from "@/components/ui/calendar"
 
 import type { DateRange } from "react-day-picker"
 
 import { SearchableCountryDropdown } from "./searchable-country-dropdown"
 import { VelocityChart } from "./velocity-chart"
 
-import { PLATFORM_OPTIONS, allCountries } from "../constants"
+import { PLATFORM_OPTIONS } from "../constants"
+import { ALL_COUNTRIES } from "../constants/map-coordinates"
 import {
   calculateForecast,
   calculateViralityScore,
@@ -36,106 +39,208 @@ import {
   extractTrendSeries,
   type DataForSEOTrendsItem,
 } from "../utils"
-import { analyzeTrendSpotter } from "../services/trend-spotter.api"
-import type { TrendSpotterPlatformType } from "../services/trend-spotter.api"
+import type {
+  TrendSpotterPlatformType,
+  TrendSpotterRelated,
+  TrendSpotterMapEntry,
+} from "../services/trend-spotter.api"
 import type { VelocityDataPoint } from "../types"
+import type { DataPoint, ForecastPoint } from "../utils"
 
 import { GeographicInterest } from "./geographic-interest"
-import { NewsContext } from "./news-context"
 import { RelatedDataLists } from "./related-data-lists"
 import { ContentTypeSuggester } from "./content-type-suggester"
 import { TrendAlertButton } from "./trend-alert-button"
+import { PublishTiming } from "./publish-timing"
+import { TriggeringEvents } from "./triggering-events"
 
 type PlatformValue = TrendSpotterPlatformType
+type TriggeringTopic = { topic_title: string; topic_type: string; value: number }
+type RelatedPayload = TrendSpotterRelated & {
+  relatedTopics?: { rising?: TriggeringTopic[] }
+}
 
 export function TrendSpotter() {
   // Main search state
   const [searchQuery, setSearchQuery] = useState("AI Agents")
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null)
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformValue>("web")
+  const [activePlatform, setActivePlatform] = useState<PlatformValue>("web")
 
   // Top section timeframe state (display uses 4H/24H/7D/30D/12M)
   const [timeframe, setTimeframe] = useState("30D")
 
   // Date range picker state (optional)
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [date, setDate] = useState<DateRange | undefined>()
+  const [calendarOpen, setCalendarOpen] = useState(false)
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isStale, setIsStale] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   const [chartData, setChartData] = useState<VelocityDataPoint[]>([])
+  const [forecastData, setForecastData] = useState<ForecastPoint[]>([])
+  const [globalVolume, setGlobalVolume] = useState<number>(0)
   const [viralityScore, setViralityScore] = useState<number | null>(null)
+  const [platformVolumes, setPlatformVolumes] = useState<Record<PlatformValue, number | null>>({
+    web: null,
+    youtube: null,
+    news: null,
+    shopping: null,
+  })
+  const [mapData, setMapData] = useState<TrendSpotterMapEntry[]>([])
+  const [relatedData, setRelatedData] = useState<RelatedPayload | null>(null)
 
-  const analyzeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchParams = useSearchParams()
 
   // Geographic section state (cascading)
   const [geoCountryCode, setGeoCountryCode] = useState<string | null>("IN")
   const [geoCity, setGeoCity] = useState<string | null>(null)
 
-  const apiTimeframe = useMemo((): string => {
-    // Map UI labels to API expected values
-    switch (timeframe) {
-      case "4H":
-        return "4h"
-      case "24H":
-        return "24h"
-      case "7D":
-        return "7d"
-      case "30D":
-        return "30d"
-      case "12M":
-        return "12m"
-      default:
-        return "30d"
-    }
-  }, [timeframe])
+  const formatDateOnly = useCallback((value?: Date) => {
+    if (!value) return undefined
+    const year = value.getFullYear()
+    const month = String(value.getMonth() + 1).padStart(2, "0")
+    const day = String(value.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}`
+  }, [])
 
-  const handleAnalyze = useCallback(async () => {
-    if (!searchQuery.trim()) return
-
-    if (analyzeTimerRef.current) {
-      clearTimeout(analyzeTimerRef.current)
+  const handleAnalyze = useCallback(async (forceRefresh?: boolean, overrideKeyword?: string) => {
+    const keyword = (overrideKeyword ?? searchQuery).trim()
+    if (!keyword) {
+      toast.error("Please enter a keyword")
+      return
     }
 
-    setIsAnalyzing(true)
+    setIsLoading(true)
 
     try {
-      const selectedCountry = allCountries.find(
-        (c) => c.code === (selectedCountryCode ?? "US")
+      const selectedCountry = ALL_COUNTRIES.find(
+        (country) => country.code === (selectedCountryCode ?? "US")
       )
 
-      const res = await analyzeTrendSpotter({
-        keyword: searchQuery.trim(),
-        // Backend supports ISO country codes and maps to DataForSEO location_code.
-        location: selectedCountry?.code ?? "US",
+      const payload = {
+        keyword,
+        country: selectedCountry?.code ?? "US",
+        timeframe,
         type: selectedPlatform,
-        timeframe: apiTimeframe,
-      })
-
-      if (!res.success || !res.data) {
-        return
+        force_refresh: !!forceRefresh,
+        start_date: timeframe === "CUSTOM" ? formatDateOnly(date?.from) : undefined,
+        end_date: timeframe === "CUSTOM" ? formatDateOnly(date?.to) : undefined,
       }
 
-      const items: DataForSEOTrendsItem[] = res.data.items ?? []
+      const response = await fetch("/api/trend-spotter/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error("Analysis failed")
+      }
+
+      const json = (await response.json()) as {
+        success?: boolean
+        data?: {
+          global_volume?: number | null
+          isStale?: boolean
+          items?: DataForSEOTrendsItem[]
+          platforms?: Record<TrendSpotterPlatformType, {
+            chart: { items: DataForSEOTrendsItem[] }
+            map: TrendSpotterMapEntry[]
+            related: TrendSpotterRelated
+          }>
+        }
+        meta?: { timestamp?: string }
+        error?: { message?: string }
+      }
+
+      if (!json.success || !json.data) {
+        throw new Error(json.error?.message || "Analysis failed")
+      }
+
+      const platformData = json.data.platforms?.[selectedPlatform]
+      const items: DataForSEOTrendsItem[] =
+        platformData?.chart.items ?? json.data.items ?? []
       const { labels, values } = extractTrendSeries(items)
 
-      const forecast = calculateForecast(values, 3)
+      const history: DataPoint[] = labels.map((label, index) => ({
+        date: label,
+        value: values[index] ?? 0,
+      }))
+      const forecast = calculateForecast(history, 3)
       const score = calculateViralityScore(values)
 
       setViralityScore(score)
-      setChartData(buildVelocityChartData(labels, values, forecast))
+      const resolvedVolume =
+        typeof json.data.global_volume === "number" && Number.isFinite(json.data.global_volume)
+          ? json.data.global_volume
+          : 0
+      setGlobalVolume(resolvedVolume)
+      setPlatformVolumes((prev) => ({
+        ...prev,
+        [selectedPlatform]: resolvedVolume,
+      }))
+      setMapData(platformData?.map ?? [])
+      const nextRelated = platformData?.related
+        ? {
+            ...platformData.related,
+            relatedTopics: {
+              rising: platformData.related.topics.rising.map((item) => ({
+                topic_title: item.title ?? "",
+                topic_type: item.type ?? "",
+                value: item.value ?? 0,
+              })),
+            },
+          }
+        : null
+      setRelatedData(nextRelated)
+      setForecastData(forecast)
+      setChartData(buildVelocityChartData(labels, values, []))
+      setLastUpdated(json.meta?.timestamp ?? null)
+
+      if (json.data.isStale) {
+        setIsStale(true)
+        toast.message("Data is from cache. Click Refresh to update.")
+      } else {
+        setIsStale(false)
+        toast.success("Analysis Complete")
+      }
+    } catch (error) {
+      toast.error("Failed to fetch trends. Please try again.")
     } finally {
-      setIsAnalyzing(false)
-      analyzeTimerRef.current = null
+      setIsLoading(false)
     }
-  }, [apiTimeframe, searchQuery, selectedCountryCode, selectedPlatform])
+  }, [searchQuery, selectedCountryCode, selectedPlatform, timeframe, date, formatDateOnly])
+
+  const publishForecastData = useMemo(
+    () =>
+      forecastData.map((point) => ({
+        date: point.date,
+        value: point.forecast,
+      })),
+    [forecastData]
+  )
+
+  const relatedListPayload = useMemo(() => {
+    if (!relatedData) return undefined
+    return {
+      result: [
+        {
+          related_topics: { top: relatedData.topics.top },
+          related_queries: { rising: relatedData.queries.rising },
+        },
+      ],
+    }
+  }, [relatedData])
 
   useEffect(() => {
-    return () => {
-      if (analyzeTimerRef.current) {
-        clearTimeout(analyzeTimerRef.current)
-      }
-    }
-  }, [])
+    const queryKeyword = searchParams.get("q")
+    if (!queryKeyword) return
+
+    setSearchQuery(queryKeyword)
+    handleAnalyze(false, queryKeyword)
+  }, [handleAnalyze, searchParams])
 
   return (
     <div className="min-h-full space-y-4 md:space-y-6">
@@ -220,7 +325,7 @@ export function TrendSpotter() {
         <div className="order-3 sm:order-2">
           <SearchableCountryDropdown
             value={selectedCountryCode}
-            onChange={setSelectedCountryCode}
+            onChange={(country) => setSelectedCountryCode(country?.code ?? null)}
             triggerClassName="min-w-[120px] sm:min-w-[160px]"
           />
         </div>
@@ -229,7 +334,21 @@ export function TrendSpotter() {
         <div className="flex w-full sm:w-auto flex-wrap md:flex-nowrap items-center rounded-lg border border-border bg-card p-1 order-4 sm:order-3 gap-1 md:gap-0">
           {PLATFORM_OPTIONS.map((platform) => {
             const platformValue = platform.value as PlatformValue
-            const isActive = selectedPlatform === platformValue
+            const isActive = activePlatform === platformValue
+            const activeStyles: Record<PlatformValue, { button: string }> = {
+              web: {
+                button: "bg-blue-500/20 border-blue-500/40",
+              },
+              youtube: {
+                button: "bg-red-500/20 border-red-500/40",
+              },
+              news: {
+                button: "bg-green-500/20 border-green-500/40",
+              },
+              shopping: {
+                button: "bg-orange-500/20 border-orange-500/40",
+              },
+            }
 
             const title =
               platformValue === "news"
@@ -243,23 +362,33 @@ export function TrendSpotter() {
             return (
               <button
                 key={platform.value}
-                onClick={() => setSelectedPlatform(platformValue)}
+                onClick={() => {
+                  setSelectedPlatform(platformValue)
+                  setActivePlatform(platformValue)
+                }}
                 aria-pressed={isActive}
                 title={title}
                 className={cn(
-                  "flex flex-1 md:flex-initial items-center justify-center gap-1.5 px-2 lg:px-3 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-all border",
+                  "group flex flex-1 md:flex-initial items-center justify-center gap-1.5 px-2 lg:px-3 py-1.5 rounded-md text-xs lg:text-sm font-medium transition-all border",
                   isActive
-                    ? "bg-amber-500/20 text-amber-400 border-amber-500/50"
-                    : "text-muted-foreground hover:text-foreground border-transparent"
+                    ? activeStyles[platformValue].button
+                    : "bg-transparent border-transparent"
                 )}
               >
                 <platform.icon
                   className={cn(
                     "h-3.5 w-3.5",
-                    isActive ? "text-amber-400" : platform.iconColor
+                    platform.iconColor
                   )}
                 />
-                <span className="hidden lg:inline">{platform.label}</span>
+                <span
+                  className={cn(
+                    "hidden lg:inline",
+                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                  )}
+                >
+                  {platform.label}
+                </span>
               </button>
             )
           })}
@@ -270,41 +399,104 @@ export function TrendSpotter() {
           {["4H", "24H", "7D", "30D", "12M"].map((tf) => (
             <button
               key={tf}
-              onClick={() => setTimeframe(tf)}
+              onClick={() => {
+                setTimeframe(tf)
+                setDate(undefined)
+                setCalendarOpen(false)
+              }}
               aria-pressed={timeframe === tf}
               className={cn(
                 "px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all",
-                timeframe === tf ? "bg-amber-500 text-black" : "text-muted-foreground hover:text-foreground"
+                timeframe === tf
+                    ? "bg-linear-to-br from-[#F59E0B] to-[#D97706] text-black font-bold shadow-[0_0_15px_rgba(245,158,11,0.3)] border border-[#F59E0B]/50"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {tf}
             </button>
           ))}
 
-          <Popover>
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
-              <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hidden sm:block">
-                <Calendar className="h-4 w-4" />
+              <button
+                className={cn(
+                  "p-1.5 rounded-md hidden sm:block transition-all",
+                  calendarOpen || (timeframe === "custom" && !!date?.from && !!date?.to)
+                    ? "bg-linear-to-br from-[#F59E0B] to-[#D97706] text-black shadow-[0_0_15px_rgba(245,158,11,0.3)] border border-[#F59E0B]/50"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <CalendarIcon className="h-4 w-4" />
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-auto p-0">
-              <RangeCalendar
-                mode="range"
-                selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
-              />
+            <PopoverContent
+              className="w-auto max-w-90 p-0 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-white/10 shadow-xl inline-block"
+              align="end"
+            >
+              <div className="p-3">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={(nextRange) => {
+                    setDate(nextRange)
+
+                    // Only mark as custom when a full range is selected.
+                    if (nextRange?.from && nextRange?.to) {
+                      setTimeframe("custom")
+                      setCalendarOpen(false)
+                    }
+                  }}
+                  numberOfMonths={1}
+                  pagedNavigation
+                  disabled={{ after: new Date() }}
+                  className="p-3"
+                  classNames={{
+                    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                    month: "space-y-4",
+                    caption: "flex justify-center pt-1 relative items-center",
+                    caption_label: "text-sm font-bold text-foreground",
+                    nav: "space-x-1 flex items-center absolute right-1 top-1",
+                    nav_button:
+                      "h-7 w-7 bg-zinc-800 hover:bg-zinc-700 border border-border p-0 rounded-md flex items-center justify-center text-foreground transition-all",
+                    nav_button_previous: "mr-1",
+                    nav_button_next: "",
+                    table: "w-full border-collapse space-y-1",
+                    head_row: "flex w-full justify-between mb-2",
+                    head_cell:
+                      "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] flex items-center justify-center",
+                    row: "flex w-full mt-2 justify-between",
+                    cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                    day:
+                      "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md flex items-center justify-center text-foreground hover:bg-muted transition-all",
+                    day_selected:
+                      "!bg-[#F59E0B] !text-black hover:!bg-[#D97706] font-bold shadow-md",
+                    day_today: "bg-muted text-foreground font-semibold border border-border",
+                    day_outside: "text-muted-foreground opacity-30",
+                    day_disabled: "text-muted-foreground opacity-20 cursor-not-allowed",
+                    day_range_middle:
+                      "aria-selected:!bg-[#F59E0B]/20 aria-selected:!text-[#F59E0B] rounded-none",
+                    day_hidden: "invisible",
+                  }}
+                />
+              </div>
             </PopoverContent>
           </Popover>
         </div>
 
         {/* Analyze Button */}
         <Button
-          onClick={handleAnalyze}
-          disabled={isAnalyzing || !searchQuery.trim()}
-          className="h-10 sm:h-11 px-4 sm:px-6 bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-black font-semibold shadow-lg shadow-amber-500/25 transition-all hover:shadow-amber-500/40 order-2 sm:order-5 flex-1 sm:flex-none"
+          onClick={() => handleAnalyze(isStale)}
+          disabled={isLoading || !searchQuery.trim()}
+          className={cn(
+            "h-10 sm:h-11 px-4 sm:px-6 text-black font-semibold shadow-lg transition-all order-2 sm:order-5 flex-1 sm:flex-none",
+            isStale
+              ? "bg-linear-to-r from-rose-500 to-orange-600 hover:from-rose-600 hover:to-orange-700 shadow-rose-500/25 hover:shadow-rose-500/40"
+              : "bg-linear-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-amber-500/25 hover:shadow-amber-500/40"
+          )}
         >
-          {isAnalyzing ? (
+          {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 mr-1 sm:mr-2 animate-spin" />
               <span className="sm:inline">Analyzing...</span>
@@ -312,20 +504,30 @@ export function TrendSpotter() {
           ) : (
             <>
               <Zap className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="sm:inline">Analyze</span>
+              <span className="sm:inline">
+                {isStale ? "Refresh (1 Credit)" : "Analyze"}
+              </span>
             </>
           )}
         </Button>
       </div>
 
       {/* Velocity Chart */}
+      <div className={cn("transition-all", isStale && "opacity-60 blur-[1px]")}>
       <VelocityChart
         searchQuery={searchQuery}
         data={chartData}
+        forecastData={forecastData}
+        globalVolume={globalVolume}
         viralityScore={viralityScore ?? undefined}
-        activePlatform={selectedPlatform}
+        activePlatform={activePlatform}
+        selectedPlatform={selectedPlatform}
         timeframe={timeframe}
+        dateRange={date}
       />
+      </div>
+
+      <PublishTiming searchQuery={searchQuery} forecastData={publishForecastData} />
 
       {/* Geographic Intelligence */}
       <GeographicInterest
@@ -333,16 +535,23 @@ export function TrendSpotter() {
         setGeoCountryCode={setGeoCountryCode}
         geoCity={geoCity}
         setGeoCity={setGeoCity}
+        globalVolume={globalVolume}
+        mapData={mapData}
       />
 
-      {/* News Context Section */}
-      <NewsContext />
+      {/* Triggering Events */}
+      <TriggeringEvents data={relatedData ?? undefined} />
 
       {/* Content Type Suggester */}
-      <ContentTypeSuggester searchQuery={searchQuery} />
+      <ContentTypeSuggester
+        searchQuery={searchQuery}
+        chartData={chartData}
+        webVolume={platformVolumes.web}
+        youtubeVolume={platformVolumes.youtube}
+      />
 
       {/* Related Topics + Breakout Queries */}
-      <RelatedDataLists searchQuery={searchQuery} />
+      <RelatedDataLists searchQuery={searchQuery} data={relatedListPayload} />
 
       {/* Unlock Content Calendar - Bottom Card */}
       <Card className="relative overflow-hidden bg-linear-to-br from-purple-500/5 via-pink-500/5 to-amber-500/5 border-purple-500/20">

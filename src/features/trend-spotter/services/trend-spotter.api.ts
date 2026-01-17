@@ -16,13 +16,34 @@ export type DataForSEOTrendsItem = {
   values?: number[]
 }
 
+export type TrendSpotterMapEntry = {
+  geo_id: number | string
+  values: number[]
+  estimated_volume?: number | null
+}
+
+export type TrendSpotterRelatedTopic = { title?: string; type?: string; value?: number }
+export type TrendSpotterRelatedQuery = { query?: string; value?: number | string }
+
+export type TrendSpotterRelated = {
+  topics: { top: TrendSpotterRelatedTopic[]; rising: TrendSpotterRelatedTopic[] }
+  queries: { top: TrendSpotterRelatedQuery[]; rising: TrendSpotterRelatedQuery[] }
+}
+
+export type TrendSpotterPlatformPayload = {
+  chart: { values: number[]; items: DataForSEOTrendsItem[] }
+  map: TrendSpotterMapEntry[]
+  related: TrendSpotterRelated
+}
+
 export type TrendSpotterAnalyzeResponse = {
   keyword: string
   location: string
-  type: TrendSpotterPlatformType
   timeframe: string
+  global_volume?: number | null
+  platforms?: Record<TrendSpotterPlatformType, TrendSpotterPlatformPayload>
+  type?: TrendSpotterPlatformType
   items?: DataForSEOTrendsItem[]
-  raw?: unknown
 }
 
 export async function analyzeTrendSpotter(request: TrendSpotterAnalyzeRequest) {

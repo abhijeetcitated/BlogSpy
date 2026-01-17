@@ -1,8 +1,11 @@
 "use client"
 
 import Link from "next/link"
+import { useCallback, useRef, useState } from "react"
+import { format, differenceInDays, subDays, subHours, subMinutes, subMonths } from "date-fns"
 import {
   Legend,
+  Label,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -18,8 +21,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
 import type { VelocityDataPoint } from "../types"
+import type { ForecastPoint } from "../utils"
+import type { DateRange } from "react-day-picker"
 
-import { PublishTiming } from "./publish-timing"
 
 type PlatformKey = "web" | "youtube" | "news" | "shopping"
 
@@ -29,23 +33,26 @@ type VelocityGodPoint = {
   youtube: number | null
   news: number | null
   shopping: number | null
-  /** Optional forecast extension for the web line only. */
-  forecastWeb?: number | null
+  /** Optional forecast extension for the selected platform. */
+  forecastLine?: number | null
 }
 
 interface VelocityChartProps {
   searchQuery: string
   /**
    * Preferred input shape ("God View"):
-   * { date, web, youtube, news, shopping, forecastWeb? }
+   * { date, web, youtube, news, shopping, forecastLine? }
    */
   data?: VelocityGodPoint[] | VelocityDataPoint[]
+  forecastData?: ForecastPoint[]
+  globalVolume?: number
   viralityScore?: number
   /** Spotlight selection (e.g. "youtube"). When unset, all lines render normally. */
   activePlatform?: PlatformKey | null
   /** @deprecated Use `activePlatform` instead. */
   selectedPlatform?: string
   timeframe?: string
+  dateRange?: DateRange
 }
 
 function formatPercent(value: number): string {
@@ -74,7 +81,7 @@ function formatTooltipDate(label: unknown): string {
   }).format(date)
 }
 
-function formatXAxisTick(label: unknown): string {
+function formatXAxisTickMonthOnly(label: unknown): string {
   if (typeof label !== "string") return String(label ?? "")
 
   const m = /^([0-9]{4})-([0-9]{2})$/.exec(label)
@@ -83,9 +90,143 @@ function formatXAxisTick(label: unknown): string {
   const monthIndex = Number(m[2]) - 1
   if (!Number.isFinite(monthIndex) || monthIndex < 0 || monthIndex > 11) return label
 
-  // Keep the axis clean (just month), tooltip shows month+year.
+  // Keep the axis clean (just month).
   const date = new Date(Date.UTC(2000, monthIndex, 1))
   return new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" }).format(date)
+}
+
+function formatXAxisTickMonthYear(label: unknown): string {
+  if (typeof label !== "string") return String(label ?? "")
+
+  const m = /^([0-9]{4})-([0-9]{2})$/.exec(label)
+  if (!m) return label
+
+  const year = Number(m[1])
+  const monthIndex = Number(m[2]) - 1
+  if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) return label
+  if (monthIndex < 0 || monthIndex > 11) return label
+
+  // 12M: make year visible (e.g. "Jan 26").
+  const date = new Date(Date.UTC(year, monthIndex, 1))
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "2-digit",
+    timeZone: "UTC",
+  }).format(date)
+}
+
+function formatXAxisTickForTimeframe(label: unknown, timeframe?: string): string {
+  if (typeof label !== "string") return String(label ?? "")
+
+  const tf = (timeframe ?? "").trim().toUpperCase()
+
+  // 12M: show month + year so it is unambiguous.
+  if (tf === "12M") return formatXAxisTickMonthYear(label)
+
+  // 30D: show day + short month (01 Jan)
+  if (tf !== "30D") return formatXAxisTickMonthOnly(label)
+
+  // Accept either YYYY-MM-DD or YYYY-MM (fallback).
+  const dayMatch = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(label)
+  if (dayMatch) {
+    const year = Number(dayMatch[1])
+    const monthIndex = Number(dayMatch[2]) - 1
+    const day = Number(dayMatch[3])
+    if (
+      Number.isFinite(year) &&
+      Number.isFinite(monthIndex) &&
+      Number.isFinite(day) &&
+      monthIndex >= 0 &&
+      monthIndex <= 11
+    ) {
+      const date = new Date(Date.UTC(year, monthIndex, day))
+      return new Intl.DateTimeFormat("en-US", {
+        day: "2-digit",
+        month: "short",
+        timeZone: "UTC",
+      }).format(date)
+    }
+  }
+
+  // If we only have YYYY-MM, keep axis clean with month.
+  return formatXAxisTickMonthOnly(label)
+}
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat("en-US").format(value)
+}
+
+function buildFallbackData(timeframe?: string, dateRange?: DateRange): VelocityGodPoint[] {
+  const tf = (timeframe ?? "").trim().toUpperCase()
+  const rawBaseDate = dateRange?.to ?? new Date()
+  const baseDate =
+    tf === "4H"
+      ? new Date(Math.floor(rawBaseDate.getTime() / (10 * 60 * 1000)) * 10 * 60 * 1000)
+      : tf === "24H"
+        ? new Date(Math.floor(rawBaseDate.getTime() / (60 * 60 * 1000)) * 60 * 60 * 1000)
+        : rawBaseDate
+
+  const makePoint = (date: Date, index: number): VelocityGodPoint => {
+    const base = Math.min(100, 35 + index * 3)
+    return {
+      date: date.toISOString(),
+      web: base,
+      youtube: Math.max(0, base - 8),
+      news: Math.max(0, base - 14),
+      shopping: Math.max(0, base - 18),
+    }
+  }
+
+  const buildSeries = (count: number, step: (date: Date, index: number) => Date) =>
+    Array.from({ length: count }, (_, i) => {
+      const idx = count - 1 - i
+      const pointDate = step(baseDate, idx)
+      return makePoint(pointDate, i)
+    })
+
+  if (tf === "4H") {
+    return buildSeries(24, (date, index) => subMinutes(date, index * 10))
+  }
+
+  if (tf === "24H") {
+    return buildSeries(24, (date, index) => subHours(date, index))
+  }
+
+  if (tf === "7D") {
+    return buildSeries(7, (date, index) => subDays(date, index))
+  }
+
+  if (tf === "30D") {
+    return buildSeries(30, (date, index) => subDays(date, index))
+  }
+
+  if (tf === "12M") {
+    const points = buildSeries(12, (date, index) => subMonths(date, index))
+    return points.map((point) => {
+      const d = new Date(point.date)
+      const label = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`
+      return { ...point, date: label }
+    })
+  }
+
+  if (tf === "CUSTOM" && dateRange?.from && dateRange?.to) {
+    const diff = differenceInDays(dateRange.to, dateRange.from)
+    if (diff <= 2) {
+      return buildSeries(24, (date, index) => subHours(date, index))
+    }
+    if (diff <= 120) {
+      const count = Math.max(2, diff + 1)
+      return buildSeries(count, (date, index) => subDays(date, index))
+    }
+    const points = buildSeries(12, (date, index) => subMonths(date, index))
+    return points.map((point) => {
+      const d = new Date(point.date)
+      const label = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`
+      return { ...point, date: label }
+    })
+  }
+
+  return buildSeries(30, (date, index) => subDays(date, index))
 }
 
 function monthAbbrevToIndex(value: string): number | null {
@@ -133,6 +274,65 @@ function hashString(input: string): number {
     hash = (hash * 31 + input.charCodeAt(i)) | 0
   }
   return Math.abs(hash)
+}
+
+function parseSortableDate(label: string): number | null {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(label)) {
+    const date = new Date(`${label}T00:00:00Z`)
+    return Number.isFinite(date.getTime()) ? date.getTime() : null
+  }
+  if (/^\d{4}-\d{2}$/.test(label)) {
+    const date = new Date(`${label}-01T00:00:00Z`)
+    return Number.isFinite(date.getTime()) ? date.getTime() : null
+  }
+  return null
+}
+
+function mergeForecastPoints(
+  data: VelocityGodPoint[],
+  forecastData?: ForecastPoint[],
+  baseKey: PlatformKey = "web"
+): VelocityGodPoint[] {
+  if (!forecastData || forecastData.length === 0) return data
+
+  const merged = data.map((point) => ({ ...point }))
+  const indexByDate = new Map<string, number>()
+  merged.forEach((point, index) => indexByDate.set(point.date, index))
+
+  for (const point of forecastData) {
+    const existingIndex = indexByDate.get(point.date)
+    if (existingIndex !== undefined) {
+      merged[existingIndex].forecastLine = point.forecast
+      continue
+    }
+    merged.push({
+      date: point.date,
+      web: null,
+      youtube: null,
+      news: null,
+      shopping: null,
+      forecastLine: point.forecast,
+    })
+  }
+
+  const lastActualIndex = merged.reduce((idx, point, index) => {
+    if (typeof point[baseKey] === "number") return index
+    return idx
+  }, -1)
+
+  if (lastActualIndex >= 0) {
+    const lastActual = merged[lastActualIndex]?.[baseKey]
+    if (typeof lastActual === "number") {
+      merged[lastActualIndex].forecastLine = lastActual
+    }
+  }
+
+  const sortable = merged.every((point) => parseSortableDate(point.date) !== null)
+  if (sortable) {
+    merged.sort((a, b) => (parseSortableDate(a.date) ?? 0) - (parseSortableDate(b.date) ?? 0))
+  }
+
+  return merged
 }
 
 function isGodPointArray(value: unknown): value is VelocityGodPoint[] {
@@ -203,9 +403,11 @@ function normalizeToGodView(
     const baseActual = p.actual
     const baseForOthers = typeof baseActual === "number" ? baseActual : p.forecast ?? null
 
-    const youtube = typeof baseForOthers === "number" ? clamp0(Math.round(baseForOthers * 0.92 + jitterA)) : null
+    const youtube =
+      typeof baseForOthers === "number" ? clamp0(Math.round(baseForOthers * 0.92 + jitterA)) : null
     const news = typeof baseForOthers === "number" ? clamp0(Math.round(baseForOthers * 0.78 + jitterB)) : null
-    const shopping = typeof baseForOthers === "number" ? clamp0(Math.round(baseForOthers * 0.66 + jitterC)) : null
+    const shopping =
+      typeof baseForOthers === "number" ? clamp0(Math.round(baseForOthers * 0.66 + jitterC)) : null
 
     return {
       date: dateLabel,
@@ -214,7 +416,7 @@ function normalizeToGodView(
       news,
       shopping,
       // Keep the legacy forecast as a dashed web extension.
-      forecastWeb: p.forecast,
+      forecastLine: p.forecast,
     }
   })
 }
@@ -232,8 +434,22 @@ function formatPlatformLabel(platform: PlatformKey): string {
   }
 }
 
+function getForecastStroke(platform: PlatformKey | null): string {
+  switch (platform) {
+    case "youtube":
+      return "#FCA5A5"
+    case "news":
+      return "#6EE7B7"
+    case "shopping":
+      return "#FCD34D"
+    case "web":
+    default:
+      return "#93C5FD"
+  }
+}
+
 function formatValue(value: unknown): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "—"
+  if (typeof value !== "number" || !Number.isFinite(value)) return "N/A"
   return `${Math.round(value)}`
 }
 
@@ -242,15 +458,21 @@ function GodViewTooltip({
   label,
   payload,
   activePlatform,
-}: TooltipProps<number, string> & { activePlatform: PlatformKey | null }) {
+  formatLabel,
+  globalVolume,
+}: TooltipProps<number, string> & {
+  activePlatform: PlatformKey | null
+  formatLabel: (value: string) => string
+  globalVolume?: number
+}) {
   if (!active || !payload || payload.length === 0) return null
 
   // We want a stable order regardless of which series Recharts sends first.
-  const byKey: Partial<Record<PlatformKey | "forecastWeb", number | null>> = {}
+  const byKey: Partial<Record<PlatformKey, number | null>> = {}
 
   for (const item of payload) {
     const key = item.dataKey
-    if (key === "web" || key === "youtube" || key === "news" || key === "shopping" || key === "forecastWeb") {
+    if (key === "web" || key === "youtube" || key === "news" || key === "shopping") {
       const v = typeof item.value === "number" ? item.value : null
       byKey[key] = v
     }
@@ -265,11 +487,19 @@ function GodViewTooltip({
 
   return (
     <div className="rounded-lg bg-white dark:bg-zinc-950 border border-slate-200 dark:border-white/10 shadow-xl px-3 py-2">
-      <div className="text-xs font-medium mb-2 text-slate-900 dark:text-slate-100">{formatTooltipDate(label)}</div>
+      <div className="text-xs font-medium mb-2 text-slate-900 dark:text-slate-100">
+        {formatLabel(String(label ?? ""))}
+      </div>
 
       <div className="space-y-1 text-slate-900 dark:text-slate-100">
         {rows.map((row) => {
           const isActive = activePlatform !== null && activePlatform === row.key
+          const trendScore = byKey[row.key]
+          const hasVolume = typeof globalVolume === "number" && Number.isFinite(globalVolume)
+          const estimatedSearches =
+            typeof trendScore === "number" && hasVolume
+              ? Math.round((trendScore / 100) * globalVolume)
+              : null
           return (
             <div
               key={row.key}
@@ -283,8 +513,13 @@ function GodViewTooltip({
                 <span>{formatPlatformLabel(row.key)}</span>
               </div>
               <div className="text-right">
-                <div className="font-semibold">{formatValue(byKey[row.key])}</div>
+                <div className="font-semibold">{formatValue(trendScore)}</div>
                 <div className="text-[10px] leading-3 text-slate-500 dark:text-slate-400">(Interest Score)</div>
+                {estimatedSearches !== null && (
+                  <div className="text-[10px] leading-3 text-slate-500 dark:text-slate-400">
+                    Est. Searches: {formatNumber(estimatedSearches)}
+                  </div>
+                )}
               </div>
             </div>
           )
@@ -297,11 +532,85 @@ function GodViewTooltip({
 export function VelocityChart({
   searchQuery,
   data,
+  forecastData,
+  globalVolume,
   viralityScore,
   activePlatform,
   selectedPlatform,
   timeframe,
+  dateRange,
 }: VelocityChartProps) {
+  const chartBoundsRef = useRef<HTMLDivElement | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const [cardPos, setCardPos] = useState({ x: 8, y: 8 })
+  const dragOffsetRef = useRef({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+
+  const clampCardPosition = useCallback((x: number, y: number) => {
+    const bounds = chartBoundsRef.current?.getBoundingClientRect()
+    const card = cardRef.current?.getBoundingClientRect()
+    if (!bounds || !card) return { x, y }
+
+    const maxX = Math.max(0, bounds.width - card.width)
+    const maxY = Math.max(0, bounds.height - card.height)
+    return {
+      x: Math.min(Math.max(0, x), maxX),
+      y: Math.min(Math.max(0, y), maxY),
+    }
+  }, [])
+
+  const handlePointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!chartBoundsRef.current || !cardRef.current) return
+      const bounds = chartBoundsRef.current.getBoundingClientRect()
+      dragOffsetRef.current = {
+        x: event.clientX - bounds.left - cardPos.x,
+        y: event.clientY - bounds.top - cardPos.y,
+      }
+      setIsDragging(true)
+      event.currentTarget.setPointerCapture(event.pointerId)
+    },
+    [cardPos.x, cardPos.y]
+  )
+
+  const handlePointerMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!isDragging || !chartBoundsRef.current) return
+      const bounds = chartBoundsRef.current.getBoundingClientRect()
+      const nextX = event.clientX - bounds.left - dragOffsetRef.current.x
+      const nextY = event.clientY - bounds.top - dragOffsetRef.current.y
+      setCardPos(clampCardPosition(nextX, nextY))
+    },
+    [isDragging, clampCardPosition]
+  )
+
+  const handlePointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return
+    setIsDragging(false)
+    event.currentTarget.releasePointerCapture(event.pointerId)
+  }, [isDragging])
+  const getAxisFormat = useCallback(
+    (dateStr: string) => {
+      const date = new Date(dateStr)
+      if (Number.isNaN(date.getTime())) return dateStr
+
+      const tf = (timeframe ?? "").trim().toUpperCase()
+      if (tf === "4H" || tf === "24H") return format(date, "HH:mm")
+      if (tf === "7D" || tf === "30D") return format(date, "d MMM")
+      if (tf === "12M") return format(date, "MMM yy")
+
+      if (tf === "CUSTOM" && dateRange?.from && dateRange?.to) {
+        const diff = differenceInDays(dateRange.to, dateRange.from)
+        if (diff <= 2) return format(date, "HH:mm")
+        if (diff <= 90) return format(date, "d MMM")
+        return format(date, "MMM yy")
+      }
+
+      return format(date, "d MMM")
+    },
+    [timeframe, dateRange]
+  )
+
   const spotlightKey: PlatformKey | null =
     activePlatform ??
     (selectedPlatform === "web" ||
@@ -313,25 +622,28 @@ export function VelocityChart({
 
   const isSpotlightOn = spotlightKey !== null
 
+  const formatXAxis = (dateStr: string) => getAxisFormat(dateStr)
+
   function lineStyle(key: PlatformKey) {
     const isActive = isSpotlightOn && spotlightKey === key
     if (isActive) {
       return { strokeOpacity: 1, strokeWidth: 4, dot: true as const }
     }
     if (isSpotlightOn) {
+      // Keep inactive lines visible while still dimmed.
       return { strokeOpacity: 0.2, strokeWidth: 2, dot: false as const }
     }
-    return { strokeOpacity: 1, strokeWidth: key === "web" ? 3 : 2, dot: false as const }
+    return { strokeOpacity: 1, strokeWidth: 3, dot: false as const }
   }
 
   function forecastStyle() {
-    // Treat forecast as an extension of the Web line.
-    const isActive = isSpotlightOn && spotlightKey === "web"
+    const isActive = isSpotlightOn && spotlightKey !== null
     if (isActive) {
       return { strokeOpacity: 1, strokeWidth: 2, dot: false as const }
     }
     if (isSpotlightOn) {
-      return { strokeOpacity: 0.2, strokeWidth: 2, dot: false as const }
+      // Keep inactive forecast visible while still dimmed.
+      return { strokeOpacity: 0.4, strokeWidth: 2, dot: false as const }
     }
     return { strokeOpacity: 1, strokeWidth: 2, dot: false as const }
   }
@@ -340,17 +652,28 @@ export function VelocityChart({
   const seed = hashString(`${spotlightKey ?? ""}:${timeframe ?? ""}`)
   const normalizedData = normalizeToGodView(data, seed)
 
-  // FAILSAFE: If data is missing or empty, use this hardcoded mock data to ensure the chart RENDERS.
-  const chartData = normalizedData.length > 0 ? normalizedData : [
-    { date: '2024-01', web: 30, youtube: 20, news: 10, shopping: 5, forecastWeb: null },
-    { date: '2024-02', web: 45, youtube: 25, news: 15, shopping: 10, forecastWeb: null },
-    { date: '2024-03', web: 55, youtube: 40, news: 30, shopping: 20, forecastWeb: null },
-    { date: '2024-04', web: 60, youtube: 55, news: 45, shopping: 35, forecastWeb: null },
-    { date: '2024-05', web: 75, youtube: 70, news: 60, shopping: 50, forecastWeb: null },
-    { date: '2024-06', web: 90, youtube: 85, news: 80, shopping: 75, forecastWeb: 95 },
-  ]
+  const fallbackData = buildFallbackData(timeframe, dateRange)
+
+  // Use normalized data if available, otherwise use fallback
+  const safeData = normalizedData.length > 0 ? normalizedData : fallbackData
+  const forecastBaseKey: PlatformKey = spotlightKey ?? "web"
+  const chartData = mergeForecastPoints(safeData, forecastData, forecastBaseKey)
 
   const score = typeof viralityScore === "number" && Number.isFinite(viralityScore) ? viralityScore : 39
+  const forecastStroke = getForecastStroke(spotlightKey)
+  const forecastMonths = forecastData?.length ?? 0
+  const lastActual = [...chartData]
+    .reverse()
+    .find((point) => typeof point[forecastBaseKey] === "number")?.[forecastBaseKey]
+  const maxForecast = forecastData?.reduce((max, point) => Math.max(max, point.forecast), -Infinity)
+  const hasForecast =
+    typeof lastActual === "number" &&
+    typeof maxForecast === "number" &&
+    Number.isFinite(maxForecast) &&
+    forecastMonths > 0
+  const growthLabel = hasForecast
+    ? `Peak: ${formatPercent(((maxForecast - (lastActual as number)) / Math.max(1, lastActual as number)) * 100)} in ${forecastMonths}mo`
+    : "Peak: +14% in 3mo"
 
   return (
     <Card className="bg-card border-border overflow-hidden">
@@ -380,8 +703,26 @@ export function VelocityChart({
 
       <CardContent className="relative h-[280px] sm:h-[350px] md:h-[400px] pt-2 sm:pt-4 px-2 sm:px-6 pb-3 sm:pb-6">
         {/* Breakout Overlay Card */}
-        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-20">
-          <div className="bg-linear-to-br from-amber-500 to-orange-600 rounded-lg sm:rounded-xl p-2.5 sm:p-4 shadow-xl sm:shadow-2xl shadow-amber-500/30 min-w-[150px] sm:min-w-[200px]">
+        <div
+          ref={chartBoundsRef}
+          className="absolute inset-2 sm:inset-4 z-20 pointer-events-none"
+        >
+          <div
+            ref={cardRef}
+            className="pointer-events-auto touch-none select-none inline-block"
+            style={{ transform: `translate3d(${cardPos.x}px, ${cardPos.y}px, 0)` }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          >
+            <div
+              className={
+                "bg-linear-to-br from-amber-500 to-orange-600 rounded-lg sm:rounded-xl " +
+                "p-2.5 sm:p-4 shadow-xl sm:shadow-2xl shadow-amber-500/30 min-w-[150px] sm:min-w-[200px] " +
+                "cursor-grab active:cursor-grabbing"
+              }
+            >
             <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
               <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-white animate-pulse" />
               <span className="text-[9px] sm:text-xs font-bold text-white/90 uppercase tracking-wider">Breakout</span>
@@ -406,6 +747,7 @@ export function VelocityChart({
               </Link>
             </Button>
           </div>
+          </div>
         </div>
 
         {/* The Chart (God View) */}
@@ -414,22 +756,44 @@ export function VelocityChart({
             <LineChart data={chartData} margin={{ top: 30, right: 20, left: 0, bottom: 40 }}>
               {/* Remove default Recharts legend (we already render a custom one in the header). */}
               <Legend content={() => null} />
-              <Tooltip content={<GodViewTooltip activePlatform={spotlightKey} />} />
+              <Tooltip
+                content={
+                  <GodViewTooltip
+                    activePlatform={spotlightKey}
+                    formatLabel={formatXAxis}
+                    globalVolume={globalVolume}
+                  />
+                }
+              />
               <XAxis
                 dataKey="date"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
+                stroke="#9CA3AF"
+                tick={{ fill: "#9CA3AF", fontSize: 12 }}
                 tickLine={false}
-                axisLine={false}
-                tickFormatter={formatXAxisTick}
-              />
+                axisLine={{ stroke: "#333", opacity: 0.2 }}
+                interval="preserveStartEnd"
+                tickFormatter={(value) => formatXAxis(String(value ?? ""))}
+              >
+                <Label value="Timeline" offset={0} position="insideBottom" fill="#6B7280" fontSize={10} />
+              </XAxis>
+
               <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
+                stroke="#9CA3AF"
+                tick={{ fill: "#9CA3AF", fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
+                domain={[0, 100]}
                 tickFormatter={(value) => `${value}`}
-              />
+              >
+                <Label
+                  value="Interest Score (0-100)"
+                  angle={-90}
+                  position="insideLeft"
+                  fill="#6B7280"
+                  fontSize={10}
+                  style={{ textAnchor: "middle" }}
+                />
+              </YAxis>
 
               {/* Web Search (main) */}
               <Line
@@ -440,6 +804,9 @@ export function VelocityChart({
                 strokeOpacity={lineStyle("web").strokeOpacity}
                 strokeWidth={lineStyle("web").strokeWidth}
                 dot={lineStyle("web").dot}
+                isAnimationActive
+                animationDuration={400}
+                animationEasing="ease-out"
                 connectNulls={false}
               />
 
@@ -452,6 +819,9 @@ export function VelocityChart({
                 strokeOpacity={lineStyle("youtube").strokeOpacity}
                 strokeWidth={lineStyle("youtube").strokeWidth}
                 dot={lineStyle("youtube").dot}
+                isAnimationActive
+                animationDuration={400}
+                animationEasing="ease-out"
                 connectNulls={false}
               />
 
@@ -464,6 +834,9 @@ export function VelocityChart({
                 strokeOpacity={lineStyle("news").strokeOpacity}
                 strokeWidth={lineStyle("news").strokeWidth}
                 dot={lineStyle("news").dot}
+                isAnimationActive
+                animationDuration={400}
+                animationEasing="ease-out"
                 connectNulls={false}
               />
 
@@ -476,19 +849,25 @@ export function VelocityChart({
                 strokeOpacity={lineStyle("shopping").strokeOpacity}
                 strokeWidth={lineStyle("shopping").strokeWidth}
                 dot={lineStyle("shopping").dot}
+                isAnimationActive
+                animationDuration={400}
+                animationEasing="ease-out"
                 connectNulls={false}
               />
 
-              {/* Forecast extension (dashed) for Web Search only */}
+              {/* Forecast extension (dashed) for active platform */}
               <Line
                 type="monotone"
-                dataKey="forecastWeb"
-                name="Web Forecast"
-                stroke="#3B82F6"
+                dataKey="forecastLine"
+                name={`${formatPlatformLabel(forecastBaseKey)} Forecast`}
+                stroke={forecastStroke}
                 strokeOpacity={forecastStyle().strokeOpacity}
                 strokeWidth={forecastStyle().strokeWidth}
-                strokeDasharray="8 4"
+                strokeDasharray="5 5"
                 dot={forecastStyle().dot}
+                isAnimationActive
+                animationDuration={400}
+                animationEasing="ease-out"
                 connectNulls={false}
               />
             </LineChart>
@@ -500,20 +879,16 @@ export function VelocityChart({
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-amber-900/30 border border-amber-700/40 rounded-md sm:rounded-lg">
             <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 shrink-0" />
             <span className="text-xs sm:text-sm font-medium text-amber-300">
-              {typeof viralityScore === "number" && Number.isFinite(viralityScore)
-                ? `Virality: ${formatPercent(score)}`
-                : "Peak: +14% in 3mo"}
+              {growthLabel}
             </span>
             <span className="text-[10px] sm:text-xs text-amber-400/70 hidden md:inline">Based on historical patterns</span>
             <Badge className="ml-auto bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] sm:text-xs px-1.5 sm:px-2">
-              {formatPercent(score)}
+              {hasForecast ? growthLabel.replace("Peak: ", "") : formatPercent(score)}
             </Badge>
           </div>
         </div>
       </CardContent>
 
-      {/* Publish Timing Indicator */}
-      <PublishTiming searchQuery={searchQuery} />
     </Card>
   )
 }

@@ -198,7 +198,7 @@ export function RefreshCreditsHeader({ isGuest = false }: RefreshCreditsHeaderPr
               disabled={isBulkRefreshing}
               className={cn(
                 "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium",
-                "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors",
+                "text-muted-foreground hover:text-foreground transition-colors",
                 "cursor-pointer disabled:cursor-not-allowed",
                 isBulkRefreshing && "opacity-50 cursor-wait"
               )}

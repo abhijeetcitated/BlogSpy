@@ -12,7 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-import { cityDataByCountry } from "../__mocks__"
+import { cityDataByCountry, regionDatabaseByCountry } from "../__mocks__"
 
 interface CascadingCityDropdownProps {
   countryCode: string | null
@@ -33,9 +33,24 @@ export function CascadingCityDropdown({
     return cityDataByCountry[countryCode] || cityDataByCountry.DEFAULT
   }, [countryCode])
 
-  const filteredCities = cities.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const allRegions = useMemo(() => {
+    if (!countryCode) return []
+    return regionDatabaseByCountry[countryCode] || regionDatabaseByCountry.DEFAULT
+  }, [countryCode])
+
+  const scoreMap = useMemo(() => {
+    return new Map(cities.map((city) => [city.name.toLowerCase(), city.value]))
+  }, [cities])
+
+  const searchNormalized = search.trim().toLowerCase()
+  const filteredCities = searchNormalized.length === 0
+    ? cities.map((city) => ({ name: city.name, value: city.value }))
+    : allRegions
+        .filter((region) => region.toLowerCase().includes(searchNormalized))
+        .map((region) => ({
+          name: region,
+          value: scoreMap.get(region.toLowerCase()),
+        }))
 
   const isDisabled = !countryCode
 
@@ -105,7 +120,9 @@ export function CascadingCityDropdown({
               )}
             >
               <span>{city.name}</span>
-              <span className="text-xs text-muted-foreground">{city.value}%</span>
+              <span className="text-xs text-muted-foreground">
+                {typeof city.value === "number" ? `${city.value}%` : "No Data"}
+              </span>
             </button>
           ))}
 

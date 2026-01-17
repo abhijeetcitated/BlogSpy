@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
-import type { ContentTypeData, ContentTypeSuggestion, ContentType } from "../types"
+import type { ContentTypeData, ContentTypeSuggestion, ContentType, VelocityDataPoint } from "../types"
 import { contentTypeData } from "../__mocks__"
 import { StarIcon, LightbulbIcon, DocumentIcon, VideoIcon, SocialIcon, WriteIcon } from "./icons"
 
@@ -21,7 +21,22 @@ interface ContentTypeSuggesterProps {
   searchQuery: string
   data?: ContentTypeData
   className?: string
+  chartData?: TrendScoreInputPoint[]
+  webVolume?: number | null
+  youtubeVolume?: number | null
 }
+
+type TrendScorePoint = {
+  date?: string
+  web?: number | null
+  youtube?: number | null
+  news?: number | null
+  shopping?: number | null
+}
+
+type TrendScoreInputPoint = TrendScorePoint | VelocityDataPoint
+
+type TrendPlatform = "web" | "youtube" | "news"
 
 // Render stars based on count
 function RenderStars({ count, maxStars = 5 }: { count: number; maxStars?: number }) {
@@ -41,6 +56,36 @@ function RenderStars({ count, maxStars = 5 }: { count: number; maxStars?: number
   )
 }
 
+function readTrendValue(point: TrendScoreInputPoint, key: TrendPlatform): number | null {
+  if (key in point) {
+    const value = (point as TrendScorePoint)[key]
+    return typeof value === "number" && Number.isFinite(value) ? value : null
+  }
+
+  if (key === "web" && "actual" in point) {
+    const value = (point as VelocityDataPoint).actual
+    return typeof value === "number" && Number.isFinite(value) ? value : null
+  }
+
+  return null
+}
+
+function averageLastN(chartData: TrendScoreInputPoint[], key: TrendPlatform, count = 3): number | null {
+  if (!chartData.length) return null
+
+  const values: number[] = []
+  for (let i = chartData.length - 1; i >= 0 && values.length < count; i -= 1) {
+    const value = readTrendValue(chartData[i], key)
+    if (value !== null) {
+      values.push(value)
+    }
+  }
+
+  if (values.length === 0) return null
+  const sum = values.reduce((acc, val) => acc + val, 0)
+  return sum / values.length
+}
+
 // Single content type card
 function ContentTypeCard({ 
   item, 
@@ -51,6 +96,10 @@ function ContentTypeCard({
   searchQuery: string
   isPrimary: boolean 
 }) {
+  const actionUrl = item.actionUrl.includes("?")
+    ? `${item.actionUrl}&topic=${encodeURIComponent(searchQuery)}`
+    : `${item.actionUrl}?topic=${encodeURIComponent(searchQuery)}`
+
   // Get the appropriate icon component
   const IconComponent = contentTypeIcons[item.type]
   
@@ -120,7 +169,7 @@ function ContentTypeCard({
         )}
         asChild
       >
-        <Link href={`${item.actionUrl}?topic=${encodeURIComponent(searchQuery)}`}>
+        <Link href={actionUrl}>
           {item.actionLabel} →
         </Link>
       </Button>
@@ -131,8 +180,50 @@ function ContentTypeCard({
 export function ContentTypeSuggester({ 
   searchQuery, 
   data = contentTypeData,
-  className 
+  className,
+  chartData = [],
+  webVolume,
+  youtubeVolume
 }: ContentTypeSuggesterProps) {
+  const { primaryType, dominanceLabel } = (() => {
+    const avgWeb = averageLastN(chartData, "web")
+    const avgYoutube = averageLastN(chartData, "youtube")
+    const avgNews = averageLastN(chartData, "news")
+
+    const entries: Array<{ platform: TrendPlatform; value: number }> = []
+    if (typeof avgWeb === "number") entries.push({ platform: "web", value: avgWeb })
+    if (typeof avgYoutube === "number") entries.push({ platform: "youtube", value: avgYoutube })
+    if (typeof avgNews === "number") entries.push({ platform: "news", value: avgNews })
+
+    if (entries.length === 0) {
+      return { primaryType: data.primaryType, dominanceLabel: null }
+    }
+
+    const maxValue = entries.reduce((max, entry) => Math.max(max, entry.value), -Infinity)
+    const winner = entries.find((entry) => entry.value === maxValue)?.platform
+
+    if (!winner) {
+      return { primaryType: data.primaryType, dominanceLabel: null }
+    }
+
+    const mappedType: ContentType =
+      winner === "web" ? "blog" : winner === "youtube" ? "video" : "social"
+
+    const labelPrefix = winner === "web" ? "Web" : winner === "youtube" ? "YouTube" : "News"
+    const dominance = `${labelPrefix} Dominance: ${Math.round(maxValue)}%`
+
+    return { primaryType: mappedType, dominanceLabel: dominance }
+  })()
+
+  const shouldBoostVideo =
+    typeof youtubeVolume === "number" &&
+    typeof webVolume === "number" &&
+    youtubeVolume > webVolume
+  const recommendations = data.recommendations.map((item) => {
+    if (item.type !== "video" || !shouldBoostVideo) return item
+    return { ...item, stars: 5 }
+  })
+
   return (
     <Card className={cn("bg-card border-border", className)}>
       <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
@@ -143,14 +234,21 @@ export function ContentTypeSuggester({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6 pb-3 sm:pb-6">
+        {dominanceLabel && (
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-amber-400">
+            <StarIcon className="h-3 w-3 text-amber-400" filled />
+            <span>{dominanceLabel}</span>
+          </div>
+        )}
+
         {/* Content Type Cards */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {data.recommendations.map((item) => (
+          {recommendations.map((item) => (
             <ContentTypeCard
               key={item.type}
               item={item}
               searchQuery={searchQuery}
-              isPrimary={item.type === data.primaryType}
+              isPrimary={item.type === primaryType}
             />
           ))}
         </div>

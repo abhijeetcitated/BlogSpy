@@ -127,6 +127,8 @@ export interface BreakoutQuery {
   query: string
   growth: string
   isBreakout: boolean
+  status?: "Rising" | "Top"
+  hasAio?: boolean
 }
 
 // Map marker for hotspots

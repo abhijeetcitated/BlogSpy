@@ -2,6 +2,7 @@
 export {
   countryInterestData,
   cityDataByCountry,
+  regionDatabaseByCountry,
   velocityData,
   newsItems,
   relatedTopics,

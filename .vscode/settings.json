@@ -116,5 +116,6 @@
     "editor.acceptSuggestionOnEnter": "on",
     "editor.tabCompletion": "on",
     "editor.wordBasedSuggestions": "off",
-    "editor.defaultFoldingRangeProvider": "GitHub.copilot-chat"
+    "editor.defaultFoldingRangeProvider": "GitHub.copilot-chat",
+    "github.copilot.chat.tools.memory.enabled": true
 }
