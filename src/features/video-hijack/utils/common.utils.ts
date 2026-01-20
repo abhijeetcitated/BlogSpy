@@ -120,6 +120,20 @@ export function formatDateShort(dateString: string): string {
 }
 
 /**
+ * Extract YouTube video ID from common URL formats.
+ */
+export function extractYouTubeVideoId(url: string): string | null {
+  if (!url) return null
+  const watchMatch = url.match(/[?&]v=([^&]+)/i)
+  if (watchMatch?.[1]) return watchMatch[1]
+  const shortMatch = url.match(/youtu\.be\/([^?&]+)/i)
+  if (shortMatch?.[1]) return shortMatch[1]
+  const embedMatch = url.match(/youtube\.com\/embed\/([^?&]+)/i)
+  if (embedMatch?.[1]) return embedMatch[1]
+  return null
+}
+
+/**
  * Get engagement rate color based on percentage
  */
 export function getEngagementColor(engagement: number): string {

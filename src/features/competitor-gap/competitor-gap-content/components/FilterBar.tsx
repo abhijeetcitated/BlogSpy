@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Download, SlidersHorizontal } from "lucide-react"
+import { Search, Download, SlidersHorizontal, CalendarPlus, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,9 @@ interface FilterBarProps {
   onLowKDChange: (value: boolean) => void
   onTrendingChange: (value: boolean) => void
   onExport: () => void
+  onBulkAddToRoadmap?: () => void
+  onCopySelected?: () => void
+  selectedCount?: number
   isGapAnalysis: boolean
 }
 
@@ -37,9 +40,13 @@ export function FilterBar({
   onLowKDChange,
   onTrendingChange,
   onExport,
+  onBulkAddToRoadmap,
+  onCopySelected,
+  selectedCount = 0,
   isGapAnalysis,
 }: FilterBarProps) {
   const activeFilters = [showHighVolume, showLowKD, showTrending].filter(Boolean).length
+  const showBulkActions = isGapAnalysis && selectedCount > 0
 
   return (
     <div className="py-3 border-b border-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-muted/30 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
@@ -55,7 +62,7 @@ export function FilterBar({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-9 text-sm font-medium border-border hover:bg-muted">
@@ -113,6 +120,29 @@ export function FilterBar({
           <Download className="w-4 h-4 sm:mr-2" />
           <span className="hidden sm:inline">Export CSV</span>
         </Button>
+
+        {showBulkActions && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCopySelected}
+              className="h-7 gap-1.5 text-xs"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy {selectedCount}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBulkAddToRoadmap}
+              className="h-7 gap-1.5 text-xs"
+            >
+              <CalendarPlus className="h-3.5 w-3.5" />
+              Add to Calendar
+            </Button>
+          </>
+        )}
       </div>
     </div>
   )

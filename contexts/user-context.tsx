@@ -46,7 +46,7 @@ function extractUserData(authUser: SupabaseUser | DemoUser) {
       credits: demoUser.credits,
     };
   }
-  
+
   // It's a SupabaseUser
   const supaUser = authUser as SupabaseUser;
   return {
@@ -103,8 +103,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const result = await fetchUserAction({});
 
       if (result?.data?.success && result.data.data) {
+        // Server returns a user object that we map to our internal profile
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const userData = result.data.data as any;
+        const userData = result.data.data as Record<string, any>;
 
         // Build profile from server data
         const serverProfile: UserProfile = {

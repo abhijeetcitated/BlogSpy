@@ -6,6 +6,13 @@
 
 import { z } from "zod"
 import { createProtectedHandler, ApiError } from "@/lib/api"
+import { createServerClient } from "@/lib/supabase/server"
+
+// ============================================
+// CONSTANTS
+// ============================================
+
+const YOUTUBE_SEARCH_CREDIT_COST = 1
 
 // ============================================
 // TYPES
@@ -76,14 +83,103 @@ type YouTubeSearchInput = z.infer<typeof YouTubeSearchSchema>
 type YouTubeAnalyticsInput = z.infer<typeof YouTubeAnalyticsSchema>
 
 // ============================================
+// HELPER: Credit Deduction
+// ============================================
+
+function isServerMockMode(): boolean {
+  return process.env.USE_MOCK_DATA === "true" || process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+}
+
+async function deductCredits(userId: string, amount: number, reason: string): Promise<boolean> {
+  if (isServerMockMode()) {
+    console.log("[YouTube Search] Mock mode - skipping credit deduction")
+    return true
+  }
+
+  const supabase = await createServerClient()
+
+  const attemptRpc = async (rpcName: string): Promise<boolean> => {
+    const { data, error } = await (supabase as typeof supabase & {
+      rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+    }).rpc(rpcName, {
+      p_user_id: userId,
+      p_amount: amount,
+      p_feature: reason,
+      p_description: "YouTube video search",
+    })
+
+    if (error) {
+      console.error(`[YouTube Search] ${rpcName} RPC error:`, error.message)
+      return false
+    }
+
+    const result = Array.isArray(data) ? data[0] : data
+    if (result?.success === false || result === false) {
+      return false
+    }
+
+    return true
+  }
+
+  // Try RPC methods first
+  const deducted = await attemptRpc("deduct_credits")
+  if (deducted) return true
+
+  const used = await attemptRpc("use_credits")
+  if (used) return true
+
+  // Fallback to direct table update
+  const { data: credits, error: creditsError } = await supabase
+    .from("user_credits")
+    .select("credits_total, credits_used")
+    .eq("user_id", userId)
+    .single()
+
+  if (creditsError || !credits) {
+    console.error("[YouTube Search] Failed to fetch credits:", creditsError?.message)
+    return false
+  }
+
+  const remaining = (credits.credits_total ?? 0) - (credits.credits_used ?? 0)
+  if (remaining < amount) {
+    console.log(`[YouTube Search] Insufficient credits: ${remaining} < ${amount}`)
+    return false
+  }
+
+  const { error: updateError } = await supabase
+    .from("user_credits")
+    .update({ credits_used: (credits.credits_used ?? 0) + amount })
+    .eq("user_id", userId)
+
+  if (updateError) {
+    console.error("[YouTube Search] Failed to update credits:", updateError.message)
+    return false
+  }
+
+  return true
+}
+
+// ============================================
 // GET - Search YouTube Videos
 // ============================================
 
 export const GET = createProtectedHandler<YouTubeSearchInput>({
   rateLimit: "search",
   schema: YouTubeSearchSchema,
-  handler: async ({ data }) => {
+  handler: async ({ data, user }) => {
     const { query, maxResults, pageToken, order, regionCode } = data
+    
+    // Require authenticated user for credit deduction
+    if (!user?.id) {
+      throw ApiError.unauthorized("Authentication required for video search")
+    }
+
+    // Check and deduct credits BEFORE making API call
+    const creditsDeducted = await deductCredits(user.id, YOUTUBE_SEARCH_CREDIT_COST, "youtube_video_search")
+    
+    if (!creditsDeducted) {
+      throw new ApiError(402, "INSUFFICIENT_CREDITS", "You need at least 1 credit to perform a video search. Please upgrade your plan.")
+    }
     
     // Check for API key
     const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY
@@ -91,10 +187,13 @@ export const GET = createProtectedHandler<YouTubeSearchInput>({
     if (!YOUTUBE_API_KEY) {
       // Return mock data if no API key configured
       return {
-        items: generateMockYouTubeResults(query, maxResults),
+        results: generateMockYouTubeResults(query, maxResults),
+        stats: null,
+        suggestion: null,
         pageInfo: { totalResults: 100, resultsPerPage: maxResults },
         nextPageToken: "mock_next_page",
         source: "mock" as const,
+        creditsUsed: YOUTUBE_SEARCH_CREDIT_COST,
       }
     }
 
@@ -122,10 +221,13 @@ export const GET = createProtectedHandler<YouTubeSearchInput>({
     
     if (!videoIds) {
       return {
-        items: [],
+        results: [],
+        stats: null,
+        suggestion: null,
         pageInfo: { totalResults: 0, resultsPerPage: maxResults },
         nextPageToken: null,
         source: "api" as const,
+        creditsUsed: YOUTUBE_SEARCH_CREDIT_COST,
       }
     }
 
@@ -150,10 +252,13 @@ export const GET = createProtectedHandler<YouTubeSearchInput>({
     })
 
     return {
-      items: videos,
+      results: videos,
+      stats: null, // TODO: Add real stats from analytics
+      suggestion: null, // TODO: Add video suggestions
       pageInfo: searchData.pageInfo,
       nextPageToken: searchData.nextPageToken || null,
       source: "api" as const,
+      creditsUsed: YOUTUBE_SEARCH_CREDIT_COST,
     }
   },
 })
@@ -213,26 +318,50 @@ function transformVideoData(item: YouTubeSearchItem, stats: YouTubeVideoStats | 
   const comments = parseInt(stats?.statistics?.commentCount || "0")
   const subs = parseInt(channel?.statistics?.subscriberCount || "0")
   const engagement = calculateEngagement(likes, comments, views)
+  const hijackScore = calculateOpportunityScore(views, subs, engagement)
 
+  // Format subscriber count for display (e.g., "1.2M")
+  const formatSubs = (count: number): string => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`
+    if (count >= 1000) return `${(count / 1000).toFixed(0)}K`
+    return count.toString()
+  }
+
+  // Calculate viral potential
+  const getViralPotential = (score: number): "High" | "Medium" | "Low" => {
+    if (score >= 70) return "High"
+    if (score >= 40) return "Medium"
+    return "Low"
+  }
+
+  // Calculate content age
+  const getContentAge = (publishedAt: string): "Fresh" | "Recent" | "Established" | "Dated" => {
+    const daysSincePublished = Math.floor((Date.now() - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24))
+    if (daysSincePublished <= 7) return "Fresh"
+    if (daysSincePublished <= 30) return "Recent"
+    if (daysSincePublished <= 180) return "Established"
+    return "Dated"
+  }
+
+  // Return VideoResult format that matches the hook's expected type
   return {
     id: item.id.videoId,
     title: item.snippet.title,
-    description: item.snippet.description,
-    thumbnail: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
-    channelId: item.snippet.channelId,
-    channelName: item.snippet.channelTitle,
-    channelThumbnail: channel?.snippet?.thumbnails?.default?.url || "",
-    channelSubs: subs,
-    channelVerified: subs > 100000,
-    publishedAt: item.snippet.publishedAt,
+    channel: item.snippet.channelTitle,
+    channelUrl: `https://www.youtube.com/channel/${item.snippet.channelId}`,
+    subscribers: formatSubs(subs),
     views,
     likes,
     comments,
-    duration: stats?.contentDetails?.duration || "PT0S",
-    url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-    engagementRate: engagement,
-    opportunityScore: calculateOpportunityScore(views, subs, engagement),
+    publishedAt: item.snippet.publishedAt,
+    duration: stats?.contentDetails?.duration || "PT5M",
+    thumbnailUrl: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url || "",
+    videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+    engagement,
     tags: [],
+    hijackScore,
+    viralPotential: getViralPotential(hijackScore),
+    contentAge: getContentAge(item.snippet.publishedAt),
   }
 }
 
@@ -281,33 +410,58 @@ function generateMockYouTubeResults(query: string, count: number) {
   const titles = ["Complete Guide", "Tutorial", "Tips & Tricks", "For Beginners", "2026 Edition"]
   const channels = ["Tech", "Tutorial", "Pro", "Expert", "Learn"]
   
+  // Format subscriber count for display
+  const formatSubs = (num: number): string => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}K`
+    return num.toString()
+  }
+
+  // Calculate viral potential
+  const getViralPotential = (score: number): "High" | "Medium" | "Low" => {
+    if (score >= 70) return "High"
+    if (score >= 40) return "Medium"
+    return "Low"
+  }
+
+  // Calculate content age
+  const getContentAge = (publishedAt: string): "Fresh" | "Recent" | "Established" | "Dated" => {
+    const daysSincePublished = Math.floor((Date.now() - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24))
+    if (daysSincePublished <= 7) return "Fresh"
+    if (daysSincePublished <= 30) return "Recent"
+    if (daysSincePublished <= 180) return "Established"
+    return "Dated"
+  }
+  
   for (let i = 0; i < count; i++) {
     const views = Math.floor(Math.random() * 1000000) + 10000
     const likes = Math.floor(views * (Math.random() * 0.05 + 0.01))
     const comments = Math.floor(likes * (Math.random() * 0.1 + 0.02))
     const subs = Math.floor(Math.random() * 500000) + 1000
     const engagement = calculateEngagement(likes, comments, views)
+    const hijackScore = calculateOpportunityScore(views, subs, engagement)
+    const publishedAt = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString()
 
+    // Return VideoResult format matching the hook's expected type
     results.push({
       id: `mock_yt_${i}_${Date.now()}`,
       title: `${query} - ${titles[i % titles.length]}`,
-      description: `Learn everything about ${query} in this comprehensive video.`,
-      thumbnail: `https://picsum.photos/seed/${encodeURIComponent(query)}${i}/640/360`,
-      channelId: `channel_${i}`,
-      channelName: `${channels[i % channels.length]} Channel ${i + 1}`,
-      channelThumbnail: `https://picsum.photos/seed/ch${i}/100/100`,
-      channelSubs: subs,
-      channelVerified: subs > 100000,
-      publishedAt: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+      channel: `${channels[i % channels.length]} Channel ${i + 1}`,
+      channelUrl: `https://www.youtube.com/channel/mock_channel_${i}`,
+      subscribers: formatSubs(subs),
       views,
       likes,
       comments,
+      publishedAt,
       duration: `PT${Math.floor(Math.random() * 20) + 5}M${Math.floor(Math.random() * 59)}S`,
-      url: `https://www.youtube.com/watch?v=mock_${i}`,
-      engagementRate: engagement,
-      opportunityScore: calculateOpportunityScore(views, subs, engagement),
+      thumbnailUrl: `https://picsum.photos/seed/${encodeURIComponent(query)}${i}/640/360`,
+      videoUrl: `https://www.youtube.com/watch?v=mock_${i}`,
+      engagement,
       tags: [query.toLowerCase(), "tutorial", "guide", "2026"],
+      hijackScore,
+      viralPotential: getViralPotential(hijackScore),
+      contentAge: getContentAge(publishedAt),
     })
   }
-  return results.sort((a, b) => b.opportunityScore - a.opportunityScore)
+  return results.sort((a, b) => b.hijackScore - a.hijackScore)
 }

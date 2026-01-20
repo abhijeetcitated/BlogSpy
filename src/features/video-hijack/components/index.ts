@@ -26,5 +26,8 @@ export { TikTokResultCard } from "./TikTokResultCard"
 export { YouTubeResultsList } from "./youtube/YouTubeResultsList"
 export { TikTokResultsList } from "./tiktok/TikTokResultsList"
 
+// Coming Soon Components
+export { TikTokComingSoon } from "./TikTokComingSoon"
+
 // Shared Components
 export * from "./shared"

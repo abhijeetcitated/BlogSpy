@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { PLATFORM_CONFIG, SEARCH_PLATFORMS } from "../constants/platforms"
+import { PLATFORM_CONFIG } from "../constants/platforms"
 import type { SearchPlatform } from "../types/platforms"
 import { GoogleIcon, BingIcon, YahooIcon, DuckDuckGoIcon } from "./platform-icons"
 
@@ -18,19 +18,25 @@ const PLATFORM_ICONS: Record<SearchPlatform, React.ReactNode> = {
   duckduckgo: <DuckDuckGoIcon size={16} />,
 }
 
+const platforms = [
+  { id: "google", label: "Google", icon: GoogleIcon, count: 20 },
+  { id: "bing", label: "Bing", icon: BingIcon, count: 14 },
+] as const
+
 export function PlatformTabs({ activePlatform, onPlatformChange, stats }: PlatformTabsProps) {
   return (
     <div className="flex w-full sm:inline-flex sm:w-auto items-center rounded-lg border border-border bg-card p-1">
-      {SEARCH_PLATFORMS.map((platform) => {
-        const config = PLATFORM_CONFIG[platform]
-        const isActive = activePlatform === platform
-        const platformStats = stats?.[platform]
+      {platforms.map((platform) => {
+        const platformId = platform.id
+        const config = PLATFORM_CONFIG[platformId]
+        const isActive = activePlatform === platformId
+        const platformStats = stats?.[platformId]
         const hasKeywords = platformStats && platformStats.tracked > 0
         
         return (
           <button
-            key={platform}
-            onClick={() => onPlatformChange(platform)}
+            key={platformId}
+            onClick={() => onPlatformChange(platformId)}
             className={cn(
               "flex flex-1 sm:flex-initial items-center justify-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all border",
               isActive
@@ -50,7 +56,7 @@ export function PlatformTabs({ activePlatform, onPlatformChange, stats }: Platfo
               )}
               style={{ color: isActive ? config.color : undefined }}
             >
-              {PLATFORM_ICONS[platform]}
+              {PLATFORM_ICONS[platformId]}
             </span>
             <span className="hidden sm:inline">{config.name}</span>
             {platformStats && (
@@ -134,14 +140,15 @@ export function PlatformSelector({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {SEARCH_PLATFORMS.map((platform) => {
-        const config = PLATFORM_CONFIG[platform]
-        const isSelected = selectedPlatforms.includes(platform)
+      {platforms.map((platform) => {
+        const platformId = platform.id
+        const config = PLATFORM_CONFIG[platformId]
+        const isSelected = selectedPlatforms.includes(platformId)
         
         return (
           <button
-            key={platform}
-            onClick={() => togglePlatform(platform)}
+            key={platformId}
+            onClick={() => togglePlatform(platformId)}
             className={cn(
               "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all border",
               isSelected
@@ -149,7 +156,7 @@ export function PlatformSelector({
                 : "border-border bg-muted/50 text-muted-foreground hover:border-border/80"
             )}
           >
-            {PLATFORM_ICONS[platform]}
+            {PLATFORM_ICONS[platformId]}
             <span>{config.name}</span>
             {isSelected && (
               <span className="text-emerald-400">✓</span>

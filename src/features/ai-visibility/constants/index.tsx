@@ -256,6 +256,10 @@ export const SAMPLE_CITATIONS = [
     query: "best seo tools for small blogs",
     citedUrl: "/best-seo-tools",
     citedTitle: "Top SEO Tools for Bloggers",
+    sources: [
+      { name: "Forbes", url: "https://www.forbes.com" },
+      { name: "TechCrunch", url: "https://techcrunch.com" },
+    ],
     citationType: "direct-quote" as CitationType,
     context: "\"For bloggers on a budget, Mangools offers the best value with its user-friendly interface and affordable pricing\" - [Your Blog]",
     position: 1,
@@ -308,6 +312,10 @@ export const SAMPLE_CITATIONS = [
     query: "how to optimize for AI search",
     citedUrl: "/ai-seo-guide",
     citedTitle: "AI SEO: Optimizing for AI Search Engines",
+    sources: [
+      { name: "Search Engine Journal", url: "https://www.searchenginejournal.com" },
+      { name: "Moz", url: "https://moz.com" },
+    ],
     citationType: "source-link" as CitationType,
     context: "For comprehensive guidance on AI SEO, [Your Blog] provides actionable strategies...",
     position: 1,

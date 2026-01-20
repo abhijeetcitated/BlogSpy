@@ -100,25 +100,7 @@ pnpm db:generate
 pnpm dev
 ```
 
-### Environment Variables
 
-```env
-# Required
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-DATABASE_URL=postgresql://...
-
-# Auth (Clerk)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-
-# SEO Data
-DATAFORSEO_LOGIN=
-DATAFORSEO_PASSWORD=
-
-# Payments (Stripe)
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 ```
 
 ## 📜 Scripts
@@ -162,4 +144,4 @@ Private - All rights reserved.
 
 ---
 
-Built with ❤️ by BlogSpy Team
+Built with ❤️ by BlogSpy Team 👋

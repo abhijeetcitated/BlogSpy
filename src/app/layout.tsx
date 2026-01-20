@@ -28,37 +28,43 @@ const geistMono = Geist_Mono({
 })
 
 // Updated metadata for BlogSpy SEO Dashboard
+const ogImageUrl = process.env.NEXT_PUBLIC_OG_IMAGE || "/og-image.svg"
+
 export const metadata: Metadata = {
   title: {
-    default: "BlogSpy - AI-Powered SEO Intelligence Platform",
-    template: "%s | BlogSpy",
+    default: "BlogSpy - Modern SEO Tool",
+    template: "%s | BlogSpy - Modern SEO Tool",
   },
-  description: "AI-Powered SEO Intelligence Platform for keyword research, rank tracking, content optimization, and competitor analysis.",
+  description: "Uncover hidden keyword opportunities, track viral trends, and hijack video traffic with AI-powered SEO intelligence.",
   keywords: ["SEO", "keyword research", "rank tracking", "content optimization", "competitor analysis", "AI writer"],
   authors: [{ name: "BlogSpy" }],
   creator: "BlogSpy",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
     siteName: "BlogSpy",
-    title: "BlogSpy - AI-Powered SEO Intelligence Platform",
-    description: "AI-Powered SEO Intelligence Platform for keyword research, rank tracking, content optimization, and competitor analysis.",
+    title: "BlogSpy - Modern SEO Tool",
+    description: "Uncover hidden keyword opportunities, track viral trends, and hijack video traffic with AI-powered SEO intelligence.",
     images: [
       {
-        url: "/og-image.svg",
+        url: ogImageUrl,
         width: 1200,
         height: 630,
-        alt: "BlogSpy - AI-Powered SEO Intelligence Platform",
+        alt: "BlogSpy - Modern SEO Tool",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "BlogSpy - AI-Powered SEO Intelligence Platform",
-    description: "AI-Powered SEO Intelligence Platform for keyword research, rank tracking, and content optimization.",
-    images: ["/og-image.svg"],
+    title: "BlogSpy - Modern SEO Tool",
+    description: "Uncover hidden keyword opportunities, track viral trends, and hijack video traffic with AI-powered SEO intelligence.",
+    images: [ogImageUrl],
   },
   icons: {
     icon: [

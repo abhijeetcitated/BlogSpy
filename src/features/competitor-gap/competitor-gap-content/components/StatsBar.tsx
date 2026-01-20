@@ -30,68 +30,88 @@ export function GapStatsBar({ gapFilter, onFilterChange, stats }: GapStatsBarPro
       <button
         onClick={() => onFilterChange("all")}
         className={cn(
-          "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all",
+          "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all border",
           gapFilter === "all"
-            ? "bg-amber-500 text-white shadow-md shadow-amber-500/30"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted border border-border sm:border-0"
+            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40"
+            : "text-muted-foreground hover:text-foreground border-transparent"
         )}
       >
         <LayoutGrid className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         <span>All</span>
-        <span className={cn("text-xs sm:text-sm font-bold tabular-nums px-1.5 sm:px-2 py-0.5 rounded-md", 
-          gapFilter === "all" ? "bg-white/20 text-white" : "bg-muted text-foreground"
-        )}>
+        <span
+          className={cn(
+            "text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-bold tabular-nums rounded-md border",
+            gapFilter === "all"
+              ? "border-amber-500/50 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+              : "border-border text-muted-foreground"
+          )}
+        >
           {stats.all}
         </span>
       </button>
       <button
         onClick={() => onFilterChange("missing")}
         className={cn(
-          "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all",
+          "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all border",
           gapFilter === "missing"
-            ? "bg-red-500 text-white shadow-md shadow-red-500/30"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted border border-border sm:border-0"
+            ? "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/40"
+            : "text-muted-foreground hover:text-foreground border-transparent"
         )}
       >
         <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         <span>Missing</span>
-        <span className={cn("text-xs sm:text-sm font-bold tabular-nums px-1.5 sm:px-2 py-0.5 rounded-md", 
-          gapFilter === "missing" ? "bg-white/20 text-white" : "bg-muted text-foreground"
-        )}>
+        <span
+          className={cn(
+            "text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-bold tabular-nums rounded-md border",
+            gapFilter === "missing"
+              ? "border-red-500/50 text-red-600 dark:text-red-400 bg-red-500/10"
+              : "border-border text-muted-foreground"
+          )}
+        >
           {stats.missing}
         </span>
       </button>
       <button
         onClick={() => onFilterChange("weak")}
         className={cn(
-          "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all",
+          "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all border",
           gapFilter === "weak"
-            ? "bg-yellow-500 text-white shadow-md shadow-yellow-500/30"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted border border-border sm:border-0"
+            ? "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/40"
+            : "text-muted-foreground hover:text-foreground border-transparent"
         )}
       >
         <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         <span>Weak</span>
-        <span className={cn("text-xs sm:text-sm font-bold tabular-nums px-1.5 sm:px-2 py-0.5 rounded-md", 
-          gapFilter === "weak" ? "bg-white/20 text-white" : "bg-muted text-foreground"
-        )}>
+        <span
+          className={cn(
+            "text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-bold tabular-nums rounded-md border",
+            gapFilter === "weak"
+              ? "border-yellow-500/50 text-yellow-700 dark:text-yellow-400 bg-yellow-500/10"
+              : "border-border text-muted-foreground"
+          )}
+        >
           {stats.weak}
         </span>
       </button>
       <button
         onClick={() => onFilterChange("strong")}
         className={cn(
-          "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all",
+          "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all border",
           gapFilter === "strong"
-            ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/30"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted border border-border sm:border-0"
+            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40"
+            : "text-muted-foreground hover:text-foreground border-transparent"
         )}
       >
         <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         <span>Strong</span>
-        <span className={cn("text-xs sm:text-sm font-bold tabular-nums px-1.5 sm:px-2 py-0.5 rounded-md", 
-          gapFilter === "strong" ? "bg-white/20 text-white" : "bg-muted text-foreground"
-        )}>
+        <span
+          className={cn(
+            "text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-bold tabular-nums rounded-md border",
+            gapFilter === "strong"
+              ? "border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+              : "border-border text-muted-foreground"
+          )}
+        >
           {stats.strong}
         </span>
       </button>

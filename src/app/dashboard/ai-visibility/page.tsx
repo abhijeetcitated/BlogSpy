@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
-import { AIVisibilityDashboard, SetupWizard, AddKeywordModal } from "@/src/features/ai-visibility/components"
-import { runFullScan, type RunScanInput, type RunScanResult } from "@/src/features/ai-visibility/actions/run-scan"
-import { addTrackedKeyword } from "@/src/features/ai-visibility/actions"
+import { AIVisibilityDashboard, SetupWizard, AddKeywordModal, SetupConfigModal } from "@/src/features/ai-visibility/components"
+import { runFullScan, type RunScanInput } from "@/src/features/ai-visibility/actions/run-scan"
+import { addTrackedKeyword, saveVisibilityConfig, listVisibilityConfigs, getVisibilityDashboardData } from "@/src/features/ai-visibility/actions"
+import type { AIVisibilityConfig, AICitation, VisibilityTrendData } from "@/src/features/ai-visibility/types"
 import { ErrorBoundary } from "@/components/common/error-boundary"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -24,17 +25,10 @@ import { ArrowRight, Eye, Rocket, Zap, LogIn } from "lucide-react"
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-interface ProjectConfig {
-  domain: string
-  brandName: string
-  createdAt: string
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// LOCAL STORAGE KEY
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-const STORAGE_KEY = "blogspy_ai_visibility_config"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // DEMO BANNER COMPONENT
@@ -78,13 +72,19 @@ function DemoBanner({ onSetupClick, isGuest }: { onSetupClick: () => void; isGue
 export default function AIVisibilityPage() {
   const router = useRouter()
   const [hasConfiguredProject, setHasConfiguredProject] = useState<boolean | null>(null)
-  const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null)
+  const [configs, setConfigs] = useState<AIVisibilityConfig[]>([])
+  const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null)
+  const [dashboardCitations, setDashboardCitations] = useState<AICitation[] | null>(null)
+  const [dashboardTrendData, setDashboardTrendData] = useState<VisibilityTrendData[] | null>(null)
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false)
+  const [showConfigModal, setShowConfigModal] = useState(false)
+  const [editingConfig, setEditingConfig] = useState<AIVisibilityConfig | null>(null)
+  const [isSavingConfig, setIsSavingConfig] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isDemoMode, setIsDemoMode] = useState(true)
   const [showSetupModal, setShowSetupModal] = useState(false)
   const [showSetupWizard, setShowSetupWizard] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
-  const [scanKeyword, setScanKeyword] = useState("best seo tools 2025") // Default keyword
   const [lastScanResult, setLastScanResult] = useState<FullScanResult | null>(null)
   const [showAddKeywordModal, setShowAddKeywordModal] = useState(false)
   const [isAddingKeyword, setIsAddingKeyword] = useState(false)
@@ -95,9 +95,79 @@ export default function AIVisibilityPage() {
   // ═══════════════════════════════════════════════════════════════════════════
   const [isGuest, setIsGuest] = useState(true) // Default to guest until we check
 
+  const normalizeDomain = (value: string) => {
+    let domain = value.trim().toLowerCase()
+    domain = domain.replace(/^https?:\/\//, "")
+    domain = domain.replace(/^www\./, "")
+    domain = domain.split("/")[0] || ""
+    domain = domain.split("?")[0] || ""
+    return domain
+  }
+
+  const selectedConfig = configs.find((config) => config.id === selectedConfigId) || null
+
+  const refreshConfigs = async (nextSelectedId?: string) => {
+    const response = await listVisibilityConfigs({})
+    if (response?.serverError) {
+      toast.error(response.serverError)
+      return null
+    }
+
+    const result = response?.data
+    if (result?.success) {
+      const nextConfigs = result.data || []
+      setConfigs(nextConfigs)
+
+      const preferredId = nextSelectedId || selectedConfigId
+      const fallbackId = nextConfigs.find((config) => config.id === preferredId)?.id || nextConfigs[0]?.id || null
+      setSelectedConfigId(fallbackId)
+      return nextConfigs
+    } else if (result?.error) {
+      toast.error(result.error)
+    }
+
+    return null
+  }
+
+  const openConfigModal = (config: AIVisibilityConfig | null) => {
+    setEditingConfig(config)
+    setShowConfigModal(true)
+  }
+
+  const handleSaveConfig = async (
+    configInput: Omit<AIVisibilityConfig, "id" | "userId" | "createdAt" | "updatedAt">
+  ) => {
+    setIsSavingConfig(true)
+    try {
+      const response = await saveVisibilityConfig({
+        ...configInput,
+        configId: editingConfig?.id,
+      })
+
+      if (response?.serverError) {
+        toast.error(response.serverError)
+        return
+      }
+
+      const result = response?.data
+      if (result?.success && result.data) {
+        await refreshConfigs(result.data.id)
+        setIsDemoMode(false)
+        setShowConfigModal(false)
+        setEditingConfig(null)
+        toast.success(editingConfig ? "Project updated" : "Project added")
+      } else {
+        toast.error(result?.error || "Failed to save project")
+      }
+    } finally {
+      setIsSavingConfig(false)
+    }
+  }
+
   // Check for existing config on mount
   useEffect(() => {
-    // Check auth status
+    let isMounted = true
+
     const checkAuth = async () => {
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -106,35 +176,80 @@ export default function AIVisibilityPage() {
         if (supabaseUrl && supabaseAnonKey) {
           const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
           const { data: { user } } = await supabase.auth.getUser()
+          if (!isMounted) return
           setIsGuest(!user)
           
-          // If logged in, check for saved config
           if (user) {
-            const saved = localStorage.getItem(STORAGE_KEY)
-            if (saved) {
-              const config = JSON.parse(saved)
-              setProjectConfig(config)
-              setIsDemoMode(false)
+            const nextConfigs = await refreshConfigs()
+            if (!isMounted) return
+            setIsDemoMode(false)
+            if (!nextConfigs || !nextConfigs.length) {
+              openConfigModal(null)
             }
+          } else {
+            setIsDemoMode(true)
           }
         }
       } catch (error) {
         console.error("Auth check failed:", error)
-        setIsGuest(true)
-      }
-      
-      // For guests, always show demo mode
-      setHasConfiguredProject(true)
-      if (isGuest) {
-        setIsDemoMode(true)
+        if (isMounted) {
+          setIsGuest(true)
+          setIsDemoMode(true)
+        }
+      } finally {
+        if (isMounted) {
+          setHasConfiguredProject(true)
+        }
       }
     }
     
     checkAuth()
-  }, [isGuest])
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!selectedConfigId || isGuest || isDemoMode) {
+      setDashboardCitations(null)
+      setDashboardTrendData(null)
+      return
+    }
+
+    let isMounted = true
+    setIsDashboardLoading(true)
+
+    const loadDashboard = async () => {
+      const response = await getVisibilityDashboardData({ configId: selectedConfigId })
+
+      if (!isMounted) return
+
+      if (response?.serverError) {
+        toast.error(response.serverError)
+      }
+
+      const result = response?.data
+      if (result?.success && result.data) {
+        setDashboardCitations(result.data.citations)
+        setDashboardTrendData(result.data.trendData)
+      } else if (result?.error) {
+        toast.error(result.error)
+        setDashboardCitations([])
+        setDashboardTrendData([])
+      }
+
+      setIsDashboardLoading(false)
+    }
+
+    loadDashboard()
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedConfigId, isGuest, isDemoMode])
 
   // Handle setup completion
-  const handleSetupComplete = (config: { domain: string; brandName: string }) => {
+  const handleSetupComplete = async (config: { domain: string; brandName: string }) => {
     // ═══════════════════════════════════════════════════════════════════════════════════════════════
     // GUEST GATE: Require login before setup
     // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -144,23 +259,32 @@ export default function AIVisibilityPage() {
     }
 
     setIsLoading(true)
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      const fullConfig: ProjectConfig = {
-        ...config,
-        createdAt: new Date().toISOString(),
+    try {
+      const normalizedDomain = normalizeDomain(config.domain)
+      const response = await saveVisibilityConfig({
+        projectName: normalizedDomain,
+        trackedDomain: normalizedDomain,
+        brandKeywords: [config.brandName.trim()],
+        competitorDomains: [],
+      })
+
+      if (response?.serverError) {
+        toast.error(response.serverError)
+        return
       }
-      
-      // Save to localStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(fullConfig))
-      
-      setProjectConfig(fullConfig)
-      setHasConfiguredProject(true)
-      setIsDemoMode(false)
-      setShowSetupWizard(false)
+
+      const result = response?.data
+      if (result?.success && result.data) {
+        await refreshConfigs(result.data.id)
+        setHasConfiguredProject(true)
+        setIsDemoMode(false)
+        setShowSetupWizard(false)
+      } else {
+        toast.error(result?.error || "Failed to save tracking config")
+      }
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   // Handle demo action click (Scan, Verify, etc.)
@@ -172,11 +296,11 @@ export default function AIVisibilityPage() {
       setShowLoginModal(true)
       return
     }
-    setShowSetupModal(true)
+    openConfigModal(null)
   }
 
   // Handle real scan when not in demo mode
-  const handleScan = async () => {
+  const handleScan = async (keyword: string) => {
     // ═══════════════════════════════════════════════════════════════════════════════════════════════
     // GUEST GATE: Require login to run real scans
     // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -188,12 +312,24 @@ export default function AIVisibilityPage() {
       return
     }
 
+    const trimmedKeyword = keyword.trim()
+    if (!trimmedKeyword) {
+      toast.error("Please enter a keyword or question")
+      return
+    }
+
     // In mock mode, use default values for testing
     const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
     
-    if (!isMockMode && !projectConfig) {
-      toast.error("Please configure your project first")
-      setShowSetupModal(true)
+    if (!isMockMode && !selectedConfig) {
+      toast.error("Please add a project first")
+      openConfigModal(null)
+      return
+    }
+
+    if (!isMockMode && (!selectedConfig?.trackedDomain || !selectedConfig?.brandKeywords?.[0])) {
+      toast.error("Please complete your project settings")
+      openConfigModal(selectedConfig || null)
       return
     }
 
@@ -201,9 +337,9 @@ export default function AIVisibilityPage() {
     
     try {
       const scanInput: RunScanInput = {
-        keyword: scanKeyword,
-        brandName: projectConfig?.brandName || "BlogSpy",
-        brandDomain: projectConfig?.domain || "blogspy.io",
+        keyword: trimmedKeyword,
+        brandName: selectedConfig?.brandKeywords?.[0] || "BlogSpy",
+        targetDomain: selectedConfig?.trackedDomain || "blogspy.io",
       }
 
       const result = await runFullScan(scanInput)
@@ -256,11 +392,19 @@ export default function AIVisibilityPage() {
       return
     }
 
+    if (!selectedConfig) {
+      toast.error("Please configure your project first")
+      setShowAddKeywordModal(false)
+      openConfigModal(null)
+      return
+    }
+
     setIsAddingKeyword(true)
     try {
       const response = await addTrackedKeyword({
         keyword,
         category: category || "other",
+        configId: selectedConfig.id,
       })
 
       // Handle SafeAction response structure
@@ -288,7 +432,7 @@ export default function AIVisibilityPage() {
     }
   }
 
-  // Loading state while checking localStorage
+  // Loading state while checking config
   if (hasConfiguredProject === null) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
@@ -314,7 +458,7 @@ export default function AIVisibilityPage() {
       {/* Demo Mode Banner */}
       {isDemoMode && (
         <DemoBanner 
-          onSetupClick={() => isGuest ? setShowLoginModal(true) : setShowSetupWizard(true)} 
+          onSetupClick={() => isGuest ? setShowLoginModal(true) : openConfigModal(null)} 
           isGuest={isGuest}
         />
       )}
@@ -327,6 +471,15 @@ export default function AIVisibilityPage() {
         isScanning={isScanning}
         lastScanResult={lastScanResult}
         onAddKeyword={() => setShowAddKeywordModal(true)}
+        citations={dashboardCitations || undefined}
+        trendData={dashboardTrendData || undefined}
+        configs={configs}
+        selectedConfigId={selectedConfigId}
+        onSelectConfig={(configId) => setSelectedConfigId(configId)}
+        onAddConfig={() => openConfigModal(null)}
+        onEditConfig={(config) => openConfigModal(config)}
+        reportDomain={selectedConfig?.trackedDomain || (isDemoMode ? "example.com" : undefined)}
+        isLoading={isDashboardLoading}
       />
 
       {/* Add Keyword Modal */}
@@ -335,6 +488,17 @@ export default function AIVisibilityPage() {
         onClose={() => setShowAddKeywordModal(false)}
         onAdd={handleAddKeyword}
         isAdding={isAddingKeyword}
+      />
+
+      <SetupConfigModal
+        open={showConfigModal}
+        onClose={() => {
+          setShowConfigModal(false)
+          setEditingConfig(null)
+        }}
+        onSave={handleSaveConfig}
+        existingConfig={editingConfig}
+        isSaving={isSavingConfig}
       />
 
       {/* Setup Prompt Modal */}
@@ -366,7 +530,7 @@ export default function AIVisibilityPage() {
             <Button 
               onClick={() => {
                 setShowSetupModal(false)
-                setShowSetupWizard(true)
+                openConfigModal(null)
               }}
               className="w-full sm:w-auto"
             >

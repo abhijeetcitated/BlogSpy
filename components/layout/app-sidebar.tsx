@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useProfile, useCredits } from "@/hooks/use-user"
@@ -12,9 +12,6 @@ import {
   Crosshair,
   Network,
   Map,
-  Sparkles,
-  Scissors,
-  CheckCircle,
   BarChart2,
   TrendingDown,
   Settings,
@@ -24,14 +21,12 @@ import {
   LayoutDashboard,
   Copy,
   Video,
-  Quote,
   DollarSign,
   Calculator,
   Target,
   ShoppingCart,
   Bot,
   Eye,
-  Code2,
   Newspaper,
   MessageCircle,
   Share2,
@@ -57,10 +52,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
@@ -78,19 +73,11 @@ const researchItems = [
   { title: "Competitor Gap", icon: Crosshair, href: "/dashboard/research/gap-analysis" },
   { title: "Affiliate Finder", icon: ShoppingCart, href: "/dashboard/research/affiliate-finder", accentColor: "text-purple-500" },
   { title: "Video Hijack", icon: Video, href: "/dashboard/research/video-hijack", accentColor: "text-red-500" },
-  { title: "Am I Cited?", icon: Quote, href: "/dashboard/research/citation-checker", accentColor: "text-violet-500" },
 ]
 
 const strategyItems = [
   { title: "Topic Clusters", icon: Network, href: "/dashboard/strategy/topic-clusters", accentColor: "text-violet-500" },
   { title: "Content Roadmap", icon: Map, href: "/dashboard/strategy/roadmap" },
-]
-
-const creationItems = [
-  { title: "AI Writer", icon: Sparkles, href: "/dashboard/creation/ai-writer", accentColor: "text-yellow-400" },
-  { title: "Snippet Stealer", icon: Scissors, href: "/dashboard/creation/snippet-stealer" },
-  { title: "On-Page Checker", icon: CheckCircle, href: "/dashboard/creation/on-page" },
-  { title: "Schema Generator", icon: Code2, href: "/dashboard/creation/schema-generator", accentColor: "text-cyan-500" },
 ]
 
 const trackingItems = [
@@ -114,15 +101,20 @@ const aiInsightsItems = [
 
 export function AppSidebar() {
   const [selectedProject, setSelectedProject] = useState(projects[0])
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
-  
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Get user data from context
   const { displayName, email, plan, avatar, initials, isLoading: profileLoading } = useProfile()
   const { credits, creditPercentage } = useCredits()
   const { logout } = useAuth()
-  
+
   // Derived state
-  const isLoading = profileLoading
+  const isLoading = profileLoading || !mounted
   const userName = displayName || "User"
   const userEmail = email || "user@example.com"
   const userPlan = plan === "PRO" ? "Pro Plan" : plan === "ENTERPRISE" ? "Enterprise" : "Free Plan"
@@ -241,37 +233,14 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {strategyItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="gap-3">
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Creation Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
-            Creation
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {creationItems.map((item) => {
-                if (item.title === "AI Writer" && !FEATURE_FLAGS.AI_WRITER) return null
-                if (item.title === "Snippet Stealer" && !FEATURE_FLAGS.SNIPPET_STEALER) return null
-                if (item.title === "On-Page Checker" && !FEATURE_FLAGS.ON_PAGE_CHECKER) return null
+              {strategyItems.map((item) => {
+                if (item.title === "Content Roadmap" && !FEATURE_FLAGS.CONTENT_ROADMAP) return null
 
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild className="gap-3">
                       <Link href={item.href}>
-                        <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
+                        <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -311,25 +280,33 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Monetization Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
-            💰 Monetization
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {monetizationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="gap-3">
-                    <Link href={item.href}>
-                      <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* Only show if at least one monetization feature is enabled */}
+        {(FEATURE_FLAGS.EARNINGS_CALC || FEATURE_FLAGS.CONTENT_ROI) && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
+              💰 Monetization
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {monetizationItems.map((item) => {
+                  if (item.title === "Earnings Calculator" && !FEATURE_FLAGS.EARNINGS_CALC) return null
+                  if (item.title === "Content ROI" && !FEATURE_FLAGS.CONTENT_ROI) return null
+
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild className="gap-3">
+                        <Link href={item.href}>
+                          <item.icon className={`h-4 w-4 ${item.accentColor || ""}`} />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-4 space-y-4">
@@ -382,9 +359,9 @@ export function AppSidebar() {
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            side="top" 
+          <DropdownMenuContent
+            align="end"
+            side="top"
             className="w-56 mb-2"
           >
             <DropdownMenuLabel className="font-normal">
@@ -394,7 +371,7 @@ export function AppSidebar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            
+
             {/* Account Section */}
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link href="/settings" className="flex items-center">
@@ -420,9 +397,9 @@ export function AppSidebar() {
                 Usage
               </Link>
             </DropdownMenuItem>
-            
+
             <DropdownMenuSeparator />
-            
+
             {/* Support Section */}
             <DropdownMenuItem asChild className="cursor-pointer">
               <Link href="/docs" className="flex items-center">
@@ -436,11 +413,11 @@ export function AppSidebar() {
                 Support
               </Link>
             </DropdownMenuItem>
-            
+
             <DropdownMenuSeparator />
-            
+
             {/* Sign Out */}
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={handleSignOut}
               className="cursor-pointer text-red-500 focus:text-red-500 focus:bg-red-500/10"
             >

@@ -18,11 +18,11 @@ export default function DashboardLayout({
             <AppSidebar />
             <SidebarInset>
               <TopNav />
-              <main className={`flex-1 ${PAGE_PADDING.default} overflow-auto`}>
+              <div role="main" className={`flex-1 ${PAGE_PADDING.default} overflow-auto`}>
                 <div className="max-w-[1920px] mx-auto">
                   {children}
                 </div>
-              </main>
+              </div>
             </SidebarInset>
           </SidebarProvider>
         </CommandPaletteProvider>

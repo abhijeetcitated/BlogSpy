@@ -33,9 +33,6 @@ export function SourceBadge({ source, subSource }: SourceBadgeProps) {
       <TooltipContent className="text-xs">
         {source === "reddit" && `r/${subSource}`}
         {source === "quora" && `Topic: ${subSource}`}
-        {source === "stackoverflow" && `Tag: ${subSource}`}
-        {source === "hackernews" && `Category: ${subSource}`}
-        {source === "youtube" && `Channel: ${subSource}`}
       </TooltipContent>
     </Tooltip>
   )

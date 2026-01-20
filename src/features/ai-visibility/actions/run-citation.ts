@@ -78,7 +78,7 @@ export const runVisibilityCheck = authAction
       const { query, configId, platforms } = parsedInput
 
       // Get user's visibility config
-      const configResult = await getVisibilityConfig({ projectId: configId })
+      const configResult = await getVisibilityConfig({ configId })
       
       if (!configResult?.data?.success || !configResult.data.data) {
         return {
@@ -124,7 +124,7 @@ export const checkPlatformNow = authAction
       const { platform, query, configId } = parsedInput
 
       // Get user's visibility config
-      const configResult = await getVisibilityConfig({ projectId: configId })
+      const configResult = await getVisibilityConfig({ configId })
       
       if (!configResult?.data?.success || !configResult.data.data) {
         return {
@@ -166,7 +166,7 @@ export const batchVisibilityCheck = authAction
       const { keywords, configId } = parsedInput
 
       // Get user's visibility config
-      const configResult = await getVisibilityConfig({ projectId: configId })
+      const configResult = await getVisibilityConfig({ configId })
       
       if (!configResult?.data?.success || !configResult.data.data) {
         return {

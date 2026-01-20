@@ -146,9 +146,9 @@ export function createKeywordColumns({
     columnHelper.accessor("keyword", {
       header: ({ column }) => <TableColumnHeader label="Keyword" column={column} />,
       cell: ({ row }) => (
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold group-hover:text-foreground">
+        <span className="inline-flex items-center gap-1.5 text-sm font-semibold group-hover:text-amber-500">
           {row.original.keyword}
-          <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-foreground" />
+          <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-amber-500" />
         </span>
       ),
       size: 220,

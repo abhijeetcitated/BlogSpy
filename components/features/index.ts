@@ -62,9 +62,6 @@ export { CannibalizationContent } from "./cannibalization"
 // Video Hijack Indicator
 export { VideoHijackContent } from "./video-hijack"
 
-// Citation Checker ("Am I Cited?")
-export { CitationCheckerContent } from "./citation-checker"
-
 // Dashboard (Command Center - from src/shared)
 export { CommandCenter } from "@/src/shared/dashboard"
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { 
   Target,
   ArrowUp,
@@ -14,6 +15,7 @@ import {
   Brain,
   Plus,
 } from "lucide-react"
+import { FEATURE_FLAGS } from "@/src/config/feature-flags"
 import { QueryAnalysis } from "../types"
 import { AI_PLATFORMS, PlatformIcons } from "../constants"
 
@@ -40,12 +42,17 @@ export function QueryOpportunities({ queries, isDemoMode, onDemoActionClick, onA
 
   // Navigate to AI Writer with pre-filled context for optimization
   const handleOptimize = (query: string, intent: string) => {
+    if (!FEATURE_FLAGS.AI_WRITER) {
+      toast.info("AI Optimization Module coming in Phase 2. Manual Action Required for now.")
+      return
+    }
+
     // Use URLSearchParams for clean encoding
     const params = new URLSearchParams({
-      topic: query,                      // Pre-fill the topic input
-      intent: intent.toLowerCase(),       // buying/learning intent
-      source: 'ai_visibility',            // Track where user came from
-      mode: 'seo_optimize'                // Trigger optimization mode in writer
+      topic: query,                         // Pre-fill the topic input
+      intent: "optimize_for_ai_overview",   // Prompt instruction
+      source: "ai_visibility",              // Track where user came from
+      search_intent: intent === "buying" ? "commercial" : "informational",
     })
 
     router.push(`/dashboard/creation/ai-writer?${params.toString()}`)

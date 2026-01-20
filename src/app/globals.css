@@ -527,3 +527,58 @@ body {
   pointer-events: none;
   z-index: 1;
 }
+
+@media print {
+  /* 1. Global Reset - FORCE White Background, Black Text */
+  :root {
+    color-scheme: light;
+  }
+  
+  *, *::before, *::after {
+    background-color: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    background-image: none !important;
+  }
+
+  /* 2. Restore Visibility for Borders & Charts */
+  /* Force borders to be black so boxes are visible */
+  div, span, p, h1, h2, h3, h4, h5, h6 {
+    border-color: #000 !important;
+  }
+
+  /* 3. Hide UI Junk (Sidebar, Buttons, Inputs) */
+  nav, header, aside, button, input, .no-print {
+    display: none !important;
+  }
+
+  /* 4. Layout Fix - Unlock Height */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  /* 5. Target the Report Content */
+  /* Ensure the dashboard main content is visible */
+  main {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+  }
+
+  /* 6. Chart Specifics (Recharts often break in print) */
+  /* Try to force SVG text to black */
+  text {
+    fill: black !important;
+  }
+  path.recharts-curve {
+    stroke: black !important; /* Optional: Makes charts black/white for clarity */
+  }
+}

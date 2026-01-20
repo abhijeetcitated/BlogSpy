@@ -12,19 +12,19 @@ export function BulkActionsBar({ selectedCount, onClearSelection }: BulkActionsB
   if (selectedCount === 0) return null
 
   return (
-    <div className="py-2.5 sm:py-3 bg-emerald-500/5 dark:bg-emerald-500/10 border-b border-emerald-500/20 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-2 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
+    <div className="py-2.5 sm:py-3 bg-slate-500/5 dark:bg-slate-500/10 border-b border-slate-500/20 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-2 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
       <div className="flex items-center gap-2 sm:gap-3">
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
-          <span className="text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">{selectedCount}</span>
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-500/15 flex items-center justify-center shrink-0">
+          <span className="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400">{selectedCount}</span>
         </div>
-        <span className="text-xs sm:text-sm font-medium text-emerald-600 dark:text-emerald-400">
+        <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
           topic{selectedCount > 1 ? "s" : ""} selected
         </span>
       </div>
       <div className="flex items-center gap-2">
         <Button
           size="sm"
-          className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white flex-1 xs:flex-none"
+          className="h-8 text-xs bg-slate-600 hover:bg-slate-700 text-white flex-1 xs:flex-none"
         >
           <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />
           <span className="hidden xs:inline">Add to Calendar</span>

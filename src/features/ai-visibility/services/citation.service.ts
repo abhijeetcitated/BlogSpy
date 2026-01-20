@@ -372,7 +372,7 @@ function detectCompetitors(
 async function queryOpenRouterPlatform(
   model: OpenRouterModel,
   query: string
-): Promise<{ success: boolean; response?: string; error?: string }> {
+): Promise<{ success: boolean; response?: string; citations?: string[]; error?: string }> {
   try {
     const completion = await openrouter.chat.completions.create({
       model,
@@ -382,15 +382,21 @@ async function queryOpenRouterPlatform(
       ],
       temperature: 0.7,
       max_tokens: 1000,
+      ...(model === MODELS.PERPLEXITY_SONAR
+        ? { extra_body: { return_citations: true } }
+        : {}),
     })
     
     const response = completion.choices[0]?.message?.content
+    const citations =
+      (completion as { citations?: string[] }).citations ||
+      (completion.choices[0]?.message as { citations?: string[] } | undefined)?.citations
     
     if (!response) {
       return { success: false, error: "Empty response from AI" }
     }
     
-    return { success: true, response }
+    return { success: true, response, citations }
   } catch (error) {
     console.error("[queryOpenRouterPlatform] Error:", error)
     return { 
@@ -537,7 +543,7 @@ export async function checkCitationOnPlatform(
   }
   
   // Query the appropriate platform
-  let queryResult: { success: boolean; response?: string; error?: string }
+  let queryResult: { success: boolean; response?: string; citations?: string[]; error?: string }
   
   if (platform === "google-aio") {
     queryResult = await queryGoogleAIO(query)
@@ -580,6 +586,7 @@ export async function checkCitationOnPlatform(
       isVisible: detection.isVisible,
       mentionType: detection.mentionType,
       aiResponse: queryResult.response,
+      citations: queryResult.citations,
       mentionContext: detection.mentionContext,
       mentionPosition: detection.mentionPosition,
       sentiment: detection.sentiment,

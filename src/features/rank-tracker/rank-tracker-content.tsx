@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   Eye,
   Monitor,
+  Smartphone,
   RefreshCw,
   Download,
   Settings,
@@ -107,6 +108,7 @@ export function RankTrackerContent() {
   const [activePlatform, setActivePlatform] = useState<SearchPlatform>(DEFAULT_PLATFORM)
   const [activeCountry, setActiveCountry] = useState<string>("worldwide")
   const [multiPlatformData, setMultiPlatformData] = useState(MOCK_MULTI_PLATFORM_DATA)
+  const [deviceType, setDeviceType] = useState<"desktop" | "mobile">("desktop")
   
   // Calculate country stats for dropdown
   const countryStats = useMemo(() => getCountryStats(multiPlatformData), [multiPlatformData])
@@ -189,8 +191,8 @@ export function RankTrackerContent() {
     await new Promise((resolve) => setTimeout(resolve, 1500))
     setLastUpdated(new Date())
     setIsRefreshing(false)
-    showNotification("Rankings refreshed successfully")
-  }, [showNotification])
+    showNotification(`Rankings refreshed for ${PLATFORM_CONFIG[activePlatform].name} (${deviceType})`)
+  }, [activePlatform, deviceType, showNotification])
 
   // Calculate dynamic stats
   const stats = useMemo(() => calculateStats(rankData), [rankData])
@@ -454,7 +456,7 @@ export function RankTrackerContent() {
                   </span>
                 </h1>
                 <p className="text-xs text-muted-foreground">
-                  Track rankings across Google, Bing, Yahoo & DuckDuckGo
+                  Track rankings across Google & Bing
                   {lastUpdated && (
                     <span className="ml-2 text-muted-foreground/60">
                       • Updated {lastUpdated.toLocaleTimeString()}
@@ -518,11 +520,11 @@ export function RankTrackerContent() {
                       className="h-8 px-2 border-border text-muted-foreground hover:bg-muted rounded-l-none border-l-0"
                     >
                       <Settings className="w-3.5 h-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Configure alert settings</TooltipContent>
-                </Tooltip>
-              </div>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Configure alert settings</TooltipContent>
+              </Tooltip>
+            </div>
               <Button
                 size="sm"
                 onClick={() => setIsAddModalOpen(true)}
@@ -542,12 +544,38 @@ export function RankTrackerContent() {
                 onPlatformChange={setActivePlatform}
                 stats={platformStats}
               />
-              <CountryDropdown 
-                value={activeCountry}
-                onChange={setActiveCountry}
-                countryStats={countryStats}
-                className="w-full max-w-[14rem] sm:w-auto sm:max-w-none"
-              />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto sm:justify-end">
+                <div className="flex items-center p-1 bg-zinc-900 border border-white/10 rounded-lg">
+                  <button
+                    onClick={() => setDeviceType("desktop")}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                      deviceType === "desktop"
+                        ? "bg-zinc-800 text-white shadow-sm"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    <Monitor className="w-3.5 h-3.5" />
+                    Desktop
+                  </button>
+                  <button
+                    onClick={() => setDeviceType("mobile")}
+                    className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                      deviceType === "mobile"
+                        ? "bg-zinc-800 text-white shadow-sm"
+                        : "text-zinc-500 hover:text-zinc-300"
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    Mobile
+                  </button>
+                </div>
+                <CountryDropdown 
+                  value={activeCountry}
+                  onChange={setActiveCountry}
+                  countryStats={countryStats}
+                  className="w-full max-w-[14rem] sm:w-auto sm:max-w-none"
+                />
+              </div>
             </div>
             <PlatformComparison 
               stats={platformStats} 

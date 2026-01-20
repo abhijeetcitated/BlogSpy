@@ -201,27 +201,7 @@ export const FORUM_SOURCES: ForumSourceConfig[] = [
     color: "text-[#B92B27]",
     bgColor: "bg-[#B92B27]/20",
   },
-  {
-    id: "stackoverflow",
-    label: "Stack Overflow",
-    icon: "🟡",
-    color: "text-[#F48024]",
-    bgColor: "bg-[#F48024]/20",
-  },
-  {
-    id: "hackernews",
-    label: "Hacker News",
-    icon: "🟢",
-    color: "text-[#FF6600]",
-    bgColor: "bg-[#FF6600]/20",
-  },
-  {
-    id: "youtube",
-    label: "YouTube",
-    icon: "🔵",
-    color: "text-[#FF0000]",
-    bgColor: "bg-[#FF0000]/20",
-  },
+
 ]
 
 /**

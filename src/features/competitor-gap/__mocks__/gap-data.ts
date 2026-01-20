@@ -348,8 +348,10 @@ export const MOCK_GAP_DATA: GapKeyword[] = [
 
 /**
  * Mock Forum Intel Data
- * Topics from Reddit, Quora, StackOverflow, HackerNews, YouTube
+ * Topics from Reddit, Quora
  */
+const recentDate = (daysAgo: number) => new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
+
 export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
   // Reddit Posts
   {
@@ -357,10 +359,10 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
     topic: "What's the best AI writing tool for SEO content in 2024?",
     source: "reddit",
     subSource: "r/SEO",
+    serpRank: 2,
+    monthlyVolume: 2100,
     upvotes: 342,
     comments: 89,
-    existingArticles: 2,
-    competitionLevel: "low",
     opportunityScore: 95,
     opportunityLevel: "high",
     relatedKeywords: [
@@ -368,7 +370,7 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
       { keyword: "ai content writer for seo", volume: 890 },
       { keyword: "seo ai tools 2024", volume: 2100 },
     ],
-    lastActive: new Date("2024-12-10"),
+    lastActive: recentDate(32),
     url: "https://reddit.com/r/SEO/comments/abc123",
   },
   {
@@ -376,10 +378,10 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
     topic: "Is Surfer SEO worth it or are there better alternatives?",
     source: "reddit",
     subSource: "r/SEO",
+    serpRank: 6,
+    monthlyVolume: 3200,
     upvotes: 256,
     comments: 67,
-    existingArticles: 8,
-    competitionLevel: "medium",
     opportunityScore: 72,
     opportunityLevel: "medium",
     relatedKeywords: [
@@ -387,7 +389,7 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
       { keyword: "surfer seo review", volume: 3200 },
       { keyword: "surfer seo worth it", volume: 720 },
     ],
-    lastActive: new Date("2024-12-08"),
+    lastActive: recentDate(45),
     url: "https://reddit.com/r/SEO/comments/def456",
   },
   {
@@ -395,10 +397,10 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
     topic: "How do you handle content decay? My old posts are losing traffic",
     source: "reddit",
     subSource: "r/blogging",
+    serpRank: 3,
+    monthlyVolume: 1100,
     upvotes: 189,
     comments: 45,
-    existingArticles: 3,
-    competitionLevel: "low",
     opportunityScore: 88,
     opportunityLevel: "high",
     relatedKeywords: [
@@ -406,7 +408,7 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
       { keyword: "update old blog posts", volume: 1100 },
       { keyword: "blog post losing traffic", volume: 320 },
     ],
-    lastActive: new Date("2024-12-12"),
+    lastActive: recentDate(58),
     url: "https://reddit.com/r/blogging/comments/ghi789",
   },
   {
@@ -414,10 +416,10 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
     topic: "Best free keyword research tools for beginners?",
     source: "reddit",
     subSource: "r/Entrepreneur",
+    serpRank: 12,
+    monthlyVolume: 12000,
     upvotes: 423,
     comments: 112,
-    existingArticles: 15,
-    competitionLevel: "high",
     opportunityScore: 45,
     opportunityLevel: "low",
     relatedKeywords: [
@@ -425,7 +427,7 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
       { keyword: "keyword research for beginners", volume: 2400 },
       { keyword: "free seo tools", volume: 12000 },
     ],
-    lastActive: new Date("2024-12-11"),
+    lastActive: recentDate(72),
     url: "https://reddit.com/r/Entrepreneur/comments/jkl012",
   },
 
@@ -435,10 +437,10 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
     topic: "How can I outrank competitors who have more backlinks?",
     source: "quora",
     subSource: "SEO",
+    serpRank: 4,
+    monthlyVolume: 1400,
     upvotes: 156,
     comments: 23,
-    existingArticles: 5,
-    competitionLevel: "medium",
     opportunityScore: 78,
     opportunityLevel: "high",
     relatedKeywords: [
@@ -446,7 +448,7 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
       { keyword: "rank without backlinks", volume: 1400 },
       { keyword: "beat competitors google", volume: 590 },
     ],
-    lastActive: new Date("2024-12-09"),
+    lastActive: recentDate(80),
     url: "https://quora.com/How-can-I-outrank-competitors",
   },
   {
@@ -454,10 +456,10 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
     topic: "What are the most underrated SEO strategies in 2024?",
     source: "quora",
     subSource: "Digital Marketing",
+    serpRank: 9,
+    monthlyVolume: 4500,
     upvotes: 234,
     comments: 41,
-    existingArticles: 4,
-    competitionLevel: "low",
     opportunityScore: 85,
     opportunityLevel: "high",
     relatedKeywords: [
@@ -465,146 +467,8 @@ export const MOCK_FORUM_INTEL_DATA: ForumIntelPost[] = [
       { keyword: "seo strategies 2024", volume: 4500 },
       { keyword: "advanced seo techniques", volume: 2100 },
     ],
-    lastActive: new Date("2024-12-13"),
+    lastActive: recentDate(90),
     url: "https://quora.com/underrated-seo-strategies-2024",
   },
 
-  // StackOverflow Questions
-  {
-    id: "fi-7",
-    topic: "How to implement structured data for FAQ pages?",
-    source: "stackoverflow",
-    subSource: "[schema.org]",
-    upvotes: 89,
-    comments: 12,
-    existingArticles: 6,
-    competitionLevel: "medium",
-    opportunityScore: 68,
-    opportunityLevel: "medium",
-    relatedKeywords: [
-      { keyword: "faq schema markup", volume: 1800 },
-      { keyword: "structured data faq", volume: 1200 },
-      { keyword: "faq page seo", volume: 890 },
-    ],
-    lastActive: new Date("2024-12-07"),
-    url: "https://stackoverflow.com/questions/123456",
-  },
-  {
-    id: "fi-8",
-    topic: "Best way to dynamically generate meta tags in Next.js?",
-    source: "stackoverflow",
-    subSource: "[next.js]",
-    upvotes: 234,
-    comments: 28,
-    existingArticles: 3,
-    competitionLevel: "low",
-    opportunityScore: 82,
-    opportunityLevel: "high",
-    relatedKeywords: [
-      { keyword: "nextjs meta tags", volume: 1400 },
-      { keyword: "dynamic meta tags nextjs", volume: 680 },
-      { keyword: "nextjs seo", volume: 3200 },
-    ],
-    lastActive: new Date("2024-12-11"),
-    url: "https://stackoverflow.com/questions/789012",
-  },
-
-  // Hacker News Discussions
-  {
-    id: "fi-9",
-    topic: "Show HN: I built an AI tool that finds content gaps automatically",
-    source: "hackernews",
-    subSource: "Show HN",
-    upvotes: 167,
-    comments: 54,
-    existingArticles: 1,
-    competitionLevel: "low",
-    opportunityScore: 92,
-    opportunityLevel: "high",
-    relatedKeywords: [
-      { keyword: "ai content gap tool", volume: 210 },
-      { keyword: "automated content analysis", volume: 480 },
-      { keyword: "content gap finder", volume: 1100 },
-    ],
-    lastActive: new Date("2024-12-10"),
-    url: "https://news.ycombinator.com/item?id=123456",
-  },
-  {
-    id: "fi-10",
-    topic: "Why SEO still matters in the age of AI search",
-    source: "hackernews",
-    subSource: "Discussion",
-    upvotes: 298,
-    comments: 87,
-    existingArticles: 7,
-    competitionLevel: "medium",
-    opportunityScore: 65,
-    opportunityLevel: "medium",
-    relatedKeywords: [
-      { keyword: "seo ai search", volume: 890 },
-      { keyword: "future of seo ai", volume: 1600 },
-      { keyword: "seo chatgpt era", volume: 720 },
-    ],
-    lastActive: new Date("2024-12-12"),
-    url: "https://news.ycombinator.com/item?id=789012",
-  },
-
-  // YouTube Topics (Video discussions)
-  {
-    id: "fi-11",
-    topic: "Complete SEO Course for Beginners (2024 Updated)",
-    source: "youtube",
-    subSource: "Income School",
-    upvotes: 4523,
-    comments: 312,
-    existingArticles: 25,
-    competitionLevel: "high",
-    opportunityScore: 35,
-    opportunityLevel: "low",
-    relatedKeywords: [
-      { keyword: "seo course beginners", volume: 6700 },
-      { keyword: "learn seo 2024", volume: 4200 },
-      { keyword: "seo tutorial", volume: 18000 },
-    ],
-    lastActive: new Date("2024-12-01"),
-    url: "https://youtube.com/watch?v=abc123",
-  },
-  {
-    id: "fi-12",
-    topic: "How I Rank #1 on Google Without Building Backlinks",
-    source: "youtube",
-    subSource: "Matt Diggity",
-    upvotes: 2341,
-    comments: 187,
-    existingArticles: 4,
-    competitionLevel: "low",
-    opportunityScore: 88,
-    opportunityLevel: "high",
-    relatedKeywords: [
-      { keyword: "rank google without backlinks", volume: 1200 },
-      { keyword: "seo without link building", volume: 890 },
-      { keyword: "on page seo only", volume: 540 },
-    ],
-    lastActive: new Date("2024-12-05"),
-    url: "https://youtube.com/watch?v=def456",
-  },
-  {
-    id: "fi-13",
-    topic: "AI Content vs Human Content: What Actually Ranks Better?",
-    source: "youtube",
-    subSource: "Ahrefs",
-    upvotes: 1876,
-    comments: 234,
-    existingArticles: 6,
-    competitionLevel: "medium",
-    opportunityScore: 75,
-    opportunityLevel: "medium",
-    relatedKeywords: [
-      { keyword: "ai content vs human", volume: 1800 },
-      { keyword: "does ai content rank", volume: 1400 },
-      { keyword: "ai generated content seo", volume: 2100 },
-    ],
-    lastActive: new Date("2024-12-08"),
-    url: "https://youtube.com/watch?v=ghi789",
-  },
 ]

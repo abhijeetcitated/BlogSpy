@@ -31,7 +31,7 @@ import { createMockScanResult, mockScanDelay } from "../data/mock-scan-results"
 export interface RunScanInput {
   keyword: string
   brandName: string
-  brandDomain: string
+  targetDomain: string
   keywordId?: string // Optional - if scanning for a saved keyword
 }
 
@@ -66,12 +66,12 @@ const CACHE_DURATION_HOURS = 1 // Check cache within 1 hour
  * const result = await runFullScan({
  *   keyword: "best seo tools 2025",
  *   brandName: "BlogSpy",
- *   brandDomain: "blogspy.io"
+ *   targetDomain: "blogspy.io"
  * })
  * ```
  */
 export async function runFullScan(input: RunScanInput): Promise<RunScanResult> {
-  const { keyword, brandName, brandDomain, keywordId } = input
+  const { keyword, brandName, targetDomain, keywordId } = input
   
   // Validate input
   if (!keyword?.trim()) {
@@ -80,8 +80,8 @@ export async function runFullScan(input: RunScanInput): Promise<RunScanResult> {
   if (!brandName?.trim()) {
     return { success: false, creditsUsed: 0, error: "Brand name is required" }
   }
-  if (!brandDomain?.trim()) {
-    return { success: false, creditsUsed: 0, error: "Brand domain is required" }
+  if (!targetDomain?.trim()) {
+    return { success: false, creditsUsed: 0, error: "Target domain is required" }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -161,7 +161,7 @@ export async function runFullScan(input: RunScanInput): Promise<RunScanResult> {
     }
 
     try {
-      const auditService = new AuditService(brandDomain)
+    const auditService = new AuditService(targetDomain)
       const auditResult = await auditService.runFullAudit()
       
       // Extract bot permissions from audit
@@ -181,7 +181,7 @@ export async function runFullScan(input: RunScanInput): Promise<RunScanResult> {
     // ─────────────────────────────────────────────────────────────────────────────────────────
     // STEP 5: Run Full Scan (Parallel API Calls)
     // ─────────────────────────────────────────────────────────────────────────────────────────
-    const scanService = createScanService(brandName, brandDomain)
+    const scanService = createScanService(brandName, targetDomain)
     
     let scanResult: FullScanResult
     let allApisFailed = false

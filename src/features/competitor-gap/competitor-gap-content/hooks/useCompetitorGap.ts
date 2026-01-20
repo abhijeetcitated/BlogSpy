@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
+import { toast } from "sonner"
 import type { GapKeyword, ForumIntelPost, SortField, SortDirection } from "../../types"
 import type { GapFilter } from "../utils/gap-utils"
 import {
@@ -11,15 +12,25 @@ import {
   sortForumPosts,
   formatNumber,
 } from "../utils/gap-utils"
+import { analyzeGapAction } from "../../actions/analyze-gap"
+import { useKeywordStore } from "@/src/features/keyword-research/store"
 
 export type MainView = "gap-analysis" | "forum-intel"
 
 interface UseCompetitorGapProps {
-  gapData: GapKeyword[]
-  forumData: ForumIntelPost[]
+  initialGapData: GapKeyword[]
+  initialForumData: ForumIntelPost[]
+  selectedCountryCode?: string
 }
 
-export function useCompetitorGap({ gapData, forumData }: UseCompetitorGapProps) {
+export function useCompetitorGap({
+  initialGapData,
+  initialForumData,
+  selectedCountryCode,
+}: UseCompetitorGapProps) {
+  const [gapData, setGapData] = useState<GapKeyword[]>(initialGapData)
+  const [forumData, setForumData] = useState<ForumIntelPost[]>(initialForumData)
+  const credits = useKeywordStore((state) => state.credits)
   // Main View
   const [mainView, setMainView] = useState<MainView>("gap-analysis")
   
@@ -69,12 +80,79 @@ export function useCompetitorGap({ gapData, forumData }: UseCompetitorGapProps) 
   }), [forumData])
 
   // Handlers
-  const handleAnalyze = async () => {
-    if (!yourDomain.trim() || !competitor1.trim()) return
-    setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
+  const mapGapItems = useCallback((items: any[]): GapKeyword[] => {
+    return items.map((item: any, index: number) => {
+      const comp1Rank = item.compRanks?.[0] ?? null
+      const comp2Rank = item.compRanks?.[1] ?? null
+      const source =
+        comp1Rank !== null && comp2Rank !== null
+          ? "both"
+          : comp1Rank !== null
+            ? "comp1"
+            : "comp2"
+
+      return {
+        id: `${item.keyword}-${index}`,
+        keyword: item.keyword,
+        intent: "informational",
+        gapType: item.gapType,
+        hasZeroClickRisk: item.hasZeroClickRisk,
+        yourRank: item.myRank ?? null,
+        comp1Rank,
+        comp2Rank,
+        volume: item.volume ?? 0,
+        kd: item.kd ?? 0,
+        cpc: item.cpc ?? 0,
+        trend: "stable",
+        source,
+      }
+    })
+  }, [])
+
+  const applyGapReport = useCallback((items: any[]) => {
+    const mapped = mapGapItems(items)
+    setGapData(mapped)
     setHasAnalyzed(true)
+    setSelectedGapRows(new Set())
+    setAddedKeywords(new Set())
+  }, [mapGapItems])
+
+  const handleAnalyze = async (overrideCountryCode?: string) => {
+    if (!yourDomain.trim() || !competitor1.trim()) return
+    if (credits !== null && credits < 10) {
+      toast.error("Insufficient credits", {
+        description: "Gap analysis requires 10 credits.",
+      })
+      return
+    }
+    setIsLoading(true)
+    try {
+      const targets = [yourDomain, competitor1, competitor2].filter(Boolean) as string[]
+      const result = await analyzeGapAction({
+        targets,
+        countryCode: overrideCountryCode ?? selectedCountryCode ?? "US",
+      })
+
+      if (result?.data?.success && result.data.data?.items) {
+        const mapped = mapGapItems(result.data.data.items)
+        setGapData(mapped)
+        setHasAnalyzed(true)
+        setSelectedGapRows(new Set())
+        setAddedKeywords(new Set())
+        toast.success("Gap analysis complete", {
+          description: `${mapped.length} keywords found.`,
+        })
+      } else {
+        const serverError = result?.serverError
+        const dataError = result?.data?.error
+        const errorMessage = dataError || serverError || "Failed to run gap analysis"
+        toast.error(errorMessage)
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to run gap analysis")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleGapSort = (field: SortField) => {
@@ -166,6 +244,9 @@ export function useCompetitorGap({ gapData, forumData }: UseCompetitorGapProps) 
     setAddedKeywords,
     addedForumPosts,
     setAddedForumPosts,
+    setGapData,
+    setForumData,
+    applyGapReport,
     
     // Sorting
     gapSortField,

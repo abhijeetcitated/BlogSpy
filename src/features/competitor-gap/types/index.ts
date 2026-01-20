@@ -48,7 +48,7 @@ export type SortField = CompetitorGapSortField
 /**
  * Forum Intel Source Platforms
  */
-export type ForumSource = "reddit" | "quora" | "stackoverflow" | "hackernews" | "youtube"
+export type ForumSource = "reddit" | "quora"
 
 /**
  * Opportunity Level
@@ -82,6 +82,7 @@ export interface GapKeyword {
   keyword: string
   intent: Intent
   gapType: GapType
+  hasZeroClickRisk?: boolean
   // Ranks
   yourRank: number | null
   comp1Rank: number | null
@@ -123,19 +124,20 @@ export interface ForumIntelPost {
   topic: string
   source: ForumSource
   subSource: string // subreddit name, tag, channel, etc.
+  // SERP + Traffic
+  serpRank: number
+  monthlyVolume: number
+  trafficEstimate?: number
   // Engagement
   upvotes: number
   comments: number
-  // Competition
-  existingArticles: number
-  competitionLevel: CompetitionLevel
   // Opportunity
   opportunityScore: number
   opportunityLevel: OpportunityLevel
   // Related keywords
   relatedKeywords: RelatedKeyword[]
   // Metadata
-  lastActive: Date
+  lastActive: Date | string
   url: string
 }
 
@@ -210,9 +212,6 @@ export interface ForumIntelStats {
   highOpportunity: number
   reddit: number
   quora: number
-  stackoverflow: number
-  hackernews: number
-  youtube: number
 }
 
 /**

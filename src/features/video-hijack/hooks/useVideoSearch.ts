@@ -2,10 +2,9 @@
 
 // Video Search Hook - Handles search state and logic
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { toast } from "sonner"
 import type {
-  SearchMode,
   Platform,
   SortOption,
   VideoResult,
@@ -24,8 +23,6 @@ import { escapeCsvValue, getPublishTimestamp } from "../utils/common.utils"
 
 export interface UseVideoSearchResult {
   // Search state
-  searchMode: SearchMode
-  setSearchMode: (mode: SearchMode) => void
   searchInput: string
   setSearchInput: (input: string) => void
   searchedQuery: string
@@ -58,18 +55,7 @@ export interface UseVideoSearchResult {
 }
 
 export function useVideoSearch(): UseVideoSearchResult {
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [])
-
   // Search state
-  const [searchMode, setSearchMode] = useState<SearchMode>("keyword")
   const [searchInput, setSearchInput] = useState("")
   const [searchedQuery, setSearchedQuery] = useState("")
   
@@ -134,39 +120,93 @@ export function useVideoSearch(): UseVideoSearchResult {
   )
   
   // Search handler
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     if (!searchInput.trim()) {
-      toast.error("Enter a keyword or domain", {
-        description: searchMode === "keyword"
-          ? "Enter a keyword to find video opportunities"
-          : "Enter your domain to find keywords with video results",
+      toast.error("Enter a keyword", {
+        description: "Enter a topic to find video opportunities",
       })
       return
     }
-    
+
     setIsLoading(true)
     setHasSearched(false)
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-    
-    // TODO: Replace with actual API calls
-    searchTimeoutRef.current = setTimeout(() => {
-      const query = searchInput.trim()
+
+    const query = searchInput.trim()
+    const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+
+    try {
+      if (useMockData) {
+        await new Promise((resolve) => setTimeout(resolve, 800))
+        const ytMock = generateMockYouTubeResults(query)
+        const ttMock = generateMockTikTokResults(query)
+        setSearchedQuery(query)
+        setYoutubeResults(ytMock)
+        setTiktokResults(ttMock)
+        setKeywordStats(generateKeywordStats(query, platform))
+        setVideoSuggestion(generateVideoSuggestion(query))
+        setHasSearched(true)
+        setCurrentPage(1)
+        toast.success("Search Complete!", {
+          description: `Found video results for "${query}" (mock mode)`,
+        })
+        return
+      }
+
+      // Call YouTube API (real data with credit deduction)
+      const response = await fetch(`/api/video-hijack/youtube?query=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        // Handle specific error codes
+        if (response.status === 402) {
+          toast.error("Insufficient Credits", {
+            description: "You need at least 1 credit to perform a video search. Please upgrade your plan.",
+          })
+          setIsLoading(false)
+          return
+        }
+        if (response.status === 401) {
+          if (!useMockData) {
+            toast.error("Authentication Required", {
+              description: "Please sign in to use this feature.",
+            })
+          }
+          setIsLoading(false)
+          return
+        }
+        throw new Error(`Search failed: ${response.statusText}`)
+      }
+      
+      const responseData = await response.json()
+      
+      // API returns wrapped response: { success: true, data: { results, stats, ... } }
+      const data = responseData.success ? responseData.data : responseData
+      
       setSearchedQuery(query)
-      setYoutubeResults(generateMockYouTubeResults(query))
-      setTiktokResults(generateMockTikTokResults(query))
-      setKeywordStats(generateKeywordStats(query, platform))
-      setVideoSuggestion(generateVideoSuggestion(query))
-      setIsLoading(false)
+      setYoutubeResults(data.results || [])
+      setTiktokResults(generateMockTikTokResults(query)) // TikTok is Coming Soon
+      setKeywordStats(data.stats || generateKeywordStats(query, platform))
+      setVideoSuggestion(data.suggestion || generateVideoSuggestion(query))
       setHasSearched(true)
       setCurrentPage(1)
       
+      const creditsUsed = data.creditsUsed || 1
       toast.success("Search Complete!", {
-        description: `Found video results for "${query}"`,
+        description: `Found ${data.results?.length || 0} video results for "${query}" (${creditsUsed} credit used)`,
       })
-    }, 2000)
-  }, [searchInput, searchMode, platform])
+    } catch (error) {
+      console.error("Video search error:", error)
+      toast.error("Search Failed", {
+        description: error instanceof Error ? error.message : "Something went wrong. Please try again.",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [searchInput, platform])
   
   // Export handler
   const handleExport = useCallback(() => {
@@ -227,8 +267,6 @@ export function useVideoSearch(): UseVideoSearchResult {
   }, [])
   
   return {
-    searchMode,
-    setSearchMode,
     searchInput,
     setSearchInput,
     searchedQuery,

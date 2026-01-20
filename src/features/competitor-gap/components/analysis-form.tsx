@@ -3,6 +3,7 @@
 import { Swords, Target, AlertCircle, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 // ============================================
 // ANALYSIS FORM - Domain input section
@@ -13,10 +14,11 @@ interface AnalysisFormProps {
   competitor1: string
   competitor2: string
   isLoading: boolean
+  selectedCountryCode?: string
   onYourDomainChange: (value: string) => void
   onCompetitor1Change: (value: string) => void
   onCompetitor2Change: (value: string) => void
-  onAnalyze: () => void
+  onAnalyze: (countryCode?: string) => void
 }
 
 export function AnalysisForm({
@@ -24,12 +26,26 @@ export function AnalysisForm({
   competitor1,
   competitor2,
   isLoading,
+  selectedCountryCode,
   onYourDomainChange,
   onCompetitor1Change,
   onCompetitor2Change,
   onAnalyze,
 }: AnalysisFormProps) {
   const canAnalyze = yourDomain.trim() && competitor1.trim()
+  const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/
+  const isValidDomain = (value: string) => domainRegex.test(value.trim())
+  const handleAnalyzeClick = () => {
+    if (
+      !isValidDomain(yourDomain) ||
+      !isValidDomain(competitor1) ||
+      (competitor2.trim() && !isValidDomain(competitor2))
+    ) {
+      toast.error("Please enter a valid domain (e.g., example.com) without https:// or paths.")
+      return
+    }
+    onAnalyze(selectedCountryCode)
+  }
 
   return (
     <div className="py-4 sm:py-5 border-b border-border bg-card/30 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
@@ -79,7 +95,7 @@ export function AnalysisForm({
         </div>
         <div className="flex items-end">
           <Button
-            onClick={onAnalyze}
+            onClick={handleAnalyzeClick}
             disabled={isLoading || !canAnalyze}
             className="w-full h-10 px-4 sm:px-6 bg-amber-500 hover:bg-amber-600 text-amber-950 font-semibold shadow-lg shadow-amber-500/20 disabled:opacity-50"
           >
@@ -92,7 +108,7 @@ export function AnalysisForm({
             ) : (
               <>
                 <Swords className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Find Missing Keywords</span>
+                <span className="hidden sm:inline">Find Opportunities (10 Credits)</span>
                 <span className="sm:hidden">Analyze</span>
               </>
             )}

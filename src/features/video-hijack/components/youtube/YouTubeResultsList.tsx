@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import {
   YouTubeIcon,
+  SearchIcon,
   SortIcon,
   GridIcon,
   ListIcon,
@@ -43,6 +44,12 @@ export function YouTubeResultsList({ results, isLoading, searchQuery }: YouTubeR
   const [sortBy, setSortBy] = useState<SortOption>("opportunity")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideoResult | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, sortBy, results.length])
 
   // Sort results
   const sortedResults = [...results].sort((a, b) => {
@@ -62,21 +69,17 @@ export function YouTubeResultsList({ results, isLoading, searchQuery }: YouTubeR
     }
   })
 
+  const totalPages = Math.max(1, Math.ceil(sortedResults.length / pageSize))
+  const pageStart = (currentPage - 1) * pageSize
+  const paginatedResults = sortedResults.slice(pageStart, pageStart + pageSize)
+
   // Export to CSV
   const handleExport = () => {
     youtubeService.exportToCSV(sortedResults, `youtube-${searchQuery}-${Date.now()}`)
   }
 
   if (results.length === 0 && !isLoading) {
-    return (
-      <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 sm:p-12 text-center">
-        <YouTubeIcon size={32} className="mx-auto text-red-500/50 sm:w-12 sm:h-12" />
-        <h3 className="mt-4 text-sm sm:text-base font-semibold text-foreground">No YouTube Results</h3>
-        <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
-          Search for a keyword to discover YouTube video opportunities
-        </p>
-      </div>
-    )
+    return <EmptyState />
   }
 
   return (
@@ -150,7 +153,7 @@ export function YouTubeResultsList({ results, isLoading, searchQuery }: YouTubeR
           ? "grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
           : "space-y-3"
       )}>
-        {sortedResults.map((video) => (
+        {paginatedResults.map((video) => (
           <YouTubeResultCard
             key={video.id}
             video={video}
@@ -160,12 +163,55 @@ export function YouTubeResultsList({ results, isLoading, searchQuery }: YouTubeR
         ))}
       </div>
 
+      {/* Pagination Footer */}
+      {sortedResults.length > pageSize && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-border">
+          <span className="text-xs text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full sm:w-auto"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Load More Indicator */}
       {isLoading && (
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
         </div>
       )}
+    </div>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 sm:p-12 text-center">
+      <SearchIcon size={32} className="mx-auto text-muted-foreground sm:w-12 sm:h-12" />
+      <h3 className="mt-4 text-sm sm:text-base font-semibold text-foreground">
+        No video opportunities found for this keyword.
+      </h3>
+      <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
+        Try a broader term.
+      </p>
     </div>
   )
 }

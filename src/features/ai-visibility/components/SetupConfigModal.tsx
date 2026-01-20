@@ -23,7 +23,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { 
   Globe, 
   Tag, 
@@ -31,7 +31,8 @@ import {
   X, 
   Plus, 
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Folder
 } from "lucide-react"
 
 import {
@@ -105,12 +106,25 @@ export function SetupConfigModal({
   // Form state - initialize from existingConfig
   const [domain, setDomain] = useState(existingConfig?.trackedDomain ?? "")
   const [domainError, setDomainError] = useState("")
+
+  const [projectName, setProjectName] = useState(existingConfig?.projectName ?? "")
   
   const [brandKeywordInput, setBrandKeywordInput] = useState("")
   const [brandKeywords, setBrandKeywords] = useState<string[]>(existingConfig?.brandKeywords ?? [])
   
   const [competitorInput, setCompetitorInput] = useState("")
   const [competitors, setCompetitors] = useState<string[]>(existingConfig?.competitorDomains ?? [])
+
+  useEffect(() => {
+    if (!open) return
+    setDomain(existingConfig?.trackedDomain ?? "")
+    setDomainError("")
+    setProjectName(existingConfig?.projectName ?? "")
+    setBrandKeywordInput("")
+    setBrandKeywords(existingConfig?.brandKeywords ?? [])
+    setCompetitorInput("")
+    setCompetitors(existingConfig?.competitorDomains ?? [])
+  }, [existingConfig, open])
 
   // ─────────────────────────────────────────────────────────────────────────────────────────────
   // HANDLERS
@@ -179,6 +193,8 @@ export function SetupConfigModal({
       return
     }
 
+    const resolvedProjectName = projectName.trim() || normalizedDomain
+
     if (brandKeywords.length === 0) {
       // Auto-add domain as brand keyword if none provided
       const domainBrand = normalizedDomain.split(".")[0]
@@ -186,6 +202,7 @@ export function SetupConfigModal({
     }
 
     onSave({
+      projectName: resolvedProjectName,
       trackedDomain: normalizedDomain,
       brandKeywords,
       competitorDomains: competitors.length > 0 ? competitors : undefined,
@@ -212,6 +229,24 @@ export function SetupConfigModal({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          {/* Project Name */}
+          <div className="space-y-2">
+            <Label htmlFor="projectName" className="flex items-center gap-2">
+              <Folder className="h-4 w-4 text-muted-foreground" />
+              Project Name
+              <Badge variant="outline" className="text-xs">Optional</Badge>
+            </Label>
+            <Input
+              id="projectName"
+              placeholder="Client - Example"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Friendly label to identify this domain in reports
+            </p>
+          </div>
+
           {/* Domain Input */}
           <div className="space-y-2">
             <Label htmlFor="domain" className="flex items-center gap-2">

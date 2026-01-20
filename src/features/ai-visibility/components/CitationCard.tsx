@@ -37,6 +37,7 @@ export function CitationCard({ citation, isDemoMode, onDemoActionClick }: Citati
   const [flagged, setFlagged] = useState(false)
   const platform = AI_PLATFORMS[citation.platform]
   const citationType = CITATION_TYPES[citation.citationType]
+  const sources = citation.sources ?? []
 
   // Sentiment dot color
   const getSentimentDot = () => {
@@ -166,24 +167,58 @@ export function CitationCard({ citation, isDemoMode, onDemoActionClick }: Citati
           </div>
 
           {/* Footer */}
-          <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2 pt-2 border-t border-border">
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">Cited:</span>
-              <a 
-                href={citation.citedUrl}
-                className="text-[10px] sm:text-xs text-primary hover:underline flex items-center gap-1 truncate"
-              >
-                <span className="truncate">{citation.citedTitle}</span>
-                <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0" />
-              </a>
+          <div className="pt-2 border-t border-border space-y-2">
+            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">Cited:</span>
+                <a 
+                  href={citation.citedUrl}
+                  className="text-[10px] sm:text-xs text-primary hover:underline flex items-center gap-1 truncate"
+                >
+                  <span className="truncate">{citation.citedTitle}</span>
+                  <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0" />
+                </a>
+              </div>
+
+              {citation.competitors.length > 0 && (
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
+                  <span className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                    Also: {citation.competitors.slice(0, 2).join(", ")}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {citation.competitors.length > 0 && (
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
-                <span className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                  Also: {citation.competitors.slice(0, 2).join(", ")}
-                </span>
+            {sources.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-xs text-muted-foreground">
+                <span className="shrink-0">🔗 Cited via:</span>
+                <div className="flex flex-wrap items-center gap-1">
+                  {sources.map((source, index) => {
+                    const separator = index < sources.length - 1 ? ", " : ""
+                    if (source.url) {
+                      return (
+                        <a
+                          key={`${source.name}-${index}`}
+                          href={source.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary/80 hover:underline"
+                        >
+                          {source.name}
+                          {separator}
+                        </a>
+                      )
+                    }
+
+                    return (
+                      <span key={`${source.name}-${index}`}>
+                        {source.name}
+                        {separator}
+                      </span>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>

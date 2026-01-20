@@ -2,20 +2,17 @@
 
 "use client"
 
+import { useState } from "react"
+import { Play } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  CopyIcon,
-  ExternalLinkIcon,
-} from "@/components/icons/platform-icons"
+import { CopyIcon, ExternalLinkIcon } from "@/components/icons/platform-icons"
 import type { VideoResult } from "../types/video-search.types"
-import {
-  formatViews,
-  getHijackScoreColor,
-  getViralPotentialColor,
-  getContentAgeColor,
-} from "../utils/helpers"
+import { formatViews, getHijackScoreColor, getViralPotentialColor } from "../utils/helpers"
+import { formatDate } from "../utils/common.utils"
+import { handleFeatureAccess } from "@/lib/feature-guard"
+import { VideoPreviewModal } from "./modals/video-preview-modal"
 
 interface YouTubeResultCardProps {
   video: VideoResult
@@ -24,110 +21,141 @@ interface YouTubeResultCardProps {
 }
 
 export function YouTubeResultCard({ video, rank, onCopy }: YouTubeResultCardProps) {
+  const [showPreview, setShowPreview] = useState(false)
+  const difficulty =
+    video.hijackScore >= 70 ? "Easy" : video.hijackScore >= 50 ? "Medium" : "Hard"
+  const difficultyClass =
+    difficulty === "Easy"
+      ? "bg-emerald-500/10 text-emerald-500"
+      : difficulty === "Medium"
+      ? "bg-amber-500/10 text-amber-500"
+      : "bg-red-500/10 text-red-500"
+  const thumbnailSrc =
+    video.thumbnailUrl || "https://placehold.co/600x400/000000/FFF?text=Video"
+
   return (
-    <div className="rounded-xl border border-border bg-card p-2.5 sm:p-4 hover:border-red-500/30 transition-colors group overflow-hidden">
-      {/* Mobile Layout */}
-      <div className="flex flex-col gap-2">
-        {/* Row 1: Rank + Title + Badges */}
-        <div className="flex items-start gap-2">
-          {/* Rank */}
-          <div className="flex flex-col items-center gap-1 shrink-0">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-[10px] sm:text-sm font-bold text-red-500">
-              {rank}
+    <div className="rounded-xl border border-border bg-card p-3 sm:p-4 hover:border-red-500/30 transition-colors overflow-hidden">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <div
+          className="group relative w-full sm:w-[180px] aspect-video shrink-0 overflow-hidden rounded-md bg-muted cursor-pointer"
+          onClick={() => setShowPreview(true)}
+        >
+          <img
+            src={thumbnailSrc}
+            alt={video.title}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/40" />
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+              <Play className="h-6 w-6 text-white" />
             </div>
-            <div className={cn(
-              "w-7 h-7 sm:w-9 sm:h-9 rounded-full flex flex-col items-center justify-center border-2",
-              video.hijackScore >= 80 
-                ? "border-emerald-500 bg-emerald-500/10" 
-                : video.hijackScore >= 60 
-                ? "border-amber-500 bg-amber-500/10"
-                : "border-red-500 bg-red-500/10"
-            )}>
-              <span className={cn("text-[9px] sm:text-xs font-bold", getHijackScoreColor(video.hijackScore))}>
+          </div>
+          <div className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
+            {video.duration}
+          </div>
+          <div className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+            #{rank}
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground line-clamp-2">
+                {video.title}
+              </h3>
+              <div className="mt-1 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">{video.channel}</span>
+                <span className="mx-1 text-muted-foreground">•</span>
+                <span>{video.subscribers} Subs</span>
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Published {formatDate(video.publishedAt)}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <div
+                className={cn(
+                  "h-12 w-12 rounded-full border-2 bg-muted/30 text-xs font-bold flex items-center justify-center",
+                  getHijackScoreColor(video.hijackScore)
+                )}
+              >
                 {video.hijackScore}
-              </span>
+              </div>
             </div>
           </div>
 
-          {/* Title + Meta */}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-xs sm:text-sm text-foreground line-clamp-2">{video.title}</h3>
-            <div className="flex items-center gap-1 mt-0.5 text-[10px] sm:text-xs text-muted-foreground">
-              <span className="truncate max-w-[80px] sm:max-w-[120px]">{video.channel}</span>
-              <span>|</span>
-              <span>{video.duration}</span>
-            </div>
-            {/* Badges */}
-            <div className="flex gap-1 mt-1">
-              <Badge className={cn("text-[9px] sm:text-[10px] px-1 py-0 capitalize", getViralPotentialColor(video.viralPotential))}>
-                {video.viralPotential}
-              </Badge>
-              <Badge variant="outline" className={cn("text-[9px] sm:text-[10px] px-1 py-0", getContentAgeColor(video.contentAge))}>
-                {video.contentAge}
-              </Badge>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              className={cn("text-[10px] sm:text-xs capitalize", getViralPotentialColor(video.viralPotential))}
+            >
+              {video.viralPotential}
+            </Badge>
+            <Badge className={cn("text-[10px] sm:text-xs", difficultyClass)}>
+              {difficulty}
+            </Badge>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="grid grid-cols-3 gap-2 text-center sm:max-w-sm">
+            <div className="rounded-md bg-muted/30 p-2">
+              <p className="text-xs sm:text-sm font-semibold text-foreground">
+                {formatViews(video.views)}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Views</p>
+            </div>
+            <div className="rounded-md bg-muted/30 p-2">
+              <p className="text-xs sm:text-sm font-semibold text-foreground">
+                {formatViews(video.likes)}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Likes</p>
+            </div>
+            <div className="rounded-md bg-muted/30 p-2">
+              <p className="text-xs sm:text-sm font-semibold text-foreground">
+                {formatViews(video.comments)}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Comments</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-row sm:flex-col gap-2 sm:items-end sm:justify-between">
+          <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 sm:h-7 sm:w-7"
+              className="h-8 w-8"
               onClick={() => onCopy(video.title)}
             >
-              <CopyIcon size={12} />
+              <CopyIcon size={14} />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 sm:h-7 sm:w-7"
+              className="h-8 w-8"
               onClick={() => window.open(video.videoUrl, "_blank", "noopener,noreferrer")}
             >
-              <ExternalLinkIcon size={12} />
+              <ExternalLinkIcon size={14} />
             </Button>
           </div>
-        </div>
-
-        {/* Row 2: Stats - 4 column grid that fits */}
-        <div className="grid grid-cols-4 gap-1 sm:gap-2">
-          <div className="text-center p-1 sm:p-1.5 rounded-md bg-muted/30">
-            <p className="font-bold text-foreground text-[10px] sm:text-xs">{formatViews(video.views)}</p>
-            <p className="text-[8px] sm:text-[10px] text-muted-foreground">views</p>
-          </div>
-          <div className="text-center p-1 sm:p-1.5 rounded-md bg-muted/30">
-            <p className="font-bold text-foreground text-[10px] sm:text-xs">{formatViews(video.likes)}</p>
-            <p className="text-[8px] sm:text-[10px] text-muted-foreground">likes</p>
-          </div>
-          <div className="text-center p-1 sm:p-1.5 rounded-md bg-muted/30">
-            <p className="font-bold text-foreground text-[10px] sm:text-xs">{formatViews(video.comments)}</p>
-            <p className="text-[8px] sm:text-[10px] text-muted-foreground">cmts</p>
-          </div>
-          <div className="text-center p-1 sm:p-1.5 rounded-md bg-emerald-500/10">
-            <p className="font-bold text-emerald-500 text-[10px] sm:text-xs">{video.engagement.toFixed(1)}%</p>
-            <p className="text-[8px] sm:text-[10px] text-muted-foreground">eng</p>
-          </div>
-        </div>
-
-        {/* Row 3: Tags */}
-        <div className="flex gap-1 flex-wrap">
-          {video.tags.slice(0, 3).map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="text-[9px] sm:text-[10px] px-1.5 py-0 bg-red-500/10 text-red-500 cursor-pointer"
-              onClick={() => onCopy(tag)}
-            >
-              {tag}
-            </Badge>
-          ))}
-          {video.tags.length > 3 && (
-            <Badge variant="secondary" className="text-[9px] sm:text-[10px] px-1.5 py-0">
-              +{video.tags.length - 3}
-            </Badge>
-          )}
+          <Button
+            size="sm"
+            className="h-8 text-xs bg-red-500 hover:bg-red-600 text-white"
+            onClick={() => handleFeatureAccess("AI_WRITER", () => {})}
+          >
+            Generate Script 📜
+          </Button>
         </div>
       </div>
+
+      <VideoPreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        videoUrl={video.videoUrl}
+        title={video.title}
+      />
     </div>
   )
 }

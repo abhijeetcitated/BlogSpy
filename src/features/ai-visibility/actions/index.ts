@@ -32,9 +32,11 @@ export {
 export {
   saveVisibilityConfig,
   getVisibilityConfig,
+  listVisibilityConfigs,
   deleteVisibilityConfig,
   type SaveConfigResponse,
   type GetConfigResponse,
+  type ListConfigResponse,
 } from "./save-config"
 
 export {
@@ -59,3 +61,8 @@ export {
   type RunScanInput,
   type RunScanResult,
 } from "./run-scan"
+
+export {
+  getVisibilityDashboardData,
+  type DashboardDataResponse,
+} from "./get-dashboard-data"

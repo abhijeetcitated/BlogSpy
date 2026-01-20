@@ -24,7 +24,7 @@ export function RelatedKeywordsButton({ keywords, onCopyAll }: RelatedKeywordsBu
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-8 w-8 p-0 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+          className="h-8 w-8 p-0 rounded-lg bg-slate-500/10 dark:bg-slate-500/15 border border-slate-500/30 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20"
         >
           <Key className="w-4 h-4" />
         </Button>
@@ -32,10 +32,10 @@ export function RelatedKeywordsButton({ keywords, onCopyAll }: RelatedKeywordsBu
       <TooltipContent side="left" className="max-w-xs p-4">
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-emerald-500/15">
-              <Key className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-1.5 rounded-md bg-slate-500/15">
+              <Key className="w-4 h-4 text-slate-600 dark:text-slate-400" />
             </div>
-            <span className="font-semibold text-sm text-emerald-600 dark:text-emerald-400">Related Keywords</span>
+            <span className="font-semibold text-sm text-slate-600 dark:text-slate-400">Related Keywords</span>
           </div>
           <div className="space-y-1.5">
             {keywords.slice(0, 5).map((kw, i) => (
@@ -49,7 +49,7 @@ export function RelatedKeywordsButton({ keywords, onCopyAll }: RelatedKeywordsBu
           </div>
           <Button 
             size="sm" 
-            className="w-full h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="w-full h-7 text-xs bg-slate-600 hover:bg-slate-700 text-white"
             onClick={onCopyAll}
           >
             <Copy className="w-3 h-3 mr-1.5" />

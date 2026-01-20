@@ -85,12 +85,18 @@ export interface AICitation {
   query: string // The question/prompt that triggered the citation
   citedUrl: string
   citedTitle: string
+  sources?: AICitationSource[]
   citationType: CitationType
   context: string // Surrounding text in AI response
   position: number // 1st, 2nd, 3rd mention in response
   timestamp: string
   sentiment: 'positive' | 'neutral' | 'negative'
   competitors: string[] // Other sites mentioned alongside
+}
+
+export interface AICitationSource {
+  name: string
+  url?: string
 }
 
 export interface ContentVisibility {
@@ -290,6 +296,9 @@ export interface AIVisibilityConfig {
   
   /** Primary domain to track (e.g., "techyatri.com") */
   trackedDomain: string
+
+  /** Friendly project name (e.g., "Client - TechYatri") */
+  projectName: string
   
   /** Brand name variations to search for in AI responses */
   brandKeywords: string[]
@@ -342,6 +351,9 @@ export interface VisibilityCheckResult {
   
   /** The actual AI response text */
   aiResponse: string
+
+  /** Source citations returned by the platform (when available) */
+  citations?: string[]
   
   /** Extracted context where brand was mentioned */
   mentionContext?: string

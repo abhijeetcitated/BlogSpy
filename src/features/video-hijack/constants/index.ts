@@ -5,6 +5,31 @@ import type { VideoPresence, VideoOpportunityLevel } from "../types"
 // Re-export platform constants
 export * from "./platforms"
 
+// ============================================
+// TikTok Feature Status (Phase 2 - Coming Soon)
+// ============================================
+export const TIKTOK_FEATURE_STATUS = {
+  enabled: false, // Set to true when TikTok API is integrated
+  phase: 2,
+  label: "Coming Soon",
+  message: "TikTok integration is coming in Phase 2. Stay tuned!",
+  notifyEnabled: true, // Allow users to sign up for notifications
+} as const
+
+// Platform availability flags
+export const PLATFORM_AVAILABILITY = {
+  youtube: {
+    enabled: true,
+    apiProvider: "DataForSEO",
+    status: "active" as const,
+  },
+  tiktok: {
+    enabled: false, // Disabled until Phase 2
+    apiProvider: null, // Will be TikAPI.io or EnsembleData
+    status: "coming_soon" as const,
+  },
+} as const
+
 export const ALL_PRESENCES: VideoPresence[] = ["dominant", "significant", "moderate", "minimal", "none"]
 export const ALL_OPPORTUNITY_LEVELS: VideoOpportunityLevel[] = ["high", "medium", "low"]
 

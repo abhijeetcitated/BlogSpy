@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,10 @@ import {
   Zap,
   AlertCircle,
   RefreshCw,
+  Printer,
+  Plus,
 } from "lucide-react"
+import { prepareAIVisibilityPrint } from "../utils/pdf-generator"
 import {
   Select,
   SelectContent,
@@ -49,7 +52,7 @@ import {
   calculateTrustMetrics,
 } from "../utils"
 import { AI_PLATFORMS, DATE_RANGE_OPTIONS, PlatformIcons } from "../constants"
-import type { AIPlatform, AIVisibilityFilters, HallucinationRisk, AICitation } from "../types"
+import type { AIPlatform, AIVisibilityFilters, HallucinationRisk, AICitation, AIVisibilityConfig, VisibilityTrendData } from "../types"
 
 // Helper to get risk color
 const getRiskColor = (risk: HallucinationRisk) => {
@@ -167,13 +170,27 @@ interface AIVisibilityDashboardProps {
   /** Callback when user clicks action in demo mode */
   onDemoActionClick?: () => void
   /** Handler to trigger a full scan */
-  onScan?: () => Promise<void>
+  onScan?: (keyword: string) => Promise<void>
   /** Whether a scan is currently in progress */
   isScanning?: boolean
   /** Latest scan result for dynamic stats */
   lastScanResult?: FullScanResult | null
   /** Handler to open Add Keyword modal */
   onAddKeyword?: () => void
+  /** All available configs for the user */
+  configs?: AIVisibilityConfig[]
+  /** Selected config ID */
+  selectedConfigId?: string | null
+  /** Callback when config is selected */
+  onSelectConfig?: (configId: string) => void
+  /** Callback to open add-config modal */
+  onAddConfig?: () => void
+  /** Callback to edit current config */
+  onEditConfig?: (config: AIVisibilityConfig) => void
+  /** Domain name for report header */
+  reportDomain?: string
+  /** Trend data override */
+  trendData?: VisibilityTrendData[]
 }
 
 export function AIVisibilityDashboard({ 
@@ -187,8 +204,16 @@ export function AIVisibilityDashboard({
   isScanning = false,
   lastScanResult,
   onAddKeyword,
+  configs = [],
+  selectedConfigId = null,
+  onSelectConfig,
+  onAddConfig,
+  onEditConfig,
+  reportDomain,
+  trendData: trendDataOverride,
 }: AIVisibilityDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [scanKeyword, setScanKeyword] = useState("")
   const [filters, setFilters] = useState<AIVisibilityFilters>({
     dateRange: "30d",
     platforms: [],
@@ -197,17 +222,50 @@ export function AIVisibilityDashboard({
     sortOrder: "desc",
   })
 
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const handleBeforePrint = () => {
+      prepareAIVisibilityPrint({ domain: reportDomain })
+    }
+
+    window.addEventListener("beforeprint", handleBeforePrint)
+    return () => window.removeEventListener("beforeprint", handleBeforePrint)
+  }, [reportDomain])
+
+  const handleDownloadReport = () => {
+    if (typeof window !== "undefined") {
+      window.print()
+    }
+  }
+
+  const selectedConfig = configs.find((config) => config.id === selectedConfigId) || null
+  const canRunScan = !!scanKeyword.trim()
+
+  const handleRunScan = () => {
+    if (onScan) {
+      onScan(scanKeyword)
+    }
+  }
+
   // Use prop citations if provided, otherwise generate demo data
   const citations = useMemo(() => {
-    if (propCitations && propCitations.length > 0) {
-      return propCitations
+    if (isDemoMode) {
+      if (propCitations && propCitations.length > 0) {
+        return propCitations
+      }
+      return generateCitations()
     }
-    // Fallback to demo data
-    return generateCitations()
-  }, [propCitations])
+    return propCitations || []
+  }, [propCitations, isDemoMode])
   const stats = useMemo(() => calculateVisibilityStats(citations), [citations])
   const platformStats = useMemo(() => getPlatformStats(citations), [citations])
-  const trendData = useMemo(() => generateTrendData(), [])
+  const trendData = useMemo(() => {
+    if (!isDemoMode && trendDataOverride) {
+      return trendDataOverride
+    }
+    return generateTrendData()
+  }, [isDemoMode, trendDataOverride])
   const queryAnalysis = useMemo(() => analyzeQueries(citations), [citations])
   
   // Calculate trust metrics - use lastScanResult if available for dynamic updates
@@ -310,9 +368,84 @@ export function AIVisibilityDashboard({
   }
 
   return (
-    <div className="space-y-6">
+    <main id="report-container" className="report-container space-y-6">
+      {/* Domain Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <Select
+            value={selectedConfigId || ""}
+            onValueChange={(value) => onSelectConfig?.(value)}
+            disabled={!configs.length || !onSelectConfig}
+          >
+            <SelectTrigger className="h-8 sm:h-9 w-full sm:w-[260px] bg-background">
+              <SelectValue placeholder={configs.length ? "Select project" : "No projects yet"} />
+            </SelectTrigger>
+            <SelectContent>
+              {configs.map((config) => (
+                <SelectItem key={config.id} value={config.id}>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-foreground">
+                      {config.projectName || config.trackedDomain}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{config.trackedDomain}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {onEditConfig && selectedConfig && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 w-full sm:w-auto"
+              onClick={() => onEditConfig(selectedConfig)}
+            >
+              Edit
+            </Button>
+          )}
+        </div>
+
+        {onAddConfig && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-full sm:w-auto"
+            onClick={onAddConfig}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add New
+          </Button>
+        )}
+      </div>
+
+      {/* Keyword Scan */}
+      <Card className="bg-card border-border">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Ask AI a question... (e.g., 'Best SEO tools 2026')"
+                value={scanKeyword}
+                onChange={(e) => setScanKeyword(e.target.value)}
+                className="pl-9 bg-background w-full h-9 sm:h-10"
+              />
+            </div>
+            <Button
+              className="h-9 sm:h-10"
+              onClick={handleRunScan}
+              disabled={!onScan || !canRunScan || isScanning}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isScanning ? "animate-spin" : ""}`} />
+              {isScanning ? "Scanning..." : "Run Scan"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header with Credits Badge */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
             <Bot className="h-6 w-6 sm:h-7 sm:w-7 text-cyan-400 shrink-0" />
@@ -322,11 +455,24 @@ export function AIVisibilityDashboard({
             Track how AI Agents recommend & sell you.
           </p>
         </div>
-        {/* Credits Badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-linear-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 rounded-lg">
-          <Zap className="h-4 w-4 text-amber-400" />
-          <span className="text-sm font-medium text-amber-400">500</span>
-          <span className="text-xs text-muted-foreground">Credits</span>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadReport}
+            className="h-8 gap-1.5 px-3 no-print w-full sm:w-auto"
+          >
+            <Printer className="h-4 w-4" />
+            <span className="hidden sm:inline">Download Report</span>
+            <span className="sm:hidden">Report</span>
+          </Button>
+
+          {/* Credits Badge */}
+          <div className="flex items-center justify-center gap-2 px-3 py-1.5 bg-linear-to-r from-amber-500/15 to-yellow-500/15 border border-amber-500/30 rounded-lg w-full sm:w-auto">
+            <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <span className="text-sm font-medium text-amber-600 dark:text-amber-400">500</span>
+            <span className="text-xs text-muted-foreground">Credits</span>
+          </div>
         </div>
       </div>
 
@@ -392,7 +538,7 @@ export function AIVisibilityDashboard({
             stats={platformStats} 
             isDemoMode={isDemoMode}
             onDemoActionClick={onDemoActionClick}
-            onScan={onScan}
+            onScan={onScan ? () => onScan(scanKeyword) : undefined}
             isScanning={isScanning}
           />
         </div>
@@ -493,6 +639,6 @@ export function AIVisibilityDashboard({
           ))}
         </div>
       </div>
-    </div>
+    </main>
   )
 }

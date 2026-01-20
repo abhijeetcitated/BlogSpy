@@ -45,7 +45,7 @@ export function generateMockYouTubeResults(keyword: string): VideoResult[] {
       comments: Math.floor(likes * 0.1),
       publishedAt: `${monthsAgo} months ago`,
       duration: `${Math.floor(Math.random() * 20) + 5}:${String(Math.floor(Math.random() * 60)).padStart(2, "0")}`,
-      thumbnailUrl: "",
+      thumbnailUrl: `https://placehold.co/600x400/000000/FFF?text=Video+${i + 1}`,
       videoUrl: `https://youtube.com/watch?v=${Math.random().toString(36).slice(2, 13)}`,
       engagement: views > 0 ? (likes / views) * 100 : 0,
       tags: [

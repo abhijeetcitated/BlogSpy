@@ -17,7 +17,8 @@
 
 "use client"
 
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Clock } from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -29,6 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
@@ -43,6 +50,7 @@ import {
   SortIcon,
   RecentIcon,
 } from "@/components/icons/platform-icons"
+import { CreditBalance } from "@/src/features/keyword-research/components/header"
 
 // Hooks
 import { useVideoSearch } from "./hooks"
@@ -53,13 +61,16 @@ import {
   YouTubeResultCard,
   TikTokResultCard,
   VideoStatsPanel,
+  TikTokComingSoon,
 } from "./components"
 
 // Types
-import type { VideoResult, TikTokResult, SortOption } from "./types/video-search.types"
+import type { VideoResult, TikTokResult, SortOption, KeywordStats } from "./types/video-search.types"
 
 // Constants
 import { ITEMS_PER_PAGE } from "./utils/helpers"
+import { getPublishTimestamp } from "./utils/common.utils"
+import { PLATFORM_AVAILABILITY } from "./constants"
 
 const VideoResultsSidebar = dynamic(
   () => import("./components/VideoResultsSidebar").then((mod) => mod.VideoResultsSidebar)
@@ -69,9 +80,9 @@ const VideoSuggestionPanel = dynamic(
 )
 
 export function VideoHijackContentRefactored() {
+  const [recentSearches, setRecentSearches] = useState<Array<{ keyword: string; created_at?: string }>>([])
+
   const {
-    searchMode,
-    setSearchMode,
     searchInput,
     setSearchInput,
     searchedQuery,
@@ -95,9 +106,161 @@ export function VideoHijackContentRefactored() {
     handleCopy,
   } = useVideoSearch()
 
+  const handleSearchWithHistory = useCallback(() => {
+    const trimmed = searchInput.trim()
+    if (trimmed) {
+      setRecentSearches((prev) => {
+        const next = [{ keyword: trimmed }, ...prev.filter((item) => item.keyword !== trimmed)]
+        return next.slice(0, 5)
+      })
+    }
+    handleSearch()
+  }, [handleSearch, searchInput])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadRecentSearches = async () => {
+      try {
+        const response = await fetch("/api/video-hijack/search", { method: "GET" })
+        if (!response.ok) return
+        const payload = await response.json()
+        const history = Array.isArray(payload?.history) ? payload.history : []
+        if (isMounted) {
+          setRecentSearches(history.map((keyword: string) => ({ keyword })))
+        }
+      } catch (error) {
+        console.error("[Video Hijack] Failed to load history:", error)
+      }
+    }
+
+    loadRecentSearches()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const derivedKeywordStats = useMemo<KeywordStats | null>(() => {
+    if (!youtubeResults.length || !searchedQuery) return null
+
+    const totalVideos = youtubeResults.length
+    const totalViews = youtubeResults.reduce((sum, video) => sum + (video.views || 0), 0)
+    const avgViews = totalViews / totalVideos
+    const avgEngagement =
+      youtubeResults.reduce((sum, video) => {
+        if (!video.views) return sum
+        return sum + ((video.likes + video.comments) / video.views) * 100
+      }, 0) / totalVideos
+    const avgHijackScore =
+      youtubeResults.reduce((sum, video) => sum + video.hijackScore, 0) / totalVideos
+
+    const competition =
+      avgHijackScore >= 70 ? "low" : avgHijackScore >= 50 ? "medium" : "high"
+
+    const channelTotals = new Map<string, { views: number; videos: number }>()
+    youtubeResults.forEach((video) => {
+      const entry = channelTotals.get(video.channel) || { views: 0, videos: 0 }
+      channelTotals.set(video.channel, {
+        views: entry.views + (video.views || 0),
+        videos: entry.videos + 1,
+      })
+    })
+
+    const topChannels = Array.from(channelTotals.entries())
+      .map(([name, data]) => ({ name, videos: data.videos, views: data.views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 5)
+      .map(({ name, videos }) => ({ name, videos }))
+
+    const topByViews = [...youtubeResults].sort((a, b) => b.views - a.views).slice(0, 10)
+    const dayCounts: Record<string, number> = {}
+    topByViews.forEach((video) => {
+      const timestamp = getPublishTimestamp(video.publishedAt)
+      if (!timestamp) return
+      const day = new Date(timestamp).toLocaleDateString("en-US", { weekday: "long" })
+      dayCounts[day] = (dayCounts[day] || 0) + 1
+    })
+
+    const bestUploadDay =
+      Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "Thursday"
+
+    const parseDuration = (value: string): number => {
+      const parts = value.split(":").map((part) => Number(part))
+      if (parts.some((part) => Number.isNaN(part))) return 0
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+      if (parts.length === 2) return parts[0] * 60 + parts[1]
+      if (parts.length === 1) return parts[0]
+      return 0
+    }
+
+    const formatDuration = (seconds: number): string => {
+      const rounded = Math.max(0, Math.round(seconds))
+      const hours = Math.floor(rounded / 3600)
+      const minutes = Math.floor((rounded % 3600) / 60)
+      const secs = rounded % 60
+      if (hours > 0) {
+        return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
+      }
+      return `${minutes}:${String(secs).padStart(2, "0")}`
+    }
+
+    const avgLengthSeconds =
+      youtubeResults.reduce((sum, video) => sum + parseDuration(video.duration), 0) /
+      totalVideos
+
+    const tutorialCount = youtubeResults.filter((video) =>
+      /how to|guide|tutorial/i.test(video.title)
+    ).length
+    const reviewCount = youtubeResults.filter((video) =>
+      /review|test/i.test(video.title)
+    ).length
+    const comparisonCount = youtubeResults.filter((video) =>
+      /vs|compare/i.test(video.title)
+    ).length
+    const tutorialPercent = Math.round((tutorialCount / totalVideos) * 100)
+    const reviewPercent = Math.round((reviewCount / totalVideos) * 100)
+    const comparisonPercent = Math.round((comparisonCount / totalVideos) * 100)
+    const otherPercent = Math.max(0, 100 - tutorialPercent - reviewPercent - comparisonPercent)
+
+    return {
+      keyword: searchedQuery,
+      platform: "youtube",
+      totalVideos,
+      totalViews,
+      avgViews,
+      avgEngagement,
+      topChannels,
+      trendScore: Math.min(100, Math.round(avgEngagement * 12)),
+      competition,
+      hijackOpportunity: Math.round(avgHijackScore),
+      monetizationScore: Math.min(100, Math.round(avgEngagement * 10)),
+      seasonality: "evergreen",
+      avgVideoLength: formatDuration(avgLengthSeconds),
+      bestUploadDay,
+      bestUploadTime: "2 PM - 6 PM",
+      searchVolume: Math.round(totalViews / 12),
+      volumeTrend: "stable",
+      contentTypes: [
+        { type: "Tutorial", percentage: tutorialPercent },
+        { type: "Review", percentage: reviewPercent },
+        { type: "Comparison", percentage: comparisonPercent },
+        { type: "Other", percentage: otherPercent },
+      ],
+      audienceAge: [
+        { range: "18-24", percentage: 20 },
+        { range: "25-34", percentage: 35 },
+        { range: "35-44", percentage: 20 },
+        { range: "45-54", percentage: 15 },
+        { range: "55+", percentage: 10 },
+      ],
+    }
+  }, [searchedQuery, youtubeResults])
+
+  const statsForPanel = platform === "youtube" ? derivedKeywordStats : keywordStats
+
   return (
     <TooltipProvider>
-      <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6 overflow-x-hidden">
+      <div className="space-y-3 sm:space-y-4 md:space-y-6 overflow-x-hidden">
         {/* ==================== HEADER ==================== */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
@@ -112,27 +275,58 @@ export function VideoHijackContentRefactored() {
             </p>
           </div>
 
-          {hasSearched && (
-            <Button
-              onClick={handleExport}
-              size="sm"
-              className="bg-red-500 hover:bg-red-600 text-white shrink-0 text-xs px-2 sm:px-3"
-            >
-              <DownloadIcon className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
-          )}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <CreditBalance />
+            {hasSearched && (
+              <Button
+                onClick={handleExport}
+                size="sm"
+                className="bg-red-500 hover:bg-red-600 text-white shrink-0 text-xs px-2 sm:px-3"
+              >
+                <DownloadIcon className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* ==================== SEARCH BOX ==================== */}
-        <VideoSearchBox
-          searchMode={searchMode}
-          setSearchMode={setSearchMode}
-          searchInput={searchInput}
-          setSearchInput={setSearchInput}
-          isLoading={isLoading}
-          onSearch={handleSearch}
-        />
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex items-center justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs sm:text-sm"
+                  disabled={recentSearches.length === 0}
+                >
+                  <Clock className="h-3.5 w-3.5 mr-1.5" />
+                  Recent Searches
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {recentSearches.map((item) => (
+                  <DropdownMenuItem
+                    key={item.keyword}
+                    onClick={() => {
+                      setSearchInput(item.keyword)
+                      setTimeout(() => handleSearchWithHistory(), 0)
+                    }}
+                  >
+                    {item.keyword}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <VideoSearchBox
+            searchInput={searchInput}
+            setSearchInput={setSearchInput}
+            isLoading={isLoading}
+            onSearch={handleSearchWithHistory}
+          />
+        </div>
 
         {/* ==================== LOADING STATE ==================== */}
         {isLoading && (
@@ -229,9 +423,15 @@ export function VideoHijackContentRefactored() {
                   <TikTokIcon size={16} className={cn("sm:w-[18px] sm:h-[18px]", platform === "tiktok" ? "text-white" : "text-foreground")} />
                   <span className="hidden xs:inline">TikTok</span>
                   <span className="xs:hidden">TT</span>
-                  <Badge variant={platform === "tiktok" ? "outline" : "secondary"} className={cn("ml-0.5 sm:ml-1 text-[10px] sm:text-xs", platform === "tiktok" && "border-white/30 text-white")}>
-                    {tiktokResults.length}
-                  </Badge>
+                  {!PLATFORM_AVAILABILITY.tiktok.enabled ? (
+                    <Badge variant="outline" className="ml-0.5 sm:ml-1 text-[10px] sm:text-xs bg-pink-500/10 border-pink-500/30 text-pink-500">
+                      Soon
+                    </Badge>
+                  ) : (
+                    <Badge variant={platform === "tiktok" ? "outline" : "secondary"} className={cn("ml-0.5 sm:ml-1 text-[10px] sm:text-xs", platform === "tiktok" && "border-white/30 text-white")}>
+                      {tiktokResults.length}
+                    </Badge>
+                  )}
                 </button>
               </div>
 
@@ -271,7 +471,7 @@ export function VideoHijackContentRefactored() {
             </div>
 
             {/* Stats Dashboard */}
-            {keywordStats && <VideoStatsPanel keywordStats={keywordStats} />}
+            {statsForPanel && <VideoStatsPanel keywordStats={statsForPanel} />}
 
             {/* Main Content Grid with Sidebar */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
@@ -301,14 +501,19 @@ export function VideoHijackContentRefactored() {
                 {/* TikTok Results */}
                 {platform === "tiktok" && (
                   <div className="space-y-3">
-                    {(paginatedResults as TikTokResult[]).map((video, i) => (
-                      <TikTokResultCard
-                        key={video.id}
-                        video={video}
-                        rank={(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
-                        onCopy={handleCopy}
-                      />
-                    ))}
+                    {/* Show Coming Soon if TikTok is not enabled */}
+                    {!PLATFORM_AVAILABILITY.tiktok.enabled ? (
+                      <TikTokComingSoon />
+                    ) : (
+                      (paginatedResults as TikTokResult[]).map((video, i) => (
+                        <TikTokResultCard
+                          key={video.id}
+                          video={video}
+                          rank={(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
+                          onCopy={handleCopy}
+                        />
+                      ))
+                    )}
                   </div>
                 )}
 
@@ -368,7 +573,7 @@ export function VideoHijackContentRefactored() {
 
               {/* Right Sidebar */}
               <VideoResultsSidebar
-                keywordStats={keywordStats}
+                keywordStats={statsForPanel}
                 platform={platform}
                 youtubeResults={youtubeResults}
                 tiktokResults={tiktokResults}

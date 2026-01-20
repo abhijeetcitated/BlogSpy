@@ -14,6 +14,7 @@ import {
   createSafeActionClient,
   DEFAULT_SERVER_ERROR_MESSAGE,
 } from "next-safe-action"
+import { headers } from "next/headers"
 import { z } from "zod"
 import { createClient } from "@/src/lib/supabase/server"
 
@@ -21,10 +22,70 @@ import { createClient } from "@/src/lib/supabase/server"
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-export interface ActionContext {
+export interface BaseActionContext {
+  idempotencyKey: string | null
+}
+
+export interface ActionContext extends BaseActionContext {
   userId: string
   email: string
   role: "user" | "admin" | "moderator"
+}
+
+const HONEYTOKEN_KEYS = new Set(["bot_trap", "botTrap", "honeytoken", "honeyToken"])
+const SAFE_ACTION_ERRORS = new Set(["PLG_LOGIN_REQUIRED", "Bot Detected"])
+
+async function getRequestIp(): Promise<string | null> {
+  const headerList = await headers()
+  const forwardedFor = headerList.get("x-forwarded-for")
+
+  if (forwardedFor) {
+    const [first] = forwardedFor.split(",")
+    if (first) {
+      return first.trim()
+    }
+  }
+
+  return (
+    headerList.get("x-real-ip") ??
+    headerList.get("cf-connecting-ip") ??
+    headerList.get("x-client-ip") ??
+    null
+  )
+}
+
+async function getIdempotencyKey(): Promise<string | null> {
+  const value = (await headers()).get("x-idempotency-key")
+  if (!value) return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function findHoneytokenValue(input: unknown): string | null {
+  if (!input || typeof input !== "object") {
+    return null
+  }
+
+  if (Array.isArray(input)) {
+    for (const entry of input) {
+      const found = findHoneytokenValue(entry)
+      if (found) return found
+    }
+    return null
+  }
+
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (HONEYTOKEN_KEYS.has(key)) {
+      if (value !== null && value !== undefined && String(value).trim() !== "") {
+        return String(value)
+      }
+    }
+
+    const nested = findHoneytokenValue(value)
+    if (nested) return nested
+  }
+
+  return null
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -41,6 +102,10 @@ const baseClient = createSafeActionClient({
       throw error
     }
 
+    if (SAFE_ACTION_ERRORS.has(error.message)) {
+      return error.message
+    }
+
     // Sanitize error message - don't expose internals
     if (process.env.NODE_ENV === "production") {
       // Return generic message in production
@@ -52,17 +117,31 @@ const baseClient = createSafeActionClient({
   },
 })
 
+const securityClient = baseClient.use(async ({ clientInput, bindArgsClientInputs, next, ctx }) => {
+  const honeytokenValue =
+    findHoneytokenValue(clientInput) ?? findHoneytokenValue(bindArgsClientInputs)
+
+  if (honeytokenValue !== null) {
+    const ip = await getRequestIp()
+    console.warn("[SafeAction] Honeytoken triggered", { ip })
+    throw new Error("Bot Detected")
+  }
+
+  const idempotencyKey = await getIdempotencyKey()
+  return next({ ctx: { ...ctx, idempotencyKey } })
+})
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // PUBLIC ACTION (no auth required)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-export const publicAction = baseClient
+export const publicAction = securityClient
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // AUTH ACTION (requires authenticated user)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-export const authAction = baseClient.use(async ({ next }) => {
+export const authAction = securityClient.use(async ({ next, ctx }) => {
   // ═══════════════════════════════════════════════════════════════
   // MOCK MODE: Bypass authentication for development
   // ═══════════════════════════════════════════════════════════════
@@ -71,12 +150,13 @@ export const authAction = baseClient.use(async ({ next }) => {
   
   if (isMockMode) {
     console.log("[authAction] MOCK MODE: Bypassing authentication")
-    const ctx: ActionContext = {
+    const nextCtx: ActionContext = {
+      ...ctx,
       userId: "mock-user-dev-123",
       email: "dev@ozmeum.com",
       role: "user",
     }
-    return next({ ctx })
+    return next({ ctx: nextCtx })
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -93,17 +173,18 @@ export const authAction = baseClient.use(async ({ next }) => {
   } = await supabase.auth.getUser()
 
   if (error || !user) {
-    throw new Error("Authentication required")
+    throw new Error("PLG_LOGIN_REQUIRED")
   }
 
   // Build context
-  const ctx: ActionContext = {
+  const nextCtx: ActionContext = {
+    ...ctx,
     userId: user.id,
     email: user.email || "",
     role: (user.user_metadata?.role as ActionContext["role"]) || "user",
   }
 
-  return next({ ctx })
+  return next({ ctx: nextCtx })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════

@@ -51,6 +51,7 @@ export interface AIResponseResult {
   platform: AIPlatform
   status: "visible" | "hidden"
   snippet: string
+  citations?: string[]
   mentionContext: string | null
   sentiment: "positive" | "neutral" | "negative"
   error?: string
@@ -275,12 +276,22 @@ Include specific product names, services, or websites that would be helpful.`
         ],
         temperature: 0.7,
         max_tokens: 1000,
+        ...(platform === "perplexity"
+          ? { extra_body: { return_citations: true } }
+          : {}),
       })
 
       const responseText = response.choices[0]?.message?.content || ""
-      
-      // Check if brand is mentioned (case-insensitive)
-      const isVisible = this.checkBrandMention(responseText)
+      const citations =
+        (response as { citations?: string[] }).citations ||
+        (response.choices[0]?.message as { citations?: string[] } | undefined)?.citations ||
+        []
+      const linkMatches = this.extractLinks(responseText)
+
+      const isVisible =
+        this.checkBrandMention(responseText) ||
+        citations.some((citation) => this.checkDomainMatch(citation)) ||
+        linkMatches.some((link) => this.checkDomainMatch(link))
       const mentionContext = isVisible ? this.extractMentionContext(responseText) : null
       const sentiment = isVisible ? this.analyzeSentiment(mentionContext || "") : "neutral"
 
@@ -288,6 +299,7 @@ Include specific product names, services, or websites that would be helpful.`
         platform: platform as AIPlatform,
         status: isVisible ? "visible" : "hidden",
         snippet: responseText.slice(0, 1000),
+        citations,
         mentionContext,
         sentiment,
       }
@@ -496,26 +508,30 @@ Include specific product names, services, or websites that would be helpful.`
   // ─────────────────────────────────────────────────────────────────────────────────────────────
 
   /**
-   * Check if brand name or domain appears in text (case-insensitive)
+   * Check if brand name appears in text (case-insensitive)
    */
   private checkBrandMention(text: string): boolean {
     if (!text) return false
     
     const lowerText = text.toLowerCase()
     const lowerBrand = this.brandName.toLowerCase()
-    const lowerDomain = this.brandDomain.toLowerCase()
 
     // Check brand name
     if (lowerText.includes(lowerBrand)) return true
 
-    // Check domain
-    if (lowerText.includes(lowerDomain)) return true
-
-    // Check domain without TLD
-    const domainWithoutTld = lowerDomain.split(".")[0]
-    if (domainWithoutTld.length > 2 && lowerText.includes(domainWithoutTld)) return true
-
     return false
+  }
+
+  /**
+   * Extract links from response text for domain matching
+   */
+  private extractLinks(text: string): string[] {
+    if (!text) return []
+
+    const urls = text.match(/\bhttps?:\/\/[^\s)]+/gi) || []
+    const wwwUrls = text.match(/\bwww\.[^\s)]+/gi) || []
+
+    return [...urls, ...wwwUrls].map((url) => url.replace(/[),.;]+$/, ""))
   }
 
   /**

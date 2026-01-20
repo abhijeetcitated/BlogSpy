@@ -15,6 +15,7 @@ import {
   getHijackScoreColor,
   getViralPotentialColor,
 } from "../utils/helpers"
+import { handleFeatureAccess } from "@/lib/feature-guard"
 
 interface TikTokResultCardProps {
   video: TikTokResult
@@ -127,6 +128,17 @@ export function TikTokResultCard({ video, rank, onCopy }: TikTokResultCardProps)
               +{video.hashtags.length - 3}
             </Badge>
           )}
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-[10px] sm:text-xs"
+            onClick={() => handleFeatureAccess("AI_WRITER", () => {})}
+          >
+            Generate Script 📜
+          </Button>
         </div>
       </div>
     </div>

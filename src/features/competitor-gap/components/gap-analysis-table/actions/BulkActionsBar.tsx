@@ -17,19 +17,19 @@ export function BulkActionsBar({
   if (selectedCount === 0) return null
 
   return (
-    <div className="py-2.5 sm:py-3 bg-amber-500/5 dark:bg-amber-500/10 border-b border-amber-500/20 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-2 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
+    <div className="py-2.5 sm:py-3 bg-slate-500/5 dark:bg-slate-500/10 border-b border-slate-500/20 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-2 -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
       <div className="flex items-center gap-2 sm:gap-3">
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-          <span className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400">{selectedCount}</span>
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-500/15 flex items-center justify-center shrink-0">
+          <span className="text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400">{selectedCount}</span>
         </div>
-        <span className="text-xs sm:text-sm font-medium text-amber-600 dark:text-amber-400">
+        <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
           keyword{selectedCount > 1 ? "s" : ""} selected
         </span>
       </div>
       <div className="flex items-center gap-2">
         <Button
           size="sm"
-          className="h-8 text-xs bg-amber-600 hover:bg-amber-700 text-white flex-1 xs:flex-none"
+          className="h-8 text-xs bg-slate-600 hover:bg-slate-700 text-white flex-1 xs:flex-none"
           onClick={onBulkAddToRoadmap}
         >
           <CalendarPlus className="w-3.5 h-3.5 mr-1.5" />

@@ -113,6 +113,183 @@ export function parseYouTubeDuration(iso8601: string): {
 }
 
 // ============================================
+// DataForSEO YouTube Organic Service
+// ============================================
+
+export interface DataForSEOYouTubeItem {
+  type: string
+  rank_group: number
+  title: string
+  url: string
+  views_count?: number
+  publication_date?: string
+  thumbnail_url?: string
+  channel?: {
+    name: string
+    url: string
+    is_verified?: boolean
+  }
+}
+
+export type VideoResult = {
+  id: string
+  title: string
+  url: string
+  thumbnail: string
+  views: number
+  publishedAt: string
+  channel: {
+    name: string
+    url?: string
+  }
+  hijackScore: number
+  difficulty: string
+  viralPotential: string
+}
+
+type RawYouTubeResult = {
+  items?: DataForSEOYouTubeItem[]
+}
+
+type RawYouTubeTask = {
+  result?: RawYouTubeResult[]
+}
+
+type RawYouTubeTaskResponse = {
+  tasks?: RawYouTubeTask[]
+}
+
+function parsePublicationDate(value?: string): Date | null {
+  if (!value) return null
+  const parsed = new Date(value)
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed
+  }
+
+  const match = value.trim().match(/(\d+)\s+(year|month|week|day)s?\s+ago/i)
+  if (!match) return null
+
+  const amount = Number(match[1])
+  const unit = match[2]?.toLowerCase()
+  const now = new Date()
+
+  if (unit === "year") now.setFullYear(now.getFullYear() - amount)
+  if (unit === "month") now.setMonth(now.getMonth() - amount)
+  if (unit === "week") now.setDate(now.getDate() - amount * 7)
+  if (unit === "day") now.setDate(now.getDate() - amount)
+  return now
+}
+
+function calculateHijackScore(video: {
+  views?: number
+  date?: string
+  title?: string
+}): { score: number; label: string; viral: boolean } {
+  let score = 50
+  const views = Number(video.views ?? 0)
+
+  if (views < 5000) {
+    score += 20
+  } else if (views > 1000000) {
+    score -= 20
+  }
+
+  const publicationDate = parsePublicationDate(video.date)
+  if (publicationDate) {
+    const daysOld = Math.floor(
+      (Date.now() - publicationDate.getTime()) / (1000 * 60 * 60 * 24)
+    )
+    if (daysOld > 365) {
+      score += 20
+    } else if (daysOld < 30) {
+      score -= 10
+    }
+  }
+
+  if (/vevo|official/i.test(video.title ?? "")) {
+    score -= 10
+  }
+
+  const clamped = Math.max(0, Math.min(100, score))
+  return {
+    score: clamped,
+    label: clamped >= 70 ? "Easy" : "Hard",
+    viral: clamped >= 70,
+  }
+}
+
+function extractVideoId(url: string): string | null {
+  const match = url.match(/[?&]v=([^&]+)/i)
+  if (match?.[1]) return match[1]
+  const shortMatch = url.match(/youtu\.be\/([^?&]+)/i)
+  if (shortMatch?.[1]) return shortMatch[1]
+  return null
+}
+
+export async function searchYouTubeVideos(keyword: string): Promise<VideoResult[]> {
+  const trimmed = keyword.trim()
+  if (!trimmed) return []
+
+  const { dataForSEOClient } = await import("@/services/dataforseo/client")
+
+  const response = await dataForSEOClient.request<RawYouTubeResult[]>(
+    "/v3/serp/youtube/organic/live/advanced",
+    [
+      {
+        keyword: trimmed,
+        location_code: 2840,
+        language_code: "en",
+        device: "desktop",
+        os: "windows",
+      },
+    ]
+  )
+
+  if (!response.success || !response.data) {
+    throw new Error(response.error || "Failed to fetch YouTube results")
+  }
+
+  const results = Array.isArray(response.data) ? response.data : [response.data]
+  const taskItems = (response as RawYouTubeTaskResponse).tasks?.[0]?.result?.[0]?.items
+  // Raw Item DataForSEO se aya
+  const rawItems = taskItems ?? results[0]?.items ?? []
+
+  // Hamara Filter & Map Logic
+  const cleanVideos = rawItems
+    // 1. FILTER: Sirf Videos chahiye, Channel/Playlist nahi
+    .filter((item: DataForSEOYouTubeItem) => item.type === "youtube_video")
+    // 2. MAP: Sirf kaam ka data nikalo
+    .map((item: DataForSEOYouTubeItem) => {
+      const scoreData = calculateHijackScore({
+        views: item.views_count,
+        date: item.publication_date,
+        title: item.title,
+      })
+
+      const fallbackId = extractVideoId(item.url)
+      return {
+        id: item.url,
+        title: item.title,
+        url: item.url,
+        thumbnail:
+          item.thumbnail_url ||
+          (fallbackId ? `https://i.ytimg.com/vi/${fallbackId}/hqdefault.jpg` : ""),
+        views: item.views_count || 0,
+        publishedAt: item.publication_date || "Unknown",
+        channel: {
+          name: item.channel?.name || "Unknown",
+          url: item.channel?.url,
+        },
+        hijackScore: scoreData.score,
+        difficulty: scoreData.label,
+        viralPotential: scoreData.viral ? "High" : "Low",
+      }
+    })
+
+  return cleanVideos
+}
+
+// ============================================
 // YouTube Service Class
 // ============================================
 

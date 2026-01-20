@@ -85,7 +85,7 @@ export function VideoSuggestionPanel({ videoSuggestion, onCopy }: VideoSuggestio
             <div className="space-y-1.5 sm:space-y-2">
               <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-foreground">
                 <TagIcon size={14} className="text-red-500 sm:w-4 sm:h-4" />
-                YouTube Tags
+                AI Suggested Tags
               </div>
               <div className="flex flex-wrap gap-1 sm:gap-1.5">
                 {videoSuggestion.recommendedTags.slice(0, 6).map((tag) => (
@@ -111,32 +111,39 @@ export function VideoSuggestionPanel({ videoSuggestion, onCopy }: VideoSuggestio
             </div>
 
             {/* TikTok Hashtags */}
-            <div className="space-y-1.5 sm:space-y-2">
+            <div className="relative space-y-1.5 sm:space-y-2 opacity-50 pointer-events-none">
+              <div className="absolute right-2 top-2 z-10">
+                <Badge className="bg-zinc-900 text-zinc-400 border-zinc-700">
+                  🔒 TikTok Insights Coming Soon
+                </Badge>
+              </div>
               <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-foreground">
                 <HashtagIcon size={14} className="text-cyan-500 sm:w-4 sm:h-4" />
                 TikTok Hashtags
               </div>
-              <div className="flex flex-wrap gap-1 sm:gap-1.5">
-                {videoSuggestion.recommendedHashtags.slice(0, 6).map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="text-[10px] sm:text-xs bg-cyan-500/10 text-cyan-500 cursor-pointer hover:bg-cyan-500/20"
-                    onClick={() => onCopy(`#${tag}`)}
-                  >
-                    #{tag}
-                  </Badge>
-                ))}
+              <div className="space-y-1.5 sm:space-y-2 blur-sm">
+                <div className="flex flex-wrap gap-1 sm:gap-1.5">
+                  {videoSuggestion.recommendedHashtags.slice(0, 6).map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="text-[10px] sm:text-xs bg-cyan-500/10 text-cyan-500 cursor-pointer hover:bg-cyan-500/20"
+                      onClick={() => onCopy(`#${tag}`)}
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-1.5 sm:mt-2 h-8 text-xs"
+                  onClick={() => onCopy(videoSuggestion.recommendedHashtags.map(t => `#${t}`).join(" "))}
+                >
+                  <CopyIcon size={12} className="mr-1.5 sm:mr-2" />
+                  Copy All
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-1.5 sm:mt-2 h-8 text-xs"
-                onClick={() => onCopy(videoSuggestion.recommendedHashtags.map(t => `#${t}`).join(" "))}
-              >
-                <CopyIcon size={12} className="mr-1.5 sm:mr-2" />
-                Copy All
-              </Button>
             </div>
           </div>
 

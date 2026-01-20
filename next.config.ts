@@ -4,15 +4,14 @@ const nextConfig: NextConfig = {
   // ============================================
   // PERFORMANCE OPTIMIZATION
   // ============================================
-  
+
   // Enable React Strict Mode for better debugging
   reactStrictMode: true,
 
   // React Compiler (React 19) - automatic memoization
   reactCompiler: true,
 
-  // Partial Prerendering (Instant Shell) - disabled temporarily for dev stability
-  // cacheComponents: true,
+
 
   // ============================================
   // TURBOPACK (Next.js 16 default)
@@ -130,6 +129,8 @@ const nextConfig: NextConfig = {
   // EXPERIMENTAL FEATURES (2026 Enterprise Security)
   // ============================================
   experimental: {
+    // Partial Prerendering (Instant Shell) - Disabled (Unstable in 16.1.1)
+    // cacheComponents: true,
     // Enable optimized package imports - reduces bundle size significantly
     optimizePackageImports: [
       "lucide-react",

@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { TrendingUp, TrendingDown, Minus, BarChart3 } from "lucide-react"
-import { PLATFORM_CONFIG, SEARCH_PLATFORMS } from "../constants/platforms"
+import { PLATFORM_CONFIG } from "../constants/platforms"
 import type { SearchPlatform } from "../types/platforms"
 import { GoogleIcon, BingIcon, YahooIcon, DuckDuckGoIcon } from "./platform-icons"
 
@@ -21,6 +21,8 @@ const PLATFORM_ICON_SMALL: Record<SearchPlatform, React.ReactNode> = {
   yahoo: <YahooIcon size={10} />,
   duckduckgo: <DuckDuckGoIcon size={10} />,
 }
+
+const comparisonPlatforms = ["google", "bing"] as const
 
 interface PlatformComparisonProps {
   stats: Record<SearchPlatform, { 
@@ -43,8 +45,8 @@ export function PlatformComparison({ stats, activePlatform, onPlatformSelect }: 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {SEARCH_PLATFORMS.map((platform) => {
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+          {comparisonPlatforms.map((platform) => {
             const config = PLATFORM_CONFIG[platform]
             const platformStats = stats[platform]
             const isActive = platform === activePlatform
@@ -144,7 +146,7 @@ export function MiniPlatformComparison({
 }) {
   return (
     <div className="flex items-center gap-1">
-      {SEARCH_PLATFORMS.map((platform) => {
+      {comparisonPlatforms.map((platform) => {
         const config = PLATFORM_CONFIG[platform]
         const rank = ranks[platform]
         
