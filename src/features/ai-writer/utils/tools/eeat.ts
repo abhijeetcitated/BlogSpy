@@ -39,7 +39,7 @@ import {
   TRUST_INDICATORS,
   YMYL_PATTERNS,
   getGradeFromScore
-} from '@/src/features/ai-writer/types/tools/eeat.types';
+} from '@/features/ai-writer/types/tools/eeat.types';
 
 // ============================================================================
 // CONTENT PARSING

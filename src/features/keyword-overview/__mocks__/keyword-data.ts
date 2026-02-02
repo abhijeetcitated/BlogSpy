@@ -1,6 +1,6 @@
 // Keyword Overview Mock Data
 import type { SERPResult } from "../types"
-import type { GEOScoreComponents, CitationSource } from "@/types/geo.types"
+import type { GEOScoreComponents, CitationSource } from "@features/geo-score/types/geo.types"
 
 export const MOCK_KEYWORD_METRICS = {
   keyword: "AI Agents",

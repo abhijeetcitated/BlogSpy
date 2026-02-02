@@ -10,10 +10,10 @@
 
 import "server-only"
 
-import { getDataForSEOClient, type DataForSEOResponse } from "@/src/lib/seo/dataforseo"
-import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
-import { mapKeywordData, type RawRelatedKeywordItem } from "../utils/data-mapper"
-import type { Keyword } from "../types"
+import { getDataForSEOClient, type DataForSEOResponse } from "@/lib/seo/dataforseo"
+import { getDataForSEOLocationCode } from "@/lib/dataforseo/locations"
+import { mapLegacyKeywordData, type RawRelatedKeywordItem } from "../utils/data-mapper"
+import type { Keyword, MatchType } from "../types"
 import { MOCK_KEYWORDS } from "../data/mock-keywords"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -21,11 +21,35 @@ import { MOCK_KEYWORDS } from "../data/mock-keywords"
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 function isMockMode(): boolean {
-  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+  const hasCredentials = Boolean(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD)
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" && !hasCredentials
 }
 
+function normalizeQuery(input: string): string {
+  return input.trim().toLowerCase().replace(/\s+/g, " ")
+}
 
-// Mapping logic lives in [`mapKeywordData()`](src/features/keyword-research/utils/data-mapper.ts:187)
+function matchesQuery(keyword: string, query: string, matchType: MatchType): boolean {
+  const normalizedKeyword = normalizeQuery(keyword)
+  const normalizedQuery = normalizeQuery(query)
+
+  if (!normalizedQuery) return false
+
+  switch (matchType) {
+    case "exact":
+      return normalizedKeyword === normalizedQuery
+    case "phrase":
+      return normalizedKeyword.includes(normalizedQuery)
+    case "broad": {
+      const terms = normalizedQuery.split(" ").filter(Boolean)
+      return terms.some((term) => normalizedKeyword.includes(term))
+    }
+    default:
+      return normalizedKeyword.includes(normalizedQuery)
+  }
+}
+
+// Mapping logic lives in [`mapLegacyKeywordData()`](src/features/keyword-research/utils/data-mapper.ts:1)
 // so the service stays thin and type-safe.
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -49,7 +73,11 @@ interface RelatedKeywordsResult {
  */
 export async function fetchKeywords(
   query: string,
-  country: string = "us"
+  country: string | number = "us",
+  matchType: MatchType = "broad",
+  countryCodeOverride?: string,
+  languageCode: string = "en",
+  deviceType: string = "desktop"
 ): Promise<Keyword[]> {
   // ─────────────────────────────────────────
   // MOCK MODE
@@ -60,8 +88,7 @@ export async function fetchKeywords(
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 800))
 
-    // MOCK_KEYWORDS are pre-enriched with RTV at definition time
-    return MOCK_KEYWORDS
+    return MOCK_KEYWORDS.filter((kw) => matchesQuery(kw.keyword, query, matchType))
   }
 
   // ─────────────────────────────────────────
@@ -69,21 +96,27 @@ export async function fetchKeywords(
   // ─────────────────────────────────────────
   try {
     const dataforseo = getDataForSEOClient()
-    const locationCode = getDataForSEOLocationCode(country)
+    const locationCode =
+      typeof country === "number" ? country : getDataForSEOLocationCode(country)
+
+    const normalizedDevice = deviceType?.trim().toLowerCase()
+    const payload: Record<string, unknown> = {
+      keyword: query.trim().toLowerCase(),
+      location_code: locationCode,
+      language_code: languageCode,
+      depth: 2,
+      limit: 100,
+      include_seed_keyword: true,
+      include_serp_info: true,
+    }
+
+    if (normalizedDevice && normalizedDevice !== "all") {
+      payload.device = normalizedDevice
+    }
 
     const { data } = await dataforseo.post<DataForSEOResponse<RelatedKeywordsResult>>(
       "/dataforseo_labs/google/related_keywords/live",
-      [
-        {
-          keyword: query.trim().toLowerCase(),
-          location_code: locationCode,
-          language_code: "en",
-          depth: 2,
-          limit: 100,
-          include_seed_keyword: true,
-          include_serp_info: true,
-        },
-      ]
+      [payload]
     )
 
     const task = data.tasks?.[0]
@@ -92,9 +125,21 @@ export async function fetchKeywords(
     }
 
     const items = task.result?.[0]?.items ?? []
+    console.log("[KeywordService] RAW_API_RESPONSE_LENGTH:", items.length)
+    if (items.length > 0) {
+      console.log(
+        "[KeywordService] FIRST_ITEM_PREVIEW:",
+        JSON.stringify(items[0], null, 2)
+      )
+    }
 
     // Transform API response to Keyword type (centralized mapping for type safety)
-    return items.map((item, index) => mapKeywordData(item, index + 1))
+    const countryCodeForMap =
+      countryCodeOverride ?? (typeof country === "string" ? country : "US")
+    const mapped = items.map((item, index) =>
+      mapLegacyKeywordData({ ...item, countryCode: countryCodeForMap }, index + 1)
+    )
+    return mapped.filter((kw) => matchesQuery(kw.keyword, query, matchType))
   } catch (error) {
     console.error("[KeywordService] Error fetching keywords:", error)
     throw new Error(
@@ -205,7 +250,7 @@ function toAPIKeyword(kw: Keyword, index: number): APIKeyword {
  * Research keywords with full API response structure
  */
 async function researchKeywords(request: KeywordResearchRequest): Promise<KeywordResearchResponse> {
-  const keywords = await fetchKeywords(request.seedKeyword, request.country)
+  const keywords = await fetchKeywords(request.seedKeyword, request.country, request.matchType)
 
   // Apply filters
   let filtered = keywords
@@ -289,7 +334,7 @@ async function researchKeywords(request: KeywordResearchRequest): Promise<Keywor
  * Get single keyword details
  */
 async function getKeywordDetails(keyword: string, country: string = "us"): Promise<APIKeyword> {
-  const keywords = await fetchKeywords(keyword, country)
+  const keywords = await fetchKeywords(keyword, country, "exact")
   const found = keywords.find((kw) => kw.keyword.toLowerCase() === keyword.toLowerCase())
 
   if (found) {

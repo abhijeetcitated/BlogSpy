@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
@@ -49,6 +50,7 @@ import {
   Image as ImageIcon
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { chargeAiWriterCredits } from "@/features/ai-writer/actions/charge-credits"
 
 import { Details, DetailsSummary } from "./extensions"
 
@@ -170,6 +172,7 @@ export function AIWriterContent() {
   // CREDITS STATE
   // ========================================
   const [creditBalance, setCreditBalance] = useState(() => creditsService.getBalance())
+  const { executeAsync: chargeCredits } = useAction(chargeAiWriterCredits)
   
   // ========================================
   // VERSION HISTORY STATE
@@ -491,14 +494,37 @@ export function AIWriterContent() {
       }
       
       if (aiAction && operationMap[aiAction]) {
-        await creditsService.deductCredits(operationMap[aiAction])
+        const operation = operationMap[aiAction]
+        await creditsService.deductCredits(operation)
         setCreditBalance(creditsService.getBalance())
+
+        const idempotencyKey =
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `aiw_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+
+        const result = await chargeCredits({
+          operation,
+          idempotency_key: idempotencyKey,
+          keyword: targetKeyword || undefined,
+        })
+
+        const serverError =
+          typeof result?.serverError === "string" ? result.serverError : undefined
+        const validationMessage =
+          result?.validationErrors?.operation?._errors?.[0] ||
+          result?.validationErrors?.idempotency_key?._errors?.[0]
+
+        if (serverError || validationMessage) {
+          console.warn("[AI Writer] Billing sync failed", serverError ?? validationMessage)
+          showNotification("Billing sync failed. Please refresh and try again.")
+        }
       }
       
       setAiAction(null)
       showNotification("AI content generated successfully! ✨")
     },
-    [editor, showNotification, aiAction]
+    [editor, showNotification, aiAction, chargeCredits, targetKeyword]
   )
   
   // Check credits before AI operation

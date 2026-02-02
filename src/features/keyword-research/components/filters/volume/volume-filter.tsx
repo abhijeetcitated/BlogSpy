@@ -30,6 +30,8 @@ export function VolumeFilter({
   onPresetChange,
   onApply,
 }: VolumeFilterProps) {
+  const isDirty = tempRange[0] !== 0 || tempRange[1] !== 10000000
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
@@ -68,10 +70,14 @@ export function VolumeFilter({
           <div className="flex items-center gap-2">
             <Input
               type="number"
+              min={0}
               placeholder="From"
               value={tempRange[0] || ""}
               onChange={(e) => {
-                const val = e.target.value === "" ? 0 : Number(e.target.value)
+                const val =
+                  e.target.value === ""
+                    ? 0
+                    : Math.max(0, Number.parseFloat(e.target.value) || 0)
                 onTempRangeChange([val, tempRange[1]])
                 onPresetChange(null)
               }}
@@ -80,17 +86,27 @@ export function VolumeFilter({
             <span className="text-muted-foreground">—</span>
             <Input
               type="number"
+              min={0}
               placeholder="To"
               value={tempRange[1] || ""}
               onChange={(e) => {
-                const val = e.target.value === "" ? 0 : Number(e.target.value)
+                const val =
+                  e.target.value === ""
+                    ? 0
+                    : Math.max(0, Number.parseFloat(e.target.value) || 0)
                 onTempRangeChange([tempRange[0], val])
                 onPresetChange(null)
               }}
               className="h-8 text-sm"
             />
           </div>
-          <Button onClick={onApply} className="w-full mt-2 bg-primary hover:bg-primary/90">
+          <Button
+            onClick={onApply}
+            className={cn(
+              "w-full mt-2 bg-primary hover:bg-primary/90",
+              isDirty && "shadow-[0_0_12px_rgba(59,130,246,0.45)]"
+            )}
+          >
             Apply Filter
           </Button>
         </div>

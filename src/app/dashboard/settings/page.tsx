@@ -1,20 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { 
   STACK_SPACING, 
   RESPONSIVE_CLASSES,
   TEXT_SIZES,
   CARD_PADDING
-} from "@/src/styles"
+} from "@/styles"
 import { 
   User, 
   Bell, 
   Palette, 
   Shield, 
   Globe, 
-  Key,
   Save,
   Eye,
   EyeOff,
@@ -142,11 +141,6 @@ export default function SettingsPage() {
               <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
               <span className="hidden xs:inline">Security</span>
               <span className="xs:hidden">🔒</span>
-            </TabsTrigger>
-            <TabsTrigger value="api" className="data-[state=active]:bg-slate-700 text-xs sm:text-sm">
-              <Key className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-              <span className="hidden xs:inline">API Keys</span>
-              <span className="xs:hidden">🔑</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -417,44 +411,6 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* API Keys Tab */}
-        <TabsContent value="api" className={STACK_SPACING.default}>
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-white text-base sm:text-lg">API Keys</CardTitle>
-              <CardDescription className="text-sm">Manage API keys for programmatic access</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 p-4 sm:p-6 pt-0 sm:pt-0">
-              {mockUser.plan === "enterprise" ? (
-                <>
-                  <div className="p-3 sm:p-4 bg-slate-900/50 rounded-lg space-y-2">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <p className="text-white font-mono text-xs sm:text-sm truncate">sk_live_****************************</p>
-                      <Button variant="ghost" size="sm" className="text-slate-400 w-fit">
-                        Copy
-                      </Button>
-                    </div>
-                    <p className="text-xs text-slate-400">Created: Dec 1, 2024 • Last used: 2 hours ago</p>
-                  </div>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto text-sm">
-                    <Key className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                    Generate New API Key
-                  </Button>
-                </>
-              ) : (
-                <div className="text-center py-6 sm:py-8">
-                  <Key className="w-10 h-10 sm:w-12 sm:h-12 text-slate-600 mx-auto mb-3 sm:mb-4" />
-                  <p className="text-white font-medium text-sm sm:text-base">API Access is Enterprise Only</p>
-                  <p className="text-xs sm:text-sm text-slate-400 mt-1 mb-4">
-                    Upgrade to Enterprise to get API access
-                  </p>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-sm">
-                    Upgrade to Enterprise
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
     </ErrorBoundary>

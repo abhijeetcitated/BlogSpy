@@ -79,7 +79,7 @@ import {
   EEAT_COMPONENT_INFO,
   SIGNAL_STRENGTH_INFO,
   EEAT_TABS
-} from '@/src/features/ai-writer/types/tools/eeat.types';
+} from '@/features/ai-writer/types/tools/eeat.types';
 
 // ============================================================================
 // HELPER COMPONENTS

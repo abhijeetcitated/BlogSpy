@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { useEffect, useState } from "react"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { 
   CreditCard, 
   Check, 
@@ -18,12 +18,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client"
 
 // Mock user data
 const mockUser = {
   plan: "pro",
-  credits: 342,
-  maxCredits: 500,
   billingCycle: "monthly",
   nextBillingDate: "Jan 15, 2025",
   stripeCustomerId: "cus_xxx",
@@ -100,10 +99,89 @@ const mockInvoices = [
 export default function BillingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
   const [isLoading, setIsLoading] = useState(false)
+  const [creditBalance, setCreditBalance] = useState({ total: 0, used: 0, remaining: 0 })
+  const [isCreditsLoading, setIsCreditsLoading] = useState(true)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setIsCreditsLoading(false)
+      return
+    }
+
+    const supabase = getSupabaseBrowserClient()
+    let isActive = true
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const loadCredits = async () => {
+      try {
+        const { data: authData } = await supabase.auth.getUser()
+        const user = authData?.user
+        if (!user || !isActive) {
+          setIsCreditsLoading(false)
+          return
+        }
+
+        const { data: creditsRow } = await supabase
+          .from("bill_credits")
+          .select("credits_total, credits_used")
+          .eq("user_id", user.id)
+          .maybeSingle()
+
+        const total = creditsRow?.credits_total ?? 0
+        const used = creditsRow?.credits_used ?? 0
+        const remaining = Math.max(total - used, 0)
+
+        if (isActive) {
+          setCreditBalance({ total, used, remaining })
+        }
+      } finally {
+        if (isActive) setIsCreditsLoading(false)
+      }
+    }
+
+    const subscribeCredits = async () => {
+      const { data: authData } = await supabase.auth.getUser()
+      const user = authData?.user
+      if (!user || !isActive) return
+
+      channel = supabase
+        .channel("public:bill_credits")
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "bill_credits",
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const next = payload.new as { credits_total?: number; credits_used?: number }
+            setCreditBalance((prev) => {
+              const total = next.credits_total ?? prev.total
+              const used = next.credits_used ?? prev.used
+              const remaining = Math.max(total - used, 0)
+              return { total, used, remaining }
+            })
+          }
+        )
+        .subscribe()
+    }
+
+    loadCredits()
+    subscribeCredits()
+
+    return () => {
+      isActive = false
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [])
 
   const currentPlan = plans.find(p => p.id === mockUser.plan) || plans[0]
-  const creditsUsed = mockUser.maxCredits - mockUser.credits
-  const creditsPercentage = (mockUser.credits / mockUser.maxCredits) * 100
+  const creditsUsed = creditBalance.used
+  const creditsTotal = creditBalance.total
+  const creditsRemaining = creditBalance.remaining
+  const creditsPercentage = creditsTotal === 0 ? 0 : (creditsUsed / creditsTotal) * 100
+  const remainingPercentage = creditsTotal === 0 ? 0 : (creditsRemaining / creditsTotal) * 100
 
   const handleUpgrade = async (planId: string) => {
     setIsLoading(true)
@@ -173,15 +251,18 @@ export default function BillingPage() {
           <CardHeader className="pb-2 p-4 sm:p-6">
             <CardDescription className="text-slate-400 text-xs sm:text-sm">Credits Usage</CardDescription>
             <CardTitle className="text-xl sm:text-2xl text-white">
-              {mockUser.credits} / {mockUser.maxCredits}
+              {isCreditsLoading ? "Loading..." : `${creditsUsed.toLocaleString()} / ${creditsTotal.toLocaleString()}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
-            <Progress value={creditsPercentage} className="h-2" />
+            <Progress
+              value={creditsPercentage}
+              className="h-2 bg-[#FFD700]/20 [&_[data-slot=progress-indicator]]:bg-[#FFD700]"
+            />
             <p className="text-xs sm:text-sm text-slate-400">
-              {creditsUsed} credits used this month
+              {creditsUsed.toLocaleString()} credits used this month
             </p>
-            {creditsPercentage < 20 && (
+            {remainingPercentage < 20 && creditsTotal > 0 && (
               <div className="flex items-center gap-2 text-amber-400 text-xs sm:text-sm">
                 <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                 Running low on credits

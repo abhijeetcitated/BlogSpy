@@ -10,7 +10,7 @@ export function Logo() {
         <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 opacity-40 blur-md -z-10 animate-gold-pulse" />
       </div>
       <span className="text-2xl font-bold tracking-tight text-foreground">
-        Blog<span className="text-amber-400">Spy</span>
+        Cita<span className="text-amber-400">Ted</span>
       </span>
     </div>
   )

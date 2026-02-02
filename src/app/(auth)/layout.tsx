@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Authentication - BlogSpy",
-  description: "Sign in or create an account to access BlogSpy SEO tools",
+  title: "Authentication - CitaTed",
+  description: "Sign in or create an account to access CitaTed SEO tools",
 }
 
 export default function AuthLayout({

@@ -1,5 +1,5 @@
-import { ContentRoadmapContent } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { ContentRoadmapContent } from "@features/content-roadmap"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function ContentRoadmapPage() {
   return (
@@ -8,6 +8,7 @@ export default function ContentRoadmapPage() {
     </ErrorBoundary>
   )
 }
+
 
 
 

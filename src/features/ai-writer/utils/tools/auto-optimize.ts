@@ -16,7 +16,7 @@ import {
   TextRange,
   DEFAULT_OPTIMIZATION_SETTINGS,
   ACTION_TYPE_INFO
-} from '@/src/features/ai-writer/types/tools/auto-optimize.types';
+} from '@/features/ai-writer/types/tools/auto-optimize.types';
 
 // =============================================================================
 // WORD SIMPLIFICATION DATABASE

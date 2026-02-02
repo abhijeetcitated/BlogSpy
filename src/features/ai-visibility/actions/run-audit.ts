@@ -11,7 +11,7 @@
  * @example
  * ```tsx
  * "use client"
- * import { runTechAudit } from "@/src/features/ai-visibility/actions/run-audit"
+ * import { runTechAudit } from "@/features/ai-visibility/actions/run-audit"
  * 
  * const result = await runTechAudit({ domain: "example.com" })
  * if (result?.data?.success) {
@@ -22,7 +22,7 @@
 
 "use server"
 
-import { authAction, z } from "@/src/lib/safe-action"
+import { authAction, z } from "@/lib/safe-action"
 import { createAuditService } from "../services/audit.service"
 import type { TechAuditResult, BotAccessStatus, SchemaValidation } from "../types"
 

@@ -16,7 +16,7 @@ export function Header({ mainView, onViewChange, children }: HeaderProps) {
   const isGapAnalysis = mainView === "gap-analysis"
 
   return (
-    <div className="py-4 sm:py-5 border-b border-border -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
+    <div className="py-4 sm:py-5 border-b border-border -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20">

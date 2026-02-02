@@ -14,11 +14,11 @@ import {
   SitePage,
   LinkRelevance,
   DEFAULT_INTERNAL_LINKING_SETTINGS
-} from '@/src/features/ai-writer/types/tools/internal-linking.types';
+} from '@/features/ai-writer/types/tools/internal-linking.types';
 import {
   analyzeInternalLinking,
   exportLinkingReport
-} from '@/src/features/ai-writer/utils/tools/internal-linking';
+} from '@/features/ai-writer/utils/tools/internal-linking';
 
 // =============================================================================
 // TYPES

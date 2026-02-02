@@ -69,7 +69,7 @@ import {
   HIGHLIGHT_COLORS,
   SEVERITY_COLORS,
   GRADE_COLORS
-} from '@/src/features/ai-writer/types/tools/readability.types';
+} from '@/features/ai-writer/types/tools/readability.types';
 
 // Utilities
 import {
@@ -77,7 +77,7 @@ import {
   extractPlainText,
   generateHighlights,
   exportReadabilityReport
-} from '@/src/features/ai-writer/utils/tools/readability';
+} from '@/features/ai-writer/utils/tools/readability';
 
 // =============================================================================
 // PROPS INTERFACE

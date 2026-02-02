@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from "@/src/styles"
+import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from "@/styles"
 
 const features = [
   {

@@ -9,21 +9,26 @@
 // ============================================
 
 import React, { useMemo, useCallback, useEffect, useRef, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
 import { useDebounce } from "@/hooks/use-debounce"
 import { Sparkles } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { cn } from "@/lib/utils"
 
 // Zustand store
 import { useKeywordStore, type KeywordFilters } from "./store"
 import { normalizeCountryCode } from "./utils/country-normalizer"
+import { bulkSearchKeywords } from "./actions/fetch-keywords"
+import { getFilterPresets } from "./actions/filter-presets"
 
 // Feature imports
-import type { Country, MatchType, BulkMode, SERPFeature } from "./types"
+import type { Country, MatchType, BulkMode, Keyword } from "./types"
 import { POPULAR_COUNTRIES, ALL_COUNTRIES } from "./constants"
 import { applyAllFilters } from "./utils"
-import { 
+import { applyFilters as applyEngineFilters } from "./utils/filter-logic"
+import {
   BulkKeywordsInput,
   VolumeFilter,
   KDFilter,
@@ -55,24 +60,36 @@ function getActiveFilterCount(filters: {
   selectedSerpFeatures: string[]
   includeTerms: string[]
   excludeTerms: string[]
+  includeKeywords: string[]
+  excludeKeywords: string[]
   trendDirection: string | null
+  selectedTrend: string[]
+  minTrendGrowth: number
   weakSpotToggle: string
 }): number {
   let count = 0
-  if (filters.volumeRange[0] > 0 || filters.volumeRange[1] < 1000000) count++
+  if (filters.volumeRange[0] > 0 || filters.volumeRange[1] < 10000000) count++
   if (filters.kdRange[0] > 0 || filters.kdRange[1] < 100) count++
   if (filters.cpcRange[0] > 0 || filters.cpcRange[1] < 100) count++
   if (filters.geoRange[0] > 0 || filters.geoRange[1] < 100) count++
   if (filters.selectedIntents.length > 0) count++
   if (filters.selectedSerpFeatures.length > 0) count++
-  if (filters.includeTerms.length > 0) count++
-  if (filters.excludeTerms.length > 0) count++
-  if (filters.trendDirection) count++
+  if (filters.includeKeywords.length > 0 || filters.includeTerms.length > 0) count++
+  if (filters.excludeKeywords.length > 0 || filters.excludeTerms.length > 0) count++
+  const hasTrendFilter =
+    filters.selectedTrend.length > 0 ||
+    filters.minTrendGrowth > 0 ||
+    (!!filters.trendDirection && filters.selectedTrend.length === 0)
+  if (hasTrendFilter) count++
   if (filters.weakSpotToggle !== "all") count++
   return count
 }
 
-export function KeywordResearchContent() {
+interface KeywordResearchContentProps {
+  initialKeywords?: Keyword[]
+}
+
+export function KeywordResearchContent({ initialKeywords = [] }: KeywordResearchContentProps) {
   // ============================================
   // GUEST MODE CHECK (PLG Flow)
   // ============================================
@@ -84,9 +101,8 @@ export function KeywordResearchContent() {
   // ============================================
   // URL PARAMS (for sharing/bookmarking)
   // ============================================
-  const router = useRouter()
   const searchParams = useSearchParams()
-  
+
   // Initialize from URL params if present
   const initialSearch = searchParams.get("q") || ""
   const initialCountryCodeRaw = searchParams.get("country") || null
@@ -104,13 +120,49 @@ export function KeywordResearchContent() {
     }
   }, [initialCountryCodeRaw])
 
-  // Find initial country
+  // ============================================
+  // SMART COUNTRY DETECTION
+  // ============================================
+  // Priority: 1. URL Param -> 2. Local Storage -> 3. System Timezone -> 4. Default (US)
   const initialCountry = useMemo(() => {
+    // 1. URL Param (Highest Priority)
     if (initialCountryCode) {
       const all = [...POPULAR_COUNTRIES, ...ALL_COUNTRIES]
       return all.find((c) => c.code === initialCountryCode) || POPULAR_COUNTRIES[0]
     }
-    return POPULAR_COUNTRIES[0] // Default to US
+
+    // 2. Local Storage (Client-side only)
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("blogspy_last_country")
+        if (cached) {
+          const all = [...POPULAR_COUNTRIES, ...ALL_COUNTRIES]
+          const found = all.find((c) => c.code === cached)
+          if (found) return found
+        }
+      } catch (e) {
+        // Ignore storage errors
+      }
+    }
+
+    // 3. System Timezone (Heuristic)
+    if (typeof window !== "undefined") {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        if (tz.includes("Calcutta") || tz.includes("Kolkata") || tz.includes("India")) {
+          return ALL_COUNTRIES.find(c => c.code === "IN") || POPULAR_COUNTRIES[0]
+        }
+        if (tz.includes("London") || tz.includes("Europe/London")) {
+          return POPULAR_COUNTRIES.find(c => c.code === "GB") || POPULAR_COUNTRIES[0]
+        }
+        // Add more heuristics as needed
+      } catch (e) {
+        // Ignore timezone errors
+      }
+    }
+
+    // 4. Default Fallback
+    return POPULAR_COUNTRIES[0] // US
   }, [initialCountryCode])
 
   // ============================================
@@ -120,6 +172,7 @@ export function KeywordResearchContent() {
     // Data
     keywords: storeKeywords,
     setKeywords,
+    setCredits,
 
     // Search state
     search,
@@ -133,15 +186,33 @@ export function KeywordResearchContent() {
     setFilter,
     setFilters,
     resetFilters,
+    setSearchQuery,
+    setPresets,
+    applyPreset,
 
     // Loading
     loading,
     setSearching,
   } = useKeywordStore()
-  
+
   // Local UI state for country popover
   const [countryOpen, setCountryOpen] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(initialCountry)
+  const [filtersPopoverOpen, setFiltersPopoverOpen] = useState(false)
+
+  // Temporary mock bridge: hydrate store when empty.
+  useEffect(() => {
+    if (storeKeywords.length === 0 && initialKeywords.length > 0) {
+      setKeywords(initialKeywords)
+    }
+  }, [initialKeywords, setKeywords, storeKeywords.length])
+
+  // Persist country selection
+  useEffect(() => {
+    if (selectedCountry?.code) {
+      localStorage.setItem("blogspy_last_country", selectedCountry.code)
+    }
+  }, [selectedCountry])
 
   // ============================================
   // DEMO MODE
@@ -153,16 +224,45 @@ export function KeywordResearchContent() {
   // DERIVED STATE
   // ============================================
   const activeFilterCount = useMemo(() => getActiveFilterCount(filters), [filters])
-  
+
   // Debounce filter text for better performance (300ms delay)
   const debouncedFilterText = useDebounce(filters.searchText, 300)
 
   // ============================================
   // FILTERED KEYWORDS (with memoization)
   // ============================================
+  const engineFilteredKeywords = useMemo(() => {
+    return applyEngineFilters(storeKeywords, {
+      volumeRange: filters.volumeRange,
+      kdRange: filters.kdRange,
+      cpcRange: filters.cpcRange,
+      geoRange: filters.geoRange,
+      selectedIntents: filters.selectedIntents,
+      selectedSerpFeatures: filters.selectedSerpFeatures,
+      includeKeywords: filters.includeKeywords,
+      excludeKeywords: filters.excludeKeywords,
+      weakSpotTypes: filters.weakSpotTypes,
+      selectedTrend: filters.selectedTrend,
+      minTrendGrowth: filters.minTrendGrowth,
+    })
+  }, [
+    storeKeywords,
+    filters.volumeRange,
+    filters.kdRange,
+    filters.cpcRange,
+    filters.geoRange,
+    filters.selectedIntents,
+    filters.selectedSerpFeatures,
+    filters.includeKeywords,
+    filters.excludeKeywords,
+    filters.weakSpotTypes,
+    filters.selectedTrend,
+    filters.minTrendGrowth,
+  ])
+
   const filteredKeywords = useMemo(() => {
     // Use keywords from store (populated by fetchKeywords action)
-    return applyAllFilters(storeKeywords, {
+    return applyAllFilters(engineFilteredKeywords, {
       filterText: debouncedFilterText,
       matchType: filters.matchType,
       volumeRange: filters.volumeRange,
@@ -179,7 +279,7 @@ export function KeywordResearchContent() {
       minTrendGrowth: filters.minTrendGrowth,
     })
   }, [
-    storeKeywords, debouncedFilterText, filters.matchType, filters.volumeRange, filters.kdRange,
+    engineFilteredKeywords, debouncedFilterText, filters.matchType, filters.volumeRange, filters.kdRange,
     filters.cpcRange, filters.geoRange, filters.selectedIntents, filters.includeTerms,
     filters.excludeTerms, filters.weakSpotToggle, filters.weakSpotTypes,
     filters.selectedSerpFeatures, filters.trendDirection, filters.minTrendGrowth
@@ -188,38 +288,124 @@ export function KeywordResearchContent() {
   // ============================================
   // BULK ANALYZE HANDLER
   // ============================================
-  const bulkAnalyzeTimerRef = useRef<NodeJS.Timeout | null>(null)
-  
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (bulkAnalyzeTimerRef.current) {
-        clearTimeout(bulkAnalyzeTimerRef.current)
+  const { executeAsync: executeBulk } = useAction(bulkSearchKeywords)
+  const { executeAsync: executeFetchPresets } = useAction(getFilterPresets)
+  const [presetsLoaded, setPresetsLoaded] = useState(false)
+  const defaultPresetApplied = useRef(false)
+
+  const handleBulkAnalyze = useCallback(
+    async (keywords: string[]) => {
+      if (keywords.length === 0) {
+        toast.error("Please enter at least one keyword.")
+        return
       }
-    }
-  }, [])
-  
-  const handleBulkAnalyze = useCallback((keywords: string[]) => {
-    if (keywords.length === 0) return
-    
-    setSearching(true)
-    
-    // Simulate API call delay
-    bulkAnalyzeTimerRef.current = setTimeout(() => {
-      if (keywords.length === 1) {
-        router.push(`/dashboard/research/overview/${encodeURIComponent(keywords[0])}`)
-      } else {
-        // Store keywords in sessionStorage for bulk view
-        try {
-          sessionStorage.setItem('bulkKeywords', JSON.stringify(keywords))
-        } catch {
-          // sessionStorage may be blocked in privacy mode
+
+      if (isGuest) {
+        toast.info("Sign up to unlock bulk analysis.")
+        return
+      }
+
+      setSearching(true)
+      const startedAt = Date.now()
+      const minDelayMs = 2500
+
+      try {
+        const idempotencyKey = crypto.randomUUID()
+        const result = await executeBulk({
+          keywords,
+          country: search.country || "US",
+          matchType: filters.matchType,
+          idempotency_key: idempotencyKey,
+        })
+
+        const serverError =
+          typeof result?.serverError === "string" ? result.serverError : undefined
+        if (serverError) {
+          if (serverError === "INSUFFICIENT_CREDITS") {
+            toast.error("You need more credits")
+            return
+          }
+          if (serverError === "PLG_LOGIN_REQUIRED") {
+            toast.error("Please sign in to analyze keywords.")
+            return
+          }
+          if (serverError === "GOOGLE_BUSY_REFUNDED") {
+            toast.error("Connection error. Your credits have been refunded.")
+            return
+          }
+          toast.error(serverError)
+          return
         }
-        toast.info(`Analyzing ${keywords.length} keywords... (API integration pending)`)
+
+        const keywordErrors = result?.validationErrors?.keywords
+        const keywordsValidation = Array.isArray(keywordErrors)
+          ? keywordErrors.find((entry) => entry?._errors?.length)?._errors?.[0]
+          : keywordErrors?._errors?.[0]
+        const validationMessage =
+          keywordsValidation ?? result?.validationErrors?.idempotency_key?._errors?.[0]
+        if (validationMessage) {
+          toast.error(validationMessage)
+          return
+        }
+
+        if (!result?.data || result.data.success !== true) {
+          toast.error("Failed to analyze keywords")
+          return
+        }
+
+        const elapsed = Date.now() - startedAt
+        if (elapsed < minDelayMs) {
+          await new Promise((resolve) => setTimeout(resolve, minDelayMs - elapsed))
+        }
+
+        setKeywords(result.data.data)
+        if (typeof result.data.balance === "number") {
+          setCredits(result.data.balance)
+        }
+
+        toast.success(
+          `Analyzed ${keywords.length} keywords successfully. ${keywords.length} credits deducted.`
+        )
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "An unexpected error occurred"
+        toast.error(message)
+      } finally {
+        setSearching(false)
       }
-      setSearching(false)
-    }, 500)
-  }, [router, setSearching])
+    },
+    [executeBulk, filters.matchType, isGuest, search.country, setCredits, setKeywords, setSearching]
+  )
+
+  // ============================================
+  // PRESET AUTO-APPLY (default preset)
+  // ============================================
+  useEffect(() => {
+    if (!isAuthenticated || presetsLoaded) return
+
+    let cancelled = false
+
+    void (async () => {
+      const result = await executeFetchPresets({})
+      if (cancelled) return
+
+      setPresetsLoaded(true)
+
+      if (result?.data?.success) {
+        const presets = result.data.presets
+        setPresets(presets)
+
+        const defaultPreset = presets.find((preset) => preset.isDefault)
+        if (defaultPreset && !defaultPresetApplied.current) {
+          applyPreset(defaultPreset)
+          defaultPresetApplied.current = true
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [applyPreset, executeFetchPresets, isAuthenticated, presetsLoaded, setPresets])
 
   // ============================================
   // SYNC URL PARAMS (for sharing)
@@ -227,25 +413,37 @@ export function KeywordResearchContent() {
   useEffect(() => {
     // SSR guard
     if (typeof window === 'undefined') return
-    
+
     const params = new URLSearchParams()
     if (filters.searchText) params.set("q", filters.searchText)
     if (selectedCountry?.code) params.set("country", selectedCountry.code)
-    
+
     // Only update URL if we have params
-    const newUrl = params.toString() 
+    const newUrl = params.toString()
       ? `${window.location.pathname}?${params.toString()}`
       : window.location.pathname
-    
+
     // Replace state without triggering navigation
     window.history.replaceState(null, "", newUrl)
   }, [filters.searchText, selectedCountry])
+
+  // Reset popover scroll assist when leaving explore mode
+  useEffect(() => {
+    if (search.mode !== "explore" && filtersPopoverOpen) {
+      setFiltersPopoverOpen(false)
+    }
+  }, [filtersPopoverOpen, search.mode])
 
   // ============================================
   // RENDER
   // ============================================
   return (
-    <div className="flex flex-col h-full w-full max-w-full overflow-hidden">
+    <div
+      className={cn(
+        "flex flex-col h-full w-full max-w-full overflow-x-hidden",
+        filtersPopoverOpen ? "overflow-y-auto pb-[40vh]" : "overflow-hidden"
+      )}
+    >
       {/* 🎭 DEMO MODE BANNER (PLG) */}
       {isGuest && (
         <div className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-b border-amber-500/20 shrink-0">
@@ -257,8 +455,8 @@ export function KeywordResearchContent() {
             — Viewing sample data. Sign up to unlock full features, export, and save your research.
           </span>
           <div className="ml-auto">
-            <a 
-              href="/register" 
+            <a
+              href="/register"
               className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline"
             >
               Create Free Account →
@@ -266,7 +464,7 @@ export function KeywordResearchContent() {
           </div>
         </div>
       )}
-      
+
       <KeywordResearchHeader
         isGuest={isGuest}
         selectedCountry={selectedCountry}
@@ -292,13 +490,14 @@ export function KeywordResearchContent() {
             <KeywordResearchSearch
               mode="filter"
               value={filters.searchText}
-              onChange={(text: string) => setFilter("searchText", text)}
+              onChange={(text: string) => setSearchQuery(text)}
             />
 
             {/* Row 2: Filter Popovers */}
-            <KeywordResearchFiltersWrapper 
-              filters={filters} 
+            <KeywordResearchFiltersWrapper
+              filters={filters}
               setFilter={setFilter}
+              onAnyPopoverChange={setFiltersPopoverOpen}
             />
           </>
         ) : (
@@ -325,39 +524,45 @@ export function KeywordResearchContent() {
 // WRAPPER FOR FILTERS (with proper popover state management)
 // ============================================
 
-function KeywordResearchFiltersWrapper({ 
+function KeywordResearchFiltersWrapper({
   filters,
-  setFilter 
-}: { 
-  filters: KeywordFilters
-  setFilter: <K extends keyof KeywordFilters>(key: K, value: KeywordFilters[K]) => void
-}) {
-  // Local popover open states
-  const [volumeOpen, setVolumeOpen] = useState(false)
-  const [kdOpen, setKdOpen] = useState(false)
-  const [cpcOpen, setCpcOpen] = useState(false)
-  const [intentOpen, setIntentOpen] = useState(false)
-  const [geoOpen, setGeoOpen] = useState(false)
-  const [serpOpen, setSerpOpen] = useState(false)
-  const [weakSpotOpen, setWeakSpotOpen] = useState(false)
-  const [trendOpen, setTrendOpen] = useState(false)
+  setFilter,
+  onAnyPopoverChange,
+  }: {
+    filters: KeywordFilters
+    setFilter: <K extends keyof KeywordFilters>(key: K, value: KeywordFilters[K]) => void
+    onAnyPopoverChange?: (open: boolean) => void
+  }) {
+    // Local popover open states
+    const [volumeOpen, setVolumeOpen] = useState(false)
+    const [kdOpen, setKdOpen] = useState(false)
+    const [cpcOpen, setCpcOpen] = useState(false)
+    const [intentOpen, setIntentOpen] = useState(false)
+    const [geoOpen, setGeoOpen] = useState(false)
+    const [serpOpen, setSerpOpen] = useState(false)
+    const [weakSpotOpen, setWeakSpotOpen] = useState(false)
+    const [trendOpen, setTrendOpen] = useState(false)
+
+  const anyPopoverOpen =
+    volumeOpen ||
+    kdOpen ||
+    cpcOpen ||
+    intentOpen ||
+    geoOpen ||
+    serpOpen ||
+    weakSpotOpen ||
+    trendOpen
+
+  useEffect(() => {
+    onAnyPopoverChange?.(anyPopoverOpen)
+  }, [anyPopoverOpen, onAnyPopoverChange])
 
   // Temp states for filters (before apply)
   const [tempVolumeRange, setTempVolumeRange] = useState<[number, number]>(filters.volumeRange)
   const [tempKdRange, setTempKdRange] = useState<[number, number]>(filters.kdRange)
   const [tempCpcRange, setTempCpcRange] = useState<[number, number]>(filters.cpcRange)
-  const [tempGeoRange, setTempGeoRange] = useState<[number, number]>(filters.geoRange)
-  const [tempSelectedIntents, setTempSelectedIntents] = useState<string[]>(filters.selectedIntents)
-  const [tempSelectedSerpFeatures, setTempSelectedSerpFeatures] = useState<SERPFeature[]>(filters.selectedSerpFeatures)
-  const [tempWeakSpotToggle, setTempWeakSpotToggle] = useState<"all" | "with" | "without">(filters.weakSpotToggle)
-  const [tempWeakSpotTypes, setTempWeakSpotTypes] = useState<string[]>(filters.weakSpotTypes)
-  const [tempTrendDirection, setTempTrendDirection] = useState<"up" | "down" | "stable" | null>(filters.trendDirection)
-  const [tempMinTrendGrowth, setTempMinTrendGrowth] = useState<number | null>(filters.minTrendGrowth)
-  const [volumePreset, setVolumePreset] = useState<string | null>(null)
-
-  // Include/Exclude inputs
-  const [includeInput, setIncludeInput] = useState("")
-  const [excludeInput, setExcludeInput] = useState("")
+    const [tempGeoRange, setTempGeoRange] = useState<[number, number]>(filters.geoRange)
+    const [volumePreset, setVolumePreset] = useState<string | null>(null)
 
   // Sync temp states when filters change externally
   useEffect(() => {
@@ -365,12 +570,6 @@ function KeywordResearchFiltersWrapper({
     setTempKdRange(filters.kdRange)
     setTempCpcRange(filters.cpcRange)
     setTempGeoRange(filters.geoRange)
-    setTempSelectedIntents(filters.selectedIntents)
-    setTempSelectedSerpFeatures(filters.selectedSerpFeatures)
-    setTempWeakSpotToggle(filters.weakSpotToggle)
-    setTempWeakSpotTypes(filters.weakSpotTypes)
-    setTempTrendDirection(filters.trendDirection)
-    setTempMinTrendGrowth(filters.minTrendGrowth)
   }, [filters])
 
   return (
@@ -399,23 +598,11 @@ function KeywordResearchFiltersWrapper({
         }}
       />
 
-      <IntentFilter
-        open={intentOpen}
-        onOpenChange={setIntentOpen}
-        selectedIntents={filters.selectedIntents}
-        tempSelectedIntents={tempSelectedIntents}
-        onToggleIntent={(intent) => {
-          setTempSelectedIntents(prev => 
-            prev.includes(intent) 
-              ? prev.filter(i => i !== intent) 
-              : [...prev, intent]
-          )
-        }}
-        onApply={() => {
-          setFilter("selectedIntents", tempSelectedIntents)
-          setIntentOpen(false)
-        }}
-      />
+        <IntentFilter
+          open={intentOpen}
+          onOpenChange={setIntentOpen}
+          selectedIntents={filters.selectedIntents}
+        />
 
       <CPCFilter
         open={cpcOpen}
@@ -442,83 +629,22 @@ function KeywordResearchFiltersWrapper({
       <WeakSpotFilter
         open={weakSpotOpen}
         onOpenChange={setWeakSpotOpen}
-        tempHasWeakSpot={tempWeakSpotToggle === "all" ? null : tempWeakSpotToggle === "with"}
-        tempWeakSpotTypes={tempWeakSpotTypes}
-        onTempHasWeakSpotChange={(value) => {
-          setTempWeakSpotToggle(value === null ? "all" : value ? "with" : "without")
-        }}
-        onToggleWeakSpotType={(type) => {
-          setTempWeakSpotTypes(prev =>
-            prev.includes(type)
-              ? prev.filter(t => t !== type)
-              : [...prev, type]
-          )
-        }}
-        onApply={() => {
-          setFilter("weakSpotToggle", tempWeakSpotToggle)
-          setFilter("weakSpotTypes", tempWeakSpotTypes)
-          setWeakSpotOpen(false)
-        }}
+        selectedTypes={filters.weakSpotTypes}
+        weakSpotToggle={filters.weakSpotToggle}
       />
 
-      <SerpFilter
-        open={serpOpen}
-        onOpenChange={setSerpOpen}
-        selectedFeatures={filters.selectedSerpFeatures}
-        tempSelectedFeatures={tempSelectedSerpFeatures}
-        onToggleFeature={(feature) => {
-          setTempSelectedSerpFeatures(prev =>
-            prev.includes(feature)
-              ? prev.filter(f => f !== feature)
-              : [...prev, feature]
-          )
-        }}
-        onApply={() => {
-          setFilter("selectedSerpFeatures", tempSelectedSerpFeatures)
-          setSerpOpen(false)
-        }}
-      />
+        <SerpFilter
+          open={serpOpen}
+          onOpenChange={setSerpOpen}
+          selectedFeatures={filters.selectedSerpFeatures}
+        />
 
       <TrendFilter
         open={trendOpen}
         onOpenChange={setTrendOpen}
-        tempTrendDirection={tempTrendDirection}
-        tempMinGrowth={tempMinTrendGrowth}
-        onTempTrendDirectionChange={setTempTrendDirection}
-        onTempMinGrowthChange={setTempMinTrendGrowth}
-        onApply={() => {
-          setFilter("trendDirection", tempTrendDirection)
-          setFilter("minTrendGrowth", tempMinTrendGrowth)
-          setTrendOpen(false)
-        }}
       />
 
-      <IncludeExcludeFilter
-        includeTerms={filters.includeTerms}
-        excludeTerms={filters.excludeTerms}
-        includeInput={includeInput}
-        excludeInput={excludeInput}
-        onIncludeInputChange={setIncludeInput}
-        onExcludeInputChange={setExcludeInput}
-        onAddIncludeTerm={() => {
-          if (includeInput.trim()) {
-            setFilter("includeTerms", [...filters.includeTerms, includeInput.trim()])
-            setIncludeInput("")
-          }
-        }}
-        onAddExcludeTerm={() => {
-          if (excludeInput.trim()) {
-            setFilter("excludeTerms", [...filters.excludeTerms, excludeInput.trim()])
-            setExcludeInput("")
-          }
-        }}
-        onRemoveIncludeTerm={(term) => {
-          setFilter("includeTerms", filters.includeTerms.filter(t => t !== term))
-        }}
-        onRemoveExcludeTerm={(term) => {
-          setFilter("excludeTerms", filters.excludeTerms.filter(t => t !== term))
-        }}
-      />
+      <IncludeExcludeFilter />
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import "server-only"
+
 // ============================================
 // SERP PARSER UTILITIES
 // ============================================
@@ -5,7 +7,7 @@
 // ============================================
 
 import { normalizeSerpFeatureType } from "./serp-feature-normalizer"
-import type { WeakSpots, SERPFeature } from "../types"
+import type { WeakSpots, SERPFeature, WeakSpotEntry, WeakSpotPlatform } from "../types"
 
 /**
  * Canonical weak domains used across the Keyword Explorer.
@@ -13,14 +15,23 @@ import type { WeakSpots, SERPFeature } from "../types"
  * Kept as a simple constant so other modules (UI/services) can reuse the same
  * allowlist without importing regex patterns.
  */
-export const WEAK_DOMAINS = ["reddit.com", "quora.com", "pinterest.com", "pinterest.co.uk"] as const
+export const WEAK_DOMAINS = [
+  "reddit.com",
+  "quora.com",
+  "pinterest.com",
+  "pinterest.co.uk",
+  "medium.com",
+  "forums",
+] as const
 
 export type WeakDomain = (typeof WEAK_DOMAINS)[number]
 
-export interface RankedWeakSpot {
-  platform: "reddit" | "quora" | "pinterest"
-  rank: number
-  url: string
+const WEAK_DOMAIN_PATTERNS: Record<WeakSpotPlatform, RegExp> = {
+  reddit: /(^|\.)reddit\.com$/i,
+  quora: /(^|\.)quora\.com$/i,
+  pinterest: /(^|\.)pinterest\./i,
+  medium: /(^|\.)medium\.com$/i,
+  forums: /(^|\.)forums?\./i,
 }
 
 /**
@@ -29,8 +40,8 @@ export interface RankedWeakSpot {
  * This complements [`detectWeakSpots()`](src/features/keyword-research/utils/serp-parser.ts:86)
  * which returns the legacy object shape ({ reddit, quora, pinterest }).
  */
-export function detectWeakSpotsRanked(items: unknown[]): RankedWeakSpot[] {
-  const out: RankedWeakSpot[] = []
+export function detectWeakSpotsRanked(items: unknown[]): WeakSpotEntry[] {
+  const out: WeakSpotEntry[] = []
   if (!Array.isArray(items)) return out
 
   for (const raw of items.slice(0, 10)) {
@@ -50,19 +61,73 @@ export function detectWeakSpotsRanked(items: unknown[]): RankedWeakSpot[] {
 
     if (rank < 1 || rank > 10) continue
 
-    const lower = domain.toLowerCase()
-    const platform =
-      lower.includes("reddit.com") ? "reddit" :
-      lower.includes("quora.com") ? "quora" :
-      lower.includes("pinterest.") ? "pinterest" :
-      null
+    const platform = (Object.entries(WEAK_DOMAIN_PATTERNS).find(([, pattern]) =>
+      pattern.test(domain)
+    )?.[0] ?? null) as WeakSpotPlatform | null
 
-    if (!platform) continue
+    const isForum =
+      !platform &&
+      (domain.toLowerCase().includes("forum") ||
+        url.toLowerCase().includes("/forum") ||
+        url.toLowerCase().includes("/forums"))
+
+    if (!platform && !isForum) continue
+
+    const resolvedPlatform = (isForum ? "forums" : platform) as WeakSpotPlatform
 
     // Keep only best (lowest rank) per platform.
-    if (out.some((x) => x.platform === platform)) continue
+    if (out.some((x) => x.platform === resolvedPlatform)) continue
 
-    out.push({ platform, rank, url })
+    out.push({ platform: resolvedPlatform, rank, url, icon: resolvedPlatform })
+  }
+
+  return out.sort((a, b) => a.rank - b.rank)
+}
+
+/**
+ * Analyze SERP items and return weak-spot hits (ranked, top 10 only).
+ */
+export function analyzeSerpForWeakSpots(items: unknown[]): WeakSpotEntry[] {
+  if (!Array.isArray(items) || items.length === 0) {
+    // Empty = UI renders "-" for Weak Spot column.
+    return []
+  }
+
+  const out: WeakSpotEntry[] = []
+  const seen = new Set<CoreWeakSpotPlatform>()
+
+  for (const raw of items) {
+    if (!raw || typeof raw !== "object") continue
+
+    const item = raw as {
+      domain?: unknown
+      url?: unknown
+      rank_absolute?: unknown
+      rank_group?: unknown
+      position?: unknown
+    }
+
+    const rank =
+      (typeof item.rank_group === "number" ? item.rank_group : undefined) ??
+      (typeof item.rank_absolute === "number" ? item.rank_absolute : undefined) ??
+      (typeof item.position === "number" ? item.position : undefined) ??
+      0
+
+    // Hard cap: top 10 only.
+    if (rank < 1 || rank > 10) continue
+
+    const url = typeof item.url === "string" ? item.url : undefined
+    const domain = typeof item.domain === "string" ? item.domain : extractDomain(url)
+    if (!domain) continue
+
+    const platform = Object.entries(PLATFORM_PATTERNS).find(([, pattern]) =>
+      pattern.test(domain)
+    )?.[0] as CoreWeakSpotPlatform | undefined
+
+    if (!platform || seen.has(platform)) continue
+    seen.add(platform)
+
+    out.push({ platform, rank, url, icon: platform })
   }
 
   return out.sort((a, b) => a.rank - b.rank)
@@ -109,16 +174,13 @@ export function detectSerpFeaturesSimple(
   return { video, snippet, shopping, ai_overview }
 }
 
-/**
- * Platform types for weak spot detection
- */
-export type WeakSpotPlatform = "reddit" | "quora" | "pinterest"
+type CoreWeakSpotPlatform = "reddit" | "quora" | "pinterest"
 
 /**
- * Individual weak spot with rank
+ * Individual weak spot with rank (legacy object-based model)
  */
 export interface WeakSpotItem {
-  platform: WeakSpotPlatform
+  platform: CoreWeakSpotPlatform
   rank: number
   url?: string
   title?: string
@@ -158,7 +220,7 @@ export interface DetectedFeatures {
 /**
  * Platform domain patterns for weak spot detection
  */
-const PLATFORM_PATTERNS: Record<WeakSpotPlatform, RegExp> = {
+const PLATFORM_PATTERNS: Record<CoreWeakSpotPlatform, RegExp> = {
   reddit: /reddit\.com/i,
   quora: /quora\.com/i,
   pinterest: /pinterest\.(com|co\.\w{2})/i,
@@ -200,7 +262,7 @@ export function detectWeakSpots(items: RawSerpItem[]): WeakSpots {
     // Check each platform
     for (const [platform, pattern] of Object.entries(PLATFORM_PATTERNS)) {
       if (pattern.test(domain)) {
-        const key = platform as WeakSpotPlatform
+        const key = platform as CoreWeakSpotPlatform
         // Only record first occurrence (highest rank)
         if (result[key] === null) {
           result[key] = rank
@@ -226,7 +288,7 @@ export function detectWeakSpotsDetailed(items: RawSerpItem[]): WeakSpotItem[] {
     .filter(item => item.type === "organic" || !item.type)
     .slice(0, 10)
 
-  const foundPlatforms = new Set<WeakSpotPlatform>()
+  const foundPlatforms = new Set<CoreWeakSpotPlatform>()
 
   for (const item of organicItems) {
     const domain = item.domain || extractDomain(item.url)
@@ -236,10 +298,10 @@ export function detectWeakSpotsDetailed(items: RawSerpItem[]): WeakSpotItem[] {
     if (rank < 1 || rank > 10) continue
 
     for (const [platform, pattern] of Object.entries(PLATFORM_PATTERNS)) {
-      if (pattern.test(domain) && !foundPlatforms.has(platform as WeakSpotPlatform)) {
-        foundPlatforms.add(platform as WeakSpotPlatform)
+      if (pattern.test(domain) && !foundPlatforms.has(platform as CoreWeakSpotPlatform)) {
+        foundPlatforms.add(platform as CoreWeakSpotPlatform)
         spots.push({
-          platform: platform as WeakSpotPlatform,
+          platform: platform as CoreWeakSpotPlatform,
           rank,
           url: item.url,
           title: item.title,
@@ -312,7 +374,7 @@ function extractDomain(url: string | undefined): string | null {
 /**
  * Check if a specific platform is in weak spots
  */
-export function hasWeakSpot(weakSpots: WeakSpots, platform: WeakSpotPlatform): boolean {
+export function hasWeakSpot(weakSpots: WeakSpots, platform: CoreWeakSpotPlatform): boolean {
   return weakSpots[platform] !== null
 }
 
@@ -326,12 +388,12 @@ export function countWeakSpots(weakSpots: WeakSpots): number {
 /**
  * Get the best (lowest rank) weak spot
  */
-export function getBestWeakSpot(weakSpots: WeakSpots): { platform: WeakSpotPlatform; rank: number } | null {
-  let best: { platform: WeakSpotPlatform; rank: number } | null = null
+export function getBestWeakSpot(weakSpots: WeakSpots): { platform: CoreWeakSpotPlatform; rank: number } | null {
+  let best: { platform: CoreWeakSpotPlatform; rank: number } | null = null
 
   for (const [platform, rank] of Object.entries(weakSpots)) {
     if (rank !== null && (best === null || rank < best.rank)) {
-      best = { platform: platform as WeakSpotPlatform, rank }
+      best = { platform: platform as CoreWeakSpotPlatform, rank }
     }
   }
 

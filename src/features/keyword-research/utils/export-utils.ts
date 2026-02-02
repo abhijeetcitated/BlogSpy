@@ -3,6 +3,7 @@
 // ============================================
 
 import type { Keyword } from "../types"
+import { calculateMomentum } from "./trend-utils"
 
 // Local export format type (extended)
 type ExportFormatExtended = "csv" | "json" | "tsv" | "clipboard"
@@ -18,6 +19,7 @@ interface ExportOptionsExtended {
  */
 function sanitizeCSVValue(value: string): string {
   if (typeof value !== "string") return String(value)
+  if (value === "-") return value
   // Prevent CSV injection
   if (/^[=+\-@\t\r]/.test(value)) {
     return `'${value}`
@@ -29,52 +31,150 @@ function sanitizeCSVValue(value: string): string {
   return value
 }
 
+const INTENT_LABELS: Record<string, string> = {
+  I: "Informational",
+  C: "Commercial",
+  T: "Transactional",
+  N: "Navigational",
+}
+
+const SERP_LABELS: Record<string, string> = {
+  ai_overview: "AI Overview",
+  featured_snippet: "Featured Snippet",
+  people_also_ask: "FAQ / PAA",
+  video_pack: "Video",
+  image_pack: "Image Pack",
+  local_pack: "Local Pack",
+  shopping_ads: "Shopping",
+  ads_top: "Ads",
+  knowledge_panel: "Knowledge Panel",
+  top_stories: "Top Stories",
+  direct_answer: "Direct Answer",
+  reviews: "Reviews",
+}
+
+const EXPORT_HEADERS = [
+  "Keyword",
+  "Intent",
+  "Volume",
+  "RTV",
+  "Trend",
+  "KD %",
+  "CPC",
+  "Weak Spot",
+  "GEO",
+  "SERP",
+]
+
+function formatIntent(intent: Keyword["intent"]): string {
+  if (!Array.isArray(intent) || intent.length === 0) return "-"
+  return intent
+    .map((code) => INTENT_LABELS[code] ?? code)
+    .join(", ")
+}
+
+function formatWeakSpots(weakSpots: Keyword["weakSpots"]): string {
+  if (!weakSpots) return "-"
+
+  const ranked = weakSpots.ranked ?? []
+  if (ranked.length > 0) {
+    const sorted = [...ranked].sort((a, b) => a.rank - b.rank)
+    return sorted
+      .map((spot) => `${spot.platform.charAt(0).toUpperCase()}${spot.platform.slice(1)}(#${spot.rank})`)
+      .join(", ")
+  }
+
+  const legacy: string[] = []
+  if (typeof weakSpots.reddit === "number") legacy.push(`Reddit(#${weakSpots.reddit})`)
+  if (typeof weakSpots.quora === "number") legacy.push(`Quora(#${weakSpots.quora})`)
+  if (typeof weakSpots.pinterest === "number") legacy.push(`Pinterest(#${weakSpots.pinterest})`)
+
+  return legacy.length > 0 ? legacy.join(", ") : "-"
+}
+
+function formatSerpFeatures(features: Keyword["serpFeatures"]): string {
+  if (!Array.isArray(features) || features.length === 0) return "-"
+  return features.map((feature) => SERP_LABELS[feature] ?? feature).join(", ")
+}
+
+function formatNumber(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "-"
+  return String(value)
+}
+
+function formatCurrency(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "-"
+  return value.toFixed(2)
+}
+
+function formatTrendLabel(trend: number[] | null | undefined): string {
+  if (!trend || trend.length < 2) {
+    return "Stable"
+  }
+
+  const momentum = calculateMomentum(trend)
+  const rounded = Math.round(momentum.percent)
+
+  if (momentum.status === "rising") return `Rising (+${rounded}%)`
+  if (momentum.status === "falling") return `Falling (${rounded}%)`
+  return "Stable"
+}
+
+function flattenKeywordData(keyword: Keyword): string[] {
+  const trendSeries = keyword.trendRaw ?? keyword.trend
+  return [
+    keyword.keyword,
+    formatIntent(keyword.intent),
+    formatNumber(keyword.volume),
+    formatNumber(keyword.rtv),
+    formatTrendLabel(trendSeries),
+    formatNumber(keyword.kd),
+    formatCurrency(keyword.cpc),
+    formatWeakSpots(keyword.weakSpots),
+    formatNumber(keyword.geoScore),
+    formatSerpFeatures(keyword.serpFeatures),
+  ]
+}
+
+function downloadCSV(content: string, filename: string): void {
+  const blob = new Blob([content], { type: "text/csv" })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement("a")
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+export function exportKeywordsToCSV(keywords: Keyword[]): void {
+  const rows = keywords.map((kw) =>
+    flattenKeywordData(kw).map((value) => sanitizeCSVValue(value)).join(",")
+  )
+  const csvContent = [EXPORT_HEADERS.join(","), ...rows].join("\n")
+  const dateStamp = new Date().toISOString().split("T")[0]
+  downloadCSV(csvContent, `BlogSpy_Keywords_${dateStamp}.csv`)
+}
+
+export function downloadAsCSV(keywords: Keyword[]): void {
+  const rows = keywords.map((kw) =>
+    flattenKeywordData(kw).map((value) => sanitizeCSVValue(value)).join(",")
+  )
+  const csvContent = [EXPORT_HEADERS.join(","), ...rows].join("\n")
+  downloadCSV(csvContent, "BlogSpy_Research.csv")
+}
+
 /**
  * Export keywords to CSV format
  */
 export function exportToCSV(keywords: Keyword[], options?: ExportOptionsExtended): string {
-  const columns = options?.columns || [
-    "keyword",
-    "volume",
-    "kd",
-    "cpc",
-    "intent",
-    "trend",
-    "geoScore",
-    "serpFeatures",
-  ]
-
-  const headers = columns.map((col) => {
-    switch (col) {
-      case "keyword": return "Keyword"
-      case "volume": return "Volume"
-      case "kd": return "KD %"
-      case "cpc": return "CPC ($)"
-      case "intent": return "Intent"
-      case "trend": return "Trend %"
-      case "geoScore": return "GEO Score"
-      case "serpFeatures": return "SERP Features"
-      default: return col
-    }
-  })
-
+  void options
   const rows = keywords.map((kw) =>
-    columns.map((col) => {
-      switch (col) {
-        case "keyword": return sanitizeCSVValue(kw.keyword)
-        case "volume": return kw.volume
-        case "kd": return kw.kd
-        case "cpc": return kw.cpc.toFixed(2)
-        case "intent": return kw.intent.join(", ")
-        case "trend": return calculateTrendPercent(kw.trend)
-        case "geoScore": return kw.geoScore || 0
-        case "serpFeatures": return kw.serpFeatures?.join("; ") || ""
-        default: return ""
-      }
-    }).join(",")
+    flattenKeywordData(kw).map((value) => sanitizeCSVValue(value)).join(",")
   )
 
-  return [headers.join(","), ...rows].join("\n")
+  return [EXPORT_HEADERS.join(","), ...rows].join("\n")
 }
 
 /**
@@ -89,6 +189,7 @@ export function exportToJSON(keywords: Keyword[], options?: ExportOptionsExtende
     intent: kw.intent,
     trend: kw.trend,
     geoScore: kw.geoScore,
+    rtv: kw.rtv,
     serpFeatures: kw.serpFeatures,
     weakSpot: kw.weakSpot,
     ...(options?.includeMetadata && {
@@ -104,27 +205,16 @@ export function exportToJSON(keywords: Keyword[], options?: ExportOptionsExtende
  * Export keywords to TSV format
  */
 export function exportToTSV(keywords: Keyword[]): string {
-  const headers = ["Keyword", "Volume", "KD", "CPC", "Intent", "Trend", "GEO"]
-  const rows = keywords.map((kw) =>
-    [
-      kw.keyword,
-      kw.volume,
-      kw.kd,
-      kw.cpc.toFixed(2),
-      kw.intent.join(", "),
-      calculateTrendPercent(kw.trend),
-      kw.geoScore || 0,
-    ].join("\t")
-  )
-
-  return [headers.join("\t"), ...rows].join("\n")
+  const rows = keywords.map((kw) => flattenKeywordData(kw).join("\t"))
+  return [EXPORT_HEADERS.join("\t"), ...rows].join("\n")
 }
 
 /**
  * Export keywords to Clipboard format
  */
 export function exportToClipboard(keywords: Keyword[]): string {
-  return keywords.map((kw) => kw.keyword).join("\n")
+  const rows = keywords.map((kw) => flattenKeywordData(kw).join("\t"))
+  return [EXPORT_HEADERS.join("\t"), ...rows].join("\n")
 }
 
 /**
@@ -156,14 +246,25 @@ export function downloadExport(
 /**
  * Copy to clipboard
  */
-export async function copyToClipboard(text: string): Promise<boolean> {
+export async function copyToClipboard(text: string): Promise<boolean>
+export async function copyToClipboard(keywords: Keyword[]): Promise<boolean>
+export async function copyToClipboard(input: string | Keyword[]): Promise<boolean> {
   try {
-    await navigator.clipboard.writeText(text)
+    const content = Array.isArray(input)
+      ? [
+          EXPORT_HEADERS.join("\t"),
+          ...input.map((kw) => flattenKeywordData(kw).join("\t")),
+        ].join("\n")
+      : input
+
+    await navigator.clipboard.writeText(content)
     return true
   } catch {
     // Fallback for older browsers
     const textarea = document.createElement("textarea")
-    textarea.value = text
+    textarea.value = Array.isArray(input)
+      ? [EXPORT_HEADERS.join("\t"), ...input.map((kw) => flattenKeywordData(kw).join("\t"))].join("\n")
+      : input
     textarea.style.position = "fixed"
     textarea.style.opacity = "0"
     document.body.appendChild(textarea)
@@ -177,17 +278,6 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       document.body.removeChild(textarea)
     }
   }
-}
-
-function calculateTrendPercent(trend: number[] | null | undefined): number {
-  if (!trend || trend.length < 2) return 0
-
-  const first = trend[0]
-  const last = trend[trend.length - 1]
-
-  if (first === 0) return 0
-
-  return Math.round(((last - first) / first) * 100)
 }
 
 /**

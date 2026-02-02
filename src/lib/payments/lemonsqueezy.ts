@@ -27,6 +27,7 @@ import {
   getSubscription as lsGetSubscription,
   cancelSubscription as lsCancelSubscription,
   updateSubscription as lsUpdateSubscription,
+  listCustomers,
   listProducts,
   listVariants,
 } from "@lemonsqueezy/lemonsqueezy.js"
@@ -82,7 +83,7 @@ function initializeLemonSqueezy(): void {
   lemonSqueezySetup({
     apiKey,
     onError: (error: Error) => {
-      console.error("❌ Lemon Squeezy Error:", error)
+      console.error("❌ Billing provider error:", error)
     },
   })
 
@@ -135,6 +136,8 @@ export interface CreateCheckoutOptions {
   name?: string
   /** Custom data to pass through checkout */
   customData?: Record<string, string>
+  /** URL to redirect after checkout completes */
+  returnUrl?: string
   /** URL to redirect after successful checkout */
   successUrl?: string
   /** URL to redirect after cancelled checkout */
@@ -164,7 +167,7 @@ export async function createCheckout(options: CreateCheckoutOptions): Promise<st
       discountCode: options.discountCode,
     },
     productOptions: {
-      redirectUrl: options.successUrl,
+      redirectUrl: options.returnUrl ?? options.successUrl,
     },
   })
 
@@ -175,7 +178,7 @@ export async function createCheckout(options: CreateCheckoutOptions): Promise<st
   const checkoutUrl = response.data?.data.attributes.url
 
   if (!checkoutUrl) {
-    throw new Error("❌ Checkout URL not returned from Lemon Squeezy.")
+    throw new Error("❌ Checkout URL not returned from billing provider.")
   }
 
   return checkoutUrl
@@ -194,7 +197,7 @@ export async function getSubscription(subscriptionId: string) {
   const response = await lsGetSubscription(subscriptionId)
 
   if (response.error) {
-    console.error("❌ Get subscription failed:", response.error.message)
+    console.error("❌ Billing provider error (subscription lookup):", response.error.message)
     return null
   }
 
@@ -210,7 +213,7 @@ export async function cancelSubscription(subscriptionId: string): Promise<boolea
   const response = await lsCancelSubscription(subscriptionId)
 
   if (response.error) {
-    console.error("❌ Cancel subscription failed:", response.error.message)
+    console.error("❌ Billing provider error (cancel subscription):", response.error.message)
     return false
   }
 
@@ -228,7 +231,7 @@ export async function resumeSubscription(subscriptionId: string): Promise<boolea
   })
 
   if (response.error) {
-    console.error("❌ Resume subscription failed:", response.error.message)
+    console.error("❌ Billing provider error (resume subscription):", response.error.message)
     return false
   }
 
@@ -251,7 +254,7 @@ export async function pauseSubscription(
   })
 
   if (response.error) {
-    console.error("❌ Pause subscription failed:", response.error.message)
+    console.error("❌ Billing provider error (pause subscription):", response.error.message)
     return false
   }
 
@@ -275,7 +278,7 @@ export async function getProducts() {
   })
 
   if (response.error) {
-    console.error("❌ Get products failed:", response.error.message)
+    console.error("❌ Billing provider error (products):", response.error.message)
     return []
   }
 
@@ -293,11 +296,42 @@ export async function getProductVariants(productId: string) {
   })
 
   if (response.error) {
-    console.error("❌ Get variants failed:", response.error.message)
+    console.error("❌ Billing provider error (variants):", response.error.message)
     return []
   }
 
   return response.data?.data ?? []
+}
+
+/**
+ * Get a customer portal URL for a customer email.
+ * Returns null if no customer or no portal URL exists.
+ */
+export async function getCustomerPortalUrlByEmail(email?: string): Promise<string | null> {
+  if (!email) return null
+  ensureInitialized()
+
+  const { storeId } = getLemonSqueezyConfig()
+
+  const response = await listCustomers({
+    filter: {
+      email,
+      ...(storeId ? { storeId } : {}),
+    },
+    page: { size: 1 },
+  })
+
+  if (response.error) {
+    console.error("❌ Billing provider error (customer portal):", response.error.message)
+    return null
+  }
+
+  const customer = response.data?.data?.[0]
+  const portalUrl =
+    (customer?.attributes as { urls?: { customer_portal?: string | null } } | undefined)?.urls
+      ?.customer_portal ?? null
+
+  return portalUrl
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════

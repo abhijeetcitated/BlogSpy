@@ -83,7 +83,7 @@ import {
   LINK_TYPE_INFO,
   ISSUE_TYPE_INFO,
   DEFAULT_INTERNAL_LINKING_SETTINGS
-} from '@/src/features/ai-writer/types/tools/internal-linking.types';
+} from '@/features/ai-writer/types/tools/internal-linking.types';
 
 // =============================================================================
 // TYPES

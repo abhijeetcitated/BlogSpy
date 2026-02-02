@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { 
   ArrowLeft, 
   Loader2, 
@@ -46,7 +46,7 @@ import {
   Topic,
   ClusterKeyword,
   PageWithCluster
-} from "@/lib/clustering-algorithm"
+} from "@features/topic-clusters/utils/clustering-algorithm"
 import { cn } from "@/lib/utils"
 
 // ============================================

@@ -60,7 +60,7 @@ import {
   BarChart3,
   ArrowRight
 } from 'lucide-react';
-import { useTopicGap } from '@/src/features/ai-writer/hooks/tools/use-topic-gap';
+import { useTopicGap } from '@/features/ai-writer/hooks/tools/use-topic-gap';
 import {
   ContentGap,
   GapSeverity,
@@ -76,7 +76,7 @@ import {
   GAP_SEVERITY_LABELS,
   GAP_STATUS_LABELS,
   TOPIC_TYPE_LABELS
-} from '@/src/features/ai-writer/types/tools/topic-gap.types';
+} from '@/features/ai-writer/types/tools/topic-gap.types';
 
 // =============================================================================
 // TYPES

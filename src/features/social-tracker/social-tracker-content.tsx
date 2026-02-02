@@ -21,7 +21,7 @@ import {
 import { SOCIAL_PLATFORM_CONFIG, SOCIAL_TRACKER_DEFAULTS } from "./constants"
 import { useSocialTracker } from "./hooks"
 import type { SocialPlatform, SocialKeyword } from "./types"
-import { STACK_SPACING } from "@/src/styles"
+import { STACK_SPACING } from "@/styles"
 
 // Lazy load modals for better performance
 const AddKeywordModal = lazy(() => 

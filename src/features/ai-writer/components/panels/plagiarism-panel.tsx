@@ -62,7 +62,7 @@ import {
   Lightbulb,
   X
 } from 'lucide-react';
-import { usePlagiarism } from '@/src/features/ai-writer/hooks/tools/use-plagiarism';
+import { usePlagiarism } from '@/features/ai-writer/hooks/tools/use-plagiarism';
 import {
   PlagiarismMatch,
   PlagiarismRecommendation,
@@ -79,7 +79,7 @@ import {
   MATCH_TYPE_LABELS,
   SOURCE_TYPE_LABELS,
   CONTENT_RISK_LABELS
-} from '@/src/features/ai-writer/types/tools/plagiarism.types';
+} from '@/features/ai-writer/types/tools/plagiarism.types';
 
 // =============================================================================
 // TYPES

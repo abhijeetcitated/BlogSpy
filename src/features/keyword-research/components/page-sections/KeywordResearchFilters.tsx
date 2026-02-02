@@ -40,17 +40,8 @@ export function KeywordResearchFilters() {
   const [tempKdRange, setTempKdRange] = useState<[number, number]>(filters.kdRange)
   const [tempCpcRange, setTempCpcRange] = useState<[number, number]>(filters.cpcRange)
   const [tempGeoRange, setTempGeoRange] = useState<[number, number]>(filters.geoRange)
-  const [tempIntents, setTempIntents] = useState<string[]>(filters.selectedIntents)
-  const [tempSerpFeatures, setTempSerpFeatures] = useState(filters.selectedSerpFeatures)
-  const [tempWeakSpotToggle, setTempWeakSpotToggle] = useState(filters.weakSpotToggle)
-  const [tempWeakSpotTypes, setTempWeakSpotTypes] = useState<string[]>(filters.weakSpotTypes)
-  const [tempTrendDirection, setTempTrendDirection] = useState(filters.trendDirection)
-  const [tempMinGrowth, setTempMinGrowth] = useState(filters.minTrendGrowth)
   const [volumePreset, setVolumePreset] = useState<string | null>(null)
-  
-  // Include/Exclude state
-  const [includeInput, setIncludeInput] = useState("")
-  const [excludeInput, setExcludeInput] = useState("")
+
 
   return (
     <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none -mx-1 px-1">
@@ -82,18 +73,6 @@ export function KeywordResearchFilters() {
         open={intentOpen}
         onOpenChange={setIntentOpen}
         selectedIntents={filters.selectedIntents}
-        tempSelectedIntents={tempIntents}
-        onToggleIntent={(intent) => {
-          setTempIntents((prev) =>
-            prev.includes(intent)
-              ? prev.filter((i) => i !== intent)
-              : [...prev, intent]
-          )
-        }}
-        onApply={() => {
-          setFilter("selectedIntents", tempIntents)
-          setIntentOpen(false)
-        }}
       />
 
       <CPCFilter
@@ -121,85 +100,22 @@ export function KeywordResearchFilters() {
       <WeakSpotFilter
         open={weakSpotOpen}
         onOpenChange={setWeakSpotOpen}
-        tempHasWeakSpot={tempWeakSpotToggle === "all" ? null : tempWeakSpotToggle === "with"}
-        tempWeakSpotTypes={tempWeakSpotTypes}
-        onTempHasWeakSpotChange={(value) => {
-          if (value === null) setTempWeakSpotToggle("all")
-          else if (value === true) setTempWeakSpotToggle("with")
-          else setTempWeakSpotToggle("without")
-        }}
-        onToggleWeakSpotType={(type) => {
-          setTempWeakSpotTypes((prev) =>
-            prev.includes(type)
-              ? prev.filter((t) => t !== type)
-              : [...prev, type]
-          )
-        }}
-        onApply={() => {
-          setFilter("weakSpotToggle", tempWeakSpotToggle)
-          setFilter("weakSpotTypes", tempWeakSpotTypes)
-          setWeakSpotOpen(false)
-        }}
+        selectedTypes={filters.weakSpotTypes}
+        weakSpotToggle={filters.weakSpotToggle}
       />
 
       <SerpFilter
         open={serpOpen}
         onOpenChange={setSerpOpen}
         selectedFeatures={filters.selectedSerpFeatures}
-        tempSelectedFeatures={tempSerpFeatures}
-        onToggleFeature={(feature) => {
-          setTempSerpFeatures((prev) =>
-            prev.includes(feature)
-              ? prev.filter((f) => f !== feature)
-              : [...prev, feature]
-          )
-        }}
-        onApply={() => {
-          setFilter("selectedSerpFeatures", tempSerpFeatures)
-          setSerpOpen(false)
-        }}
       />
 
       <TrendFilter
         open={trendOpen}
         onOpenChange={setTrendOpen}
-        tempTrendDirection={tempTrendDirection}
-        tempMinGrowth={tempMinGrowth}
-        onTempTrendDirectionChange={setTempTrendDirection}
-        onTempMinGrowthChange={setTempMinGrowth}
-        onApply={() => {
-          setFilter("trendDirection", tempTrendDirection)
-          setFilter("minTrendGrowth", tempMinGrowth)
-          setTrendOpen(false)
-        }}
       />
 
-      <IncludeExcludeFilter
-        includeTerms={filters.includeTerms}
-        excludeTerms={filters.excludeTerms}
-        includeInput={includeInput}
-        excludeInput={excludeInput}
-        onIncludeInputChange={setIncludeInput}
-        onExcludeInputChange={setExcludeInput}
-        onAddIncludeTerm={() => {
-          if (includeInput.trim()) {
-            setFilter("includeTerms", [...filters.includeTerms, includeInput.trim()])
-            setIncludeInput("")
-          }
-        }}
-        onAddExcludeTerm={() => {
-          if (excludeInput.trim()) {
-            setFilter("excludeTerms", [...filters.excludeTerms, excludeInput.trim()])
-            setExcludeInput("")
-          }
-        }}
-        onRemoveIncludeTerm={(term) => {
-          setFilter("includeTerms", filters.includeTerms.filter((t) => t !== term))
-        }}
-        onRemoveExcludeTerm={(term) => {
-          setFilter("excludeTerms", filters.excludeTerms.filter((t) => t !== term))
-        }}
-      />
+      <IncludeExcludeFilter />
     </div>
   )
 }

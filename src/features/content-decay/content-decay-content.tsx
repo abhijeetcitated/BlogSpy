@@ -39,7 +39,7 @@ import {
   ArticleDetailModal,
   GSCConnectionPrompt,
 } from "./components"
-import { STACK_SPACING } from "@/src/styles"
+import { STACK_SPACING } from "@/styles"
 
 // ============================================
 // LOCAL STORAGE KEYS

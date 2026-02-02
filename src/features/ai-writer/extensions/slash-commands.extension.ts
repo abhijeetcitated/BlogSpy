@@ -9,8 +9,8 @@ import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 
-import type { SlashCommand, MenuPosition, CommandContext } from '@/src/features/ai-writer/types/tools/slash-commands.types';
-import { DEFAULT_SLASH_COMMANDS } from '@/src/features/ai-writer/types/tools/slash-commands.types';
+import type { SlashCommand, MenuPosition, CommandContext } from '@/features/ai-writer/types/tools/slash-commands.types';
+import { DEFAULT_SLASH_COMMANDS } from '@/features/ai-writer/types/tools/slash-commands.types';
 
 // -----------------------------------------------------------------------------
 // Plugin Key

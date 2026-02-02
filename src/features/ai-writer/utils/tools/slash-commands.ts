@@ -14,14 +14,14 @@ import type {
   AITransformation,
   SlashMenuState,
   MenuPosition
-} from '@/src/features/ai-writer/types/tools/slash-commands.types';
+} from '@/features/ai-writer/types/tools/slash-commands.types';
 
 import {
   DEFAULT_SLASH_COMMANDS,
   TRANSFORMATION_PROMPTS,
   AI_PROMPT_TEMPLATES,
   DEFAULT_MENU_STATE
-} from '@/src/features/ai-writer/types/tools/slash-commands.types';
+} from '@/features/ai-writer/types/tools/slash-commands.types';
 
 // -----------------------------------------------------------------------------
 // Command Filtering
@@ -514,5 +514,5 @@ export {
   DEFAULT_MENU_STATE,
   AI_PROMPT_TEMPLATES,
   TRANSFORMATION_PROMPTS
-} from '@/src/features/ai-writer/types/tools/slash-commands.types';
+} from '@/features/ai-writer/types/tools/slash-commands.types';
 

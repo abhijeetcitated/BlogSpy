@@ -17,8 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { toast } from "sonner"
 import type { GapKeyword, ForumIntelPost, SortField, SortDirection } from "../types"
-import { fetchForumAction } from "../actions/fetch-forum-intel"
-import { useKeywordStore } from "@/src/features/keyword-research/store"
+import { useKeywordStore } from "@/features/keyword-research/store"
 import { handleFeatureAccess } from "@/lib/feature-guard"
 import {
   IntentBadge,
@@ -119,35 +118,8 @@ export function GapAnalysisTable({
       return
     }
 
-    const toastId = toast.loading("Checking forums...")
-    setIsForumLoading(true)
-    try {
-      const response = await fetchForumAction({
-        keyword: keyword.keyword,
-        volume: keyword.volume ?? 0,
-        countryCode: selectedCountryCode ?? "US",
-      })
-
-      const posts = response?.data?.data
-      if (!response?.data?.success || !Array.isArray(posts)) {
-        throw new Error(response?.serverError || "Failed to fetch forum intel")
-      }
-
-      const mapped = posts.map((post) => ({
-        ...post,
-        lastActive: new Date(post.lastActive),
-      }))
-
-      setForumData(mapped)
-      setSelectedKeywordForForum(keyword.keyword)
-      setForumSelectedRows(new Set())
-      setForumDialogOpen(true)
-      toast.success("Forum intel ready", { id: toastId })
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to fetch forum intel", { id: toastId })
-    } finally {
-      setIsForumLoading(false)
-    }
+    void keyword
+    toast.info("This feature is being rebuilt in V2")
   }, [credits, selectedCountryCode])
 
   const volumeFormatter = useMemo(

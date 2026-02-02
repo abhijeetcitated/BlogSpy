@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { GSCData, GSCPageData, GSCQueryData } from '@/types/gsc.types';
+import type { GSCData, GSCPageData, GSCQueryData } from '@features/integrations/types/gsc.types';
 
 interface GSCDataState {
   isLoading: boolean;

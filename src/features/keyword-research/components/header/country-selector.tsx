@@ -4,7 +4,7 @@
 // Country Selector Component
 // ============================================
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { ChevronDown, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,6 +30,8 @@ export function CountrySelector({
   onOpenChange,
 }: CountrySelectorProps) {
   const [countrySearch, setCountrySearch] = useState("")
+  const [fullCountries, setFullCountries] = useState<Country[]>([])
+  const [isLoadingFull, setIsLoadingFull] = useState(false)
 
   const defaultCountry = useMemo<Country | null>(() => {
     const fromPopular = popularCountries.find((c) => c.code === "US")
@@ -46,6 +48,27 @@ export function CountrySelector({
     }
   }, [defaultCountry, onSelect, selectedCountry])
 
+  // Lazy load full countries when user starts searching
+  const loadFullCountries = useCallback(async () => {
+    if (fullCountries.length > 0 || isLoadingFull) return
+    setIsLoadingFull(true)
+    try {
+      const { FULL_COUNTRIES } = await import("../../constants/full-countries")
+      setFullCountries(FULL_COUNTRIES)
+    } catch (e) {
+      console.error("Failed to load full countries", e)
+    } finally {
+      setIsLoadingFull(false)
+    }
+  }, [fullCountries.length, isLoadingFull])
+
+  // Trigger load when user types
+  useEffect(() => {
+    if (countrySearch.trim().length >= 2) {
+      loadFullCountries()
+    }
+  }, [countrySearch, loadFullCountries])
+
   const filteredPopular = popularCountries.filter(
     (c) =>
       c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
@@ -58,6 +81,21 @@ export function CountrySelector({
       c.code.toLowerCase().includes(countrySearch.toLowerCase())
   )
 
+  // Additional results from FULL list (exclude already shown)
+  const existingCodes = new Set([
+    ...popularCountries.map(c => c.code),
+    ...allCountries.map(c => c.code),
+  ])
+  const filteredExtended = countrySearch.trim().length >= 2
+    ? fullCountries.filter(
+      (c) =>
+        !existingCodes.has(c.code) &&
+        (c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
+          c.code.toLowerCase().includes(countrySearch.toLowerCase()))
+    )
+    : []
+
+
   return (
     <Popover open={open} onOpenChange={onOpenChange} modal={true}>
       <PopoverTrigger asChild>
@@ -65,20 +103,20 @@ export function CountrySelector({
           variant="outline"
           className="h-9 gap-1.5 sm:gap-2 bg-secondary/50 border-border hover:bg-accent min-w-0 sm:min-w-[180px] justify-between px-2 sm:px-3"
         >
-        {effectiveSelectedCountry ? (
-          <>
-            <span className="text-base">{effectiveSelectedCountry.flag}</span>
-            <span className="text-xs sm:text-sm font-medium truncate max-w-20 sm:max-w-none">{effectiveSelectedCountry.name}</span>
-          </>
-        ) : (
-          <span className="text-xs sm:text-sm">Select country</span>
-        )}
-        <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground ml-auto shrink-0" />
-      </Button>
+          {effectiveSelectedCountry ? (
+            <>
+              <span className="text-base">{effectiveSelectedCountry.flag}</span>
+              <span className="text-xs sm:text-sm font-medium truncate max-w-20 sm:max-w-none">{effectiveSelectedCountry.name}</span>
+            </>
+          ) : (
+            <span className="text-xs sm:text-sm">Select country</span>
+          )}
+          <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground ml-auto shrink-0" />
+        </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-[280px] p-0" 
-        align="end" 
+      <PopoverContent
+        className="w-[280px] p-0"
+        align="end"
         sideOffset={8}
       >
         <div className="p-2 border-b border-border">
@@ -144,6 +182,39 @@ export function CountrySelector({
                 </button>
               ))}
             </>
+          )}
+
+          {/* Extended Search Results (Lazy Loaded) */}
+          {filteredExtended.length > 0 && (
+            <>
+              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider mt-2">
+                More Countries
+              </div>
+              {filteredExtended.map((country) => (
+                <button
+                  key={country.code}
+                  onClick={() => {
+                    onSelect(country)
+                    onOpenChange(false)
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors",
+                    effectiveSelectedCountry?.code === country.code && "bg-accent"
+                  )}
+                >
+                  <span className="text-base">{country.flag}</span>
+                  <span>{country.name}</span>
+                  {effectiveSelectedCountry?.code === country.code && (
+                    <Check className="h-4 w-4 ml-auto text-primary" />
+                  )}
+                </button>
+              ))}
+            </>
+          )}
+
+          {/* Loading indicator */}
+          {isLoadingFull && countrySearch.trim().length >= 2 && (
+            <div className="px-2 py-1.5 text-xs text-muted-foreground">Loading more countries...</div>
           )}
         </div>
       </PopoverContent>

@@ -26,6 +26,8 @@ export function KDFilter({
   onTempRangeChange,
   onApply,
 }: KDFilterProps) {
+  const isDirty = tempRange[0] !== 0 || tempRange[1] !== 100
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
@@ -70,7 +72,13 @@ export function KDFilter({
             <span>{tempRange[0]}%</span>
             <span>{tempRange[1]}%</span>
           </div>
-          <Button onClick={onApply} className="w-full mt-2 bg-primary hover:bg-primary/90">
+          <Button
+            onClick={onApply}
+            className={cn(
+              "w-full mt-2 bg-primary hover:bg-primary/90",
+              isDirty && "shadow-[0_0_12px_rgba(59,130,246,0.45)]"
+            )}
+          >
             Apply Filter
           </Button>
         </div>

@@ -9,9 +9,11 @@
 // Supports mock mode: NEXT_PUBLIC_USE_MOCK_DATA=true
 // ============================================
 
+import "server-only"
+
 import { dataForSEOClient } from "@/services/dataforseo/client"
 
-import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
+import { getDataForSEOLocationCode } from "@/lib/dataforseo/locations"
 import type { CommunityResult, DrawerDataResponse, YouTubeResult } from "../types"
 
 type DataForSEOSerpResultItem = {
@@ -61,8 +63,56 @@ type DataForSEOPinterestResult = {
   pins_count?: number
 }
 
+export interface RedditThread {
+  title: string
+  url: string
+  subreddit?: string
+  subredditMembers?: number
+  score?: number
+  comments?: number
+  author?: string
+  createdAt?: string | null
+  ageDays?: number | null
+}
+
+export interface RedditInsight {
+  threads: RedditThread[]
+  heatIndex: number
+  topSubreddit?: string
+  topSubredditMembers?: number
+}
+
+export interface PinterestInsight {
+  pins: CommunityResult[]
+  totalPins: number
+  viralityScore: number
+}
+
+export interface QuoraDiscussion {
+  title: string
+  url: string
+  snippet?: string
+  answersCount?: number | null
+  upvotes?: number | null
+  date?: string | null
+  answerRecencyDays: number | null
+}
+
+export interface QuoraInsight {
+  discussions: QuoraDiscussion[]
+  presenceScore: number
+}
+
+export interface SocialIntelPayload {
+  youtube: YouTubeResult[]
+  reddit: RedditInsight
+  pinterest: PinterestInsight
+  quora: QuoraInsight
+}
+
 function isMockMode(): boolean {
-  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+  const hasCredentials = Boolean(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD)
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" && !hasCredentials
 }
 
 function stableHash(input: string): number {
@@ -79,6 +129,42 @@ function formatK(num: number): string {
   return `${num}`
 }
 
+function toIsoDaysAgo(days: number): string {
+  const date = new Date()
+  date.setDate(date.getDate() - Math.max(0, Math.floor(days)))
+  return date.toISOString()
+}
+
+function ageDaysFromIso(value?: string | null): number | null {
+  if (!value) return null
+  const parsed = Date.parse(value)
+  if (Number.isNaN(parsed)) return null
+  const diffMs = Date.now() - parsed
+  return Math.max(0, Math.round(diffMs / (1000 * 60 * 60 * 24)))
+}
+
+function clampScore(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)))
+}
+
+function calculateHeatIndex(threads: RedditThread[]): number {
+  if (threads.length === 0) return 0
+  const totalComments = threads.reduce((sum, t) => sum + (t.comments ?? 0), 0)
+  const score = threads.length * 2 + totalComments / 10
+  return clampScore(score)
+}
+
+function calculatePinterestVirality(totalPins: number): number {
+  if (!Number.isFinite(totalPins) || totalPins <= 0) return 0
+  const scaled = totalPins / 10
+  return clampScore(scaled)
+}
+
+function calculateQuoraPresence(discussions: QuoraDiscussion[]): number {
+  if (discussions.length === 0) return 0
+  const recencyBonus = discussions.some((d) => (d.answerRecencyDays ?? 999) <= 30) ? 15 : 0
+  return clampScore(discussions.length * 12 + recencyBonus)
+}
 
 function pickFirstResult<T>(data: T | T[] | undefined): T | undefined {
   if (!data) return undefined
@@ -141,6 +227,163 @@ function mockPinterest(keyword: string): { pins: CommunityResult[]; totalPins: n
   }))
 
   return { pins, totalPins }
+}
+
+function mockRedditThreads(keyword: string): RedditThread[] {
+  const h = stableHash(keyword)
+  const subreddits = ["SEO", "marketing", "Entrepreneur", "Productivity", "SmallBusiness"]
+
+  return Array.from({ length: 10 }, (_, i) => {
+    const subreddit = subreddits[(h + i) % subreddits.length]
+    const score = 10 + ((h + i * 31) % 2800)
+    const comments = 2 + ((h + i * 17) % 420)
+    const ageDays = 1 + ((h + i * 13) % 120)
+
+    return {
+      title: `Discussing: ${keyword} - ${["tips", "mistakes", "tools", "case study", "help"][((h >>> 3) + i) % 5]}`,
+      url: `https://www.reddit.com/r/${subreddit}/comments/${(h + i * 13).toString(16)}/`,
+      subreddit,
+      subredditMembers: 50_000 + ((h + i * 101) % 900_000),
+      score,
+      comments,
+      author: `user_${(h + i * 7) % 9999}`,
+      createdAt: toIsoDaysAgo(ageDays),
+      ageDays,
+    }
+  })
+}
+
+function mockQuoraDiscussions(keyword: string): QuoraDiscussion[] {
+  const h = stableHash(keyword)
+  return Array.from({ length: 6 }, (_, i) => {
+    const ageDays = 3 + ((h + i * 19) % 240)
+    return {
+      title: `What is the best way to ${keyword}? (${i + 1})`,
+      url: `https://www.quora.com/${encodeURIComponent(keyword)}-discussion-${(h + i * 11).toString(16)}`,
+      snippet: "23 Answers · 156 Upvotes",
+      answersCount: 23 + ((h + i) % 15),
+      upvotes: 40 + ((h + i * 7) % 500),
+      date: toIsoDaysAgo(ageDays),
+      answerRecencyDays: ageDays,
+    }
+  })
+}
+
+function buildRedditInsight(threads: RedditThread[]): RedditInsight {
+  const top = threads.reduce<RedditThread | null>((best, current) => {
+    if (!best) return current
+    const bestMembers = best.subredditMembers ?? 0
+    const currentMembers = current.subredditMembers ?? 0
+    return currentMembers > bestMembers ? current : best
+  }, null)
+
+  return {
+    threads,
+    heatIndex: calculateHeatIndex(threads),
+    topSubreddit: top?.subreddit,
+    topSubredditMembers: top?.subredditMembers,
+  }
+}
+
+function buildPinterestInsight(keyword: string): PinterestInsight {
+  const { pins, totalPins } = mockPinterest(keyword)
+  return {
+    pins,
+    totalPins,
+    viralityScore: calculatePinterestVirality(totalPins),
+  }
+}
+
+function buildQuoraInsight(keyword: string): QuoraInsight {
+  const discussions = mockQuoraDiscussions(keyword)
+  return {
+    discussions,
+    presenceScore: calculateQuoraPresence(discussions),
+  }
+}
+
+function parseQuoraSnippet(snippet?: string | null): {
+  answersCount?: number | null
+  upvotes?: number | null
+} {
+  if (!snippet) return {}
+  const parseMetric = (pattern: RegExp) => {
+    const match = snippet.match(pattern)
+    if (!match) return undefined
+    const raw = match[1].replace(/,/g, "")
+    const value = Number.parseFloat(raw)
+    if (Number.isNaN(value)) return undefined
+    const suffix = match[2]?.toLowerCase()
+    if (suffix === "k") return Math.round(value * 1000)
+    if (suffix === "m") return Math.round(value * 1_000_000)
+    return Math.round(value)
+  }
+
+  const answersCount = parseMetric(/(\d+(?:[.,]\d+)?)(k|m)?\s+Answers?/i)
+  const upvotes = parseMetric(/(\d+(?:[.,]\d+)?)(k|m)?\s+Upvotes?/i)
+
+  return { answersCount, upvotes }
+}
+
+export async function fetchQuoraForensic(
+  keyword: string,
+  country: string = "US",
+  forceMock: boolean = false
+): Promise<QuoraInsight> {
+  if (!keyword.trim()) {
+    return { discussions: [], presenceScore: 0 }
+  }
+
+  if (forceMock || isMockMode()) {
+    return buildQuoraInsight(keyword)
+  }
+
+  try {
+    const endpoint = "/v3/serp/google/organic/live/advanced"
+    const payload = [
+      {
+        keyword: `site:quora.com \"${keyword}\"`,
+        location_code: getDataForSEOLocationCode(country),
+        language_code: "en",
+        depth: 10,
+        se_domain: "google.com",
+      },
+    ]
+
+    const res = await dataForSEOClient.request<DataForSEOSerpResult[]>(endpoint, payload)
+    if (!res.success) {
+      return { discussions: [], presenceScore: 0 }
+    }
+
+    const first = pickFirstResult(res.data)
+    const items = (first as DataForSEOSerpResult | undefined)?.items ?? []
+
+    const discussions: QuoraDiscussion[] = items
+      .filter((item) => typeof item.url === "string" && item.url.includes("quora.com"))
+      .map((item) => {
+        const snippet = item.description?.trim() || undefined
+        const { answersCount, upvotes } = parseQuoraSnippet(snippet)
+
+        return {
+          title: item.title?.trim() || "Quora discussion",
+          url: item.url ?? "",
+          snippet,
+          answersCount: typeof answersCount === "number" ? answersCount : null,
+          upvotes: typeof upvotes === "number" ? upvotes : null,
+          date: item.date ?? item.published ?? null,
+          answerRecencyDays: ageDaysFromIso(item.date ?? item.published ?? null),
+        }
+      })
+      .filter((item) => item.url)
+      .slice(0, 5)
+
+    return {
+      discussions,
+      presenceScore: calculateQuoraPresence(discussions),
+    }
+  } catch {
+    return { discussions: [], presenceScore: 0 }
+  }
 }
 
 function toYouTubeResult(item: DataForSEOSerpResultItem): YouTubeResult | null {
@@ -341,5 +584,142 @@ export async function fetchPinterestData(
       isRetryable: true,
       source: "dataforseo",
     }
+  }
+}
+
+export async function fetchYouTubeResults(
+  keyword: string,
+  country: string,
+  forceMock: boolean
+): Promise<YouTubeResult[]> {
+  if (forceMock || isMockMode()) {
+    return mockYouTube(keyword)
+  }
+
+  const res = await fetchYouTubeData(keyword, country)
+  return res.success ? (res.data ?? []) : []
+}
+
+export async function fetchRedditInsight(
+  keyword: string,
+  forceMock: boolean = false
+): Promise<RedditInsight> {
+  if (!keyword.trim()) {
+    return buildRedditInsight([])
+  }
+
+  if (forceMock || isMockMode()) {
+    return buildRedditInsight(mockRedditThreads(keyword))
+  }
+
+  const res = await fetchRedditData(keyword)
+  const threads: RedditThread[] = (res.success ? (res.data ?? []) : []).map((item) => ({
+    title: item.title,
+    url: item.url,
+    subreddit: item.subreddit,
+    subredditMembers: item.subredditMembers,
+    score: item.score,
+    comments: item.comments,
+    author: item.author,
+    createdAt: null,
+    ageDays: null,
+  }))
+
+  return buildRedditInsight(threads)
+}
+
+export async function fetchPinterestInsight(
+  keyword: string,
+  forceMock: boolean = false
+): Promise<PinterestInsight> {
+  if (!keyword.trim()) {
+    return { pins: [], totalPins: 0, viralityScore: 0 }
+  }
+
+  if (forceMock || isMockMode()) {
+    return buildPinterestInsight(keyword)
+  }
+
+  const res = await fetchPinterestData(keyword)
+  const pins = res.success ? (res.data?.pins ?? []) : []
+  const totalPins = res.success ? (res.data?.totalPins ?? pins.length) : 0
+
+  return {
+    pins,
+    totalPins,
+    viralityScore: calculatePinterestVirality(totalPins),
+  }
+}
+
+export async function fetchQuoraFallback(
+  keyword: string,
+  country: string = "US",
+  forceMock: boolean = false
+): Promise<QuoraInsight> {
+  if (!keyword.trim()) {
+    return { discussions: [], presenceScore: 0 }
+  }
+
+  if (forceMock || isMockMode()) {
+    return buildQuoraInsight(keyword)
+  }
+
+  try {
+    const endpoint = "/v3/serp/google/organic/live/advanced"
+    const payload = [
+      {
+        keyword: `site:quora.com ${keyword}`,
+        location_code: getDataForSEOLocationCode(country),
+        language_code: "en",
+        depth: 10,
+        se_domain: "google.com",
+      },
+    ]
+
+    const res = await dataForSEOClient.request<DataForSEOSerpResult[]>(endpoint, payload)
+    if (!res.success) {
+      return { discussions: [], presenceScore: 0 }
+    }
+
+    const first = pickFirstResult(res.data)
+    const items = (first as DataForSEOSerpResult | undefined)?.items ?? []
+
+    const discussions: QuoraDiscussion[] = items
+      .filter((item) => typeof item.url === "string" && item.url.includes("quora.com"))
+      .map((item) => ({
+        title: item.title?.trim() || "Quora discussion",
+        url: item.url ?? "",
+        answerRecencyDays: ageDaysFromIso(item.date),
+      }))
+      .filter((item) => item.url)
+
+    return {
+      discussions,
+      presenceScore: calculateQuoraPresence(discussions),
+    }
+  } catch {
+    return { discussions: [], presenceScore: 0 }
+  }
+}
+
+export async function fetchSocialIntel(
+  keyword: string,
+  country: string = "US",
+  opts?: { forceMock?: boolean }
+): Promise<SocialIntelPayload> {
+  const forceMock = opts?.forceMock === true
+
+  const [youtube, reddit, pinterest, quora] = await Promise.all([
+    fetchYouTubeResults(keyword, country, forceMock),
+    fetchRedditInsight(keyword, forceMock),
+    fetchPinterestInsight(keyword, forceMock),
+    fetchQuoraForensic(keyword, country, forceMock),
+  ])
+
+  return {
+    youtube,
+    reddit,
+    pinterest,
+    quora,
   }
 }

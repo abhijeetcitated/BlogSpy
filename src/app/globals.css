@@ -423,7 +423,7 @@ html {
 
 /* Touch-friendly targets */
 @media (pointer: coarse) {
-  button, 
+  button:not([role="switch"]), 
   a, 
   [role="button"] {
     min-height: 44px;

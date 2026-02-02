@@ -2,7 +2,7 @@
 
 import { toast } from "sonner"
 import { useUser } from "@/contexts/user-context"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { CommunityPlatformTabs, CommunitySummaryCards } from "./components"
 import { CommunityHeader } from "./components/CommunityHeader"
 import { CommunityFilterBar } from "./components/CommunityFilterBar"
@@ -10,7 +10,7 @@ import { CommunityKeywordSection } from "./components/CommunityKeywordSection"
 import { CommunitySidebar } from "./components/CommunitySidebar"
 import { AddKeywordModal } from "./components/AddKeywordModal"
 import { useCommunityTracker } from "./hooks/useCommunityTracker"
-import { STACK_SPACING, GAP_PATTERNS } from "@/src/styles"
+import { STACK_SPACING, GAP_PATTERNS } from "@/styles"
 
 export function CommunityTrackerContent() {
   // Get user credits from context

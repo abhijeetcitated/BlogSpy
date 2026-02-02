@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar, TopNav } from "@/components/layout"
-import { TrendSpotter } from "@/components/features"
-import { DemoWrapper } from "@/components/common/demo-wrapper"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
+import { TrendSpotter } from "@features/trend-spotter"
+import { DemoWrapper } from "@/components/shared/common/demo-wrapper"
 
 export const metadata = {
   title: "Trend Spotter Demo - BlogSpy | Catch Viral Topics Early",
@@ -25,3 +25,4 @@ export default function TrendSpotterDemoPage() {
     </DemoWrapper>
   )
 }
+

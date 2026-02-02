@@ -23,13 +23,13 @@ import {
   UsePlagiarismReturn,
   DEFAULT_PLAGIARISM_SETTINGS,
   DEFAULT_FILTER_STATE
-} from '@/src/features/ai-writer/types/tools/plagiarism.types';
+} from '@/features/ai-writer/types/tools/plagiarism.types';
 import {
   analyzePlagiarism,
   exportPlagiarismReport,
   createHighlightedDocument,
   compareTexts as compareTextsUtil
-} from '@/src/features/ai-writer/utils/tools/plagiarism';
+} from '@/features/ai-writer/utils/tools/plagiarism';
 
 export function usePlagiarism(
   options: UsePlagiarismOptions = {}

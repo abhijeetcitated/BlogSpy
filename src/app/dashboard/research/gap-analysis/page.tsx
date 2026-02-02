@@ -1,7 +1,7 @@
 "use client"
 
-import { CompetitorGapContent } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { CompetitorGapContent } from "@features/competitor-gap"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function CompetitorGapPage() {
   return (
@@ -10,6 +10,7 @@ export default function CompetitorGapPage() {
     </ErrorBoundary>
   )
 }
+
 
 
 

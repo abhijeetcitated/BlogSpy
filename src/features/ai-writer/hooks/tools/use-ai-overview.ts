@@ -23,8 +23,8 @@ import {
   UseAIOverviewReturn,
   FactorCategory,
   AIOverviewExportOptions
-} from '@/src/features/ai-writer/types/tools/ai-overview.types';
-import { analyzeAIOverview, exportAIOverviewReport } from '@/src/features/ai-writer/utils/tools/ai-overview';
+} from '@/features/ai-writer/types/tools/ai-overview.types';
+import { analyzeAIOverview, exportAIOverviewReport } from '@/features/ai-writer/utils/tools/ai-overview';
 
 export function useAIOverview(
   content: string,

@@ -7,7 +7,7 @@
 import { Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MAX_BULK_KEYWORDS } from "../../constants"
-import { parseBulkKeywords } from "../../utils"
+import { parseBulkKeywords } from "../../utils/input-parser"
 
 interface BulkKeywordsInputProps {
   value: string

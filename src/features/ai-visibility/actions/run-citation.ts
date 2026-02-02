@@ -8,7 +8,7 @@
  * @example
  * ```tsx
  * "use client"
- * import { runVisibilityCheck, checkPlatformNow } from "@/src/features/ai-visibility/actions"
+ * import { runVisibilityCheck, checkPlatformNow } from "@/features/ai-visibility/actions"
  * 
  * // Full check across all platforms
  * const result = await runVisibilityCheck({
@@ -20,7 +20,7 @@
 
 "use server"
 
-import { authAction, z } from "@/src/lib/safe-action"
+import { authAction, z } from "@/lib/safe-action"
 import {
   runFullVisibilityCheck,
   quickPlatformCheck,

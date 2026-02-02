@@ -9,5 +9,8 @@
 // Re-export useDebounce from global hooks for convenience
 export { useDebounce } from "@/hooks/use-debounce"
 
+// Pagination URL sync (client-side)
+export { usePaginationUrlSync } from "./use-pagination-url-sync"
+
 // Helper hooks can be added here if needed
 // e.g., useUrlSync, useKeyboardShortcuts

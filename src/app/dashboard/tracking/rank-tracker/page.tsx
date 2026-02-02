@@ -1,5 +1,5 @@
-import { RankTrackerContent } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { RankTrackerContent } from "@features/rank-tracker"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function RankTrackerPage() {
   return (
@@ -8,6 +8,7 @@ export default function RankTrackerPage() {
     </ErrorBoundary>
   )
 }
+
 
 
 

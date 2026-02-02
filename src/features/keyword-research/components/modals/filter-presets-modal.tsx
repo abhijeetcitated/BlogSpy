@@ -4,7 +4,8 @@
 // FILTER PRESETS MODAL - Save/load filter presets
 // ============================================
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useAction } from "next-safe-action/hooks"
 import {
   Dialog,
   DialogContent,
@@ -17,43 +18,99 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Save, Trash2, Check } from "lucide-react"
-import type { FilterState } from "../../types"
-
-interface FilterPreset {
-  id: string
-  name: string
-  filters: Partial<FilterState>
-  createdAt: Date
-}
+import { Save, Trash2, Check, Star } from "lucide-react"
+import { useKeywordStore } from "../../store"
+import {
+  saveFilterPreset,
+  getFilterPresets,
+  deleteFilterPreset,
+  setDefaultPreset,
+} from "../../actions/filter-presets"
 
 interface FilterPresetsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  currentFilters: FilterState
-  presets: FilterPreset[]
-  onSavePreset: (name: string, filters: FilterState) => void
-  onLoadPreset: (preset: FilterPreset) => void
-  onDeletePreset: (id: string) => void
 }
 
 export function FilterPresetsModal({
   open,
   onOpenChange,
-  currentFilters,
-  presets,
-  onSavePreset,
-  onLoadPreset,
-  onDeletePreset,
 }: FilterPresetsModalProps) {
   const [newPresetName, setNewPresetName] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+
+  const filters = useKeywordStore((state) => state.filters)
+  const presets = useKeywordStore((state) => state.presets)
+  const setPresets = useKeywordStore((state) => state.setPresets)
+  const addPreset = useKeywordStore((state) => state.addPreset)
+  const removePreset = useKeywordStore((state) => state.removePreset)
+  const applyPreset = useKeywordStore((state) => state.applyPreset)
+
+  const { executeAsync: executeSave } = useAction(saveFilterPreset)
+  const { executeAsync: executeFetch } = useAction(getFilterPresets)
+  const { executeAsync: executeDelete } = useAction(deleteFilterPreset)
+  const { executeAsync: executeDefault } = useAction(setDefaultPreset)
 
   const handleSave = () => {
     if (newPresetName.trim()) {
-      onSavePreset(newPresetName.trim(), currentFilters)
-      setNewPresetName("")
+      void (async () => {
+        setIsLoading(true)
+        const result = await executeSave({
+          name: newPresetName.trim(),
+          filters: filters as unknown as Record<string, unknown>,
+        })
+        setIsLoading(false)
+
+        if (result?.data?.success) {
+          addPreset(result.data.preset)
+          setNewPresetName("")
+        }
+      })()
     }
   }
+
+  const handleLoad = (presetId: string) => {
+    const preset = presets.find((item) => item.id === presetId)
+    if (!preset) return
+    applyPreset(preset)
+    onOpenChange(false)
+  }
+
+  const handleDelete = (presetId: string) => {
+    void (async () => {
+      const result = await executeDelete({ id: presetId })
+      if (result?.data?.success) {
+        removePreset(presetId)
+      }
+    })()
+  }
+
+  const handleSetDefault = (presetId: string) => {
+    void (async () => {
+      const result = await executeDefault({ id: presetId })
+      if (result?.data?.success) {
+        const updated = result.data.preset
+        setPresets(
+          presets.map((item) => ({
+            ...item,
+            isDefault: item.id === updated.id,
+          }))
+        )
+      }
+    })()
+  }
+
+  useEffect(() => {
+    if (!open) return
+    void (async () => {
+      setIsLoading(true)
+      const result = await executeFetch({})
+      setIsLoading(false)
+      if (result?.data?.success) {
+        setPresets(result.data.presets)
+      }
+    })()
+  }, [open, executeFetch, setPresets])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,7 +132,7 @@ export function FilterPresetsModal({
                 value={newPresetName}
                 onChange={(e) => setNewPresetName(e.target.value)}
               />
-              <Button onClick={handleSave} disabled={!newPresetName.trim()}>
+              <Button onClick={handleSave} disabled={!newPresetName.trim() || isLoading}>
                 <Save className="h-4 w-4" />
               </Button>
             </div>
@@ -86,7 +143,7 @@ export function FilterPresetsModal({
             <Label>Saved Presets</Label>
             {presets.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4 text-center">
-                No saved presets yet
+                {isLoading ? "Loading presets..." : "No saved presets yet"}
               </p>
             ) : (
               <ScrollArea className="h-48">
@@ -106,14 +163,27 @@ export function FilterPresetsModal({
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => onLoadPreset(preset)}
+                          onClick={() => handleLoad(preset.id)}
                         >
                           <Check className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => onDeletePreset(preset.id)}
+                          onClick={() => handleSetDefault(preset.id)}
+                        >
+                          <Star
+                            className={
+                              preset.isDefault
+                                ? "h-4 w-4 text-amber-500"
+                                : "h-4 w-4 text-muted-foreground"
+                            }
+                          />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(preset.id)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>

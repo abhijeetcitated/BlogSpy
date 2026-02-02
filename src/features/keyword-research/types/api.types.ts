@@ -4,7 +4,7 @@
 // Types for API integration
 // ============================================
 
-import type { Keyword, MatchType, Country, SERPFeature } from "./index"
+import type { Keyword, MatchType, Country } from "./index"
 
 /**
  * API Request for keyword research
@@ -64,10 +64,44 @@ export type SortableField =
   | "trend"
   | "kd"
   | "cpc"
+  | "geo"
   | "geoScore"
   | "aioScore"
   | "decayScore"
   | "relevance"
+
+/**
+ * DataForSEO Organic SERP item (minimal subset for analysis)
+ */
+export interface DataForSEOOrganicSerpItem {
+  type?: string
+  rank_group?: number
+  rank_absolute?: number
+  position?: number
+  domain?: string
+  url?: string
+  title?: string
+}
+
+/**
+ * DataForSEO Organic SERP result (minimal subset for analysis)
+ */
+export interface DataForSEOOrganicSerpResult {
+  keyword?: string
+  item_types?: string[]
+  items?: DataForSEOOrganicSerpItem[]
+  cpc?: number | null
+  intent?: string
+}
+
+/**
+ * Clean keyword payload for the analytical engine
+ */
+/**
+ * Clean keyword payload for the analytical engine.
+ * Uses the UI-ready Keyword shape (with weakSpots.ranked as the array).
+ */
+export type CleanKeyword = Keyword
 
 /**
  * API Response for keyword research
@@ -298,27 +332,8 @@ export interface ExportOptions {
 /**
  * Transform API keyword to local Keyword type
  */
-export function transformAPIKeyword(apiKeyword: APIKeyword): Keyword {
-  // Convert API weakSpot to new weakSpots format
-  const weakSpots = {
-    reddit: apiKeyword.weakSpot.type === "reddit" ? apiKeyword.weakSpot.rank : null,
-    quora: apiKeyword.weakSpot.type === "quora" ? apiKeyword.weakSpot.rank : null,
-    pinterest: apiKeyword.weakSpot.type === "pinterest" ? apiKeyword.weakSpot.rank : null,
-  }
-
-  return {
-    id: parseInt(apiKeyword.id, 10) || Math.random() * 1000000,
-    keyword: apiKeyword.keyword,
-    intent: apiKeyword.intent.all,
-    volume: apiKeyword.volume,
-    trend: apiKeyword.trend.values,
-    weakSpots,
-    kd: apiKeyword.kd,
-    cpc: apiKeyword.cpc,
-    serpFeatures: apiKeyword.serp.features.map((f) => f.type) as SERPFeature[],
-    geoScore: apiKeyword.geoScore.score,
-    hasAio: apiKeyword.aioAnalysis?.hasAIOverview ?? apiKeyword.serp.features.some((f) => f.type === "ai_overview"),
-  }
+export function transformAPIKeyword(_apiKeyword: APIKeyword): Keyword {
+  throw new Error("TRANSFORM_API_KEYWORD_NOT_IMPLEMENTED")
 }
 
 /**
@@ -341,26 +356,13 @@ export function buildAPIRequest(
   page: number,
   limit: number
 ): KeywordResearchRequest {
-  return {
-    seedKeyword,
-    country: country?.code || "US",
-    matchType,
-    filters: {
-      volumeMin: filters.volumeRange[0],
-      volumeMax: filters.volumeRange[1],
-      kdMin: filters.kdRange[0],
-      kdMax: filters.kdRange[1],
-      cpcMin: filters.cpcRange[0],
-      cpcMax: filters.cpcRange[1],
-      intents: filters.selectedIntents.length > 0 
-        ? filters.selectedIntents as ("I" | "C" | "T" | "N")[] 
-        : undefined,
-      includeTerms: filters.includeTerms.length > 0 ? filters.includeTerms : undefined,
-      excludeTerms: filters.excludeTerms.length > 0 ? filters.excludeTerms : undefined,
-    },
-    page,
-    limit,
-    sortBy,
-    sortOrder,
-  }
+  void seedKeyword
+  void country
+  void matchType
+  void filters
+  void sortBy
+  void sortOrder
+  void page
+  void limit
+  throw new Error("BUILD_API_REQUEST_NOT_IMPLEMENTED")
 }

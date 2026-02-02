@@ -26,7 +26,7 @@ import {
   PERSONAL_ELEMENTS,
   SENTENCE_STARTERS_HUMAN,
   HumanizationExportOptions
-} from '@/src/features/ai-writer/types/tools/humanizer.types';
+} from '@/features/ai-writer/types/tools/humanizer.types';
 
 // =============================================================================
 // TEXT ANALYSIS

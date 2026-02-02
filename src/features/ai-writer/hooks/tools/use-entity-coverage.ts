@@ -30,12 +30,12 @@ import {
   EntitySortOption,
   DEFAULT_ENTITY_COVERAGE_SETTINGS,
   EntityExportFormat
-} from '@/src/features/ai-writer/types/tools/entity-coverage.types';
+} from '@/features/ai-writer/types/tools/entity-coverage.types';
 import {
   analyzeEntityCoverage,
   exportEntityReport,
   getEntityHighlights
-} from '@/src/features/ai-writer/utils/tools/entity-coverage';
+} from '@/features/ai-writer/utils/tools/entity-coverage';
 
 // =============================================================================
 // TYPES

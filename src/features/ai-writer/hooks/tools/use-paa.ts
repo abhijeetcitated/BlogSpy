@@ -17,7 +17,7 @@ import {
   PAALocation,
   DEFAULT_PAA_OPTIONS,
   DEFAULT_PAA_FILTERS
-} from '@/src/features/ai-writer/types/tools/paa.types';
+} from '@/features/ai-writer/types/tools/paa.types';
 import {
   generatePAAData,
   filterQuestions,
@@ -29,7 +29,7 @@ import {
   exportToCSV,
   exportToJSON,
   calculatePAAStatistics
-} from '@/src/features/ai-writer/utils/tools/paa';
+} from '@/features/ai-writer/utils/tools/paa';
 
 // =============================================================================
 // HOOK INTERFACE

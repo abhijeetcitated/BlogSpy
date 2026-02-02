@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { MARKETING_SPACING } from '@/src/styles';
+import { MARKETING_SPACING } from '@/styles';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - BlogSpy',

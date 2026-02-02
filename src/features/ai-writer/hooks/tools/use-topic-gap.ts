@@ -26,11 +26,11 @@ import {
   GapSummary,
   DEFAULT_TOPIC_GAP_SETTINGS,
   GAP_SEVERITY_WEIGHTS
-} from '@/src/features/ai-writer/types/tools/topic-gap.types';
+} from '@/features/ai-writer/types/tools/topic-gap.types';
 import {
   analyzeTopicGaps,
   exportTopicGapReport
-} from '@/src/features/ai-writer/utils/tools/topic-gap';
+} from '@/features/ai-writer/utils/tools/topic-gap';
 
 // =============================================================================
 // TYPES

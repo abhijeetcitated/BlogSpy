@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { PAGE_PADDING, STACK_SPACING, GRID_COLS, GAP_PATTERNS } from "@/src/styles"
+import { PAGE_PADDING, STACK_SPACING, GRID_COLS, GAP_PATTERNS } from "@/styles"
 
 export const metadata: Metadata = {
   title: "Marketing - BlogSpy",

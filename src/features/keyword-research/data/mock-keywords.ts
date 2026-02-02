@@ -2,11 +2,14 @@
 // KEYWORD RESEARCH - Mock Keywords Data
 // ============================================
 // Realistic mock data for development/testing
-// Pre-enriched with RTV calculations
+// Pre-enriched via data mapper + calculators
 // ============================================
 
-import type { Keyword } from "../types"
-import { calculateRtv } from "../utils/rtv-calculator"
+import "server-only"
+
+import type { Keyword, SERPFeature } from "../types"
+import type { DataForSEOOrganicSerpItem, DataForSEOOrganicSerpResult } from "../types/api.types"
+import { mapKeywordData } from "../utils/data-mapper"
 
 /**
  * Raw mock keyword data (without RTV)
@@ -224,29 +227,69 @@ const RAW_MOCK_KEYWORDS: Omit<Keyword, "rtv" | "rtvBreakdown">[] = [
   },
 ]
 
-/**
- * Enrich a keyword with calculated RTV data
- */
-function enrichWithRtv(keyword: Omit<Keyword, "rtv" | "rtvBreakdown">): Keyword {
-  const rtvResult = calculateRtv({
-    volume: keyword.volume,
-    cpc: keyword.cpc,
-    serpFeatures: keyword.serpFeatures,
-  })
-  
+const PLATFORM_DOMAINS: Record<"reddit" | "quora" | "pinterest", string> = {
+  reddit: "reddit.com",
+  quora: "quora.com",
+  pinterest: "pinterest.com",
+}
+
+function intentToLabel(intent: Keyword["intent"]): string {
+  if (intent.includes("I")) return "informational"
+  if (intent.includes("C")) return "commercial"
+  if (intent.includes("T")) return "transactional"
+  if (intent.includes("N")) return "navigational"
+  return "informational"
+}
+
+function buildMockSerp(item: Omit<Keyword, "rtv" | "rtvBreakdown">): DataForSEOOrganicSerpResult {
+  const items: DataForSEOOrganicSerpItem[] = []
+
+  const pushWeakSpot = (platform: keyof typeof PLATFORM_DOMAINS, rank: number | null) => {
+    if (typeof rank !== "number") return
+    const domain = PLATFORM_DOMAINS[platform]
+    items.push({
+      type: "organic",
+      rank_group: rank,
+      rank_absolute: rank,
+      domain,
+      url: `https://${domain}/thread/${rank}`,
+    })
+  }
+
+  pushWeakSpot("reddit", item.weakSpots.reddit)
+  pushWeakSpot("quora", item.weakSpots.quora)
+  pushWeakSpot("pinterest", item.weakSpots.pinterest)
+
   return {
-    ...keyword,
-    rtv: rtvResult.rtv,
-    rtvBreakdown: rtvResult.breakdown.map(b => ({
-      label: b.label,
-      value: Math.abs(b.value), // Store as positive for display
-      icon: b.icon,
-      color: b.color,
-    })),
-  } as Keyword
+    keyword: item.keyword,
+    item_types: item.serpFeatures as SERPFeature[],
+    items,
+    cpc: item.cpc,
+    intent: intentToLabel(item.intent),
+  }
+}
+
+function buildMockKeyword(item: Omit<Keyword, "rtv" | "rtvBreakdown">): Keyword {
+  const serp = buildMockSerp(item)
+  const computed = mapKeywordData(serp, {
+    id: item.id,
+    keyword: item.keyword,
+    volume: item.volume,
+    cpc: item.cpc,
+    kd: item.kd,
+    trend: item.trend,
+    trendOrder: "oldest-first",
+    intent: item.intent,
+    countryCode: item.countryCode ?? "US",
+  })
+
+  return {
+    ...computed,
+    dataSource: "mock",
+  }
 }
 
 /**
- * Pre-enriched mock keywords with RTV calculations
+ * Pre-enriched mock keywords with calculator-driven metrics
  */
-export const MOCK_KEYWORDS: Keyword[] = RAW_MOCK_KEYWORDS.map(enrichWithRtv)
+export const MOCK_KEYWORDS: Keyword[] = RAW_MOCK_KEYWORDS.map(buildMockKeyword)

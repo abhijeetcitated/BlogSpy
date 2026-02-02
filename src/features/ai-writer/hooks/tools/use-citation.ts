@@ -16,12 +16,12 @@ import {
   ClaimType,
   Citation,
   DEFAULT_CITATION_SETTINGS
-} from '@/src/features/ai-writer/types/tools/citation.types';
+} from '@/features/ai-writer/types/tools/citation.types';
 import {
   analyzeCitations,
   generateCitation,
   exportCitationReport
-} from '@/src/features/ai-writer/utils/tools/citation';
+} from '@/features/ai-writer/utils/tools/citation';
 
 // =============================================================================
 // TYPES

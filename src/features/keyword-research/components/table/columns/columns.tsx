@@ -3,8 +3,10 @@
 import {
   type Column,
   type ColumnDef,
+  type Table,
   createColumnHelper,
 } from "@tanstack/react-table"
+import type { MouseEvent } from "react"
 import {
   ArrowDown,
   ArrowUp,
@@ -14,27 +16,197 @@ import {
   FileText,
   HelpCircle,
   ImageIcon,
+  Loader2,
   MapPin,
   Megaphone,
   Newspaper,
   ShoppingCart,
   Star,
   Video,
+  Zap,
 } from "lucide-react"
+import { useAction } from "next-safe-action/hooks"
+import { toast } from "sonner"
 
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { Sparkline, KDRing } from "@/components/charts"
+import { KDRing } from "@/components/charts"
+import { useUIStore } from "@/store/ui-store"
 
 import { INTENT_CONFIG } from "../../../constants/table-config"
 import type { Keyword } from "../../../types"
+import { useKeywordStore } from "../../../store"
+import {
+  getIntentSortValue,
+  getNumericSortValue,
+  getWeakSpotSortValue,
+} from "../../../utils/sort-utils"
 import { WeakSpotColumn } from "./weak-spot/weak-spot-column"
 import { RefreshColumn } from "./refresh"
 import { RefreshCreditsHeader } from "./refresh/RefreshCreditsHeader"
+import { TrendSparkline } from "./TrendSparkline"
+import { refreshKeyword } from "../../../actions/refresh-keyword"
 
 const columnHelper = createColumnHelper<Keyword>()
 
+function RowSelectionCheckbox({ id, label }: { id: number; label: string }) {
+  const selectedIds = useKeywordStore((state) => state.selectedIds)
+  const toggleSelection = useKeywordStore((state) => state.toggleSelection)
+
+  const key = String(id)
+  const isChecked = Boolean(selectedIds[key])
+
+  return (
+    <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+      <Checkbox
+        checked={isChecked}
+        onCheckedChange={() => {
+          if (!key) return
+          toggleSelection(key)
+        }}
+        aria-label={label}
+      />
+    </div>
+  )
+}
+
+function HeaderSelectionCheckbox({ table }: { table: Table<Keyword> }) {
+  const selectedIds = useKeywordStore((state) => state.selectedIds)
+  const pagination = useKeywordStore((state) => state.pagination)
+  const selectVisible = useKeywordStore((state) => state.selectVisible)
+  const toggleSelection = useKeywordStore((state) => state.toggleSelection)
+
+  const sortedRows = table.getSortedRowModel().rows
+  const start = pagination.pageIndex * pagination.pageSize
+  const end = start + pagination.pageSize
+  const pageRowIds = sortedRows
+    .slice(start, end)
+    .map((row) => Number(row.original.id))
+    .filter((id) => Number.isFinite(id))
+
+  const allSelected =
+    pageRowIds.length > 0 && pageRowIds.every((id) => selectedIds[String(id)])
+  const someSelected = pageRowIds.some((id) => selectedIds[String(id)])
+
+  return (
+    <div className="flex items-center justify-center">
+      <Checkbox
+        checked={allSelected || (someSelected && "indeterminate")}
+        onCheckedChange={(value) => {
+          if (!pageRowIds.length) return
+          if (value) {
+            selectVisible(pageRowIds.map((id) => String(id)))
+          } else {
+            pageRowIds.forEach((id) => {
+              const key = String(id)
+              if (selectedIds[key]) {
+                toggleSelection(key)
+              }
+            })
+          }
+        }}
+        aria-label="Select page"
+      />
+    </div>
+  )
+}
+
+function ForensicScanInline({ id, keyword }: { id: number; keyword: string }) {
+  const country = useKeywordStore((state) => state.search.country)
+  const updateKeyword = useKeywordStore((state) => state.updateKeyword)
+  const setCredits = useKeywordStore((state) => state.setCredits)
+  const currentBalance = useKeywordStore((state) => state.credits)
+  const openPricingModal = useUIStore((state) => state.openPricingModal)
+  const { executeAsync, status } = useAction(refreshKeyword)
+  const isExecuting = status === "executing"
+
+  const handleClick = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    if (!Number.isFinite(id) || isExecuting) return
+
+    const idempotencyKey = crypto.randomUUID()
+    console.log("[CLIENT] Generated Key:", idempotencyKey)
+
+    updateKeyword(id, { isRefreshing: true })
+
+    try {
+      const result = await executeAsync({
+        keywordId: id,
+        keyword,
+        country: country || "US",
+        idempotency_key: idempotencyKey,
+        current_balance: typeof currentBalance === "number" ? currentBalance : undefined,
+      })
+
+      const serverError = typeof result?.serverError === "string" ? result.serverError : undefined
+      if (serverError) {
+        if (serverError.includes("COOLDOWN_ACTIVE")) {
+          updateKeyword(id, { lastRefreshedAt: new Date(), isRefreshing: false })
+          return
+        }
+        if (serverError.includes("INSUFFICIENT_CREDITS")) {
+          openPricingModal()
+          toast.error("Insufficient credits", { description: "Upgrade to run a forensic scan." })
+          return
+        }
+        throw new Error(serverError)
+      }
+
+      if (!result?.data || result.data.success !== true) {
+        throw new Error("Refresh failed")
+      }
+
+      const updated = result.data.data
+      const balance = result.data.balance
+      const lastRefreshedAt = updated.lastRefreshedAt ?? result.data.lastRefreshedAt ?? null
+      const parsedLastRefreshedAt =
+        lastRefreshedAt instanceof Date
+          ? lastRefreshedAt
+          : typeof lastRefreshedAt === "string"
+            ? new Date(lastRefreshedAt)
+            : null
+
+      updateKeyword(id, {
+        ...updated,
+        lastUpdated: updated.lastUpdated ? new Date(updated.lastUpdated) : new Date(),
+        lastRefreshedAt: parsedLastRefreshedAt,
+        isRefreshing: false,
+      } as Partial<Keyword>)
+
+      if (typeof balance === "number") {
+        setCredits(balance)
+      }
+
+      toast.success("Forensic scan complete")
+    } catch (error) {
+      console.error("[ForensicScan] ERROR:", error)
+      const message = error instanceof Error ? error.message : "Please try again."
+      toast.error("Scan failed", { description: message })
+    } finally {
+      updateKeyword(id, { isRefreshing: false })
+    }
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="h-7 px-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-400/10"
+      onClick={handleClick}
+      disabled={isExecuting}
+    >
+      {isExecuting ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Zap className="h-3.5 w-3.5" />
+      )}
+      <span className="ml-1">Forensic Scan</span>
+    </Button>
+  )
+}
 
 const EDUCATIONAL_TOOLTIPS: Record<
   "volume" | "trend" | "kd" | "cpc" | "weakSpots" | "geoScore",
@@ -112,30 +284,23 @@ function TableColumnHeader({
 
 export function createKeywordColumns({
   isGuest,
+  isBulkRefreshing,
+  onBulkRefresh,
 }: {
   isGuest: boolean
+  isBulkRefreshing?: boolean
+  onBulkRefresh?: (ids: number[]) => void
 }): ColumnDef<Keyword, unknown>[] {
   return [
     // 1. Checkbox
     columnHelper.display({
       id: "select",
-      header: ({ table }) => (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={table.getIsAllRowsSelected() || (table.getIsSomeRowsSelected() && "indeterminate")}
-            onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        </div>
-      ),
+      header: ({ table }) => <HeaderSelectionCheckbox table={table} />,
       cell: ({ row }) => (
-        <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label={`Select ${row.original.keyword}`}
-          />
-        </div>
+        <RowSelectionCheckbox
+          id={Number(row.original.id)}
+          label={`Select ${row.original.keyword}`}
+        />
       ),
       size: 40,
       minSize: 40,
@@ -156,8 +321,9 @@ export function createKeywordColumns({
     }),
 
     // 3. Intent
-    columnHelper.accessor("intent", {
-      header: () => <TableColumnHeader label="Intent" />,
+    columnHelper.accessor((row) => getIntentSortValue(row.intent), {
+      id: "intent",
+      header: ({ column }) => <TableColumnHeader label="Intent" column={column} />,
       cell: ({ row }) => (
         <div className="flex items-center justify-center gap-0.5">
           {row.original.intent.map((int, idx) => (
@@ -179,14 +345,16 @@ export function createKeywordColumns({
           ))}
         </div>
       ),
-      enableSorting: false,
+      sortingFn: "basic",
+      sortUndefined: "last",
       size: 70,
       minSize: 70,
       maxSize: 90,
     }),
 
     // 4. Volume
-    columnHelper.accessor("volume", {
+    columnHelper.accessor((row) => getNumericSortValue(row.volume), {
+      id: "volume",
       header: ({ column }) => (
         <TableColumnHeader
           label="Volume"
@@ -200,6 +368,8 @@ export function createKeywordColumns({
           {row.original.volume.toLocaleString()}
         </div>
       ),
+      sortingFn: "basic",
+      sortUndefined: "last",
       size: 80,
       minSize: 80,
     }),
@@ -208,9 +378,23 @@ export function createKeywordColumns({
     columnHelper.accessor("trend", {
       header: () => <TableColumnHeader label="Trend" tooltip={EDUCATIONAL_TOOLTIPS.trend} />,
       cell: ({ row }) => (
-        <div className="flex items-center justify-center">
-          <Sparkline data={row.original.trend} />
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center justify-center">
+              <TrendSparkline
+                trend={row.original.trend}
+                status={row.original.trendStatus ?? "stable"}
+              />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={6}>
+            {row.original.trendStatus === "rising"
+              ? "Rising Trend"
+              : row.original.trendStatus === "falling"
+                ? "Falling Trend"
+                : "Stable Trend"}
+          </TooltipContent>
+        </Tooltip>
       ),
       enableSorting: false,
       size: 80,
@@ -218,7 +402,8 @@ export function createKeywordColumns({
     }),
 
     // 6. KD
-    columnHelper.accessor("kd", {
+    columnHelper.accessor((row) => getNumericSortValue(row.kd), {
+      id: "kd",
       header: ({ column }) => (
         <TableColumnHeader label="KD %" tooltip={EDUCATIONAL_TOOLTIPS.kd} column={column} />
       ),
@@ -227,12 +412,15 @@ export function createKeywordColumns({
           <KDRing value={row.original.kd} />
         </div>
       ),
+      sortingFn: "basic",
+      sortUndefined: "last",
       size: 60,
       minSize: 60,
     }),
 
     // 7. CPC
-    columnHelper.accessor("cpc", {
+    columnHelper.accessor((row) => getNumericSortValue(row.cpc), {
+      id: "cpc",
       header: ({ column }) => (
         <TableColumnHeader label="CPC" tooltip={EDUCATIONAL_TOOLTIPS.cpc} column={column} align="right" />
       ),
@@ -241,37 +429,52 @@ export function createKeywordColumns({
           ${row.original.cpc.toFixed(2)}
         </div>
       ),
+      sortingFn: "basic",
+      sortUndefined: "last",
       size: 60,
       minSize: 60,
     }),
 
     // 8. Weak Spot
-    columnHelper.accessor("weakSpots", {
-      header: () => (
-        <TableColumnHeader label="Weak Spot" tooltip={EDUCATIONAL_TOOLTIPS.weakSpots} />
+    columnHelper.accessor((row) => getWeakSpotSortValue(row.weakSpots), {
+      id: "weakSpots",
+      header: ({ column }) => (
+        <TableColumnHeader label="Weak Spot" tooltip={EDUCATIONAL_TOOLTIPS.weakSpots} column={column} />
       ),
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center">
-          <WeakSpotColumn weakSpots={row.original.weakSpots} />
-        </div>
-      ),
-      enableSorting: false,
+      cell: ({ row }) => {
+        const geoScore = row.original.geoScore
+        const numericId = Number(row.original.id)
+
+        return (
+          <div className="flex items-center justify-center">
+            {geoScore == null ? (
+              <ForensicScanInline id={numericId} keyword={row.original.keyword} />
+            ) : (
+              <WeakSpotColumn weakSpots={row.original.weakSpots} />
+            )}
+          </div>
+        )
+      },
+      sortingFn: "basic",
+      sortUndefined: "last",
+      sortDescFirst: true,
       size: 180,
       minSize: 160,
     }),
 
     // 9. GEO Score
-    columnHelper.accessor("geoScore", {
+    columnHelper.accessor((row) => getNumericSortValue(row.geoScore), {
+      id: "geoScore",
       header: ({ column }) => (
         <TableColumnHeader label="GEO" tooltip={EDUCATIONAL_TOOLTIPS.geoScore} column={column} />
       ),
       cell: ({ row }) => {
         const hasAio = row.original.hasAio ?? row.original.serpFeatures?.includes("ai_overview")
         const geoScore = row.original.geoScore
-
+        const numericId = Number(row.original.id)
         return (
           <div className="flex items-center justify-center">
-            {geoScore !== undefined && geoScore > 0 ? (
+            {typeof geoScore === "number" && geoScore > 0 ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span
@@ -299,12 +502,14 @@ export function createKeywordColumns({
                   </p>
                 </TooltipContent>
               </Tooltip>
-            ) : (
-              <span className="text-muted-foreground/50 text-xs">—</span>
-            )}
+              ) : (
+                <span className="text-muted-foreground/50 text-xs">-</span>
+              )}
           </div>
         )
       },
+      sortingFn: "basic",
+      sortUndefined: "last",
       size: 60,
       minSize: 60,
     }),
@@ -424,7 +629,7 @@ export function createKeywordColumns({
                 )}
               </div>
             ) : (
-              <span className="text-muted-foreground/50 text-xs">—</span>
+              <span className="text-muted-foreground/50 text-xs">-</span>
             )}
           </div>
         )
@@ -439,7 +644,11 @@ export function createKeywordColumns({
       id: "refresh",
       header: () => (
         <div className="min-w-[150px] flex justify-end text-right">
-          <RefreshCreditsHeader isGuest={isGuest} />
+          <RefreshCreditsHeader
+            isGuest={isGuest}
+            isBulkRefreshing={isBulkRefreshing}
+            onBulkRefresh={onBulkRefresh}
+          />
         </div>
       ),
       cell: ({ row }) => (
@@ -455,6 +664,16 @@ export function createKeywordColumns({
                 ? row.original.lastUpdated.toISOString()
                 : row.original.lastUpdated ?? null
             }
+            lastRefreshedAt={
+              row.original.lastRefreshedAt instanceof Date
+                ? row.original.lastRefreshedAt.toISOString()
+                : row.original.lastRefreshedAt ?? null
+            }
+            lastSerpUpdate={
+              row.original.lastSerpUpdate instanceof Date
+                ? row.original.lastSerpUpdate.toISOString()
+                : row.original.lastSerpUpdate ?? null
+            }
             isGuest={isGuest}
           />
         </div>
@@ -465,3 +684,4 @@ export function createKeywordColumns({
     }),
   ] as ColumnDef<Keyword, unknown>[]
 }
+

@@ -11,8 +11,8 @@
 
 import "server-only"
 
-import { getDataForSEOClient, type DataForSEOResponse } from "@/src/lib/seo/dataforseo"
-import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
+import { getDataForSEOClient, type DataForSEOResponse } from "@/lib/seo/dataforseo"
+import { getDataForSEOLocationCode } from "@/lib/dataforseo/locations"
 import { calculateGeoScore, countKeywordWords } from "../utils/geo-calculator"
 import { normalizeSerpFeatureType } from "../utils/serp-feature-normalizer"
 import type { SERPFeature } from "../types"
@@ -152,22 +152,29 @@ function hasFeaturedSnippet(itemTypes: string[]): boolean {
  */
 export async function fetchLiveSerp(
   keyword: string,
-  locationCode: number = 2840
+  locationCode: number = 2840,
+  languageCode: string = "en",
+  deviceType: string = "desktop"
 ): Promise<LiveSerpData> {
   const dataforseo = getDataForSEOClient()
 
   try {
+    const normalizedDevice = deviceType?.trim().toLowerCase()
+    const payload: Record<string, unknown> = {
+      keyword: keyword.trim().toLowerCase(),
+      location_code: locationCode,
+      language_code: languageCode,
+      depth: 20, // Get more results for comprehensive analysis
+      se_domain: "google.com",
+    }
+
+    if (normalizedDevice && normalizedDevice !== "all") {
+      payload.device = normalizedDevice
+    }
+
     const { data } = await dataforseo.post<DataForSEOResponse<LiveSerpResult>>(
       "/v3/serp/google/organic/live/advanced",
-      [
-        {
-          keyword: keyword.trim().toLowerCase(),
-          location_code: locationCode,
-          language_code: "en",
-          depth: 20, // Get more results for comprehensive analysis
-          se_domain: "google.com",
-        },
-      ]
+      [payload]
     )
 
     const task = data.tasks?.[0]

@@ -21,7 +21,7 @@ import { useScanHistory, useKeyboardShortcuts } from "./hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { CurrentIssue } from "./types"
 import { useRef } from "react"
-import { STACK_SPACING } from "@/src/styles"
+import { STACK_SPACING } from "@/styles"
 
 // Lazy load heavy AIFixModal component
 const AIFixModal = lazy(() => 

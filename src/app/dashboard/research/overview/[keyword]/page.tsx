@@ -1,5 +1,5 @@
-import { KeywordOverviewContent } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { KeywordOverviewContent } from "@features/keyword-overview"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { Metadata } from "next"
 
 interface PageProps {

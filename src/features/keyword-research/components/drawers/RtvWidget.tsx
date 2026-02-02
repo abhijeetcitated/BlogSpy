@@ -4,31 +4,20 @@ import * as React from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { calculateRtv } from "../../utils/rtv-calculator";
-
 type KeywordDataLike = {
   volume?: number | null;
-  cpc?: number | null;
-  serp_features?: unknown;
-  serpFeatures?: unknown;
+  rtv?: number | null;
+  rtvBreakdown?: Array<{ label: string; value: number }>;
 };
 
 export function RtvWidget({ keywordData }: { keywordData: KeywordDataLike }) {
   const volume = Number(keywordData.volume ?? 0);
-  const cpc = keywordData.cpc ?? 0;
-  const serpFeatures = (keywordData.serp_features ?? keywordData.serpFeatures) as unknown;
+  const rtvValue = Number(keywordData.rtv ?? 0);
+  const lossPercentage =
+    volume > 0 ? Math.max(0, Math.min(1, 1 - rtvValue / volume)) : 0;
+  const breakdown = keywordData.rtvBreakdown ?? [];
 
-  const rtv = React.useMemo(
-    () =>
-      calculateRtv({
-        volume,
-        cpc,
-        serpFeatures,
-      }),
-    [volume, cpc, serpFeatures]
-  );
-
-  const trafficLeftPct = Math.max(0, Math.min(100, Math.round((1 - rtv.lossPercentage) * 100)));
+  const trafficLeftPct = Math.max(0, Math.min(100, Math.round((1 - lossPercentage) * 100)));
   const trafficLostPct = 100 - trafficLeftPct;
 
   const fmt = React.useMemo(
@@ -72,7 +61,7 @@ export function RtvWidget({ keywordData }: { keywordData: KeywordDataLike }) {
         {/* Big stat */}
         <div className="flex items-baseline gap-2">
           <div className="text-2xl font-semibold text-zinc-50 tabular-nums">
-            {fmt.format(rtv.rtv)}
+            {fmt.format(rtvValue)}
           </div>
           <div className="text-sm text-zinc-400 tabular-nums">
             / {fmt.format(Math.max(0, volume))}
@@ -81,13 +70,13 @@ export function RtvWidget({ keywordData }: { keywordData: KeywordDataLike }) {
 
         {/* Breakdown */}
         <div className="space-y-1.5">
-          {rtv.breakdown.length === 0 ? (
+          {breakdown.length === 0 ? (
             <div className="text-xs text-zinc-500">
               No major SERP suppressors detected for this keyword.
             </div>
           ) : (
             <ul className="space-y-1">
-              {rtv.breakdown.map((b) => (
+              {breakdown.map((b) => (
                 <li key={b.label} className="flex items-center justify-between text-xs">
                   <span className="text-zinc-300">{b.label}</span>
                   <span className="text-rose-400 tabular-nums">-{b.value}%</span>

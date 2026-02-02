@@ -8,8 +8,8 @@
 import "server-only"
 
 import { dataForSEOClient, type ApiResponse } from "@/services/dataforseo/client"
-import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
-import { mapKeywordData, mapBulkKeywords, type RawLabsKeyword } from "../utils/data-mapper"
+import { getDataForSEOLocationCode } from "@/lib/dataforseo/locations"
+import { mapBulkKeywords, type RawLabsKeyword } from "../utils/data-mapper"
 import type { Keyword } from "../types"
 
 /**

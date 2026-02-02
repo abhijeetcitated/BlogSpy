@@ -8,6 +8,7 @@ import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 interface CPCFilterProps {
   open: boolean
@@ -24,6 +25,8 @@ export function CPCFilter({
   onTempRangeChange,
   onApply,
 }: CPCFilterProps) {
+  const isDirty = tempRange[0] !== 0 || tempRange[1] !== 1000
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
@@ -44,10 +47,14 @@ export function CPCFilter({
               </span>
               <Input
                 type="number"
+                min={0}
                 placeholder="Min"
                 value={tempRange[0] || ""}
                 onChange={(e) => {
-                  const val = e.target.value === "" ? 0 : Number(e.target.value)
+                  const val =
+                    e.target.value === ""
+                      ? 0
+                      : Math.max(0, Number.parseFloat(e.target.value) || 0)
                   onTempRangeChange([val, tempRange[1]])
                 }}
                 className="h-8 text-sm pl-6"
@@ -60,17 +67,27 @@ export function CPCFilter({
               </span>
               <Input
                 type="number"
+                min={0}
                 placeholder="Max"
                 value={tempRange[1] || ""}
                 onChange={(e) => {
-                  const val = e.target.value === "" ? 0 : Number(e.target.value)
+                  const val =
+                    e.target.value === ""
+                      ? 0
+                      : Math.max(0, Number.parseFloat(e.target.value) || 0)
                   onTempRangeChange([tempRange[0], val])
                 }}
                 className="h-8 text-sm pl-6"
               />
             </div>
           </div>
-          <Button onClick={onApply} className="w-full mt-2 bg-primary hover:bg-primary/90">
+          <Button
+            onClick={onApply}
+            className={cn(
+              "w-full mt-2 bg-primary hover:bg-primary/90",
+              isDirty && "shadow-[0_0_12px_rgba(59,130,246,0.45)]"
+            )}
+          >
             Apply Filter
           </Button>
         </div>

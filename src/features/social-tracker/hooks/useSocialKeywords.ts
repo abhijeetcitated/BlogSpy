@@ -23,7 +23,7 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { toast } from "sonner"
-import { socialTrackerService } from "../../../../services/social-tracker.service"
+import { socialTrackerService } from "@features/social-tracker/services/social-tracker.service"
 import type { SocialKeyword, SocialSummary, SocialPlatform } from "../types"
 
 /**

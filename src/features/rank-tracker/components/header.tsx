@@ -6,6 +6,7 @@
 
 import { RefreshCw, Plus, Bell, Download, Target, Monitor, Smartphone } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
 import { GoogleIcon, BingIcon } from "./platform-icons"
 import type { SearchPlatform } from "../types/platforms"
@@ -127,29 +128,30 @@ export function RankTrackerHeader({
           </Button>
 
           {/* Device Toggle */}
-          <div className="flex items-center p-1 bg-zinc-900 border border-white/10 rounded-lg mr-3">
-            <button
-              onClick={() => onDeviceChange("desktop")}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                deviceType === "desktop"
-                  ? "bg-zinc-800 text-white shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
+          <div className="mr-2 border-r border-border/50 pr-4">
+            <ToggleGroup
+              type="single"
+              value={deviceType}
+              onValueChange={(val: string) => val && onDeviceChange(val as DeviceType)}
+              className="bg-muted/50 p-0.5 rounded-lg border border-border/50"
             >
-              <Monitor className="w-3.5 h-3.5" />
-              Desktop
-            </button>
-            <button
-              onClick={() => onDeviceChange("mobile")}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                deviceType === "mobile"
-                  ? "bg-zinc-800 text-white shadow-sm"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              Mobile
-            </button>
+              <ToggleGroupItem
+                value="desktop"
+                size="sm"
+                className="h-7 px-2.5 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
+              >
+                <Monitor className="w-3.5 h-3.5 mr-1.5" />
+                Desktop
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="mobile"
+                size="sm"
+                className="h-7 px-2.5 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
+              >
+                <Smartphone className="w-3.5 h-3.5 mr-1.5" />
+                Mobile
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           <Button

@@ -16,7 +16,7 @@
 
 "use server"
 
-import { authAction, z } from "@/src/lib/safe-action"
+import { authAction, z } from "@/lib/safe-action"
 import { createDefenseService, type BrandFacts } from "../services/defense.service"
 import type { DefenseResult, PlatformVisibility } from "../types"
 

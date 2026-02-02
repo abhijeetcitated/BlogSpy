@@ -168,7 +168,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     // Resolve aliases for faster imports
     resolveAlias: {
-      "@": "./",
+      "@": "./src",
+      "@ui": "./src/components/ui",
+      "@features": "./src/features",
     },
   },
 

@@ -7,8 +7,8 @@
 import { ExternalLink, TrendingUp, TrendingDown, Minus, Eye } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sparkline } from "@/components/charts"
-import { PixelRankBadge } from "@/components/ui/pixel-rank-badge"
-import { generateMockPixelRank } from "@/lib/pixel-calculator"
+import { PixelRankBadge } from "@features/pixel-rank"
+import { generateMockPixelRank } from "@features/pixel-rank/utils/pixel-calculator"
 import { RankBadge, SerpFeatureIcon } from "./index"
 import type { RankData } from "../types"
 

@@ -29,7 +29,7 @@ import {
   DEFAULT_ENTITY_COVERAGE_SETTINGS,
   ENTITY_IMPORTANCE_WEIGHTS,
   EntityExportFormat
-} from '@/src/features/ai-writer/types/tools/entity-coverage.types';
+} from '@/features/ai-writer/types/tools/entity-coverage.types';
 
 // =============================================================================
 // ENTITY EXTRACTION

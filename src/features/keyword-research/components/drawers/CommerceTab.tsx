@@ -27,10 +27,10 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { toast } from "sonner"
 
 import type { Keyword, AmazonData, AmazonProduct, DrawerDataState } from "../../types"
-import { generateMockCommerceOpportunity } from "@/lib/commerce-opportunity-calculator"
-import { fetchAmazonData } from "../../actions/fetch-drawer-data"
+import { generateMockCommerceOpportunity } from "@features/platform-opportunity/utils/commerce-opportunity-calculator"
 import { useKeywordStore } from "../../store"
 
 // ============================================
@@ -273,7 +273,6 @@ export function CommerceTab({ keyword, onRefresh }: CommerceTabProps) {
   // CACHE ACCESS (Zustand)
   // ─────────────────────────────────────────
   const getCachedData = useKeywordStore((s) => s.getCachedData)
-  const setDrawerCache = useKeywordStore((s) => s.setDrawerCache)
   const country = useKeywordStore((s) => s.search.country)
 
   // ─────────────────────────────────────────
@@ -312,43 +311,16 @@ export function CommerceTab({ keyword, onRefresh }: CommerceTabProps) {
     if (cached) {
       setAmazonData(cached)
       setState("success")
-      return // No API call needed
+      return
     }
 
-    // 2. Cache miss → Call API (PAID - 1 credit)
-    setState("loading")
+    void onRefresh
     setError(null)
-
-    try {
-      const result = await fetchAmazonData({
-        keyword: keyword.keyword,
-        country,
-      })
-
-      // Check result structure
-      if (result?.data?.success && result.data.data) {
-        // Store in cache for future use
-        setDrawerCache(country, keyword.keyword, "commerce", result.data.data)
-        setAmazonData(result.data.data)
-        setState("success")
-        onRefresh?.()
-      } else {
-        // Handle structured error from server action
-        const errorMsg = result?.data?.error || result?.serverError || "Failed to fetch Amazon data"
-        setError(errorMsg)
-        setIsRetryable(result?.data?.isRetryable ?? true)
-        setState("error")
-      }
-    } catch (err) {
-      // Handle unexpected errors (network, etc.)
-      console.error("[CommerceTab] Unexpected error:", err)
-      setError(err instanceof Error ? err.message : "An unexpected error occurred")
-      setIsRetryable(true)
-      setState("error")
-    }
+    setIsRetryable(false)
+    setState("idle")
+    toast.info("This feature is being rebuilt in V2")
   }
 
-  // ─────────────────────────────────────────
   // HELPER FUNCTIONS
   // ─────────────────────────────────────────
   const getScoreColor = (score: number) => {
@@ -489,3 +461,4 @@ export function CommerceTab({ keyword, onRefresh }: CommerceTabProps) {
 }
 
 export default CommerceTab
+

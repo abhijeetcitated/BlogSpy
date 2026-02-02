@@ -1,142 +1,58 @@
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 🗄️ SUPABASE SERVER CLIENT
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 
- * Server-side Supabase client for Server Components, Route Handlers, and Server Actions.
- * Handles cookies automatically for authentication.
- * 
- * @example
- * ```tsx
- * // In Server Component or Server Action
- * import { createClient } from "@/src/lib/supabase/server"
- *
- * const supabase = await createClient()
- * const { data } = await supabase.from("users").select("*")
- * ```
- */
-
-import { createServerClient as createSupabaseServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import type { Database } from "@/types/supabase"
-import { assertSupabaseTransactionMode } from "./db-config"
+import { createServerClient as createSupabaseServerClient } from "@supabase/ssr"
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// ENVIRONMENT VALIDATION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+export async function createServerClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-function getSupabaseEnv() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  // During build time, return placeholder values to allow static generation
-  // These won't be used for actual API calls during build
-  if (!supabaseUrl || !supabaseAnonKey) {
-    if (process.env.NODE_ENV === "production" && typeof window === "undefined") {
-      // Build time - return placeholders for static generation
-      console.warn("[Supabase] Using placeholder values during build. Set env vars in Vercel.")
-      return {
-        supabaseUrl: "https://placeholder.supabase.co",
-        supabaseAnonKey: "placeholder-key",
-      }
-    }
-    
-    throw new Error(
-      "Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY"
-    )
+  if (!url || !anonKey) {
+    throw new Error("Missing Supabase environment variables")
   }
 
-  return { supabaseUrl, supabaseAnonKey }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// SERVER CLIENT FACTORY
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-/**
- * Creates a Supabase client for server-side usage.
- * Works in Server Components, Route Handlers, and Server Actions.
- * 
- * This function is async because it needs to access cookies.
- */
-export async function createServerClient() {
-  assertSupabaseTransactionMode()
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv()
   const cookieStore = await cookies()
 
-  return createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseServerClient(url, anonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll()
       },
-      setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+      setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
+            cookieStore.set(name, value, options)
           })
         } catch {
-          // The `setAll` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
+          // Ignore: Cookie modification not allowed in Server Components
+          // This is expected when called from page.tsx or layout.tsx
         }
       },
     },
   })
 }
 
-/**
- * Backwards-compatible alias.
- * Prefer `createServerClient()` in new code.
- */
 export async function createClient() {
   return createServerClient()
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// ADMIN CLIENT (Service Role - Use with caution!)
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-/**
- * Creates a Supabase admin client with service role key.
- * ⚠️ USE WITH EXTREME CAUTION - Bypasses Row Level Security!
- * 
- * Only use for admin operations, background jobs, or webhooks.
- */
 export function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  // Canonical env var (required by this codebase): SUPABASE_SERVICE_ROLE_KEY
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl) {
-    throw new Error("❌ Missing NEXT_PUBLIC_SUPABASE_URL environment variable.")
+  if (!url || !serviceKey) {
+    throw new Error("Missing Supabase environment variables")
   }
 
-  if (!supabaseServiceKey) {
-    throw new Error(
-      "❌ Missing SUPABASE_SERVICE_ROLE_KEY environment variable. " +
-        "This is required for admin operations."
-    )
-  }
-
-  return createSupabaseServerClient<Database>(supabaseUrl, supabaseServiceKey, {
+  return createSupabaseServerClient(url, serviceKey, {
     cookies: {
       getAll() {
         return []
       },
       setAll() {
-        // No-op for admin client
+        return
       },
-    },
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
     },
   })
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// TYPE EXPORTS
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export type SupabaseServerClient = Awaited<ReturnType<typeof createServerClient>>
-export type SupabaseAdminClient = ReturnType<typeof createAdminClient>

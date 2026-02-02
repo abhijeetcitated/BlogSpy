@@ -2,9 +2,13 @@
 // KEYWORD MAGIC - Mock Data
 // ============================================
 
-import type { Keyword } from "../types"
+import "server-only"
 
-export const MOCK_KEYWORDS: Keyword[] = [
+import type { Keyword, SERPFeature, WeakSpotEntry } from "../types"
+import type { DataForSEOOrganicSerpItem, DataForSEOOrganicSerpResult } from "../types/api.types"
+import { mapKeywordData } from "../utils/data-mapper"
+
+const RAW_MOCK_KEYWORDS: Keyword[] = [
   {
     id: 1,
     keyword: "best ai tools 2024",
@@ -222,3 +226,103 @@ export const MOCK_KEYWORDS: Keyword[] = [
     geoScore: 68,
   },
 ]
+
+const PLATFORM_DOMAINS: Record<Exclude<WeakSpotEntry["platform"], "medium" | "forums">, string> = {
+  reddit: "reddit.com",
+  quora: "quora.com",
+  pinterest: "pinterest.com",
+}
+
+function createSeededRandom(seed: number): () => number {
+  let state = seed >>> 0
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0
+    return state / 4294967296
+  }
+}
+
+function randomizeTrend(baseTrend: number[], seed: number): number[] {
+  const rand = createSeededRandom(seed)
+  const base = baseTrend.length >= 12 ? baseTrend.slice(0, 12) : [
+    ...baseTrend,
+    ...Array.from({ length: Math.max(0, 12 - baseTrend.length) }, () => 0),
+  ]
+
+  const scale = 0.85 + rand() * 0.4 // 0.85 - 1.25
+  const offset = (rand() - 0.5) * 12 // -6 to +6
+  const slope = (rand() - 0.5) * 2 // -1 to +1 per step
+
+  return base.map((value, index) => {
+    const noise = (rand() - 0.5) * 6 // -3 to +3
+    const adjusted = (value + offset + slope * index) * scale + noise
+    const clamped = Math.max(0, Math.min(100, Math.round(adjusted)))
+    return clamped
+  })
+}
+
+function intentToLabel(intent: Keyword["intent"]): string {
+  if (intent.includes("I")) return "informational"
+  if (intent.includes("C")) return "commercial"
+  if (intent.includes("T")) return "transactional"
+  if (intent.includes("N")) return "navigational"
+  return "informational"
+}
+
+function buildMockSerp(item: Keyword): DataForSEOOrganicSerpResult {
+  const items: DataForSEOOrganicSerpItem[] = []
+
+  const pushWeakSpot = (platform: keyof typeof PLATFORM_DOMAINS, rank: number | null) => {
+    if (typeof rank !== "number") return
+    const domain = PLATFORM_DOMAINS[platform]
+    items.push({
+      type: "organic",
+      rank_group: rank,
+      rank_absolute: rank,
+      domain,
+      url: `https://${domain}/thread/${rank}`,
+    })
+  }
+
+  pushWeakSpot("reddit", item.weakSpots.reddit)
+  pushWeakSpot("quora", item.weakSpots.quora)
+  pushWeakSpot("pinterest", item.weakSpots.pinterest)
+
+  return {
+    keyword: item.keyword,
+    item_types: item.serpFeatures as SERPFeature[],
+    items,
+    cpc: item.cpc,
+    intent: intentToLabel(item.intent),
+  }
+}
+
+export const MOCK_KEYWORDS: Keyword[] = RAW_MOCK_KEYWORDS.map((item) => {
+  const randomizedTrend = randomizeTrend(item.trend, item.id)
+  const serp = buildMockSerp(item)
+  const computed = mapKeywordData(serp, {
+    id: item.id,
+    keyword: item.keyword,
+    volume: item.volume,
+    cpc: item.cpc,
+    kd: item.kd,
+    trend: randomizedTrend,
+    trendOrder: "oldest-first",
+    intent: item.intent,
+    countryCode: item.countryCode ?? "US",
+  })
+
+  return {
+    ...item,
+    trendRaw: randomizedTrend,
+    trend: computed.trend,
+    trendStatus: computed.trendStatus,
+    serpFeatures: computed.serpFeatures,
+    rtv: computed.rtv,
+    rtvBreakdown: computed.rtvBreakdown,
+    geoScore: computed.geoScore,
+    weakSpots: computed.weakSpots,
+    weakSpot: computed.weakSpot,
+    hasAio: computed.hasAio,
+    dataSource: "mock",
+  }
+})

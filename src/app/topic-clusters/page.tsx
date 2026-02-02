@@ -1,8 +1,8 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar, TopNav } from "@/components/layout"
-import { TopicClusterContent } from "@/components/features"
-import { DemoWrapper } from "@/components/common/demo-wrapper"
-import { PAGE_PADDING } from "@/src/styles"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
+import { TopicClusterContent } from "@features/topic-clusters"
+import { DemoWrapper } from "@/components/shared/common/demo-wrapper"
+import { PAGE_PADDING } from "@/styles"
 
 export const metadata = {
   title: "Topic Clusters Demo - BlogSpy | Build Content Authority",
@@ -28,3 +28,4 @@ export default function TopicClustersDemoPage() {
     </DemoWrapper>
   )
 }
+

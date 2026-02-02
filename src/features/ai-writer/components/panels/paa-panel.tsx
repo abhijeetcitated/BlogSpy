@@ -83,7 +83,7 @@ import {
   COVERAGE_STATUS_COLORS,
   DEFAULT_PAA_FILTERS,
   LOADING_STAGE_MESSAGES
-} from '@/src/features/ai-writer/types/tools/paa.types';
+} from '@/features/ai-writer/types/tools/paa.types';
 import {
   filterQuestions,
   sortQuestions,
@@ -91,8 +91,8 @@ import {
   identifyOpportunities,
   exportToMarkdown,
   exportToCSV
-} from '@/src/features/ai-writer/utils/tools/paa';
-import { usePAA } from '@/src/features/ai-writer/hooks/tools/use-paa';
+} from '@/features/ai-writer/utils/tools/paa';
+import { usePAA } from '@/features/ai-writer/hooks/tools/use-paa';
 
 // =============================================================================
 // PROPS INTERFACE

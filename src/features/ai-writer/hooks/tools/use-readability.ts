@@ -18,13 +18,13 @@ import {
   ReadabilityIssue,
   ReadabilityRecommendation,
   DEFAULT_READABILITY_CONFIG
-} from '@/src/features/ai-writer/types/tools/readability.types';
+} from '@/features/ai-writer/types/tools/readability.types';
 import {
   analyzeReadability,
   extractPlainText,
   generateHighlights,
   exportReadabilityReport
-} from '@/src/features/ai-writer/utils/tools/readability';
+} from '@/features/ai-writer/utils/tools/readability';
 
 // =============================================================================
 // HOOK INTERFACE

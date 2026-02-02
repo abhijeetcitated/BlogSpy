@@ -24,11 +24,13 @@
     ],
     "paths": {
       "@/*": [
-        "./*",
         "./src/*"
       ],
-      "@/types/shared": [
-        "./src/types/shared/index.ts"
+      "@ui/*": [
+        "./src/components/ui/*"
+      ],
+      "@features/*": [
+        "./src/features/*"
       ]
     }
   },

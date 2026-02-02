@@ -19,7 +19,7 @@ import {
   extractEntitiesFromContent,
   buildOutlineStructure,
   countHeadingsByLevel
-} from '@/src/features/ai-writer/utils/tools/competitor-analysis';
+} from '@/features/ai-writer/utils/tools/competitor-analysis';
 
 import type {
   SERPAnalysis,
@@ -31,7 +31,7 @@ import type {
   CompetitorSearchIntent,
   ContentMetrics,
   DEFAULT_ANALYSIS_SETTINGS
-} from '@/src/features/ai-writer/types/tools/competitor-analysis.types';
+} from '@/features/ai-writer/types/tools/competitor-analysis.types';
 
 // -----------------------------------------------------------------------------
 // Default Settings

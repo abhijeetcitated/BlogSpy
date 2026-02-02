@@ -27,7 +27,7 @@ import type {
   DifficultyLevel,
   ContentType,
   WordCountTarget,
-} from '@/src/features/ai-writer/types/tools/content-brief.types';
+} from '@/features/ai-writer/types/tools/content-brief.types';
 
 // -----------------------------------------------------------------------------
 // Brief Generation

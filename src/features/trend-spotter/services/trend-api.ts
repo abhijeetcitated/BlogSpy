@@ -1,5 +1,5 @@
 import { subDays, subHours, subMinutes, subMonths } from "date-fns"
-import { getDataForSEOLocationCode } from "@/src/lib/dataforseo/locations"
+import { getDataForSEOLocationCode } from "@/lib/dataforseo/locations"
 import { calculateForecast, distributeVolume } from "../utils/trend-math"
 
 export type TrendPlatform = "web" | "youtube" | "news" | "shopping"

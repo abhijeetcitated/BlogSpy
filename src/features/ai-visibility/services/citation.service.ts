@@ -32,7 +32,7 @@
  * ```
  */
 
-import { openrouter, MODELS, type OpenRouterModel } from "@/src/lib/ai/openrouter"
+import { openrouter, MODELS, type OpenRouterModel } from "@/lib/ai/openrouter"
 import { DATAFORSEO } from "@/constants/api-endpoints"
 import type { 
   AIPlatform, 

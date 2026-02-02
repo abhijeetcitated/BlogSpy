@@ -68,18 +68,16 @@ export function AuthForm({ activeTab, setActiveTab }: AuthFormProps) {
           <button
             type="button"
             onClick={() => setActiveTab("login")}
-            className={`relative z-10 flex-1 py-2.5 text-sm font-medium transition-colors duration-300 rounded-lg ${
-              activeTab === "login" ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
-            }`}
+            className={`relative z-10 flex-1 py-2.5 text-sm font-medium transition-colors duration-300 rounded-lg ${activeTab === "login" ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
+              }`}
           >
             Login
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("signup")}
-            className={`relative z-10 flex-1 py-2.5 text-sm font-medium transition-colors duration-300 rounded-lg ${
-              activeTab === "signup" ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
-            }`}
+            className={`relative z-10 flex-1 py-2.5 text-sm font-medium transition-colors duration-300 rounded-lg ${activeTab === "signup" ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-200"
+              }`}
           >
             Sign Up
           </button>
@@ -110,7 +108,7 @@ export function AuthForm({ activeTab, setActiveTab }: AuthFormProps) {
               name="email"
               type="email"
               placeholder="you@company.com"
-              className="h-11 bg-zinc-900 border-white/5 shadow-inner transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600"
+              className="h-11 bg-zinc-900 border-white/5 shadow-inner transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600 text-white"
               required
             />
           </div>
@@ -125,7 +123,7 @@ export function AuthForm({ activeTab, setActiveTab }: AuthFormProps) {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                className="h-11 bg-zinc-900 border-white/5 shadow-inner pr-10 transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600"
+                className="h-11 bg-zinc-900 border-white/5 shadow-inner pr-10 transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600 text-white"
                 required
                 minLength={6}
               />
@@ -174,7 +172,7 @@ export function AuthForm({ activeTab, setActiveTab }: AuthFormProps) {
               name="name"
               type="text"
               placeholder="John Doe"
-              className="h-11 bg-zinc-900 border-white/5 shadow-inner transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600"
+              className="h-11 bg-zinc-900 border-white/5 shadow-inner transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600 text-white"
             />
           </div>
 
@@ -187,7 +185,7 @@ export function AuthForm({ activeTab, setActiveTab }: AuthFormProps) {
               name="email"
               type="email"
               placeholder="you@company.com"
-              className="h-11 bg-zinc-900 border-white/5 shadow-inner transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600"
+              className="h-11 bg-zinc-900 border-white/5 shadow-inner transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600 text-white"
               required
             />
           </div>
@@ -202,9 +200,9 @@ export function AuthForm({ activeTab, setActiveTab }: AuthFormProps) {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                className="h-11 bg-zinc-900 border-white/5 shadow-inner pr-10 transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600"
+                className="h-11 bg-zinc-900 border-white/5 shadow-inner pr-10 transition-all duration-300 focus:border-amber-500/30 focus:ring-2 focus:ring-amber-500/20 focus:bg-zinc-900/80 placeholder:text-zinc-600 text-white"
                 required
-                minLength={6}
+                minLength={8}
               />
               <button
                 type="button"
@@ -214,6 +212,9 @@ export function AuthForm({ activeTab, setActiveTab }: AuthFormProps) {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            <p className="text-[11px] text-zinc-500">
+              Must be 8+ chars with uppercase, lowercase, number, and symbol.
+            </p>
           </div>
 
           <Button

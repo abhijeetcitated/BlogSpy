@@ -52,7 +52,7 @@ export const VOLUME_PRESETS: VolumePreset[] = [
   { label: "Low (0-1K)", min: 0, max: 1000 },
 ]
 
-export const DEFAULT_VOLUME_RANGE: [number, number] = [0, 500000]
+export const DEFAULT_VOLUME_RANGE: [number, number] = [0, 10000000]
 export const DEFAULT_KD_RANGE: [number, number] = [0, 100]
 export const DEFAULT_CPC_RANGE: [number, number] = [0, 50]
 

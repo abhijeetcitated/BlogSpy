@@ -4,9 +4,9 @@
 
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { rateLimiter } from "@/src/lib/rate-limit"
+import { rateLimiter } from "@/lib/rate-limit"
 import { createServerClient } from "@/lib/supabase/server"
-import { searchYouTubeVideos } from "@/src/features/video-hijack/services/youtube.service"
+import { searchYouTubeVideos } from "@/features/video-hijack/services/youtube.service"
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 const CREDIT_COST = 1

@@ -1,7 +1,7 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar, TopNav } from "@/components/layout"
-import { ContentDecayContent } from "@/components/features"
-import { DemoWrapper } from "@/components/common/demo-wrapper"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
+import { ContentDecayContent } from "@features/content-decay"
+import { DemoWrapper } from "@/components/shared/common/demo-wrapper"
 
 export const metadata = {
   title: "Content Decay Demo - BlogSpy | Revive Declining Content",
@@ -25,3 +25,4 @@ export default function ContentDecayDemoPage() {
     </DemoWrapper>
   )
 }
+

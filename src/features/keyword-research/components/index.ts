@@ -8,11 +8,11 @@
 export { 
   VolumeFilter, 
   KDFilter, 
-  IntentFilter, 
+  IntentFilter,
   CPCFilter, 
   GeoFilter, 
   WeakSpotFilter, 
-  SerpFilter, 
+  SerpFilter,
   TrendFilter, 
   IncludeExcludeFilter, 
   MatchTypeToggle 

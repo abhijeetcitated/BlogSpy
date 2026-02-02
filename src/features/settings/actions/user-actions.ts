@@ -1,248 +1,128 @@
 "use server"
 
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 🎯 USER SERVER ACTIONS - Settings Profile Management
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 
- * Server Actions for fetching and updating user profile data.
- * Uses next-safe-action for type-safe, authenticated operations.
- */
+import "server-only"
 
-import { authAction, z } from "@/src/lib/safe-action"
-import { getCurrentUser, type UserDTO } from "@/src/lib/dal"
-import { createClient } from "@/src/lib/supabase/server"
-import { revalidatePath } from "next/cache"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// SCHEMAS
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+type ActionResponse<T> = {
+  data: T
+  serverError?: string
+}
 
-const updateProfileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  company: z.string().optional(),
-  website: z.string().url().optional().or(z.literal("")),
-  timezone: z.string().optional(),
-})
-
-const updateNotificationsSchema = z.object({
-  email: z.boolean(),
-  rankingAlerts: z.boolean(),
-  weeklyReport: z.boolean(),
-  productUpdates: z.boolean(),
-})
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// RESPONSE TYPES
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export interface UserActionResponse {
+type ActionResult<T> = {
   success: boolean
-  data?: UserDTO | null
+  data?: T
   error?: string
 }
 
-export interface ProfileUpdateResponse {
-  success: boolean
-  data?: {
-    id: string
-    name: string
-    company?: string
-    website?: string
-    timezone?: string
-    updatedAt: Date
-  }
-  error?: string
-}
+export async function fetchUserAction(
+  _input: unknown
+): Promise<ActionResponse<ActionResult<Record<string, unknown>>>> {
+  try {
+    const supabase = await createClient()
+    const admin = createAdminClient()
 
-export interface NotificationsUpdateResponse {
-  success: boolean
-  data?: {
-    email: boolean
-    rankingAlerts: boolean
-    weeklyReport: boolean
-    productUpdates: boolean
-  }
-  error?: string
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// FETCH USER ACTION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-/**
- * Fetch current authenticated user profile
- * Returns SafeUser from the DAL
- */
-export const fetchUserAction = authAction
-  .schema(z.object({}))
-  .action(async ({ ctx }): Promise<UserActionResponse> => {
-    try {
-      const user = await getCurrentUser()
-      
-      if (!user) {
-        return {
-          success: false,
-          error: "User not found",
-        }
-      }
-
-      // Also fetch extended profile data from users table
-      const supabase = await createClient()
-      const { data: profile } = await supabase
-        .from("users")
-        .select("company, website, timezone, notifications")
-        .eq("id", ctx.userId)
-        .single()
-
-      // Merge DAL data with profile data
-      const enrichedUser: UserDTO & {
-        company?: string
-        website?: string
-        timezone?: string
-        notifications?: Record<string, boolean>
-      } = {
-        ...user,
-        company: profile?.company || undefined,
-        website: profile?.website || undefined,
-        timezone: profile?.timezone || "America/New_York",
-        notifications:
-          (profile?.notifications as unknown as Record<string, boolean> | null) ||
-          {
-            email: true,
-            rankingAlerts: true,
-            weeklyReport: true,
-            productUpdates: false,
-          },
-      }
-
-      return {
-        success: true,
-        data: enrichedUser as UserDTO,
-      }
-    } catch (error) {
-      console.error("[fetchUserAction] Error:", error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch user",
-      }
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+    const authUser = authData?.user
+    if (authError || !authUser) {
+      return { data: { success: false, error: "UNAUTHORIZED" } }
     }
-  })
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// UPDATE PROFILE ACTION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+    // Use admin client to bypass RLS for reading profile
+    const { data: profile, error: profileError } = await admin
+      .from("core_profiles")
+      .select(
+        "id, email, full_name, billing_tier, timezone, date_format, language_preference, auth_provider, last_password_change, created_at"
+      )
+      .eq("id", authUser.id)
+      .single()
 
-/**
- * Update user profile (name, company, website, timezone)
- * Persists to public.users table
- */
-export const updateProfileAction = authAction
-  .schema(updateProfileSchema)
-  .action(async ({ parsedInput, ctx }): Promise<ProfileUpdateResponse> => {
-    try {
-      const supabase = await createClient()
-      const { name, company, website, timezone } = parsedInput
-
-      // Upsert to users table (create if not exists, update if exists)
-      const { data, error } = await supabase
-        .from("users")
-        .upsert(
-          {
-            id: ctx.userId,
-            email: ctx.email,
-            name,
-            company: company || null,
-            website: website || null,
-            timezone: timezone || "America/New_York",
-            updated_at: new Date().toISOString(),
-          },
-          {
-            onConflict: "id",
-          }
-        )
-        .select()
-        .single()
-
-      if (error) {
-        console.error("[updateProfileAction] Supabase error:", error)
-        return {
-          success: false,
-          error: error.message,
-        }
-      }
-
-      // Also update auth user metadata for name
-      await supabase.auth.updateUser({
-        data: { full_name: name },
-      })
-
-      // Revalidate dashboard and settings pages
-      revalidatePath("/dashboard")
-      revalidatePath("/settings")
-
+    if (profileError || !profile) {
+      // Profile doesn't exist yet - return auth user data
+      console.error("[fetchUserAction] Profile error:", profileError?.message)
+      
+      // Fallback to auth user metadata
+      const provider = authUser.app_metadata?.provider || "email"
       return {
-        success: true,
         data: {
-          id: data.id,
-          name: data.name ?? name,
-          company: data.company ?? undefined,
-          website: data.website ?? undefined,
-          timezone: data.timezone ?? undefined,
-          updatedAt: new Date(data.updated_at),
+          success: true,
+          data: {
+            id: authUser.id,
+            email: authUser.email,
+            name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "User",
+            plan: "FREE",
+            credits: 0,
+            createdAt: authUser.created_at,
+            timezone: "UTC",
+            dateFormat: "DD/MM/YYYY",
+            language: "en",
+            auth_provider: provider,
+            last_password_change: null,
+          },
         },
       }
-    } catch (error) {
-      console.error("[updateProfileAction] Error:", error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to update profile",
-      }
     }
-  })
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// UPDATE NOTIFICATIONS ACTION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+    // Use admin client for credits too
+    const { data: creditsRow } = await admin
+      .from("bill_credits")
+      .select("credits_total, credits_used")
+      .eq("user_id", authUser.id)
+      .single()
 
-/**
- * Update notification preferences
- * Stores as JSONB in users.notifications column
- */
-export const updateNotificationsAction = authAction
-  .schema(updateNotificationsSchema)
-  .action(async ({ parsedInput, ctx }): Promise<NotificationsUpdateResponse> => {
-    try {
-      const supabase = await createClient()
+    const remainingCredits =
+      creditsRow?.credits_total && creditsRow?.credits_used !== null
+        ? Math.max(creditsRow.credits_total - creditsRow.credits_used, 0)
+        : 0
 
-      const { error } = await supabase
-        .from("users")
-        .update({
-          notifications: parsedInput as unknown as import("@/types/supabase").Json,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", ctx.userId)
+    const plan = String(profile.billing_tier || "free").toUpperCase()
 
-      if (error) {
-        console.error("[updateNotificationsAction] Supabase error:", error)
-        return {
-          success: false,
-          error: error.message,
-        }
-      }
-
-      // Revalidate settings page
-      revalidatePath("/settings")
-
-      return {
+    return {
+      data: {
         success: true,
-        data: parsedInput,
-      }
-    } catch (error) {
-      console.error("[updateNotificationsAction] Error:", error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to update notifications",
-      }
+        data: {
+          id: profile.id,
+          email: profile.email || authUser.email,
+          name: profile.full_name || authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "User",
+          plan,
+          credits: remainingCredits,
+          createdAt: profile.created_at,
+          timezone: profile.timezone,
+          dateFormat: profile.date_format,
+          language: profile.language_preference,
+          auth_provider: profile.auth_provider,
+          last_password_change: profile.last_password_change,
+        },
+      },
     }
-  })
+  } catch (error) {
+    return {
+      data: {
+        success: false,
+        error: error instanceof Error ? error.message : "UNKNOWN_ERROR",
+      },
+    }
+  }
+}
+
+export async function updateProfileAction(
+  _input: unknown
+): Promise<ActionResponse<ActionResult<null>>> {
+  return {
+    data: {
+      success: false,
+      error: "This feature is being rebuilt in V2",
+    },
+  }
+}
+
+export async function updateNotificationsAction(
+  _input: unknown
+): Promise<ActionResponse<ActionResult<null>>> {
+  return {
+    data: {
+      success: false,
+      error: "This feature is being rebuilt in V2",
+    },
+  }
+}

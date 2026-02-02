@@ -3,15 +3,15 @@ import { NextResponse } from "next/server"
 
 import { createApiHandler, ApiError } from "@/lib/api/route-helpers"
 import { creditService } from "@/lib/credits"
-import { createServerClient } from "@/src/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import {
   fetchTrendAnalysis,
   type TrendAnalysisResult,
   type TrendPlatform,
-} from "@/src/features/trend-spotter/services/trend-api"
-import { calculateForecast, calculateVirality, type ViralityResult } from "@/src/features/trend-spotter/utils/trend-math"
-import { buildCacheTimeframeKey, getCacheExpiry } from "@/src/features/trend-spotter/utils/cache-logic"
-import { rateLimiter } from "@/src/lib/rate-limit"
+} from "@/features/trend-spotter/services/trend-api"
+import { calculateForecast, calculateVirality, type ViralityResult } from "@/features/trend-spotter/utils/trend-math"
+import { buildCacheTimeframeKey, getCacheExpiry } from "@/features/trend-spotter/utils/cache-logic"
+import { rateLimiter } from "@/lib/rate-limit"
 
 const AnalyzeTrendSpotterSchema = z.object({
   keyword: z.string().min(1).max(200),

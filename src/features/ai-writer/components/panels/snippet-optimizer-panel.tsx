@@ -80,7 +80,7 @@ import {
   SNIPPET_TYPE_LABELS,
   SNIPPET_TYPE_DESCRIPTIONS,
   SNIPPET_TEMPLATES
-} from '@/src/features/ai-writer/types/tools/snippet-optimizer.types';
+} from '@/features/ai-writer/types/tools/snippet-optimizer.types';
 
 // =============================================================================
 // HELPER COMPONENTS

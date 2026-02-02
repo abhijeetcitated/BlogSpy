@@ -52,7 +52,7 @@ export interface RankData {
   trendHistory: number[]
   lastUpdated: string
   aiOverview: AIOverviewStatus
-  pixelRank?: import("@/types/pixel.types").PixelRankScore
+  pixelRank?: import("@features/pixel-rank/types/pixel.types").PixelRankScore
   country?: string // Country code (e.g., "US", "IN", "worldwide") - optional for mock data
 }
 

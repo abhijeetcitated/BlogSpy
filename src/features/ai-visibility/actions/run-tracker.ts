@@ -13,7 +13,7 @@
 
 "use server"
 
-import { authAction, z } from "@/src/lib/safe-action"
+import { authAction, z } from "@/lib/safe-action"
 import { createTrackerService } from "../services/tracker.service"
 import type { GoogleAIOResult, RankingResult, CitationResult } from "../types"
 

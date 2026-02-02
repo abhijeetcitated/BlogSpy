@@ -1,7 +1,7 @@
 import { FeatureLocked } from "@/components/shared/feature-locked"
 import { FEATURE_FLAGS } from "@/config/feature-flags"
-import { NewsTrackerContent } from "@/src/features/news-tracker"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { NewsTrackerContent } from "@/features/news-tracker"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function NewsTrackerPage() {
   if (!FEATURE_FLAGS.NEWS_TRACKER) {

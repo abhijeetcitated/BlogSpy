@@ -17,8 +17,8 @@ import {
   EEATRecommendation,
   AuthorInfo,
   DEFAULT_EEAT_SETTINGS
-} from '@/src/features/ai-writer/types/tools/eeat.types';
-import { analyzeEEAT, exportEEATReport } from '@/src/features/ai-writer/utils/tools/eeat';
+} from '@/features/ai-writer/types/tools/eeat.types';
+import { analyzeEEAT, exportEEATReport } from '@/features/ai-writer/utils/tools/eeat';
 
 interface UseEEATOptions {
   initialSettings?: Partial<EEATSettings>;

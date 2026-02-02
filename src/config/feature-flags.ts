@@ -8,6 +8,7 @@ export const FEATURE_FLAGS = {
   SNIPPET_STEALER: false,
   ON_PAGE_CHECKER: false,
   AFFILIATE_FINDER: false,
+  API_KEYS: false,
 
   // ✅ ON (EVERYTHING ELSE STAYS ACTIVE)
   KEYWORD_MAGIC: true,

@@ -31,7 +31,7 @@ import {
   OPTIMAL_SNIPPET_LENGTH,
   CATEGORY_WEIGHTS,
   AIOverviewExportOptions
-} from '@/src/features/ai-writer/types/tools/ai-overview.types';
+} from '@/features/ai-writer/types/tools/ai-overview.types';
 
 // =============================================================================
 // TEXT UTILITIES

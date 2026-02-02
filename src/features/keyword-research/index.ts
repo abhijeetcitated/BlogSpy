@@ -67,7 +67,7 @@ export {
 } from "./utils"
 
 // ⚠️ Services are SERVER-ONLY
-// Import directly from "@/src/features/keyword-research/services" in Server Components
+// Import directly from "@/features/keyword-research/services" in Server Components
 // Do NOT re-export here to avoid "server-only" errors in Client Components
 
 // Config
@@ -101,11 +101,11 @@ export {
   type SortConfig,
   type SortField,
   type SortDirection,
-  type PaginationConfig,
+  type PaginationState,
 } from "./store"
 
 // Hooks - Not exported from barrel to avoid Server Component issues
-// Import directly from "@/src/features/keyword-research/hooks" when needed
+// Import directly from "@/features/keyword-research/hooks" when needed
 // export {
 //   useKeywordFilters,
 //   useKeywordData,

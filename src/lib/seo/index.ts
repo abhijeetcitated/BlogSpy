@@ -13,3 +13,5 @@ export {
   type KeywordDataResult,
   type SerpResultItem,
 } from "./dataforseo"
+
+export * from "./metadata"

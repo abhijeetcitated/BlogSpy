@@ -30,7 +30,7 @@ import {
   COMMON_AI_PHRASES,
   COMMON_AI_TRANSITIONS,
   AI_SENTENCE_STARTERS
-} from '@/src/features/ai-writer/types/tools/ai-detector.types';
+} from '@/features/ai-writer/types/tools/ai-detector.types';
 
 // =============================================================================
 // TEXT PROCESSING

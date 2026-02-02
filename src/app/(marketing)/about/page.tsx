@@ -5,7 +5,7 @@ import { Target, Users, Lightbulb, Trophy, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from '@/src/styles';
+import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from '@/styles';
 
 export const metadata: Metadata = {
   title: 'About Us - BlogSpy',

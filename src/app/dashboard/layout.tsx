@@ -1,17 +1,22 @@
-import { AppSidebar, TopNav } from "@/components/layout"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { CommandPaletteProvider } from "@/src/features/command-palette"
+import { CommandPaletteProvider } from "@/features/command-palette"
 import { AuthProvider } from "@/contexts/auth-context"
 import { UserProvider } from "@/contexts/user-context"
-import { PAGE_PADDING } from "@/src/styles"
+import { PAGE_PADDING } from "@/styles"
+import { createServerClient } from "@/lib/supabase/server"
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const supabase = await createServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const serverAccessToken = session?.access_token ?? null
+
   return (
-    <AuthProvider>
+    <AuthProvider serverAccessToken={serverAccessToken}>
       <UserProvider>
         <CommandPaletteProvider>
           <SidebarProvider>

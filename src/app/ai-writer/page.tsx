@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout"
-import { AIWriterContent } from "@/src/features/ai-writer"
+import { AppSidebar } from "@/components/shared/layout"
+import { AIWriterContent } from "@/features/ai-writer"
 
 export const metadata = {
   title: "AI Writer - BlogSpy | AI-Powered Content Creation",

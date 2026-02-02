@@ -3,8 +3,10 @@
 // ============================================================
 // Search volume is misleading - AI Overview, Featured Snippets,
 // Local Pack, Ads all steal clicks before organic results.
-// RTV = Volume × (1 - TotalLoss%)
+// RTV = Volume * (1 - TotalLoss%)
 // ============================================================
+
+import "server-only"
 
 import { normalizeSerpFeatureType } from "./serp-feature-normalizer"
 import type { SERPFeature } from "../types"
@@ -44,21 +46,18 @@ export type SerpFeatureInput =
 // ============================================================
 // LOSS RULES (Strict Math)
 // ============================================================
-// - ai_overview         => 50%
-// - local_pack          => 30%
-// - featured_snippet    => 20% (ignored if AI exists)
-// - paid/shopping/cpc>1 => 15%
-// - video               => 10%
-// - MAX TOTAL CAP       => 85%
+// - ai_overview       => 50%
+// - local_pack        => 30%
+// - featured_snippet  => 20%
+// - ads_top           => 15%
+// - MAX TOTAL CAP     => 85%
 // ============================================================
 
 const LOSS_RULES = {
   ai_overview: { loss: 50, label: "AI Overview", icon: "bot" as const, color: "text-red-500" },
   local_pack: { loss: 30, label: "Local Map Pack", icon: "map" as const, color: "text-orange-500" },
   featured_snippet: { loss: 20, label: "Featured Snippet", icon: "snippet" as const, color: "text-amber-500" },
-  ads_top: { loss: 15, label: "Paid Ads", icon: "ad" as const, color: "text-pink-500" },
-  shopping_ads: { loss: 15, label: "Shopping Ads", icon: "ad" as const, color: "text-pink-500" },
-  video_pack: { loss: 10, label: "Video Pack", icon: "video" as const, color: "text-yellow-500" },
+  ads_top: { loss: 15, label: "Top Ads", icon: "ad" as const, color: "text-pink-500" },
 } as const
 
 const MAX_LOSS_CAP = 85
@@ -118,22 +117,20 @@ export type RtvInputs = {
 /**
  * Calculate Realizable Traffic Value (RTV)
  * 
- * RTV = Volume × (1 - TotalLoss%)
+ * RTV = Volume * (1 - TotalLoss%)
  * 
  * @param inputs - Object with volume, cpc, and serpFeatures
  * @returns RtvResult with rtv, lossPercentage, lossPercent, and breakdown
  * 
  * Loss Rules:
- * - ai_overview         => 50%
- * - local_pack          => 30%
- * - featured_snippet    => 20% (ignored if AI exists)
- * - paid/shopping/cpc>1 => 15%
- * - video               => 10%
- * - MAX TOTAL CAP       => 85%
+ * - ai_overview       => 50%
+ * - local_pack        => 30%
+ * - featured_snippet  => 20%
+ * - ads_top           => 15%
+ * - MAX TOTAL CAP     => 85%
  */
 export function calculateRtv(inputs: RtvInputs): RtvResult {
   const volume = Math.max(0, toFiniteNumber(inputs.volume, 0))
-  const cpc = toFiniteNumber(inputs.cpc, 0)
   const serp = normalizeSerpFeatures(inputs.serpFeatures)
 
   // Detect SERP features (canonical keys only)
@@ -141,12 +138,8 @@ export function calculateRtv(inputs: RtvInputs): RtvResult {
   const hasLocalPack = hasSerpFeature(serp, "local_pack")
   const hasSnippet = hasSerpFeature(serp, "featured_snippet")
 
-  // Paid click stealers: explicit canonical keys + CPC heuristic.
-  const hasAdsTop = hasSerpFeature(serp, "ads_top")
-  const hasShoppingAds = hasSerpFeature(serp, "shopping_ads")
-  const hasAds = hasAdsTop || hasShoppingAds || cpc > 1
-
-  const hasVideo = hasSerpFeature(serp, "video_pack")
+  // Paid click stealers: explicit canonical keys only.
+  const hasAdsTop = hasSerpFeature(serp, "ads_top") || hasSerpFeature(serp, "paid_ads")
 
   // Build breakdown with strict loss rules
   const breakdown: RtvBreakdownItem[] = []
@@ -174,8 +167,8 @@ export function calculateRtv(inputs: RtvInputs): RtvResult {
     })
   }
 
-  // Featured Snippet: -20% (ONLY if no AI Overview)
-  if (hasSnippet && !hasAi) {
+  // Featured Snippet: -20%
+  if (hasSnippet) {
     totalLoss += LOSS_RULES.featured_snippet.loss
     breakdown.push({
       label: LOSS_RULES.featured_snippet.label,
@@ -185,28 +178,14 @@ export function calculateRtv(inputs: RtvInputs): RtvResult {
     })
   }
 
-  // Paid Ads / Shopping: -15%
-  if (hasAds) {
-    // Prefer explicit label where possible.
-    const rule = hasShoppingAds ? LOSS_RULES.shopping_ads : LOSS_RULES.ads_top
-
-    totalLoss += rule.loss
+  // Top Ads: -15%
+  if (hasAdsTop) {
+    totalLoss += LOSS_RULES.ads_top.loss
     breakdown.push({
-      label: rule.label,
-      value: -rule.loss,
-      icon: rule.icon,
-      color: rule.color,
-    })
-  }
-
-  // Video Pack: -10%
-  if (hasVideo) {
-    totalLoss += LOSS_RULES.video_pack.loss
-    breakdown.push({
-      label: LOSS_RULES.video_pack.label,
-      value: -LOSS_RULES.video_pack.loss,
-      icon: LOSS_RULES.video_pack.icon,
-      color: LOSS_RULES.video_pack.color,
+      label: LOSS_RULES.ads_top.label,
+      value: -LOSS_RULES.ads_top.loss,
+      icon: LOSS_RULES.ads_top.icon,
+      color: LOSS_RULES.ads_top.color,
     })
   }
 
@@ -256,9 +235,6 @@ export function calculateRTV(volume: number, serpItems: unknown[], cpc: number =
   let hasLocal = false
   let hasSnippet = false
   let hasAdsTop = false
-  let hasShoppingAds = false
-  let hasVideo = false
-
   for (const item of items) {
     if (typeof item !== "object" || item === null) continue
     const obj = item as Record<string, unknown>
@@ -273,11 +249,8 @@ export function calculateRTV(volume: number, serpItems: unknown[], cpc: number =
     if (!hasSnippet && (f === "featured_snippet" || f === "direct_answer")) hasSnippet = true
 
     if (!hasAdsTop && f === "ads_top") hasAdsTop = true
-    if (!hasShoppingAds && f === "shopping_ads") hasShoppingAds = true
 
-    if (!hasVideo && f === "video_pack") hasVideo = true
-
-    if (hasAIO && hasLocal && hasSnippet && hasAdsTop && hasShoppingAds && hasVideo) break
+    if (hasAIO && hasLocal && hasSnippet && hasAdsTop) break
   }
 
   // Convert detections to serpFeatures array (canonical keys only)
@@ -286,9 +259,6 @@ export function calculateRTV(volume: number, serpItems: unknown[], cpc: number =
   if (hasLocal) serpFeatures.push("local_pack")
   if (hasSnippet) serpFeatures.push("featured_snippet")
   if (hasAdsTop) serpFeatures.push("ads_top")
-  if (hasShoppingAds) serpFeatures.push("shopping_ads")
-  if (hasVideo) serpFeatures.push("video_pack")
-
   // Use main calculator
   return calculateRtv({
     volume: vol,

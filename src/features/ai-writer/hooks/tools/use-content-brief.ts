@@ -15,12 +15,12 @@ import type {
   GenerationProgress,
   GenerationStage,
   BriefTab,
-} from '@/src/features/ai-writer/types/tools/content-brief.types';
+} from '@/features/ai-writer/types/tools/content-brief.types';
 
 import {
   generateContentBrief,
   type CompetitorData,
-} from '@/src/features/ai-writer/utils/tools/content-brief';
+} from '@/features/ai-writer/utils/tools/content-brief';
 
 // -----------------------------------------------------------------------------
 // Types

@@ -17,7 +17,7 @@ import { IgnoreIssueDialog } from "./components/IgnoreIssueDialog"
 import { BulkActionsDialog } from "./components/BulkActionsDialog"
 import { HistoryTrendsCard, generateMockHistory } from "./components/HistoryTrendsCard"
 import type { SortField, SortDirection, FilterSeverity, CannibalizationIssue } from "./types"
-import { STACK_SPACING } from "@/src/styles"
+import { STACK_SPACING } from "@/styles"
 
 // ============================================
 // LOCAL STORAGE KEYS

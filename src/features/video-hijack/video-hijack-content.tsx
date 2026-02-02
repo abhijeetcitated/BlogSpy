@@ -68,7 +68,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
 import { escapeCsvValue, getPublishTimestamp } from "./utils/common.utils"
-import { STACK_SPACING, GAP_PATTERNS, RESPONSIVE_CLASSES } from "@/src/styles"
+import { STACK_SPACING, GAP_PATTERNS, RESPONSIVE_CLASSES } from "@/styles"
 
 // ============================================
 // Types

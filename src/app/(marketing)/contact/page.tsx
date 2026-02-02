@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from '@/src/styles';
+import { MARKETING_SPACING, MARKETING_TEXT, MARKETING_GRID } from '@/styles';
 
 const contactMethods = [
   {

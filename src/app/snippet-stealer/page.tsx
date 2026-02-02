@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar, TopNav } from "@/components/layout"
-import { SnippetStealerContent } from "@/components/features"
-import { DemoWrapper } from "@/components/common/demo-wrapper"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
+import { SnippetStealerContent } from "@features/snippet-stealer"
+import { DemoWrapper } from "@/components/shared/common/demo-wrapper"
 
 export const metadata = {
   title: "Snippet Stealer Demo - BlogSpy | Win Featured Snippets",
@@ -25,3 +25,4 @@ export default function SnippetStealerDemoPage() {
     </DemoWrapper>
   )
 }
+

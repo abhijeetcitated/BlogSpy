@@ -7,6 +7,8 @@ import { Toaster } from "sonner"
 import { AuthProvider } from "@/contexts/auth-context"
 import { UserProvider } from "@/contexts/user-context"
 import { QueryProvider } from "@/contexts/query-provider"
+import { ThemeProvider } from "@/components/shared/theme-provider"
+import { createServerClient } from "@/lib/supabase/server"
 import "./globals.css"
 
 // Geist - Vercel's premium sans-serif font
@@ -76,26 +78,31 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const supabase = await createServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const serverAccessToken = session?.access_token ?? null
+
   return (
-    // <CHANGE> Added dark class by default for dark mode theme
     // suppressHydrationWarning added to fix browser extension (Grammarly) hydration mismatch
-    <html lang="en" className={`dark ${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <QueryProvider>
-          <AuthProvider>
-            <UserProvider>
-              <Suspense fallback={null}>{children}</Suspense>
-            </UserProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" storageKey="blogspy-theme">
+          <QueryProvider>
+            <AuthProvider serverAccessToken={serverAccessToken}>
+              <UserProvider>
+                <Suspense fallback={null}>{children}</Suspense>
+              </UserProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
 
         {/* Global toasts (Sonner) */}
-        <Toaster theme="dark" richColors position="top-right" closeButton />
+        <Toaster theme="system" richColors position="top-right" closeButton />
 
         <Analytics />
       </body>

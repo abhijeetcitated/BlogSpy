@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
-import { AIVisibilityDashboard, SetupWizard, AddKeywordModal, SetupConfigModal } from "@/src/features/ai-visibility/components"
-import { runFullScan, type RunScanInput } from "@/src/features/ai-visibility/actions/run-scan"
-import { addTrackedKeyword, saveVisibilityConfig, listVisibilityConfigs, getVisibilityDashboardData } from "@/src/features/ai-visibility/actions"
-import type { AIVisibilityConfig, AICitation, VisibilityTrendData } from "@/src/features/ai-visibility/types"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { AIVisibilityDashboard, SetupWizard, AddKeywordModal, SetupConfigModal } from "@/features/ai-visibility/components"
+import { runFullScan, type RunScanInput } from "@/features/ai-visibility/actions/run-scan"
+import { addTrackedKeyword, saveVisibilityConfig, listVisibilityConfigs, getVisibilityDashboardData } from "@/features/ai-visibility/actions"
+import type { AIVisibilityConfig, AICitation, VisibilityTrendData } from "@/features/ai-visibility/types"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import type { FullScanResult } from "@/src/features/ai-visibility/services/scan.service"
+import type { FullScanResult } from "@/features/ai-visibility/services/scan.service"
 import {
   Dialog,
   DialogContent,

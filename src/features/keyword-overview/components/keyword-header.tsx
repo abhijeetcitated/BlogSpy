@@ -2,9 +2,9 @@
 
 import { Plus, PenTool, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { AIOverviewStatusBadge } from "@/components/ui/ai-overview-card"
+import { AIOverviewStatusBadge } from "@features/ai-overview"
 import type { KeywordMetrics } from "../types"
-import type { AIOverviewAnalysis } from "@/types/ai-overview.types"
+import type { AIOverviewAnalysis } from "@features/ai-overview/types/ai-overview.types"
 
 interface KeywordHeaderProps {
   metrics: KeywordMetrics

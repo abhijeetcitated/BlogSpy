@@ -14,7 +14,7 @@ export function AuthPage({ defaultTab }: AuthPageProps) {
   const [activeTab, setActiveTab] = useState<AuthTab>(defaultTab)
 
   return (
-    <div className="flex h-screen w-full overflow-hidden noise-bg bg-zinc-950">
+    <div className="dark flex h-screen w-full overflow-hidden noise-bg bg-zinc-950">
       {/* Left Side - Auth Form (40%) */}
       <div className="relative z-10 flex w-full flex-col justify-center px-8 py-8 lg:w-[40%] lg:px-16">
         <AuthForm activeTab={activeTab} setActiveTab={setActiveTab} />

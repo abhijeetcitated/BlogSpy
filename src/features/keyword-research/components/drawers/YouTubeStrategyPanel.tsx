@@ -141,10 +141,10 @@ function WinProbabilityBadge({
   label: WinProbabilityLabel
 }) {
   return (
-    <div className="flex flex-col items-start gap-1">
-      <div className="text-xs text-muted-foreground uppercase tracking-wider">Win Probability</div>
-      <div className="flex items-center gap-2">
-        <span className={cn("text-3xl font-bold tabular-nums", getWinProbabilityColor(label))}>
+    <div className="flex flex-col items-start sm:items-center gap-1 w-full sm:w-auto">
+      <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Win Probability</div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={cn("text-2xl sm:text-4xl font-black tabular-nums", getWinProbabilityColor(label))}>
           {score}%
         </span>
         <span
@@ -169,11 +169,11 @@ function RecommendedPlay({
   icon: string
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 text-center px-4">
+    <div className="flex flex-col items-start sm:items-center gap-2 text-left sm:text-center px-2 sm:px-4 w-full sm:w-auto">
       <div className="text-xs text-muted-foreground uppercase tracking-wider">Recommended Play</div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 w-full">
         <span className="text-2xl">{icon}</span>
-        <span className="text-sm font-semibold text-foreground">{strategy}</span>
+        <span className="text-xs sm:text-sm font-semibold text-foreground">{strategy}</span>
       </div>
     </div>
   )
@@ -187,9 +187,9 @@ function AuthorityStatusBadge({
   ratio: number
 }) {
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="text-xs text-muted-foreground uppercase tracking-wider">Authority Wall</div>
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col items-start sm:items-center gap-1 w-full sm:w-auto">
+      <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Authority Wall</div>
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-lg">{getAuthorityStatusEmoji(status)}</span>
         <span className={cn("text-sm font-medium", getAuthorityStatusColor(status))}>
           {status}
@@ -379,8 +379,8 @@ export function YouTubeVideoCard({ video, className }: YouTubeVideoCardProps) {
       target="_blank"
       rel="noreferrer"
       className={cn(
-        "group flex gap-4 p-3 rounded-lg",
-        "border border-border/50 bg-card/30",
+        "group flex items-start gap-3 p-3 rounded-lg w-full min-w-0 overflow-hidden",
+        "border border-border/60 bg-card/30",
         "hover:border-border hover:bg-accent/50",
         "backdrop-blur-sm transition-all duration-200",
         className
@@ -404,7 +404,7 @@ export function YouTubeVideoCard({ video, className }: YouTubeVideoCardProps) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col justify-center gap-1.5 min-w-0 flex-1">
+      <div className="flex flex-col justify-center gap-1.5 flex-1 min-w-0">
         {/* Badges Row */}
         {video.badges.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -420,12 +420,12 @@ export function YouTubeVideoCard({ video, className }: YouTubeVideoCardProps) {
         )}
 
         {/* Title */}
-        <h4 className="text-sm font-medium leading-tight text-foreground group-hover:text-primary line-clamp-2">
+        <h4 className="text-sm font-medium leading-tight text-foreground group-hover:text-primary line-clamp-2 break-words">
           {video.title}
         </h4>
 
         {/* Meta */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Eye className="w-3 h-3" />
             <span className="font-mono text-xs text-primary">
@@ -456,19 +456,19 @@ export function YouTubeStrategyPanel({ analysis, className }: YouTubeStrategyPan
   const { winProbability, authorityWall, angleMap, freshnessGap, effort, exploit } = analysis
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-4 w-full max-w-full overflow-hidden", className)}>
       {/* ─────────────────────────────────────────
           ROW 1: The "Consultant" Header
           ───────────────────────────────────────── */}
       <div
         className={cn(
-          "rounded-xl p-4",
-          "border border-border/50",
+          "rounded-xl p-4 w-full max-w-full overflow-hidden border-border/60",
+          "border border-border/60",
           "bg-gradient-to-r from-card/80 via-card/60 to-card/80",
           "backdrop-blur-md"
         )}
       >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-start sm:gap-6">
           {/* Left: Win Probability */}
           <WinProbabilityBadge score={winProbability.score} label={winProbability.label} />
 
@@ -496,7 +496,7 @@ export function YouTubeStrategyPanel({ analysis, className }: YouTubeStrategyPan
         <div
           className={cn(
             "rounded-xl p-4",
-            "border border-border/50",
+            "border border-border/60",
             "bg-card/40 backdrop-blur-sm"
           )}
         >
@@ -510,7 +510,7 @@ export function YouTubeStrategyPanel({ analysis, className }: YouTubeStrategyPan
         <div
           className={cn(
             "rounded-xl p-4",
-            "border border-border/50",
+            "border border-border/60",
             "bg-card/40 backdrop-blur-sm"
           )}
         >
@@ -529,13 +529,13 @@ export function YouTubeStrategyPanel({ analysis, className }: YouTubeStrategyPan
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted/30 border border-border/50 cursor-help">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted/30 border border-border/60 cursor-help">
                 <Users className="h-3 w-3" />
                 {winProbability.breakdown.weakCount} weak
               </span>
             </TooltipTrigger>
             <TooltipContent className="bg-popover border-border">
-              <p className="text-xs">Channels with &lt;1K subscribers</p>
+              <p className="text-xs">Channels with &lt;10K subscribers</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -543,7 +543,7 @@ export function YouTubeStrategyPanel({ analysis, className }: YouTubeStrategyPan
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted/30 border border-border/50 cursor-help">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted/30 border border-border/60 cursor-help">
                 <Clock className="h-3 w-3" />
                 {winProbability.breakdown.outdatedCount} outdated
               </span>
@@ -557,7 +557,7 @@ export function YouTubeStrategyPanel({ analysis, className }: YouTubeStrategyPan
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted/30 border border-border/50 cursor-help">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted/30 border border-border/60 cursor-help">
                 <Zap className="h-3 w-3" />
                 {winProbability.breakdown.viralCount} viral
               </span>
@@ -571,13 +571,13 @@ export function YouTubeStrategyPanel({ analysis, className }: YouTubeStrategyPan
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted/30 border border-border/50 cursor-help">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted/30 border border-border/60 cursor-help">
                 <Shield className="h-3 w-3" />
                 {authorityWall.highAuthorityCount}/{authorityWall.totalChecked} authority
               </span>
             </TooltipTrigger>
             <TooltipContent className="bg-popover border-border">
-              <p className="text-xs">Top 5 channels with &gt;100K subscribers</p>
+              <p className="text-xs">Top 5 channels with &gt;1M subscribers</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

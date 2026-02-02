@@ -51,7 +51,7 @@ import {
   WEAK_VERBS,
   COMMON_ADVERBS,
   DEFAULT_READABILITY_CONFIG
-} from '@/src/features/ai-writer/types/tools/readability.types';
+} from '@/features/ai-writer/types/tools/readability.types';
 
 // =============================================================================
 // TEXT EXTRACTION UTILITIES

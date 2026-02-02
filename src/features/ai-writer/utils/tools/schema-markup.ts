@@ -36,7 +36,7 @@ import {
   BreadcrumbItemSchema,
   PersonSchema,
   OrganizationSchema
-} from '@/src/features/ai-writer/types/tools/schema-markup.types';
+} from '@/features/ai-writer/types/tools/schema-markup.types';
 
 // =============================================================================
 // CONTENT ANALYSIS & TYPE DETECTION

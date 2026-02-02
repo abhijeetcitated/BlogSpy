@@ -58,7 +58,7 @@ import {
   BarChart3,
   Eye
 } from 'lucide-react';
-import { useAIDetector } from '@/src/features/ai-writer/hooks/tools/use-ai-detector';
+import { useAIDetector } from '@/features/ai-writer/hooks/tools/use-ai-detector';
 import {
   SectionAnalysis,
   AIDetectionMetrics,
@@ -74,7 +74,7 @@ import {
   CONFIDENCE_LABELS,
   TEXT_PATTERN_LABELS,
   RISK_LEVEL_LABELS
-} from '@/src/features/ai-writer/types/tools/ai-detector.types';
+} from '@/features/ai-writer/types/tools/ai-detector.types';
 
 // =============================================================================
 // TYPES

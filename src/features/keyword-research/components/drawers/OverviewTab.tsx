@@ -24,7 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-import { generateMockGEOScore } from "@/lib/geo-calculator"
+import { generateMockGEOScore } from "@features/geo-score/utils/geo-calculator"
 import type { Keyword } from "../../types"
 import { RtvBreakdown } from "./widgets/RtvBreakdown"
 

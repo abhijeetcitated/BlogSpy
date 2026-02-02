@@ -4,8 +4,13 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { RtvResult } from "../../utils/rtv-calculator";
 import { RtvFormulaButton } from "./widgets/RtvFormulaButton";
+
+type RtvResultLike = {
+  rtv: number;
+  lossPercentage: number;
+  breakdown?: Array<{ label: string; value: number }>;
+};
 
 type Segment = {
   key: string;
@@ -76,7 +81,7 @@ export function RtvBreakdownWidget({
   className,
 }: {
   volume: number;
-  rtv: RtvResult;
+  rtv: RtvResultLike;
   className?: string;
 }) {
   const safeVolume = Math.max(0, Number(volume) || 0);

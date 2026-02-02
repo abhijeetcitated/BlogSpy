@@ -1,9 +1,7 @@
-"use client"
-
 import { Suspense } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar, TopNav } from "@/components/layout"
-import { SettingsContent } from "@/components/features"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
+import { SettingsContent } from "@features/settings"
 
 export default function SettingsPage() {
   return (
@@ -18,3 +16,4 @@ export default function SettingsPage() {
     </SidebarProvider>
   )
 }
+

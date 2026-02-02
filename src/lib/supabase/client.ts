@@ -1,70 +1,26 @@
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 🗄️ SUPABASE BROWSER CLIENT
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 
- * Browser-side Supabase client for client components.
- * Use this in "use client" components only.
- * 
- * @example
- * ```tsx
- * "use client"
- * import { createBrowserClient } from "@/lib/supabase/client"
- * 
- * const supabase = createBrowserClient()
- * const { data } = await supabase.from("users").select("*")
- * ```
- */
-
 import { createBrowserClient as createSupabaseBrowserClient } from "@supabase/ssr"
-import type { Database } from "@/types/supabase"
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// ENVIRONMENT VALIDATION
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 function getSupabaseEnv() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return { url, anonKey }
+}
 
-  // During build time, return placeholder values to allow static generation
-  if (!supabaseUrl || !supabaseAnonKey) {
-    if (typeof window === "undefined") {
-      // Build time - return placeholders for static generation
-      console.warn("[Supabase] Using placeholder values during build. Set env vars in Vercel.")
-      return {
-        supabaseUrl: "https://placeholder.supabase.co",
-        supabaseAnonKey: "placeholder-key",
-      }
-    }
-    
-    throw new Error(
-      "Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY"
-    )
+export function isSupabaseConfigured(): boolean {
+  const { url, anonKey } = getSupabaseEnv()
+  return Boolean(url && anonKey)
+}
+
+export function createBrowserClient() {
+  const { url, anonKey } = getSupabaseEnv()
+
+  if (!url || !anonKey) {
+    throw new Error("Missing Supabase environment variables")
   }
 
-  return { supabaseUrl, supabaseAnonKey }
+  return createSupabaseBrowserClient(url, anonKey)
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// BROWSER CLIENT FACTORY
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-/**
- * Creates a Supabase client for browser/client components.
- * This should be called in "use client" components.
- * 
- * Note: This creates a new instance each time to ensure fresh cookies.
- * The @supabase/ssr package handles caching internally.
- */
-export function createBrowserClient() {
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv()
-
-  return createSupabaseBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+export function getSupabaseBrowserClient() {
+  return createBrowserClient()
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// TYPE EXPORTS
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export type SupabaseBrowserClient = ReturnType<typeof createBrowserClient>

@@ -50,7 +50,7 @@ import {
   SortIcon,
   RecentIcon,
 } from "@/components/icons/platform-icons"
-import { CreditBalance } from "@/src/features/keyword-research/components/header"
+import { CreditBalance } from "@/features/keyword-research/components/header"
 
 // Hooks
 import { useVideoSearch } from "./hooks"

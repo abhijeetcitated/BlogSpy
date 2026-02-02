@@ -79,7 +79,7 @@ import {
   SchemaGeneratorSettings,
   SCHEMA_TYPE_LABELS,
   ValidationStatus
-} from '@/src/features/ai-writer/types/tools/schema-markup.types';
+} from '@/features/ai-writer/types/tools/schema-markup.types';
 
 // =============================================================================
 // HELPER COMPONENTS

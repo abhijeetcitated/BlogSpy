@@ -63,7 +63,7 @@ import {
   Heart,
   Info
 } from 'lucide-react';
-import { useAIOverview } from '@/src/features/ai-writer/hooks/tools/use-ai-overview';
+import { useAIOverview } from '@/features/ai-writer/hooks/tools/use-ai-overview';
 import {
   AIOverviewFactor,
   AIOverviewOptimization,
@@ -76,7 +76,7 @@ import {
   VISIBILITY_SCORE_LABELS,
   CONTENT_FORMAT_LABELS,
   FACTOR_CATEGORY_LABELS
-} from '@/src/features/ai-writer/types/tools/ai-overview.types';
+} from '@/features/ai-writer/types/tools/ai-overview.types';
 
 // =============================================================================
 // HELPER COMPONENTS

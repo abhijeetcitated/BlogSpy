@@ -5,40 +5,42 @@
 // with tabs for Overview, Commerce, and Social data
 // Features:
 // - ErrorBoundary for fault tolerance
-// - Fixed footer with Deep GEO Report link
+// - Fixed header with scrollable content area
 // ============================================
 
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import {
   X,
-  MapPin,
-  ExternalLink,
   Info,
   ShoppingCart,
   DollarSign,
   Navigation,
   Monitor,
   Youtube,
+  BarChart3,
+  Gauge,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
+  DialogClose,
+  DialogTitle,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 import { OverviewTab } from "./OverviewTab"
 import { CommerceTab } from "./CommerceTab"
 import { SocialTab } from "./SocialTab"
-import { RtvFormulaDialog } from "./RtvFormulaDialog"
 
 import type { Keyword } from "../../types"
+import { useKeywordStore } from "../../store"
 
 // ============================================
 // LOCAL FEATURE FLAGS
@@ -55,7 +57,6 @@ interface KeywordDetailsDrawerProps {
   isOpen: boolean
   onClose: () => void
   onWriteClick?: (keyword: Keyword) => void
-  onAnalyzeClick?: (keyword: Keyword) => void
 }
 
 // ============================================
@@ -67,9 +68,9 @@ export function KeywordDetailsDrawer({
   isOpen,
   onClose,
   onWriteClick,
-  onAnalyzeClick,
 }: KeywordDetailsDrawerProps) {
   const [activeTab, setActiveTab] = React.useState("overview")
+  const credits = useKeywordStore((state) => state.credits)
 
   // Reset tab when drawer opens with new keyword
   React.useEffect(() => {
@@ -142,109 +143,176 @@ export function KeywordDetailsDrawer({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className={cn(
-          // Keep the details view premium + focused (not too wide)
-          "w-[calc(100vw-1rem)] max-w-5xl",
-          // Desktop: taller fixed-height card (aim: no scroll on large screens).
-          "h-[92vh] max-h-[92vh] sm:h-[92vh] sm:max-h-[92vh]",
-          "p-0 gap-0",
-          "flex flex-col",
-          // Keep header/footer fixed; scroll happens inside the content area.
-          "overflow-hidden",
-          "border border-white/10 shadow-2xl"
-        )}
+        className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-[95vw] lg:max-w-5xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-0 shadow-lg duration-200 sm:rounded-lg h-[90vh] flex flex-col overflow-hidden [&>button]:hidden"
       >
-        <div className="flex flex-col h-full">
+        <DialogTitle className="sr-only">Keyword details</DialogTitle>
+        <div className="flex flex-col h-full w-full overflow-x-hidden">
           {/* Header */}
-          <div className="px-4 py-3 sm:px-6 sm:py-3 border-b border-border bg-muted/30 shrink-0">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="text-lg font-semibold text-foreground truncate">
-                  {keyword.keyword}
-                </div>
-                <div className="flex items-center gap-2 mt-1 text-sm">
-                  <span className="text-muted-foreground">
-                    Volume: <span className="text-foreground font-medium">{formattedVolume}</span>
-                  </span>
-                  <span className="text-muted-foreground">•</span>
-                  <span className={cn("font-medium", getKdColor(keyword.kd))}>
-                    KD: {keyword.kd}%
-                  </span>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-muted-foreground">
-                    CPC: <span className="text-foreground font-medium">${keyword.cpc.toFixed(2)}</span>
-                  </span>
-                </div>
-              </div>
+          <div className="px-3 py-3 sm:px-6 sm:py-3 border-b border-border bg-muted/30 shrink-0 pr-12 relative">
+            <DialogClose asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0"
-                onClick={onClose}
+                className="absolute right-4 top-4 z-50 h-8 w-8 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-4 w-4" />
                 <span className="sr-only">Close</span>
               </Button>
+            </DialogClose>
+
+            {/* Mobile layout */}
+            <div className="flex flex-col gap-2 sm:hidden">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-lg font-bold truncate max-w-[70vw] text-foreground">
+                  {keyword.keyword}
+                </div>
+                <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs shrink-0">
+                  <span className="text-muted-foreground">Credits</span>
+                  <span className="font-semibold text-amber-300">
+                    {typeof credits === "number" ? credits : "--"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground overflow-x-auto whitespace-nowrap">
+                <span className="inline-flex items-center gap-1 shrink-0">
+                  <BarChart3 className="h-4 w-4" />
+                  Vol <span className="text-foreground font-medium">{formattedVolume}</span>
+                </span>
+                <span className={cn("inline-flex items-center gap-1 shrink-0", getKdColor(keyword.kd))}>
+                  <Gauge className="h-4 w-4" />
+                  KD <span className="font-medium">{keyword.kd}%</span>
+                </span>
+                <span className="inline-flex items-center gap-1 text-muted-foreground shrink-0">
+                  <DollarSign className="h-4 w-4" />
+                  CPC <span className="text-foreground font-medium">${keyword.cpc.toFixed(2)}</span>
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {keyword.intent.map((intentCode) => {
+                    const config = intentConfig[intentCode as IntentCode]
+                    if (!config) return null
+
+                    return (
+                      <Badge
+                        key={intentCode}
+                        variant="outline"
+                        className={cn(
+                          "h-5 px-1.5 text-[10px] font-medium border rounded-full",
+                          config.bgColor,
+                          config.borderColor,
+                          config.color
+                        )}
+                      >
+                        {intentCode}
+                      </Badge>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <Button size="sm" onClick={() => onWriteClick?.(keyword)} className="h-8 w-full">
+                  Write Content
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const slug = keyword.keyword
+                      .trim()
+                      .toLowerCase()
+                      .replace(/\\s+/g, "-")
+
+                    window.location.href = `/dashboard/research/overview/${encodeURIComponent(slug)}`
+                  }}
+                  className="h-8 w-full"
+                >
+                  Keyword Overview
+                </Button>
+              </div>
             </div>
 
-            {/* Intent badges */}
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {keyword.intent.map((intentCode) => {
-                const config = intentConfig[intentCode as IntentCode]
-                if (!config) return null
+            {/* Desktop layout */}
+            <div className="hidden sm:flex flex-col gap-2 pr-10">
+              {/* Row 1: Keyword + Actions + Credits */}
+              <div className="flex items-center gap-3">
+                <div className="text-lg font-bold truncate max-w-[70vw] text-foreground">
+                  {keyword.keyword}
+                </div>
 
-                return (
-                  <Badge
-                    key={intentCode}
+                <div className="flex items-center gap-2 ml-auto shrink-0">
+                  <Button size="sm" onClick={() => onWriteClick?.(keyword)} className="h-8">
+                    Write Content
+                  </Button>
+                  <Button
+                    size="sm"
                     variant="outline"
-                    className={cn(
-                      "h-6 px-2 text-xs font-medium border rounded-full",
-                      config.bgColor,
-                      config.borderColor,
-                      config.color
-                    )}
+                    onClick={() => {
+                      const slug = keyword.keyword
+                        .trim()
+                        .toLowerCase()
+                        .replace(/\\s+/g, "-")
+
+                      window.location.href = `/dashboard/research/overview/${encodeURIComponent(slug)}`
+                    }}
+                    className="h-8"
                   >
-                    {intentCode}
-                  </Badge>
-                )
-              })}
-            </div>
+                    Keyword Overview
+                  </Button>
+                  <div className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-sm shrink-0">
+                    <span className="text-muted-foreground">Credits</span>
+                    <span className="font-semibold text-amber-300">
+                      {typeof credits === "number" ? credits : "--"}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 mt-4">
-              <Button
-                size="sm"
-                onClick={() => onWriteClick?.(keyword)}
-                className="h-9 w-full sm:w-auto sm:px-4"
-              >
-                ✍️ Write Content
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  // Route uses a slug (lowercase, spaces -> hyphens)
-                  const slug = keyword.keyword
-                    .trim()
-                    .toLowerCase()
-                    .replace(/\s+/g, "-")
+              {/* Row 2: Metrics + Intent */}
+              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <BarChart3 className="h-4 w-4" />
+                  Vol <span className="text-foreground font-medium">{formattedVolume}</span>
+                </span>
+                <span className={cn("inline-flex items-center gap-1", getKdColor(keyword.kd))}>
+                  <Gauge className="h-4 w-4" />
+                  KD <span className="font-medium">{keyword.kd}%</span>
+                </span>
+                <span className="inline-flex items-center gap-1 text-muted-foreground">
+                  <DollarSign className="h-4 w-4" />
+                  CPC <span className="text-foreground font-medium">${keyword.cpc.toFixed(2)}</span>
+                </span>
 
-                  window.location.href = `/dashboard/research/overview/${encodeURIComponent(slug)}`
-                }}
-                className="h-9 w-full sm:w-auto sm:px-4"
-              >
-                📊 Keyword Overview
-              </Button>
+                <div className="flex items-center gap-2">
+                  {keyword.intent.map((intentCode) => {
+                    const config = intentConfig[intentCode as IntentCode]
+                    if (!config) return null
+
+                    return (
+                      <Badge
+                        key={intentCode}
+                        variant="outline"
+                        className={cn(
+                          "h-6 px-2 text-xs font-medium border rounded-full",
+                          config.bgColor,
+                          config.borderColor,
+                          config.color
+                        )}
+                      >
+                        {intentCode}
+                      </Badge>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Content (tabs + tab contents)
-              Desktop goal: avoid scrolling the whole dialog; allow tab-specific scrolling only when needed.
-           */}
-          <div className="flex-1 overflow-y-auto">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col min-h-0">
+          {/* Content (tabs + tab contents) */}
+          <div className="flex-1 min-h-0 flex flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
               {/* Trend-Spotter style pill tabs */}
-              <TabsList className="w-full justify-start rounded-none border-b border-border bg-background/60 px-4 sm:px-6 py-2 h-auto sticky top-0 z-10 backdrop-blur-sm">
+              <TabsList className="w-full justify-start rounded-none border-b border-border bg-background/60 px-3 sm:px-6 py-2 h-auto">
                 <TabsTrigger
                   value="overview"
                   className={cn(
@@ -299,40 +367,28 @@ export function KeywordDetailsDrawer({
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="m-0 p-3 sm:p-4 pb-6">
-                <ErrorBoundary fallback={<TabErrorFallback tabName="Overview" />}>
-                  <OverviewTab keyword={keyword} />
-                </ErrorBoundary>
-              </TabsContent>
-
-              {SHOW_COMMERCE_TAB && (
-                <TabsContent value="commerce" className="m-0 p-6">
-                  <ErrorBoundary fallback={<TabErrorFallback tabName="Commerce" />}>
-                    <CommerceTab keyword={keyword} />
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+                <TabsContent value="overview" className="m-0 p-3 sm:p-4 pb-6">
+                  <ErrorBoundary fallback={<TabErrorFallback tabName="Overview" />}>
+                    <OverviewTab keyword={keyword} />
                   </ErrorBoundary>
                 </TabsContent>
-              )}
 
-              <TabsContent value="social" className="m-0 p-3 sm:p-4 pb-6">
-                <ErrorBoundary fallback={<TabErrorFallback tabName="Social" />}>
-                  <SocialTab keyword={keyword} />
-                </ErrorBoundary>
-              </TabsContent>
+                {SHOW_COMMERCE_TAB && (
+                  <TabsContent value="commerce" className="m-0 p-6">
+                    <ErrorBoundary fallback={<TabErrorFallback tabName="Commerce" />}>
+                      <CommerceTab keyword={keyword} />
+                    </ErrorBoundary>
+                  </TabsContent>
+                )}
+
+                <TabsContent value="social" className="m-0 p-3 sm:p-4 pb-6">
+                  <ErrorBoundary fallback={<TabErrorFallback tabName="Social" />}>
+                    <SocialTab keyword={keyword} />
+                  </ErrorBoundary>
+                </TabsContent>
+              </div>
             </Tabs>
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-border bg-muted/30 px-4 py-3 sm:px-6 sm:py-3 shrink-0">
-            <Button
-              asChild
-              className="h-10 w-full gap-2 bg-linear-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-            >
-              <Link href={`/dashboard/research/geo-report/${encodeURIComponent(keyword.keyword)}`}>
-                <MapPin className="h-4 w-4" />
-                🚀 View Full Deep GEO Report
-                <ExternalLink className="h-3 w-3 ml-auto opacity-70" />
-              </Link>
-            </Button>
           </div>
         </div>
       </DialogContent>

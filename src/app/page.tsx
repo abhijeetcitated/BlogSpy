@@ -1,8 +1,8 @@
-import { AppSidebar, TopNav } from "@/components/layout"
-import { CommandCenter } from "@/components/features"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
+import { CommandCenter } from "@features/dashboard"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { CommandPaletteProvider } from "@/src/features/command-palette"
-import { PAGE_PADDING } from "@/src/styles"
+import { CommandPaletteProvider } from "@/features/command-palette"
+import { PAGE_PADDING } from "@/styles"
 
 export default function DashboardPage() {
   return (

@@ -11,6 +11,8 @@ import type { Keyword } from "../../types"
 import dynamic from "next/dynamic"
 import { useKeywordStore } from "../../store"
 import { Loader2, SearchX, Sparkles } from "lucide-react"
+import { TableLoadingSkeleton } from "../shared"
+import { parseBulkKeywords } from "../../utils/input-parser"
 
 const KeywordTable = dynamic(
   async () => {
@@ -53,6 +55,10 @@ export function KeywordResearchResults({
   // Zustand store for drawer
   const openKeywordDrawer = useKeywordStore((state) => state.openKeywordDrawer)
   const selectedCountryCode = useKeywordStore((state) => state.search.country)
+  const bulkMode = useKeywordStore((state) => state.search.mode)
+  const bulkKeywords = useKeywordStore((state) => state.search.bulkKeywords)
+  const bulkCount = parseBulkKeywords(bulkKeywords).length
+  const shouldShowBulkSkeleton = bulkMode === "bulk" && bulkCount >= 10
 
   // Strict country isolation: only display rows for the currently selected country.
   // We attach `countryCode` at the action boundary; defensively allow missing values.
@@ -66,10 +72,25 @@ export function KeywordResearchResults({
   }
   // Loading state
   if (isSearching) {
+    if (shouldShowBulkSkeleton) {
+      const rows = Math.min(Math.max(bulkCount, 10), 25)
+      return (
+        <div className="flex-1 flex flex-col min-h-0 h-full pt-2">
+          <div className="flex items-center justify-between mb-2 px-1 shrink-0">
+            <span className="text-xs text-muted-foreground">Analyzing batch...</span>
+          </div>
+          <div className="flex-1 h-full min-h-0 border border-border/50 rounded-lg bg-card overflow-hidden">
+            <TableLoadingSkeleton rows={rows} />
+          </div>
+        </div>
+      )
+    }
+
+    const loadingLabel = bulkMode === "bulk" ? "Analyzing batch..." : "Searching keywords..."
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-3 py-20">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground text-sm">Searching keywords...</p>
+        <p className="text-muted-foreground text-sm">{loadingLabel}</p>
       </div>
     )
   }

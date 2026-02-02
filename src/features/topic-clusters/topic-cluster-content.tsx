@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
-import { STACK_SPACING, PAGE_PADDING } from "@/src/styles"
+import { STACK_SPACING, PAGE_PADDING } from "@/styles"
 
 // ============================================
 // TYPES - Advanced Schema

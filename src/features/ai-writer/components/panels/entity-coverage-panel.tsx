@@ -84,7 +84,7 @@ import {
   Copy,
   ExternalLink
 } from 'lucide-react';
-import { useEntityCoverage } from '@/src/features/ai-writer/hooks/tools/use-entity-coverage';
+import { useEntityCoverage } from '@/features/ai-writer/hooks/tools/use-entity-coverage';
 import {
   Entity,
   EntityType,
@@ -102,7 +102,7 @@ import {
   EntitySortOption,
   ENTITY_TYPE_LABELS,
   ENTITY_STATUS_LABELS
-} from '@/src/features/ai-writer/types/tools/entity-coverage.types';
+} from '@/features/ai-writer/types/tools/entity-coverage.types';
 
 // =============================================================================
 // TYPES

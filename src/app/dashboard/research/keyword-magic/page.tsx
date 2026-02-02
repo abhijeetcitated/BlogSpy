@@ -1,5 +1,5 @@
-import { KeywordResearchContent } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { KeywordResearchContent } from "@features/keyword-research"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function KeywordResearchPage() {
   return (
@@ -8,6 +8,7 @@ export default function KeywordResearchPage() {
     </ErrorBoundary>
   )
 }
+
 
 
 

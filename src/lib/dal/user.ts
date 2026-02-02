@@ -16,7 +16,7 @@
 import "server-only"
 
 import { experimental_taintObjectReference, experimental_taintUniqueValue } from "react"
-import { createClient } from "@/src/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -51,7 +51,6 @@ export interface UserDTO {
   id: string
   email: string
   name: string | null
-  avatar: string | null
   role: "user" | "admin" | "moderator"
   createdAt: string
   emailVerified: boolean
@@ -103,7 +102,6 @@ function toUserDTO(rawUser: RawUser): UserDTO {
     id: rawUser.id,
     email: rawUser.email.replace(/(.{2}).*(@.*)/, "$1***$2"), // Mask email: ab***@domain.com
     name: (rawUser.user_metadata?.name as string) || null,
-    avatar: (rawUser.user_metadata?.avatar_url as string) || null,
     role: (rawUser.role as UserDTO["role"]) || "user",
     createdAt: rawUser.created_at,
     emailVerified: rawUser.email_verified,

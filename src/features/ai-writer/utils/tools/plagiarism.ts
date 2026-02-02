@@ -24,7 +24,7 @@ import {
   HighlightRange,
   DEFAULT_PLAGIARISM_SETTINGS,
   MATCH_SEVERITY_THRESHOLDS
-} from '@/src/features/ai-writer/types/tools/plagiarism.types';
+} from '@/features/ai-writer/types/tools/plagiarism.types';
 
 // =============================================================================
 // TEXT PROCESSING

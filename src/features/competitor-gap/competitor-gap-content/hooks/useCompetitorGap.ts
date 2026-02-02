@@ -12,8 +12,7 @@ import {
   sortForumPosts,
   formatNumber,
 } from "../utils/gap-utils"
-import { analyzeGapAction } from "../../actions/analyze-gap"
-import { useKeywordStore } from "@/src/features/keyword-research/store"
+import { useKeywordStore } from "@/features/keyword-research/store"
 
 export type MainView = "gap-analysis" | "forum-intel"
 
@@ -125,34 +124,13 @@ export function useCompetitorGap({
       })
       return
     }
+    void overrideCountryCode
     setIsLoading(true)
-    try {
-      const targets = [yourDomain, competitor1, competitor2].filter(Boolean) as string[]
-      const result = await analyzeGapAction({
-        targets,
-        countryCode: overrideCountryCode ?? selectedCountryCode ?? "US",
-      })
-
-      if (result?.data?.success && result.data.data?.items) {
-        const mapped = mapGapItems(result.data.data.items)
-        setGapData(mapped)
-        setHasAnalyzed(true)
-        setSelectedGapRows(new Set())
-        setAddedKeywords(new Set())
-        toast.success("Gap analysis complete", {
-          description: `${mapped.length} keywords found.`,
-        })
-      } else {
-        const serverError = result?.serverError
-        const dataError = result?.data?.error
-        const errorMessage = dataError || serverError || "Failed to run gap analysis"
-        toast.error(errorMessage)
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to run gap analysis")
-    } finally {
+    setTimeout(() => {
       setIsLoading(false)
-    }
+      setHasAnalyzed(true)
+      toast.info("This feature is being rebuilt in V2")
+    }, 800)
   }
 
   const handleGapSort = (field: SortField) => {

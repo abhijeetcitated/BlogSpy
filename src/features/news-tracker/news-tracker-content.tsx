@@ -30,7 +30,7 @@ import {
   type KeywordAlert,
 } from "./components"
 import type { NewsPlatform, NewsKeyword, NewsSummary } from "./types"
-import { STACK_SPACING } from "@/src/styles"
+import { STACK_SPACING } from "@/styles"
 
 // ============================================
 // MOCK USER ID (Replace with actual auth)

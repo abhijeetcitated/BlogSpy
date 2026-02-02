@@ -1,13 +1,13 @@
 "use client"
 
 import { Monitor, Activity, Target, Flame } from "lucide-react"
-import { PixelRankCard, PixelRankBadge } from "@/components/ui/pixel-rank-badge"
-import { SERPStackVisualizer } from "@/components/ui/serp-visualizer"
-import { RTVCard, RTVBadge, CTRBreakdownChart } from "@/components/ui/rtv-badge"
+import { PixelRankCard, PixelRankBadge } from "@features/pixel-rank"
+import { SERPStackVisualizer } from "@features/pixel-rank"
+import { RTVCard, RTVBadge, CTRBreakdownChart } from "@features/rtv"
 import { getPixelRankMessage, getRTVMessage, getDecayMessage, getContentAgeLabel } from "../utils/overview-utils"
-import type { PixelRankScore } from "@/types/pixel.types"
-import type { RTVAnalysis } from "@/types/rtv.types"
-import type { CommunityDecayAnalysis } from "@/types/community-decay.types"
+import type { PixelRankScore } from "@features/pixel-rank/types/pixel.types"
+import type { RTVAnalysis } from "@features/rtv/types/rtv.types"
+import type { CommunityDecayAnalysis } from "@features/community-decay/types/community-decay.types"
 
 interface PixelRankSectionProps {
   score: PixelRankScore

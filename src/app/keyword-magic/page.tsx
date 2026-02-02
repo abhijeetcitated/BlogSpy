@@ -1,6 +1,7 @@
 import { Suspense } from "react"
-import { KeywordResearchContent } from "@/components/features"
-import { DemoWrapper } from "@/components/common/demo-wrapper"
+import { KeywordResearchContent } from "@features/keyword-research"
+import { MOCK_KEYWORDS } from "@features/keyword-research/__mocks__/keyword-data"
+import { DemoWrapper } from "@/components/shared/common/demo-wrapper"
 
 export const metadata = {
   title: "Keyword Explorer Demo - BlogSpy | Discover High-Value Keywords",
@@ -16,6 +17,8 @@ function KeywordResearchLoading() {
 }
 
 export default function KeywordResearchDemoPage() {
+  const initialKeywords = MOCK_KEYWORDS.map(({ lastUpdated, ...rest }) => rest)
+
   return (
     <DemoWrapper
       featureName="Keyword Explorer"
@@ -24,9 +27,10 @@ export default function KeywordResearchDemoPage() {
     >
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <Suspense fallback={<KeywordResearchLoading />}>
-          <KeywordResearchContent />
+          <KeywordResearchContent initialKeywords={initialKeywords} />
         </Suspense>
       </div>
     </DemoWrapper>
   )
 }
+

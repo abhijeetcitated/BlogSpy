@@ -77,9 +77,9 @@ import {
 } from "@/components/ui/tooltip"
 import { Sparkline } from "@/components/charts"
 import { cn } from "@/lib/utils"
-import { PixelRankBadge } from "@/components/ui/pixel-rank-badge"
-import { generateMockPixelRank } from "@/lib/pixel-calculator"
-import { STACK_SPACING } from "@/src/styles"
+import { PixelRankBadge } from "@features/pixel-rank"
+import { generateMockPixelRank } from "@features/pixel-rank/utils/pixel-calculator"
+import { STACK_SPACING } from "@/styles"
 
 import { MOCK_RANK_DATA } from "./__mocks__"
 import { MOCK_MULTI_PLATFORM_DATA, generatePlatformStats, getCountryStats } from "./__mocks__/multi-platform-data"

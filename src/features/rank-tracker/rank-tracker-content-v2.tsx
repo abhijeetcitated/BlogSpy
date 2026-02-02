@@ -46,8 +46,8 @@ import {
 } from "@/components/ui/tooltip"
 import { Sparkline } from "@/components/charts"
 import { cn } from "@/lib/utils"
-import { PixelRankBadge } from "@/components/ui/pixel-rank-badge"
-import { generateMockPixelRank } from "@/lib/pixel-calculator"
+import { PixelRankBadge } from "@features/pixel-rank"
+import { generateMockPixelRank } from "@features/pixel-rank/utils/pixel-calculator"
 
 // Feature imports
 import { PLATFORM_CONFIG, DEBOUNCE_MS } from "./constants"
@@ -115,7 +115,7 @@ const SortIcon = ({ field, currentField, direction }: SortIconProps) => {
 export function RankTrackerContent() {
   // Use the centralized state management with useReducer
   const { state, actions } = useRankTrackerState()
-  
+
   // Debounce search query
   const debouncedSearchQuery = useDebounce(state.searchQuery, DEBOUNCE_MS.SEARCH)
 

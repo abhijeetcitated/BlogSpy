@@ -1,20 +1,32 @@
-import { NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/src/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
+import { NextResponse } from "next/server"
 
-/**
- * OAuth Callback Handler
- * Exchanges the auth code for a session and redirects to dashboard
- */
-export async function GET(request: NextRequest) {
-  const requestUrl = new URL(request.url)
-  const code = requestUrl.searchParams.get("code")
-  const origin = requestUrl.origin
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get("code")
+
+  // if "next" is in param, use it as the redirect target
+  const next = searchParams.get("next") ?? "/"
 
   if (code) {
     const supabase = await createServerClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (!error) {
+      const forwardedHost = request.headers.get("x-forwarded-host") // original origin before load balancer
+      const isLocalEnv = process.env.NODE_ENV === "development"
+
+      if (isLocalEnv) {
+        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
+        return NextResponse.redirect(`${origin}${next}`)
+      } else if (forwardedHost) {
+        return NextResponse.redirect(`https://${forwardedHost}${next}`)
+      } else {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+    }
   }
 
-  // Redirect to dashboard after successful auth
-  return NextResponse.redirect(`${origin}/dashboard`)
+  // return the user to an error page with instructions
+  return NextResponse.redirect(`${origin}/error`)
 }

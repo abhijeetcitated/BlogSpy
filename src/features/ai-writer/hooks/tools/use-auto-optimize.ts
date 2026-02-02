@@ -14,13 +14,13 @@ import {
   OptimizationCategory,
   OptimizationPriority,
   DEFAULT_OPTIMIZATION_SETTINGS
-} from '@/src/features/ai-writer/types/tools/auto-optimize.types';
+} from '@/features/ai-writer/types/tools/auto-optimize.types';
 import {
   analyzeForOptimization,
   applyOptimizationAction,
   applyBatchOptimizations,
   exportOptimizationReport
-} from '@/src/features/ai-writer/utils/tools/auto-optimize';
+} from '@/features/ai-writer/utils/tools/auto-optimize';
 
 // =============================================================================
 // HOOK INTERFACE

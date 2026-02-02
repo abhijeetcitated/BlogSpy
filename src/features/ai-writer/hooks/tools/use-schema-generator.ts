@@ -20,7 +20,7 @@ import {
   UseSchemaGeneratorOptions,
   UseSchemaGeneratorReturn,
   DEFAULT_SCHEMA_SETTINGS
-} from '@/src/features/ai-writer/types/tools/schema-markup.types';
+} from '@/features/ai-writer/types/tools/schema-markup.types';
 import {
   analyzeContent,
   generateSchema,
@@ -29,7 +29,7 @@ import {
   generateJsonLd,
   generateHtmlScript,
   exportSchemaMarkup
-} from '@/src/features/ai-writer/utils/tools/schema-markup';
+} from '@/features/ai-writer/utils/tools/schema-markup';
 
 export function useSchemaGenerator(
   options: UseSchemaGeneratorOptions = {}

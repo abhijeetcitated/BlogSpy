@@ -15,7 +15,7 @@ import {
   Brain,
   Plus,
 } from "lucide-react"
-import { FEATURE_FLAGS } from "@/src/config/feature-flags"
+import { FEATURE_FLAGS } from "@/config/feature-flags"
 import { QueryAnalysis } from "../types"
 import { AI_PLATFORMS, PlatformIcons } from "../constants"
 

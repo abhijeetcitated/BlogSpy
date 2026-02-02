@@ -54,13 +54,13 @@ import type {
   ContentGuidelines,
   SearchIntent,
   DifficultyLevel,
-} from '@/src/features/ai-writer/types/tools/content-brief.types';
+} from '@/features/ai-writer/types/tools/content-brief.types';
 
 import {
   BRIEF_TABS,
   INTENT_LABELS,
   DIFFICULTY_COLORS,
-} from '@/src/features/ai-writer/types/tools/content-brief.types';
+} from '@/features/ai-writer/types/tools/content-brief.types';
 
 // -----------------------------------------------------------------------------
 // Props Interface

@@ -1,5 +1,5 @@
-import { SchemaGeneratorDashboard } from "@/src/features/schema-generator/components"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { SchemaGeneratorDashboard } from "@/features/schema-generator/components"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function SchemaGeneratorPage() {
   return (

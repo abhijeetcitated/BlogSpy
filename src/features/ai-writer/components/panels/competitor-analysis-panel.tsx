@@ -69,7 +69,7 @@ import type {
   CompetitorPanelState,
   ScoreDetail,
   PositionPrediction,
-} from '@/src/features/ai-writer/types/tools/competitor-analysis.types';
+} from '@/features/ai-writer/types/tools/competitor-analysis.types';
 
 // -----------------------------------------------------------------------------
 // Props Interface

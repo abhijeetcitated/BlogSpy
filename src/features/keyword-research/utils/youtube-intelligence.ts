@@ -16,10 +16,12 @@ import { differenceInDays, parseISO, isValid } from "date-fns"
 // CONSTANTS
 // ============================================
 
-export const WEAK_COMPETITOR_SUBS = 1000
+export const WEAK_COMPETITOR_SUBS = 10000
 export const OUTDATED_DAYS = 730 // 2 years
+export const ONE_YEAR_DAYS = 365
+export const RECENT_DAYS = 180
 export const VIRAL_THRESHOLD = 5 // Views / Subs ratio
-export const AUTHORITY_THRESHOLD = 100000 // 100k Subs
+export const AUTHORITY_THRESHOLD = 1000000 // 1M Subs
 
 // Angle keyword clusters for content gap analysis
 export const ANGLE_CLUSTERS = {
@@ -60,6 +62,8 @@ export interface YouTubeVideoInput {
 export type WinProbabilityLabel = "High" | "Medium" | "Low"
 export type AuthorityStatus = "Hard (Wall)" | "Mixed" | "Open Field"
 export type EffortLevel = "High Effort (Deep Tutorial needed)" | "Medium Effort" | "Low Effort (Shorts/Snackable)"
+export type FreshnessGapLevel = "High" | "Low"
+export type CompetitorStrengthLabel = "Weak" | "Moderate" | "Strong"
 
 export interface WinProbabilityResult {
   score: number // 0-100
@@ -68,6 +72,7 @@ export interface WinProbabilityResult {
     weakCount: number
     outdatedCount: number
     viralCount: number
+    optimizationGap?: boolean
   }
 }
 
@@ -76,6 +81,7 @@ export interface FreshnessGapResult {
   isRipeForUpdate: boolean
   outdatedCount: number
   totalCount: number
+  level: FreshnessGapLevel
 }
 
 export interface AuthorityWallResult {
@@ -107,6 +113,11 @@ export interface YouTubeIntelligenceResult {
   winProbability: WinProbabilityResult
   freshnessGap: FreshnessGapResult
   authorityWall: AuthorityWallResult
+  competitorStrength: {
+    label: CompetitorStrengthLabel
+    score: number
+    reason: string
+  }
   angleMap: AngleMapResult
   exploit: ExploitRecommendation
   effort: EffortEstimate
@@ -209,46 +220,82 @@ function getSubscriberCount(video: YouTubeVideoInput): number {
   return video.subscriberCount ?? 0
 }
 
+function normalizeText(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 // ============================================
 // ANALYSIS FUNCTIONS
 // ============================================
 
 /**
- * 1. Calculate Win Probability (0-100)
- * Formula: Score = 20 + (15 * weakCount) + (10 * outdatedCount) + (5 * viralCount)
+ * 1. Calculate Win Probability (High/Medium/Low)
+ * Rules:
+ * - High: Videos are >2 years old AND channel has <10k subs.
+ * - Medium: Videos are ~1 year old.
+ * - Low: Top results are from huge channels (1M+ subs) updated recently.
  */
-export function calculateWinProbability(videos: YouTubeVideoInput[]): WinProbabilityResult {
+export function calculateWinProbability(
+  videos: YouTubeVideoInput[],
+  keyword: string
+): WinProbabilityResult {
   const top10 = videos.slice(0, 10)
-  
+  const topVideo = top10[0]
+
   let weakCount = 0
   let outdatedCount = 0
   let viralCount = 0
 
   for (const video of top10) {
-    // Count weak competitors (subs < 1000 or null)
     const subs = getSubscriberCount(video)
     if (subs < WEAK_COMPETITOR_SUBS) {
       weakCount++
     }
 
-    // Count outdated videos (> 2 years old)
     const ageDays = parseVideoAge(video)
     if (ageDays !== null && ageDays > OUTDATED_DAYS) {
       outdatedCount++
     }
 
-    // Count viral videos (views/subs > 5)
     const viralRatio = calculateViralRatio(video)
     if (viralRatio !== null && viralRatio > VIRAL_THRESHOLD) {
       viralCount++
     }
   }
 
-  // Calculate score with formula
-  const rawScore = 20 + (15 * weakCount) + (10 * outdatedCount) + (5 * viralCount)
-  const score = Math.max(0, Math.min(100, rawScore)) // Clamp 0-100
+  let score = 0
+  let optimizationGap = false
 
-  // Determine label
+  if (topVideo) {
+    const topAgeDays = parseVideoAge(topVideo)
+    if (topAgeDays !== null && topAgeDays > OUTDATED_DAYS) {
+      score += 30
+    }
+
+    const topSubs = getSubscriberCount(topVideo)
+    if (topSubs < WEAK_COMPETITOR_SUBS) {
+      score += 30
+    }
+
+    const normalizedKeyword = normalizeText(keyword)
+    const normalizedTitle = normalizeText(topVideo.title ?? "")
+    if (normalizedKeyword && !normalizedTitle.includes(normalizedKeyword)) {
+      score += 20
+      optimizationGap = true
+    }
+
+    const topViralRatio = calculateViralRatio(topVideo)
+    if (topViralRatio !== null && topViralRatio > VIRAL_THRESHOLD) {
+      score += 20
+    }
+  }
+
+  score = Math.min(100, Math.max(0, score))
+
   let label: WinProbabilityLabel
   if (score >= 70) {
     label = "High"
@@ -265,6 +312,7 @@ export function calculateWinProbability(videos: YouTubeVideoInput[]): WinProbabi
       weakCount,
       outdatedCount,
       viralCount,
+      optimizationGap,
     },
   }
 }
@@ -283,6 +331,7 @@ export function calculateFreshnessGap(videos: YouTubeVideoInput[]): FreshnessGap
       isRipeForUpdate: false,
       outdatedCount: 0,
       totalCount: videos.length,
+      level: "Low",
     }
   }
 
@@ -293,11 +342,13 @@ export function calculateFreshnessGap(videos: YouTubeVideoInput[]): FreshnessGap
 
   const percentage = Math.round((outdatedCount / totalCount) * 100)
 
+  const isRipeForUpdate = percentage > 50
   return {
     percentage,
-    isRipeForUpdate: percentage > 50,
+    isRipeForUpdate,
     outdatedCount,
     totalCount,
+    level: isRipeForUpdate ? "High" : "Low",
   }
 }
 
@@ -482,6 +533,50 @@ export function estimateEffort(videos: YouTubeVideoInput[]): EffortEstimate {
   }
 }
 
+/**
+ * Determine competitor strength from the top result.
+ */
+export function assessCompetitorStrength(videos: YouTubeVideoInput[]): {
+  label: CompetitorStrengthLabel
+  score: number
+  reason: string
+} {
+  const top = videos[0]
+  if (!top) {
+    return {
+      label: "Weak",
+      score: 20,
+      reason: "No competitor data available",
+    }
+  }
+
+  const subs = getSubscriberCount(top)
+  const ageDays = parseVideoAge(top)
+  const isRecent = ageDays !== null && ageDays <= RECENT_DAYS
+
+  if (subs >= AUTHORITY_THRESHOLD && isRecent) {
+    return {
+      label: "Strong",
+      score: 85,
+      reason: "Top result is a large, recently active channel",
+    }
+  }
+
+  if (subs >= WEAK_COMPETITOR_SUBS) {
+    return {
+      label: "Moderate",
+      score: 60,
+      reason: "Top result comes from a mid-size channel",
+    }
+  }
+
+  return {
+    label: "Weak",
+    score: 30,
+    reason: "Top result is a small channel",
+  }
+}
+
 // ============================================
 // BADGE GENERATOR (for video cards)
 // ============================================
@@ -497,7 +592,7 @@ export function generateVideoBadges(video: YouTubeVideoInput): VideoBadge[] {
   if (viralRatio !== null && viralRatio > VIRAL_THRESHOLD) {
     badges.push({
       type: "viral",
-      label: "Viral Opportunity",
+      label: "Viral Potential",
       emoji: "⚡",
     })
   }
@@ -546,12 +641,14 @@ export function analyzeVideosWithBadges(videos: YouTubeVideoInput[]): AnalyzedVi
  * Returns comprehensive insights for the Strategy Dashboard
  */
 export function analyzeYouTubeCompetition(
-  videos: YouTubeVideoInput[]
+  videos: YouTubeVideoInput[],
+  keyword: string = ""
 ): YouTubeIntelligenceResult {
   // Run all analyses
-  const winProbability = calculateWinProbability(videos)
+  const winProbability = calculateWinProbability(videos, keyword)
   const freshnessGap = calculateFreshnessGap(videos)
   const authorityWall = calculateAuthorityWall(videos)
+  const competitorStrength = assessCompetitorStrength(videos)
   const angleMap = generateAngleMap(videos)
   const exploit = determineExploit(
     freshnessGap,
@@ -560,10 +657,15 @@ export function analyzeYouTubeCompetition(
   )
   const effort = estimateEffort(videos)
 
+  const topVideo = videos[0]
+  const topAgeDays = topVideo ? parseVideoAge(topVideo) : null
+  const freshnessLevel = topAgeDays !== null && topAgeDays > OUTDATED_DAYS ? "High" : "Low"
+
   return {
     winProbability,
-    freshnessGap,
+    freshnessGap: { ...freshnessGap, level: freshnessLevel },
     authorityWall,
+    competitorStrength,
     angleMap,
     exploit,
     effort,

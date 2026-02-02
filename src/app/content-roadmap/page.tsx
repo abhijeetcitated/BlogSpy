@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar, TopNav } from "@/components/layout"
-import { ContentRoadmapContent } from "@/components/features"
-import { DemoWrapper } from "@/components/common/demo-wrapper"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
+import { ContentRoadmapContent } from "@features/content-roadmap"
+import { DemoWrapper } from "@/components/shared/common/demo-wrapper"
 
 export const metadata = {
   title: "Content Roadmap Demo - BlogSpy | Plan Your Content Strategy",
@@ -25,3 +25,4 @@ export default function ContentRoadmapDemoPage() {
     </DemoWrapper>
   )
 }
+

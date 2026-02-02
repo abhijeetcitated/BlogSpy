@@ -7,9 +7,7 @@
 
 import { NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
-import { searchYouTubeVideos } from "@/src/features/video-hijack/services/youtube.service"
-
-export { GET } from "@/src/features/video-hijack/api/youtube/route"
+import { searchYouTubeVideos } from "@/features/video-hijack/services/youtube.service"
 
 type YouTubeRequestPayload = {
   keyword?: string
@@ -107,4 +105,11 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "Failed to fetch YouTube results."
     return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, error: "This endpoint is being rebuilt in V2." },
+    { status: 501 }
+  )
 }

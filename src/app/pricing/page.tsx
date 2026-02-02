@@ -1,5 +1,6 @@
-import { PricingModal } from "@/components/features"
+import { PricingModal } from "@features/pricing"
 
 export default function PricingPage() {
   return <PricingModal />
 }
+

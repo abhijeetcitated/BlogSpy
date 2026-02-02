@@ -1,57 +1,15 @@
-/**
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 🛡️ SAFE ACTION - Type-safe Server Actions with Authentication
- * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 
- * Simple wrapper for next-safe-action v8+ with Supabase authentication.
- * 
- * @see https://next-safe-action.dev/docs/getting-started
- */
-
 import "server-only"
 
-import {
-  createSafeActionClient,
-  DEFAULT_SERVER_ERROR_MESSAGE,
-} from "next-safe-action"
+import { createSafeActionClient } from "next-safe-action"
 import { headers } from "next/headers"
 import { z } from "zod"
-import { createClient } from "@/src/lib/supabase/server"
+import { Redis } from "@upstash/redis"
+import { createClient } from "@/lib/supabase/server"
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// TYPES
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export interface BaseActionContext {
-  idempotencyKey: string | null
-}
-
-export interface ActionContext extends BaseActionContext {
+export interface AuthenticatedActionContext {
   userId: string
   email: string
-  role: "user" | "admin" | "moderator"
-}
-
-const HONEYTOKEN_KEYS = new Set(["bot_trap", "botTrap", "honeytoken", "honeyToken"])
-const SAFE_ACTION_ERRORS = new Set(["PLG_LOGIN_REQUIRED", "Bot Detected"])
-
-async function getRequestIp(): Promise<string | null> {
-  const headerList = await headers()
-  const forwardedFor = headerList.get("x-forwarded-for")
-
-  if (forwardedFor) {
-    const [first] = forwardedFor.split(",")
-    if (first) {
-      return first.trim()
-    }
-  }
-
-  return (
-    headerList.get("x-real-ip") ??
-    headerList.get("cf-connecting-ip") ??
-    headerList.get("x-client-ip") ??
-    null
-  )
+  idempotencyKey: string | null
 }
 
 async function getIdempotencyKey(): Promise<string | null> {
@@ -61,112 +19,132 @@ async function getIdempotencyKey(): Promise<string | null> {
   return trimmed.length > 0 ? trimmed : null
 }
 
-function findHoneytokenValue(input: unknown): string | null {
-  if (!input || typeof input !== "object") {
-    return null
-  }
-
-  if (Array.isArray(input)) {
-    for (const entry of input) {
-      const found = findHoneytokenValue(entry)
-      if (found) return found
-    }
-    return null
-  }
-
-  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
-    if (HONEYTOKEN_KEYS.has(key)) {
-      if (value !== null && value !== undefined && String(value).trim() !== "") {
-        return String(value)
-      }
-    }
-
-    const nested = findHoneytokenValue(value)
-    if (nested) return nested
-  }
-
-  return null
+function getIdempotencyKeyFromInput(parsedInput: Record<string, unknown> | null): string | null {
+  if (!parsedInput) return null
+  const value = parsedInput.idempotency_key
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// BASE ACTION CLIENT (handles errors globally)
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
+async function resolveIdempotencyKey(parsedInput: Record<string, unknown> | null): Promise<string | null> {
+  const inputKey = getIdempotencyKeyFromInput(parsedInput)
+  if (inputKey) return inputKey
+  return getIdempotencyKey()
+}
 
-const baseClient = createSafeActionClient({
-  handleServerError(error) {
-    // Log error for debugging (server-side only)
-    console.error("[SafeAction Error]:", error.message)
+const HONEYPOT_FIELDS = ["user_system_priority", "admin_validation_token"] as const
+const BANNED_SET_KEY = "banned_ips"
+const BAN_TTL_SECONDS = 24 * 60 * 60
 
-    // Handle Next.js redirects
-    if (error.message.includes("NEXT_REDIRECT")) {
-      throw error
+const penaltyRedis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
+
+function getClientIpFromHeaders(requestHeaders: Headers): string {
+  const forwardedFor = requestHeaders.get("x-forwarded-for")
+  if (forwardedFor) {
+    const [first] = forwardedFor.split(",")
+    if (first) return first.trim()
+  }
+
+  const realIp = requestHeaders.get("x-real-ip")
+  return realIp ?? "unknown"
+}
+
+function getHoneytokenHits(parsedInput: unknown): string[] {
+  if (!parsedInput) return []
+
+  const values: Record<string, unknown> = {}
+  if (parsedInput instanceof FormData) {
+    for (const field of HONEYPOT_FIELDS) {
+      values[field] = parsedInput.get(field)
     }
-
-    if (SAFE_ACTION_ERRORS.has(error.message)) {
-      return error.message
+  } else if (typeof parsedInput === "object") {
+    const record = parsedInput as Record<string, unknown>
+    for (const field of HONEYPOT_FIELDS) {
+      values[field] = record[field]
     }
+  } else {
+    return []
+  }
 
-    // Sanitize error message - don't expose internals
-    if (process.env.NODE_ENV === "production") {
-      // Return generic message in production
-      return DEFAULT_SERVER_ERROR_MESSAGE
-    }
+  return HONEYPOT_FIELDS.filter((field) => {
+    const value = values[field]
+    if (value === null || value === undefined) return false
+    return String(value).trim().length > 0
+  })
+}
 
-    // In development, return actual error for debugging
-    return error.message
+function isBotRequest(parsedInput: unknown): boolean {
+  return getHoneytokenHits(parsedInput).length > 0
+}
+
+function getUserAgent(requestHeaders: Headers): string {
+  return requestHeaders.get("user-agent") ?? "unknown"
+}
+
+function getFingerprint(requestHeaders: Headers): string | null {
+  return (
+    requestHeaders.get("x-client-fingerprint") ??
+    requestHeaders.get("x-fingerprint") ??
+    requestHeaders.get("x-device-fingerprint")
+  )
+}
+
+async function addToBanList(ip: string): Promise<void> {
+  await penaltyRedis.sadd(BANNED_SET_KEY, ip)
+  await penaltyRedis.expire(BANNED_SET_KEY, BAN_TTL_SECONDS)
+}
+
+const safeActionClient = createSafeActionClient({
+  handleServerError: (error) => {
+    const message = error instanceof Error ? error.message : "UNKNOWN_SERVER_ERROR"
+    console.error("ACTION_SERVER_ERROR:", message)
+    return message
   },
 })
 
-const securityClient = baseClient.use(async ({ clientInput, bindArgsClientInputs, next, ctx }) => {
-  const honeytokenValue =
-    findHoneytokenValue(clientInput) ?? findHoneytokenValue(bindArgsClientInputs)
+export const publicAction = safeActionClient
 
-  if (honeytokenValue !== null) {
-    const ip = await getRequestIp()
-    console.warn("[SafeAction] Honeytoken triggered", { ip })
-    throw new Error("Bot Detected")
-  }
+export const authenticatedAction = safeActionClient.use(async ({ clientInput, next, ctx }) => {
+  const parsedInput = clientInput as Record<string, unknown> | null
+  if (isBotRequest(parsedInput)) {
+    const requestHeaders = await headers()
+    const clientIp = getClientIpFromHeaders(requestHeaders)
+    const userAgent = getUserAgent(requestHeaders)
+    const fingerprint = getFingerprint(requestHeaders)
 
-  const idempotencyKey = await getIdempotencyKey()
-  return next({ ctx: { ...ctx, idempotencyKey } })
-})
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// PUBLIC ACTION (no auth required)
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export const publicAction = securityClient
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// AUTH ACTION (requires authenticated user)
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export const authAction = securityClient.use(async ({ next, ctx }) => {
-  // ═══════════════════════════════════════════════════════════════
-  // MOCK MODE: Bypass authentication for development
-  // ═══════════════════════════════════════════════════════════════
-  const isMockMode = process.env.USE_MOCK_DATA === "true" ||
-                     process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
-  
-  if (isMockMode) {
-    console.log("[authAction] MOCK MODE: Bypassing authentication")
-    const nextCtx: ActionContext = {
-      ...ctx,
-      userId: "mock-user-dev-123",
-      email: "dev@ozmeum.com",
-      role: "user",
+    try {
+      await addToBanList(clientIp)
+    } catch (error) {
+      console.warn("[SECURITY] Failed to add IP to ban list", {
+        ip: clientIp,
+        error: error instanceof Error ? error.message : "unknown error",
+      })
     }
-    return next({ ctx: nextCtx })
+
+    try {
+      const supabase = await createClient()
+      await (supabase as any).from("core_security_violations").insert({
+        ip_address: clientIp,
+        user_agent: userAgent,
+        violation_type: "bot_trap",
+        metadata: {
+          fingerprint,
+        },
+      })
+    } catch (error) {
+      console.warn("[SECURITY] Failed to log security violation", {
+        ip: clientIp,
+        error: error instanceof Error ? error.message : "unknown error",
+      })
+    }
+    throw new Error("An unexpected error occurred")
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // PRODUCTION MODE: Real Supabase authentication
-  // ═══════════════════════════════════════════════════════════════
-  
-  // Get Supabase client
   const supabase = await createClient()
-
-  // Get current user
   const {
     data: { user },
     error,
@@ -176,56 +154,18 @@ export const authAction = securityClient.use(async ({ next, ctx }) => {
     throw new Error("PLG_LOGIN_REQUIRED")
   }
 
-  // Build context
-  const nextCtx: ActionContext = {
-    ...ctx,
-    userId: user.id,
-    email: user.email || "",
-    role: (user.user_metadata?.role as ActionContext["role"]) || "user",
-  }
-
-  return next({ ctx: nextCtx })
+  return next({
+    ctx: {
+      ...ctx,
+      userId: user.id,
+      email: user.email ?? "",
+      idempotencyKey: await resolveIdempotencyKey(parsedInput),
+    },
+  })
 })
 
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// ADMIN ACTION (requires admin role)
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export const adminAction = authAction.use(async ({ next, ctx }) => {
-  if (ctx.role !== "admin") {
-    throw new Error("Admin access required")
-  }
-
-  return next({ ctx })
-})
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// LEGACY EXPORTS (for backwards compatibility with existing code)
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-// Alias for existing code using 'action'
+export const authAction = authenticatedAction
 export const action = publicAction
+export const actionClient = safeActionClient
 
-// Alias for existing code using 'actionClient'
-export const actionClient = publicAction
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-// CONVENIENCE EXPORTS
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-// Re-export zod for schema definitions
 export { z }
-
-// Common schema patterns
-export const schemas = {
-  id: z.string().uuid(),
-  email: z.string().email(),
-  pagination: z.object({
-    page: z.number().int().min(1).default(1),
-    limit: z.number().int().min(1).max(100).default(20),
-  }),
-  dateRange: z.object({
-    from: z.string().datetime(),
-    to: z.string().datetime(),
-  }),
-}

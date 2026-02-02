@@ -67,7 +67,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
-import { useHumanizer } from '@/src/features/ai-writer/hooks/tools/use-humanizer';
+import { useHumanizer } from '@/features/ai-writer/hooks/tools/use-humanizer';
 import {
   HumanizationChange,
   HumanizationRecommendation,
@@ -82,7 +82,7 @@ import {
   WritingStyle,
   ToneType,
   DiffSegment
-} from '@/src/features/ai-writer/types/tools/humanizer.types';
+} from '@/features/ai-writer/types/tools/humanizer.types';
 
 // =============================================================================
 // HELPER COMPONENTS

@@ -1,376 +1,355 @@
 "use server"
+import "server-only"
 
 // ============================================
 // KEYWORD RESEARCH - Refresh Keyword Action
 // ============================================
-// The Orchestrator: Deducts credits, fetches live SERP,
-// calculates RTV, and updates the database.
-// ============================================
 
 import { z } from "zod"
-import { authAction } from "@/src/lib/safe-action"
-import { createServerClient } from "@/src/lib/supabase/server"
-import { getDataForSEOLocationCode } from "../../../lib/dataforseo/locations"
-import { normalizeCountryCode } from "../utils/country-normalizer"
+import { headers } from "next/headers"
+import { Redis } from "@upstash/redis"
+import { Ratelimit } from "@upstash/ratelimit"
+
+import { publicAction } from "@/lib/safe-action"
+import { createAdminClient, createClient } from "@/lib/supabase/server"
+import { getNumericLocationCode } from "@/config/locations"
+import { keywordService } from "../services/keyword.service"
 import { liveSerpService } from "../services/live-serp"
-import { calculateRtv } from "../utils/rtv-calculator"
-import type { Keyword, SERPFeature } from "../types"
+import { buildCacheSlug, sanitizeKeywordInput } from "../utils/input-parser"
+import { calculateRTV } from "../utils/rtv-calculator"
+import type { Keyword, MatchType } from "../types"
 
 const RefreshKeywordSchema = z.object({
-  keyword: z.string().min(1, "Keyword is required").max(200, "Keyword too long"),
-  keywordId: z.number().optional(), // Optional: If provided, updates existing keyword in DB
-  country: z.string().default("US").transform(normalizeCountryCode),
-  volume: z.number().default(0), // Existing volume for RTV calculation
-  cpc: z.number().default(0), // Existing CPC for RTV calculation
-  intent: z.array(z.enum(["I", "C", "T", "N"])).optional(), // User intent for GEO score
+  keywordId: z.number(),
+  keyword: z.string().min(1, "Keyword is required"),
+  country: z.string().default("US"),
+  languageCode: z.string().optional(),
+  deviceType: z.string().optional(),
+  idempotency_key: z.string().min(1, "Idempotency key is required"),
+  current_balance: z.number().int().nonnegative().optional(),
+  count: z.number().int().nonnegative().optional(),
+  traffic: z.number().int().nonnegative().optional(),
+  user_system_priority: z.string().optional(),
+  admin_validation_token: z.string().optional(),
 })
 
-export type RefreshKeywordResponse =
-  | {
-      success: true
-      data: {
-        keyword: Partial<Keyword>
-        serpData: {
-          weakSpots: {
-            reddit: number | null
-            quora: number | null
-            pinterest: number | null
-          }
-          serpFeatures: SERPFeature[]
-          hasAio: boolean
-          hasSnippet: boolean
-          geoScore: number
-        }
-        rtvData: {
-          rtv: number
-          lossPercentage: number
-          breakdown: Array<{ label: string; value: number }>
-        }
-        lastUpdated: string
-      }
-      newBalance: number
-    }
-  | {
-      error: "API_ERROR"
-      refunded: true
-    }
+export type RefreshKeywordResponse = {
+  success: true
+  data: Keyword
+  balance: number | null
+  fromCache?: boolean
+  message?: string
+  lastRefreshedAt?: string | null
+  status?: "pending" | "completed"
+}
 
 export type RefreshKeywordActionResult = {
   data?: RefreshKeywordResponse
   serverError?: string
+  validationErrors?: Record<string, { _errors?: string[] }>
 }
 
-function isServerMockMode(): boolean {
-  return process.env.USE_MOCK_DATA === "true" || process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
-}
+const HONEYPOT_FIELDS = ["user_system_priority", "admin_validation_token"] as const
+const BANNED_SET_KEY = "banned_ips"
+const BAN_TTL_SECONDS = 24 * 60 * 60
 
-async function fetchUserCreditsRemaining(userId: string): Promise<number> {
-  if (isServerMockMode()) {
-    return 77
+const penaltyRedis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
+
+const rateLimitRedis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
+
+const LABS_TTL_MS = 30 * 24 * 60 * 60 * 1000
+const COOLDOWN_WINDOW_MS = 5 * 60 * 1000
+
+function getClientIpFromHeaders(requestHeaders: Headers): string {
+  const forwardedFor = requestHeaders.get("x-forwarded-for")
+  if (forwardedFor) {
+    const [first] = forwardedFor.split(",")
+    if (first) return first.trim()
   }
 
-  const supabase = await createServerClient()
-  const { data: credits, error } = await supabase
-    .from("user_credits")
-    .select("credits_total, credits_used")
-    .eq("user_id", userId)
-    .single()
-
-  if (error || !credits) return 0
-  const total = credits.credits_total ?? 0
-  const used = credits.credits_used ?? 0
-  return Math.max(0, total - used)
+  const realIp = requestHeaders.get("x-real-ip")
+  return realIp ?? "unknown"
 }
 
-/**
- * Step 1: Deduct 1 credit via Supabase RPC
- * Primary: `deduct_credits` (per spec), fallback: `use_credits`
- */
-async function deductCredit(userId: string, amount: number = 1, reason: string = "keyword_refresh"): Promise<void> {
-  if (isServerMockMode()) {
-    console.log("[RefreshKeyword] Mock mode - skipping credit deduction")
-    return
+function getFingerprint(requestHeaders: Headers): string | null {
+  return (
+    requestHeaders.get("x-client-fingerprint") ??
+    requestHeaders.get("x-fingerprint") ??
+    requestHeaders.get("x-device-fingerprint")
+  )
+}
+
+function isBotRequest(parsedInput: Record<string, unknown> | null): boolean {
+  if (!parsedInput) return false
+  return HONEYPOT_FIELDS.some((field) => {
+    const value = parsedInput[field]
+    if (value === null || value === undefined) return false
+    return String(value).trim().length > 0
+  })
+}
+
+async function addToBanList(ip: string): Promise<void> {
+  await penaltyRedis.sadd(BANNED_SET_KEY, ip)
+  await penaltyRedis.expire(BANNED_SET_KEY, BAN_TTL_SECONDS)
+}
+
+function parseCachedKeywords(data: unknown): Keyword[] {
+  return Array.isArray(data) ? (data as Keyword[]) : []
+}
+
+function normalizeKeywordKey(keyword: string): string {
+  return keyword.trim().toLowerCase()
+}
+
+function resolvePostbackUrl(requestHeaders: Headers): string | null {
+  const explicit =
+    process.env.DATAFORSEO_POSTBACK_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL
+
+  if (explicit) {
+    return `${explicit.replace(/\/$/, "")}/api/webhooks/serp`
   }
 
-  const supabase = await createServerClient()
+  const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host")
+  if (!host) return null
 
-  const attemptRpc = async (rpcName: string): Promise<boolean> => {
-    // Supabase type defs may not include custom RPCs like `deduct_credits`.
-    const { data, error } = await (supabase as typeof supabase & {
-      rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
-    }).rpc(rpcName, {
-      p_user_id: userId,
-      p_amount: amount,
-      p_feature: reason,
-      p_description:
-        amount < 0
-          ? "Refund for failed live SERP refresh"
-          : "Live SERP refresh",
+  const proto = requestHeaders.get("x-forwarded-proto") || "https"
+  return `${proto}://${host}/api/webhooks/serp`
+}
+
+function isFreshTimestamp(timestamp: string | null | undefined, ttlMs: number): boolean {
+  if (!timestamp) return false
+  const time = new Date(timestamp).getTime()
+  if (Number.isNaN(time)) return false
+  return Date.now() - time < ttlMs
+}
+
+export const refreshKeyword = publicAction
+  .schema(RefreshKeywordSchema)
+  .action(async ({ parsedInput }): Promise<RefreshKeywordResponse> => {
+    if (isBotRequest(parsedInput)) {
+      const requestHeaders = await headers()
+      const clientIp = getClientIpFromHeaders(requestHeaders)
+      const userAgent = requestHeaders.get("user-agent") ?? "unknown"
+      const fingerprint = getFingerprint(requestHeaders)
+
+      try {
+        await addToBanList(clientIp)
+      } catch (error) {
+        console.warn("[SECURITY] Failed to add IP to ban list", {
+          ip: clientIp,
+          error: error instanceof Error ? error.message : "unknown error",
+        })
+      }
+
+      try {
+        const admin = createAdminClient()
+        await admin.from("core_security_violations").insert({
+          ip_address: clientIp,
+          user_agent: userAgent,
+          violation_type: "bot_trap",
+          metadata: { fingerprint },
+        })
+      } catch (error) {
+        console.warn("[SECURITY] Failed to log security violation", {
+          ip: clientIp,
+          error: error instanceof Error ? error.message : "unknown error",
+        })
+      }
+
+      throw new Error("An unexpected error occurred")
+    }
+
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      throw new Error("PLG_LOGIN_REQUIRED")
+    }
+
+    const idempotencyKey = parsedInput.idempotency_key?.trim()
+    if (!idempotencyKey) {
+      throw new Error("MISSING_IDEMPOTENCY_KEY")
+    }
+
+    const keywordText = sanitizeKeywordInput(parsedInput.keyword)
+    const country = parsedInput.country || "US"
+    const languageCode = parsedInput.languageCode?.trim().toLowerCase() || "en"
+    const deviceType = parsedInput.deviceType?.trim().toLowerCase() || "desktop"
+    const slug = buildCacheSlug(keywordText, country, languageCode, deviceType)
+    const numericLocationCode = getNumericLocationCode(country)
+    const matchType: MatchType = "broad"
+    const nowIso = new Date().toISOString()
+
+    const { data: cooldownRow } = await supabase
+      .from("kw_cache")
+      .select("last_serp_update")
+      .eq("slug", slug)
+      .maybeSingle()
+
+    if (cooldownRow?.last_serp_update) {
+      const lastSerpTime = new Date(cooldownRow.last_serp_update).getTime()
+      if (!Number.isNaN(lastSerpTime) && Date.now() - lastSerpTime < COOLDOWN_WINDOW_MS) {
+        throw new Error("COOLDOWN_ACTIVE")
+      }
+    }
+
+    const { data, error } = await supabase.rpc("deduct_credits_atomic", {
+      p_user_id: user.id,
+      p_amount: 1,
+      p_idempotency_key: idempotencyKey,
+      p_description: `Keyword Refresh: ${keywordText}`,
     })
 
     if (error) {
-      console.error(`[RefreshKeyword] ${rpcName} RPC error:`, error.message)
-      return false
+      if (error.message.includes("INSUFFICIENT_CREDITS")) {
+        const insufficientError = new Error("INSUFFICIENT_CREDITS")
+        ;(insufficientError as Error & { status?: number }).status = 402
+        throw insufficientError
+      }
+      throw new Error(error.message)
     }
 
-    const result = Array.isArray(data) ? data[0] : data
-    if (result?.success === false || result === false) {
-      throw new Error(result?.message || "Insufficient credits")
+    const rpcResult = Array.isArray(data) ? data[0] : data
+    const balance =
+      rpcResult && typeof rpcResult.balance === "number" ? rpcResult.balance : null
+
+    if (balance === null) {
+      throw new Error("CREDITS_BALANCE_UNAVAILABLE")
     }
 
-    return true
-  }
-
-  const deducted = await attemptRpc("deduct_credits")
-  if (deducted) return
-
-  const used = await attemptRpc("use_credits")
-  if (used) return
-
-  await fallbackDeductCredit(userId, supabase, amount)
-}
-
-/**
- * Fallback credit deduction when RPC fails
- */
-async function fallbackDeductCredit(
-  userId: string,
-  supabase: Awaited<ReturnType<typeof createServerClient>>,
-  amount: number
-): Promise<void> {
-  const { data: credits, error: creditsError } = await supabase
-    .from("user_credits")
-    .select("credits_total, credits_used")
-    .eq("user_id", userId)
-    .single()
-
-  if (creditsError || !credits) {
-    throw new Error("Unable to verify credits")
-  }
-
-  const creditsRemaining = (credits.credits_total ?? 0) - (credits.credits_used ?? 0)
-
-  if (amount > 0 && creditsRemaining < amount) {
-    throw new Error("Insufficient credits")
-  }
-
-  // Refunds are represented as negative amounts, meaning we subtract from credits_used.
-  const nextUsed = Math.max(0, (credits.credits_used ?? 0) + amount)
-
-  const { error: updateError } = await supabase
-    .from("user_credits")
-    .update({ credits_used: nextUsed })
-    .eq("user_id", userId)
-
-  if (updateError) {
-    throw new Error("Unable to deduct credits")
-  }
-}
-
-/**
- * Step 4: Update keywords table with new SERP data and RTV
- * NOTE: `keywords` table with serp_data JSONB column is assumed per spec
- * If table doesn't exist, this is a no-op (schema migration pending)
- */
-type SerpDataPayload = {
-  weakSpots: {
-    reddit: number | null
-    quora: number | null
-    pinterest: number | null
-  }
-  serpFeatures: SERPFeature[]
-  hasAio: boolean
-  hasSnippet: boolean
-  geoScore: number
-}
-
-function resolveWeakSpot(weakSpots: SerpDataPayload["weakSpots"]): {
-  type: "reddit" | "quora" | "pinterest" | null
-  rank?: number
-} {
-  if (typeof weakSpots.reddit === "number") {
-    return { type: "reddit", rank: weakSpots.reddit }
-  }
-  if (typeof weakSpots.quora === "number") {
-    return { type: "quora", rank: weakSpots.quora }
-  }
-  if (typeof weakSpots.pinterest === "number") {
-    return { type: "pinterest", rank: weakSpots.pinterest }
-  }
-  return { type: null }
-}
-
-async function updateKeywordInDb(
-  input: { keywordId: number; keywordText: string; countryCode: string },
-  serpData: SerpDataPayload,
-  rtvData: { rtv: number; lossPercentage: number; breakdown: Array<{ label: string; value: number }> },
-  lastUpdated: string
-): Promise<void> {
-  if (isServerMockMode()) {
-    console.log("[RefreshKeyword] Mock mode - skipping DB update")
-    return
-  }
-
-  const supabase = await createServerClient()
-  const weakSpot = resolveWeakSpot(serpData.weakSpots)
-
-  const payload = {
-    serp_data: serpData,
-    serp_features: serpData.serpFeatures,
-    weak_spots: serpData.weakSpots,
-    weak_spot: weakSpot,
-    geo_score: serpData.geoScore,
-    has_aio: serpData.hasAio,
-    rtv: rtvData.rtv,
-    rtv_breakdown: rtvData.breakdown,
-    rtv_data: rtvData,
-    last_updated: lastUpdated,
-  }
-
-  // Best-effort: prefer composite key (keyword_text + country_code) for strict country isolation.
-  // If schema doesn't support it, fall back to id-based update.
-  type KeywordsTableUpdate = (values: Record<string, unknown>) => {
-    eq: (column: string, value: string | number) => {
-      eq: (column: string, value: string | number) => Promise<{ error: { message: string } | null }>
-    }
-  }
-
-  type KeywordsTableUpdateSingleEq = (values: Record<string, unknown>) => {
-    eq: (column: string, value: string | number) => Promise<{ error: { message: string } | null }>
-  }
-
-  const keywordsTable = (supabase as typeof supabase & {
-    from: (table: string) => {
-      update: KeywordsTableUpdate & KeywordsTableUpdateSingleEq
-    }
-  }).from("keywords")
-
-  let error: { message: string } | null = null
-
-  try {
-    const res = await (keywordsTable.update as KeywordsTableUpdate)(payload)
-      .eq("keyword_text", input.keywordText)
-      .eq("country_code", input.countryCode)
-
-    error = res.error
-  } catch {
-    // Ignore and fall back
-    error = null
-  }
-
-  if (!error) {
-    // Either composite succeeded or nothing to do.
-    // However, if composite matched 0 rows, Supabase doesn't surface as error; still fall back to id if present.
-    if (!input.keywordId) return
-  }
-
-  const fallback = await (keywordsTable.update as KeywordsTableUpdateSingleEq)(payload).eq("id", input.keywordId)
-  if (fallback.error) {
-    console.error("[RefreshKeyword] DB update failed:", fallback.error.message)
-  }
-}
-
-/**
- * Main refresh action
- */
-export const refreshKeywordAction = authAction
-  .schema(RefreshKeywordSchema)
-  .action(async ({ parsedInput, ctx }): Promise<RefreshKeywordResponse> => {
-    const { keyword, keywordId, country, volume, cpc } = parsedInput
-
-    // Step 1: Deduct 1 credit
-    await deductCredit(ctx.userId, 1, "keyword_refresh")
-
-    const newBalance = await fetchUserCreditsRemaining(ctx.userId)
-
-    // Step 2: Fetch live SERP data (external API)
-    const locationCode = getDataForSEOLocationCode(country)
-
-    let serpResult: Awaited<ReturnType<(typeof liveSerpService)["fetchLiveSerp"]>>
     try {
-      serpResult = await liveSerpService.fetchLiveSerp(keyword, locationCode)
-    } catch (error) {
-      console.error("[RefreshKeyword] External API failed:", error)
+      const { data: cacheRow } = await supabase
+        .from("kw_cache")
+        .select("raw_data, analysis_data, last_labs_update, last_serp_update")
+        .eq("slug", slug)
+        .maybeSingle()
 
-      // Refund: if API fails AFTER credit deduction.
-      // Requirement: `await deductCredit(userId, -1, 'refund_api_error')`.
-      try {
-        await deductCredit(ctx.userId, -1, "refund_api_error")
-      } catch (refundError) {
-        console.error("[RefreshKeyword] Refund failed:", refundError)
+      const cachedLabs = parseCachedKeywords(cacheRow?.raw_data)
+      const labsFresh =
+        cachedLabs.length > 0 && isFreshTimestamp(cacheRow?.last_labs_update, LABS_TTL_MS)
+
+      let labsData = cachedLabs
+      let labsUpdatedAt = cacheRow?.last_labs_update ?? null
+
+      if (!labsFresh) {
+        labsData = await keywordService.fetchKeywords(
+          keywordText,
+          numericLocationCode,
+          matchType,
+          country,
+          languageCode,
+          deviceType
+        )
+        labsUpdatedAt = nowIso
       }
 
-      return { error: "API_ERROR", refunded: true }
-    }
-
-    // Step 3: Calculate RTV with new SERP features
-    const rtvResult = calculateRtv({
-      volume,
-      cpc,
-      serpFeatures: serpResult.serpFeatures,
-    })
-
-    // Prepare data objects
-    const serpData: SerpDataPayload = {
-      weakSpots: serpResult.weakSpots,
-      serpFeatures: serpResult.serpFeatures,
-      hasAio: serpResult.hasAio,
-      hasSnippet: serpResult.hasSnippet,
-      geoScore: serpResult.geoScore,
-    }
-
-    const rtvData = {
-      rtv: rtvResult.rtv,
-      lossPercentage: rtvResult.lossPercentage,
-      breakdown: rtvResult.breakdown,
-    }
-
-    const lastUpdated = new Date().toISOString()
-
-    // Step 4: Update database (best-effort). Do not fail refresh if DB update fails.
-    try {
-      await updateKeywordInDb(
-        { keywordId: keywordId ?? 0, keywordText: keyword, countryCode: country },
-        serpData,
-        rtvData,
-        lastUpdated
-      )
-    } catch (dbError) {
-      console.error("[RefreshKeyword] DB update failed:", dbError)
-    }
-
-    const weakSpot = resolveWeakSpot(serpData.weakSpots)
-
-    // Step 5: Return updated Keyword object to frontend
-    return {
-      success: true,
-      data: {
-        keyword: {
-          id: keywordId,
-          keyword,
+      const baseKeyword =
+        labsData.find((item) => normalizeKeywordKey(item.keyword) === normalizeKeywordKey(keywordText)) ??
+        labsData[0] ??
+        {
+          id: parsedInput.keywordId,
+          keyword: keywordText,
           countryCode: country,
-          weakSpots: serpResult.weakSpots,
-          weakSpot,
-          serpFeatures: serpResult.serpFeatures,
-          geoScore: serpResult.geoScore,
-          hasAio: serpResult.hasAio,
-          rtv: rtvResult.rtv,
-          rtvBreakdown: rtvResult.breakdown,
-          lastUpdated: new Date(lastUpdated),
-          updatedAt: lastUpdated,
+          intent: ["I"],
+          volume: 0,
+          trend: Array.from({ length: 12 }, () => 0),
+          kd: 0,
+          cpc: 0,
+          weakSpots: { reddit: null, quora: null, pinterest: null, ranked: [] },
+          serpFeatures: [],
+          geoScore: null,
+          hasAio: false,
+        }
+
+      const serpData = await liveSerpService.fetchLiveSerp(
+        keywordText,
+        numericLocationCode,
+        languageCode,
+        deviceType
+      )
+      const rtvResult = calculateRTV(
+        baseKeyword.volume ?? 0,
+        serpData.rawItems ?? [],
+        baseKeyword.cpc ?? 0
+      )
+
+      const updatedKeyword: Keyword = {
+        ...baseKeyword,
+        id: parsedInput.keywordId,
+        keyword: keywordText,
+        weakSpots: {
+          reddit: serpData.weakSpots.reddit ?? null,
+          quora: serpData.weakSpots.quora ?? null,
+          pinterest: serpData.weakSpots.pinterest ?? null,
+          ranked: baseKeyword.weakSpots?.ranked ?? [],
         },
-        serpData,
-        rtvData,
-        lastUpdated,
-      },
-      newBalance,
+        serpFeatures: serpData.serpFeatures ?? [],
+        geoScore: serpData.geoScore ?? null,
+        hasAio: serpData.hasAio ?? false,
+        rtv: rtvResult.rtv,
+        rtvBreakdown: rtvResult.breakdown,
+        serpStatus: "completed",
+        lastUpdated: new Date(),
+        lastRefreshedAt: nowIso,
+        lastLabsUpdate: labsUpdatedAt ?? nowIso,
+        lastSerpUpdate: nowIso,
+      }
+
+      const admin = createAdminClient()
+      await admin
+        .from("kw_cache")
+        .upsert(
+          {
+            slug,
+            keyword: keywordText,
+            country_code: country,
+            language_code: languageCode,
+            device_type: deviceType,
+            match_type: matchType,
+            raw_data: labsData.length > 0 ? labsData : null,
+            analysis_data: [updatedKeyword],
+            last_labs_update: labsUpdatedAt ?? nowIso,
+            last_serp_update: nowIso,
+            last_accessed_at: nowIso,
+          },
+          { onConflict: "slug" }
+        )
+
+      return {
+        success: true,
+        data: updatedKeyword,
+        balance,
+        lastRefreshedAt: nowIso,
+        status: "completed",
+      }
+    } catch (error) {
+      try {
+        await supabase.rpc("refund_credits_atomic", {
+          p_user_id: user.id,
+          p_amount: 1,
+          p_idempotency_key: idempotencyKey,
+        })
+      } catch (refundError) {
+        console.warn(
+          "[RefreshKeyword] Failed to refund credits after API failure",
+          refundError instanceof Error ? refundError.message : "unknown error"
+        )
+      }
+
+      throw new Error("GOOGLE_BUSY_REFUNDED")
     }
   })
-
-
-// ============================================
-// GET USER CREDITS
-// ============================================
 
 export interface UserCreditsResponse {
   credits: number
@@ -378,39 +357,40 @@ export interface UserCreditsResponse {
   remaining: number
 }
 
-export const getUserCreditsAction = authAction
+export const getUserCreditsAction = publicAction
   .schema(z.object({}))
-  .action(async ({ ctx }): Promise<UserCreditsResponse> => {
-    if (isServerMockMode()) {
-      return {
-        credits: 100,
-        used: 23,
-        remaining: 77,
-      }
+  .action(async (): Promise<UserCreditsResponse> => {
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      throw new Error("Authentication required")
     }
 
-    const supabase = await createServerClient()
-
-    const { data: credits, error } = await supabase
+    const { data, error } = await supabase
       .from("user_credits")
       .select("credits_total, credits_used")
-      .eq("user_id", ctx.userId)
+      .eq("user_id", user.id)
       .single()
 
-    if (error || !credits) {
-      return {
-        credits: 0,
-        used: 0,
-        remaining: 0,
+    if (error) {
+      // No credits record yet - return 0
+      if (error.code === "PGRST116") {
+        return { credits: 0, used: 0, remaining: 0 }
       }
+      throw new Error("Failed to fetch credits")
     }
 
-    const total = credits.credits_total ?? 0
-    const used = credits.credits_used ?? 0
+    const creditsTotal = data.credits_total ?? 0
+    const creditsUsed = data.credits_used ?? 0
+    const remaining = Math.max(0, creditsTotal - creditsUsed)
 
     return {
-      credits: total,
-      used,
-      remaining: total - used,
+      credits: creditsTotal,
+      used: creditsUsed,
+      remaining,
     }
   })

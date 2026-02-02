@@ -69,7 +69,7 @@ import {
   List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useImageOptimization } from '@/src/features/ai-writer/hooks/tools/use-image-optimization';
+import { useImageOptimization } from '@/features/ai-writer/hooks/tools/use-image-optimization';
 import {
   ImageFormat,
   ImageIssueSeverity,
@@ -82,7 +82,7 @@ import {
   IMAGE_FORMAT_INFO,
   IMAGE_ISSUE_TYPE_INFO,
   OPTIMIZATION_ACTION_INFO
-} from '@/src/features/ai-writer/types/tools/image-optimization.types';
+} from '@/features/ai-writer/types/tools/image-optimization.types';
 
 // ============================================================================
 // TYPES

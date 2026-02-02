@@ -4,10 +4,10 @@ import { Globe, Target, Calendar, Video, AlertTriangle } from "lucide-react"
 import { WorldMap } from "./world-map"
 import { RadarChart } from "./radar-chart"
 import { SeasonalityChart } from "./seasonality-chart"
-import { GEOScoreRing } from "@/components/ui/geo-score-ring"
+import { GEOScoreRing } from "@features/geo-score"
 import { Clock, Shield, FileText } from "lucide-react"
 import { GLOBAL_VOLUMES } from "../constants"
-import type { GEOScoreComponents } from "@/types/geo.types"
+import type { GEOScoreComponents } from "@features/geo-score/types/geo.types"
 
 interface GEOScoreCardProps {
   score: number

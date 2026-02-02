@@ -80,7 +80,7 @@ import {
   AUTHORITY_INFO,
   DEFAULT_CITATION_SETTINGS,
   Citation
-} from '@/src/features/ai-writer/types/tools/citation.types';
+} from '@/features/ai-writer/types/tools/citation.types';
 
 // =============================================================================
 // TYPES

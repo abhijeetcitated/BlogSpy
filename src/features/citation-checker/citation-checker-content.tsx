@@ -14,7 +14,7 @@ import {
 import { generateCitationAnalysis, generateCitationTrend, getCitationRecommendations } from "./__mocks__/citation-data"
 import { calculateCitationScore, filterCitations, sortCitations } from "./utils/citation-utils"
 import type { CitationStatus, SortByOption, SortOrder } from "./types"
-import { STACK_SPACING, GAP_PATTERNS } from "@/src/styles"
+import { STACK_SPACING, GAP_PATTERNS } from "@/styles"
 
 export function CitationCheckerContent() {
   // Domain state

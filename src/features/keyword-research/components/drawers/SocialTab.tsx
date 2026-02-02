@@ -31,13 +31,14 @@ import { cn } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 
-import { generateMockSocialOpportunity } from "@/lib/social-opportunity-calculator"
+import { generateMockSocialOpportunity } from "@features/platform-opportunity/utils/social-opportunity-calculator"
 
+import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
 
 import type { CommunityResult, DrawerDataState, Keyword, YouTubeResult } from "../../types"
-import { fetchSocialInsights } from "../../actions/fetch-drawer-data"
 import { useKeywordStore } from "../../store"
+import { fetchSocialIntel } from "../../actions/fetch-social-intel"
 import { YouTubeStrategyPanel, YouTubeVideoCard } from "./YouTubeStrategyPanel"
 import {
   analyzeYouTubeCompetition,
@@ -54,6 +55,18 @@ interface SocialTabProps {
 type SocialDataPayload = {
   youtube: YouTubeResult[]
   community: CommunityResult[]
+  quora?: {
+    discussions: Array<{
+      title: string
+      url: string
+      snippet?: string
+      answersCount?: number | null
+      upvotes?: number | null
+      date?: string | null
+      answerRecencyDays?: number | null
+    }>
+    presenceScore?: number
+  }
 }
 
 type ActivePlatform = "youtube" | "reddit" | "pinterest" | "quora"
@@ -127,11 +140,10 @@ function LockedState({
         <Button
           onClick={onLoad}
           disabled={isLoading}
-          variant="outline"
-          className={cn(
+                    className={cn(
             "h-10",
-            "border-primary/30 text-primary hover:bg-primary/10",
-            "bg-transparent transition-all duration-200"
+            "bg-[#FFD700] text-black hover:bg-[#FFC400]",
+            "transition-all duration-200"
           )}
         >
           {isLoading ? (
@@ -209,7 +221,7 @@ function SkeletonReddit() {
 
 function SkeletonPinterest() {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid w-full grid-cols-2 sm:grid-cols-3 gap-3 px-0 mx-0">
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <div key={i} className="relative aspect-[2/3] rounded-lg overflow-hidden border border-border bg-card/40">
           <div className="absolute inset-0 bg-muted/50" />
@@ -256,6 +268,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
   const [state, setState] = React.useState<DrawerDataState>("idle")
   const [data, setData] = React.useState<SocialDataPayload | null>(null)
   const [error, setError] = React.useState<string | null>(null)
+  const [loadingLabel, setLoadingLabel] = React.useState("🔒 Verifying Credits...")
 
   // Platform Switcher
   const [activePlatform, setActivePlatform] = React.useState<ActivePlatform>("youtube")
@@ -266,11 +279,14 @@ export function SocialTab({ keyword }: SocialTabProps) {
 
   // Cache (Zustand)
   const getCachedData = useKeywordStore((s) => s.getCachedData)
+  const country = useKeywordStore((s) => s.search.country)
+  const matchType = useKeywordStore((s) => s.filters.matchType)
   const setDrawerCache = useKeywordStore((s) => s.setDrawerCache)
   const setCredits = useKeywordStore((s) => s.setCredits)
-  const country = useKeywordStore((s) => s.search.country)
+  const { executeAsync: executeSocialUnlock, status: socialStatus } = useAction(fetchSocialIntel)
+  const isUnlocking = socialStatus === "executing"
 
-  const processYouTubeData = React.useCallback((youtubeData: YouTubeResult[]) => {
+  const processYouTubeData = React.useCallback((youtubeData: YouTubeResult[], keywordTerm: string) => {
     if (youtubeData.length === 0) {
       setYoutubeAnalysis(null)
       setAnalyzedVideos([])
@@ -278,7 +294,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
     }
 
     const videoInputs: YouTubeVideoInput[] = youtubeData.map(mapToVideoInput)
-    const analysis = analyzeYouTubeCompetition(videoInputs)
+    const analysis = analyzeYouTubeCompetition(videoInputs, keywordTerm)
     setYoutubeAnalysis(analysis)
 
     const withBadges = analyzeVideosWithBadges(videoInputs)
@@ -295,9 +311,18 @@ export function SocialTab({ keyword }: SocialTabProps) {
     if (cached) {
       setData(cached)
       setState("success")
-      processYouTubeData(cached.youtube ?? [])
+      processYouTubeData(cached.youtube ?? [], keyword.keyword)
     }
   }, [keyword?.keyword, getCachedData, processYouTubeData])
+
+  React.useEffect(() => {
+    if (state !== "loading") return
+    setLoadingLabel("🔒 Verifying Credits...")
+    const timer = setTimeout(() => {
+      setLoadingLabel("📡 Scanning Social Signals...")
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [state])
 
   if (!keyword) {
     return <div className="text-xs text-muted-foreground">No keyword data.</div>
@@ -312,80 +337,57 @@ export function SocialTab({ keyword }: SocialTabProps) {
     if (cached && !force) {
       setData(cached)
       setState("success")
-      processYouTubeData(cached.youtube ?? [])
+      processYouTubeData(cached.youtube ?? [], keyword.keyword)
       return
     }
 
-    setState("loading")
+    void opts
     setError(null)
+    setState("loading")
 
     try {
-      const res = await fetchSocialInsights({ keyword: keyword.keyword, country, force })
+      console.log("CLIENT_SIDE_PAYLOAD:", { keywordId: keyword.id, keyword: keyword.keyword })
+      const result = await executeSocialUnlock({
+        keywordId: String(keyword.id),
+        keyword: keyword.keyword,
+        country,
+        matchType,
+        idempotency_key: crypto.randomUUID(),
+      })
 
-      const serverError = res?.serverError
-      if (typeof serverError === "string" && serverError.toLowerCase().includes("authentication")) {
-        toast.error("Sign in required", {
-          description: "Social insights use credits and require an account.",
-          action: {
-            label: "Sign In",
-            onClick: () => {
-              window.location.href = "/login"
-            },
-          },
-          duration: 5000,
-        })
-
-        setError("Authentication required")
-        setState("error")
-        return
+      const serverError = typeof result?.serverError === "string" ? result.serverError : undefined
+      if (serverError) {
+        throw new Error(serverError)
       }
 
-      if (res?.data?.success && res.data.data) {
-        setDrawerCache(country, keyword.keyword, "social", res.data.data)
-        setData(res.data.data)
-        setState("success")
-        processYouTubeData(res.data.data.youtube ?? [])
-
-        const newBalance = (res.data as unknown as { newBalance?: unknown }).newBalance
-        if (typeof newBalance === "number") {
-          setCredits(newBalance)
-        }
-
-        return
+      if (!result?.data) {
+        throw new Error("Failed to unlock social intelligence")
       }
 
-      const message = res?.data?.error || serverError || "Failed to fetch social data"
-
-      if (typeof message === "string" && message.toLowerCase().includes("insufficient")) {
-        toast.error("Insufficient credits", {
-          description: "Loading social data uses 1 credit.",
-        })
+      if (result.data.success !== true) {
+        throw new Error(result.data.error || "Failed to unlock social intelligence")
       }
 
+      if (!result.data.data) {
+        throw new Error("Failed to unlock social intelligence")
+      }
+
+      const payload = result.data.data
+      setData(payload)
+      setDrawerCache(country, keyword.keyword, "social", payload)
+      processYouTubeData(payload.youtube ?? [], keyword.keyword)
+
+      if (typeof result.data.balance === "number") {
+        setCredits(result.data.balance)
+      }
+
+      setState("success")
+      toast.success("Social intelligence unlocked")
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Please try again."
       setError(message)
       setState("error")
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to fetch social data"
-
-      if (message.toLowerCase().includes("authentication")) {
-        toast.error("Sign in required", {
-          description: "Social insights use credits and require an account.",
-          action: {
-            label: "Sign In",
-            onClick: () => {
-              window.location.href = "/login"
-            },
-          },
-          duration: 5000,
-        })
-      } else if (message.toLowerCase().includes("insufficient")) {
-        toast.error("Insufficient credits", {
-          description: "Loading social data uses 1 credit.",
-        })
-      }
-
-      setError(message)
-      setState("error")
+      toast.error("Failed to load social data", { description: message })
     }
   }
 
@@ -396,10 +398,11 @@ export function SocialTab({ keyword }: SocialTabProps) {
   const youtubeCount = analyzedVideos.length
   const redditCount = reddit.length
   const pinterestCount = pinterest.length
-  const quoraCount = 0
+  const quoraDiscussions = data?.quora?.discussions ?? []
+  const quoraCount = quoraDiscussions.length
 
   const platformCardBase =
-    "group relative rounded-xl border bg-card/50 backdrop-blur-sm p-3 sm:p-4 text-left transition-all duration-200"
+    "group relative w-full max-w-full sm:max-w-[240px] sm:mx-auto h-auto rounded-xl border bg-card/50 backdrop-blur-sm p-3 sm:p-4 text-left transition-all duration-200"
 
   const platformCards: Array<{
     key: ActivePlatform
@@ -437,16 +440,15 @@ export function SocialTab({ keyword }: SocialTabProps) {
     {
       key: "quora",
       label: "Quora",
-      subtext: quoraCount > 0 ? `${quoraCount} Opportunities` : "Coming soon",
+      subtext: quoraCount > 0 ? `${quoraCount} Discussions` : "No discussions",
       icon: <QuoraIcon className="h-4 w-4 text-blue-500" />,
       activeClass: "border-blue-500/60 bg-blue-500/10",
       inactiveClass: "border-border hover:border-blue-500/30",
-      disabled: true,
     },
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 sm:px-6 w-full max-w-4xl mx-auto overflow-x-hidden">
       {/* Section A: Global Header */}
       <div className="rounded-xl border border-border bg-card/50 backdrop-blur-sm p-4">
         <div className="flex items-center justify-between gap-4">
@@ -464,12 +466,17 @@ export function SocialTab({ keyword }: SocialTabProps) {
 
       {/* State: Idle (Locked) */}
       {state === "idle" ? (
-        <LockedState keywordLabel={keyword.keyword} onLoad={() => loadSocialData({ force: true })} isLoading={false} />
+        <LockedState
+          keywordLabel={keyword.keyword}
+          onLoad={() => loadSocialData({ force: true })}
+          isLoading={isUnlocking}
+        />
       ) : null}
 
       {/* State: Loading */}
       {state === "loading" ? (
-        <div className="space-y-6">
+        <div className="space-y-6 px-4 sm:px-6">
+          <div className="text-xs text-muted-foreground">{loadingLabel}</div>
           <div className="space-y-3">
             <SectionHeader
               icon={<YouTubeIcon className="h-4 w-4 text-red-500" />}
@@ -509,8 +516,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
             <div className="text-xs text-muted-foreground">{error}</div>
             <div className="mt-3">
               <Button
-                variant="outline"
-                onClick={() => loadSocialData({ force: true })}
+                                onClick={() => loadSocialData({ force: true })}
                 className="border-border bg-transparent hover:bg-accent transition-all duration-200"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -525,7 +531,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
       {state === "success" ? (
         <>
           {/* Section B: Platform Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid w-full grid-cols-2 sm:grid-cols-4 gap-3 px-1 place-items-stretch">
             {platformCards.map((card) => {
               const isActive = activePlatform === card.key
               const isDisabled = Boolean(card.disabled)
@@ -561,10 +567,10 @@ export function SocialTab({ keyword }: SocialTabProps) {
 
           {/* Section C: Dynamic Content Area (fixed scroll) */}
           <div className="rounded-xl border border-border bg-card/50 backdrop-blur-sm">
-            <div className="h-[500px] overflow-y-auto p-4">
+            <div className="h-[500px] overflow-y-auto overflow-x-hidden p-4 max-w-full">
               <ContentFade activeKey={activePlatform}>
                 {activePlatform === "youtube" ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4 w-full max-w-full overflow-x-hidden px-2">
                     <SectionHeader
                       icon={<YouTubeIcon className="h-4 w-4 text-red-500" />}
                       title="YouTube"
@@ -655,7 +661,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
                         <EmptyState label="Pinterest pins" />
                       </div>
                     ) : (
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid w-full grid-cols-2 sm:grid-cols-3 gap-3 px-0 mx-0">
                         {pinterestGrid.map((p) => (
                           <a
                             key={p.url}
@@ -700,14 +706,50 @@ export function SocialTab({ keyword }: SocialTabProps) {
                         </div>
                       }
                       title="Quora"
-                      subtitle="Coming soon"
+                      subtitle={
+                        quoraCount > 0
+                          ? `${quoraCount} discussions found`
+                          : "No active discussions"
+                      }
                     />
 
-                    <div className="rounded-xl border border-border bg-card/50 p-4">
-                      <div className="text-xs text-muted-foreground">
-                        Quora extraction + opportunity scoring will appear here.
+                    {quoraCount === 0 ? (
+                      <div className="rounded-xl border border-border bg-card/50 p-4">
+                        <div className="text-xs text-muted-foreground">
+                          No active discussions found on Quora for this topic.
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {quoraDiscussions.slice(0, 5).map((discussion, index) => (
+                          <a
+                            key={`${discussion.url}-${index}`}
+                            href={discussion.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block rounded-lg border border-border bg-card/50 p-3 hover:border-blue-500/40 transition-all"
+                          >
+                            <div className="text-sm font-medium text-foreground">{discussion.title}</div>
+                            {discussion.snippet ? (
+                              <div className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                                {discussion.snippet}
+                              </div>
+                            ) : null}
+                            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                              {typeof discussion.answersCount === "number" ? (
+                                <span>{discussion.answersCount} Answers</span>
+                              ) : null}
+                              {typeof discussion.upvotes === "number" ? (
+                                <span>{discussion.upvotes} Upvotes</span>
+                              ) : null}
+                              {discussion.date ? (
+                                <span>{discussion.date}</span>
+                              ) : null}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : null}
               </ContentFade>
@@ -717,8 +759,7 @@ export function SocialTab({ keyword }: SocialTabProps) {
           {/* Refresh Button */}
           <div className="pt-2">
             <Button
-              variant="outline"
-              onClick={() => loadSocialData({ force: true })}
+                            onClick={() => loadSocialData({ force: true })}
               className={cn(
                 "h-10 w-full",
                 "border-primary/30 text-primary hover:bg-primary/10",
@@ -736,3 +777,4 @@ export function SocialTab({ keyword }: SocialTabProps) {
 }
 
 export default SocialTab
+

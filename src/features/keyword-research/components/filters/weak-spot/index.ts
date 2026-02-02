@@ -1,1 +1,1 @@
-export { WeakSpotFilter } from "./weak-spot-filter"
+export { WeakSpotFilter } from "../WeakSpotFilter"

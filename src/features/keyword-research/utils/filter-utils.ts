@@ -30,7 +30,7 @@ export interface FilterState {
   
   // Multi-select filters
   selectedIntents: string[]
-  selectedSerpFeatures: SERPFeature[]
+  selectedSerpFeatures: string[]
   
   // Include/Exclude terms (comma-separated → array)
   includeTerms: string[]
@@ -307,14 +307,14 @@ export function filterByWeakSpot(
   // "all" = no filtering
   if (normalizedToggle === "all") return keywords
 
+  const normalizedTypes = weakSpotTypes
+    .map((type) => normalize(type))
+    .filter((type) => type.length > 0)
+  const hasTypeFilter = normalizedTypes.length > 0
+
   return keywords.filter(k => {
-    // New weakSpots object: { reddit: number | null, quora: number | null, pinterest: number | null }
-    const weakSpots = k.weakSpots
-    const hasAnyWeakSpot = weakSpots && (
-      weakSpots.reddit !== null ||
-      weakSpots.quora !== null ||
-      weakSpots.pinterest !== null
-    )
+    const ranked = k.weakSpots?.ranked ?? []
+    const hasAnyWeakSpot = ranked.length > 0
 
     if (normalizedToggle === "without") {
       // Show only keywords WITHOUT any weak spots
@@ -326,14 +326,10 @@ export function filterByWeakSpot(
       if (!hasAnyWeakSpot) return false
       
       // If specific types selected, filter by type
-      if (weakSpotTypes.length > 0) {
-        return weakSpotTypes.some(type => {
-          const normalizedType = normalize(type)
-          if (normalizedType === "reddit") return weakSpots.reddit !== null
-          if (normalizedType === "quora") return weakSpots.quora !== null
-          if (normalizedType === "pinterest") return weakSpots.pinterest !== null
-          return false
-        })
+      if (hasTypeFilter) {
+        return ranked.some((entry) =>
+          normalizedTypes.includes(normalize(String(entry.platform)))
+        )
       }
       
       // Any weak spot type
@@ -352,7 +348,7 @@ export function filterByWeakSpot(
  */
 export function filterBySerpFeatures(
   keywords: Keyword[],
-  selectedFeatures: SERPFeature[]
+  selectedFeatures: string[]
 ): Keyword[] {
   if (!selectedFeatures || selectedFeatures.length === 0) return keywords
 
@@ -375,9 +371,9 @@ export function filterBySerpFeatures(
  * Calculates growth % from first to last value in trend array
  * 
  * Logic:
- * - "up" = growth > 5%
- * - "down" = growth < -5%
- * - "stable" = growth between -5% and 5%
+ * - "up" = growth > 10%
+ * - "down" = growth < -10%
+ * - "stable" = growth between -10% and 10%
  * - null = no filtering
  */
 export function filterByTrend(
@@ -401,19 +397,19 @@ export function filterByTrend(
 
     switch (trendDirection) {
       case "up":
-        // Must be growing (> 5%)
-        if (growthPercent <= 5) return false
+        // Must be growing (> 10%)
+        if (growthPercent <= 10) return false
         // Optional: minimum growth threshold
         if (minGrowth !== null && growthPercent < minGrowth) return false
         return true
 
       case "down":
-        // Must be declining (< -5%)
-        return growthPercent < -5
+        // Must be declining (< -10%)
+        return growthPercent < -10
 
       case "stable":
-        // Between -5% and 5%
-        return growthPercent >= -5 && growthPercent <= 5
+        // Between -10% and 10%
+        return growthPercent >= -10 && growthPercent <= 10
 
       default:
         return true
@@ -526,82 +522,182 @@ export function applyFilters(
   // Guard: empty input
   if (!keywords || keywords.length === 0) return []
 
-  let result = keywords
+  const volumeRange = filters.volumeRange
+  const kdRange = filters.kdRange
+  const cpcRange = filters.cpcRange
+  const geoRange = filters.geoRange
 
-  // ────────────────────────────────────────
-  // PHASE 1: Quick eliminations (cheap checks first)
-  // ────────────────────────────────────────
+  const [volumeMin, volumeMax] = volumeRange ?? [0, 10000000]
+  const [kdMin, kdMax] = kdRange ?? [0, 100]
+  const [cpcMin, cpcMax] = cpcRange ?? [0, 100]
+  const [geoMin, geoMax] = geoRange ?? [0, 100]
 
-  // 1. Volume range (fastest numeric check)
-  if (filters.volumeRange) {
-    result = filterByVolume(result, filters.volumeRange)
+  const useVolume = Boolean(volumeRange) && !(volumeMin <= 0 && volumeMax >= 10000000)
+  const useKd = Boolean(kdRange) && !(kdMin <= 0 && kdMax >= 100)
+  const useCpc = Boolean(cpcRange) && !(cpcMin <= 0 && cpcMax >= 100)
+  const useGeo = Boolean(geoRange) && !(geoMin <= 0 && geoMax >= 100)
+
+  const normalizedIntents = (filters.selectedIntents ?? [])
+    .map((intent) => normalize(intent))
+    .filter((intent) => intent.length > 0)
+  const intentSet = new Set(normalizedIntents)
+  const useIntent = intentSet.size > 0
+
+  const normalizedSerpFeatures = (filters.selectedSerpFeatures ?? [])
+    .map((feature) => normalizeSerpFeatureValue(String(feature)))
+    .filter((feature) => feature.length > 0)
+  const serpFeatureSet = new Set(normalizedSerpFeatures)
+  const useSerpFeatures = serpFeatureSet.size > 0
+
+  const normalizedIncludeTerms = (filters.includeTerms ?? [])
+    .map((term) => normalize(term))
+    .filter((term) => term.length > 0)
+  const useIncludeTerms = normalizedIncludeTerms.length > 0
+
+  const normalizedExcludeTerms = (filters.excludeTerms ?? [])
+    .map((term) => normalize(term))
+    .filter((term) => term.length > 0)
+  const useExcludeTerms = normalizedExcludeTerms.length > 0
+
+  const normalizedWeakSpotTypes = (filters.weakSpotTypes ?? [])
+    .map((type) => normalize(type))
+    .filter((type) => type.length > 0)
+  const weakSpotTypeSet = new Set(normalizedWeakSpotTypes)
+
+  let weakSpotToggle: "all" | "with" | "without" = "all"
+  if (filters.weakSpotToggle === "with") {
+    weakSpotToggle = "with"
+  } else if (filters.weakSpotToggle === "without") {
+    weakSpotToggle = "without"
   }
 
-  // 2. KD range
-  if (filters.kdRange) {
-    result = filterByKD(result, filters.kdRange)
-  }
+  const useWeakSpot = weakSpotToggle !== "all"
 
-  // 3. CPC range
-  if (filters.cpcRange) {
-    result = filterByCPC(result, filters.cpcRange)
-  }
+  const trendDirection = filters.trendDirection ?? null
+  const minTrendGrowth = typeof filters.minTrendGrowth === "number" ? filters.minTrendGrowth : 0
+  const useTrend = trendDirection !== null
 
-  // 4. GEO Score range
-  if (filters.geoRange) {
-    result = filterByGeoScore(result, filters.geoRange)
-  }
+  const onlyAIO = Boolean(filters.onlyAIO)
 
-  // ────────────────────────────────────────
-  // PHASE 2: Categorical filters
-  // ────────────────────────────────────────
+  const searchTerm = normalize(filters.searchText ?? "")
+  const matchType = (filters.matchType ?? "broad") as MatchType
+  const useSearch = Boolean(searchTerm)
+  const QUESTION_WORDS = [
+    "how",
+    "what",
+    "why",
+    "when",
+    "where",
+    "which",
+    "who",
+    "can",
+    "does",
+    "is",
+    "are",
+    "will",
+    "should",
+  ]
 
-  // 5. Intent filter
-  if (filters.selectedIntents && filters.selectedIntents.length > 0) {
-    result = filterByIntent(result, filters.selectedIntents)
-  }
+  const needsKeywordText = useIncludeTerms || useExcludeTerms || useSearch
 
-  // 6. Weak Spot filter
-  if (filters.weakSpotToggle && filters.weakSpotToggle !== "all") {
-    result = filterByWeakSpot(result, filters.weakSpotToggle, filters.weakSpotTypes || [])
-  }
+  return keywords.filter((keyword) => {
+    if (useVolume && !isInRange(keyword.volume, volumeMin, volumeMax, 0)) return false
+    if (useKd && !isInRange(keyword.kd, kdMin, kdMax, 0)) return false
+    if (useCpc && !isInRange(keyword.cpc, cpcMin, cpcMax, 0)) return false
 
-  // 7. SERP Features filter
-  if (filters.selectedSerpFeatures && filters.selectedSerpFeatures.length > 0) {
-    result = filterBySerpFeatures(result, filters.selectedSerpFeatures)
-  }
+    if (useGeo) {
+      const score = safeNumber(keyword.geoScore, 50)
+      if (score < geoMin || score > geoMax) return false
+    }
 
-  // 8. Trend filter
-  if (filters.trendDirection !== undefined && filters.trendDirection !== null) {
-    result = filterByTrend(result, filters.trendDirection, filters.minTrendGrowth || null)
-  }
+    if (useIntent) {
+      if (!keyword.intent || keyword.intent.length === 0) return false
+      const hasIntent = keyword.intent.some((intent) => intentSet.has(normalize(intent)))
+      if (!hasIntent) return false
+    }
 
-  // 9. AIO filter
-  if (filters.onlyAIO) {
-    result = filterByAIO(result, filters.onlyAIO)
-  }
+    if (useWeakSpot) {
+      const ranked = keyword.weakSpots?.ranked ?? []
+      const hasAnyWeakSpot = ranked.length > 0
 
-  // ────────────────────────────────────────
-  // PHASE 3: Text-based filters (most expensive)
-  // ────────────────────────────────────────
+      if (weakSpotToggle === "without") {
+        if (hasAnyWeakSpot) return false
+      } else if (weakSpotToggle === "with") {
+        if (!hasAnyWeakSpot) return false
+        if (weakSpotTypeSet.size > 0) {
+          const matchesType = ranked.some((entry) =>
+            weakSpotTypeSet.has(normalize(String(entry.platform)))
+          )
+          if (!matchesType) return false
+        }
+      }
+    }
 
-  // 10. Include terms (AND logic)
-  if (filters.includeTerms && filters.includeTerms.length > 0) {
-    result = filterByIncludeTerms(result, filters.includeTerms)
-  }
+    if (useSerpFeatures) {
+      if (!keyword.serpFeatures || keyword.serpFeatures.length === 0) return false
+      const matchesFeature = keyword.serpFeatures.some((feature) =>
+        serpFeatureSet.has(normalizeSerpFeatureValue(String(feature)))
+      )
+      if (!matchesFeature) return false
+    }
 
-  // 11. Exclude terms (OR logic)
-  if (filters.excludeTerms && filters.excludeTerms.length > 0) {
-    result = filterByExcludeTerms(result, filters.excludeTerms)
-  }
+    if (useTrend) {
+      if (!keyword.trend || keyword.trend.length < 2) {
+        if (trendDirection !== "stable") return false
+      } else {
+        const first = safeNumber(keyword.trend[0], 0)
+        const last = safeNumber(keyword.trend[keyword.trend.length - 1], 0)
+        const growthRate = (last - first) / Math.max(1, first)
+        const growthPercent = growthRate * 100
 
-  // 12. Search text (match type based)
-  if (filters.searchText && filters.matchType) {
-    result = filterBySearchText(result, filters.searchText, filters.matchType)
-  }
+        if (trendDirection === "up") {
+          if (growthPercent <= 10) return false
+        if (minTrendGrowth > 0 && growthRate < minTrendGrowth) return false
+        } else if (trendDirection === "down") {
+          if (growthPercent >= -10) return false
+        } else if (trendDirection === "stable") {
+          if (growthPercent < -10 || growthPercent > 10) return false
+        }
+      }
+    }
 
-  return result
+    if (onlyAIO) {
+      const hasAIO =
+        (keyword as Keyword & { hasAio?: boolean }).hasAio ||
+        (keyword as Keyword & { has_aio?: boolean; hasAIO?: boolean }).has_aio ||
+        (keyword as Keyword & { hasAIO?: boolean }).hasAIO ||
+        keyword.serpFeatures?.includes("ai_overview" as SERPFeature)
+
+      if (!hasAIO) return false
+    }
+
+    const keywordText = needsKeywordText ? normalize(keyword.keyword) : ""
+
+    if (useIncludeTerms) {
+      const includesAll = normalizedIncludeTerms.every((term) => keywordText.includes(term))
+      if (!includesAll) return false
+    }
+
+    if (useExcludeTerms) {
+      const includesExcluded = normalizedExcludeTerms.some((term) => keywordText.includes(term))
+      if (includesExcluded) return false
+    }
+
+    if (useSearch) {
+      if (matchType === "exact") {
+        if (keywordText !== searchTerm) return false
+      } else if (matchType === "questions") {
+        const startsWithQuestion = QUESTION_WORDS.some((q) => keywordText.startsWith(q))
+        if (!startsWithQuestion || !keywordText.includes(searchTerm)) return false
+      } else {
+        if (!keywordText.includes(searchTerm)) return false
+      }
+    }
+
+    return true
+  })
 }
+
 
 /**
  * 🔄 Legacy compatibility wrapper

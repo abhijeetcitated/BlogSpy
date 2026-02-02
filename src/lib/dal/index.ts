@@ -27,7 +27,7 @@ export {
 
 /*
 // ✅ SAFE: Passing user to Client Component
-import { getCurrentUser } from "@/src/lib/dal"
+import { getCurrentUser } from "@/lib/dal"
 
 export default async function Page() {
   const user = await getCurrentUser()
@@ -35,7 +35,7 @@ export default async function Page() {
 }
 
 // ✅ Server-side data access with taint protection
-import { getUserById } from "@/src/lib/dal"
+import { getUserById } from "@/lib/dal"
 
 export default async function AdminPage() {
   const serverData = await getUserById(userId)  // Tainted internally
@@ -44,7 +44,7 @@ export default async function AdminPage() {
 }
 
 // ✅ CORRECT: Require authenticated user
-import { requireCurrentUser } from "@/src/lib/dal"
+import { requireCurrentUser } from "@/lib/dal"
 
 export default async function ProtectedPage() {
   const user = await requireCurrentUser()  // Throws if not authenticated

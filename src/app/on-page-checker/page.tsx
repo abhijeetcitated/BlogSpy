@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar, TopNav } from "@/components/layout"
-import { OnPageCheckerContent } from "@/components/features"
-import { DemoWrapper } from "@/components/common/demo-wrapper"
+import { AppSidebar, TopNav } from "@/components/shared/layout"
+import { OnPageCheckerContent } from "@features/on-page-checker"
+import { DemoWrapper } from "@/components/shared/common/demo-wrapper"
 
 export const metadata = {
   title: "On-Page Checker Demo - BlogSpy | Optimize Your Content",
@@ -25,3 +25,4 @@ export default function OnPageCheckerDemoPage() {
     </DemoWrapper>
   )
 }
+

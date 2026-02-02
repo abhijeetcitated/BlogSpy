@@ -16,15 +16,15 @@ import type {
   MenuPosition,
   CommandContext,
   CommandResult,
-} from '@/src/features/ai-writer/types/tools/slash-commands.types';
+} from '@/features/ai-writer/types/tools/slash-commands.types';
 
 import {
   DEFAULT_SLASH_COMMANDS,
-} from '@/src/features/ai-writer/types/tools/slash-commands.types';
+} from '@/features/ai-writer/types/tools/slash-commands.types';
 
 import {
   filterCommands,
-} from '@/src/features/ai-writer/utils/tools/slash-commands';
+} from '@/features/ai-writer/utils/tools/slash-commands';
 
 // -----------------------------------------------------------------------------
 // Types

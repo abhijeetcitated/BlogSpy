@@ -22,12 +22,12 @@ import {
   UseAIDetectorReturn,
   DEFAULT_AI_DETECTION_SETTINGS,
   DEFAULT_FILTER_STATE
-} from '@/src/features/ai-writer/types/tools/ai-detector.types';
+} from '@/features/ai-writer/types/tools/ai-detector.types';
 import {
   analyzeAIContent,
   exportAIDetectionReport,
   getHighlightedSections
-} from '@/src/features/ai-writer/utils/tools/ai-detector';
+} from '@/features/ai-writer/utils/tools/ai-detector';
 
 export function useAIDetector(
   options: UseAIDetectorOptions = {}

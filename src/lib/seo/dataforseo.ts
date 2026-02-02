@@ -34,7 +34,8 @@ interface DataForSEOCredentials {
  * In mock mode, we don't need real credentials.
  */
 function isMockMode(): boolean {
-  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
+  const hasCredentials = Boolean(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD)
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" && !hasCredentials
 }
 
 function getDataForSEOCredentials(): DataForSEOCredentials {
@@ -80,6 +81,14 @@ export const DATAFORSEO_ENDPOINTS = {
   SERP_LIVE: "/serp/google/organic/live/regular",
   SERP_TASK_POST: "/serp/google/organic/task_post",
   SERP_TASK_GET: "/serp/google/organic/task_get/regular",
+
+  // Social Intelligence (Business Data API)
+  YOUTUBE_ORGANIC: "/business_data/social_media/youtube/live",
+  REDDIT_LIVE: "/business_data/social_media/reddit/live",
+  PINTEREST_LIVE: "/business_data/social_media/pinterest/live",
+
+  // Quora Hack (Using Organic SERP with Site Filter)
+  QUORA_SNIFFER: "/serp/google/organic/live/advanced",
   
   // Backlinks
   BACKLINKS_SUMMARY: "/backlinks/summary/live",
@@ -270,6 +279,28 @@ export interface SerpResultItem {
   breadcrumb: string
 }
 
+export interface RedditResult {
+  subreddit?: string
+  title: string
+  upvotes?: number
+  comments?: number
+  date?: string
+  url: string
+}
+
+export interface PinterestResult {
+  url: string
+  pin_count: number
+}
+
+export interface QuoraResult {
+  thread_title: string
+  answers_count: number | null
+  link: string
+  snippet?: string
+  date?: string
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -321,4 +352,157 @@ export async function getSerpResults(
   )
 
   return response.data.tasks[0]?.result[0]?.items || []
+}
+
+function parseCount(value: string | number | undefined | null): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.round(value)
+  }
+  if (!value) return null
+  const cleaned = value.toString().replace(/,/g, "").trim()
+  const match = cleaned.match(/(\d+(?:\.\d+)?)([kKmM]?)/)
+  if (!match) return null
+  let num = Number.parseFloat(match[1])
+  const suffix = match[2]?.toLowerCase()
+  if (suffix === "k") num *= 1_000
+  if (suffix === "m") num *= 1_000_000
+  return Number.isFinite(num) ? Math.round(num) : null
+}
+
+function extractSnippetCount(label: "answers" | "upvotes", snippet?: string): number | null {
+  if (!snippet) return null
+  const regex = label === "answers"
+    ? /(\d+(?:\.\d+)?[kKmM]?)\s+answers?/i
+    : /(\d+(?:\.\d+)?[kKmM]?)\s+upvotes?/i
+  const match = snippet.match(regex)
+  return match ? parseCount(match[1]) : null
+}
+
+export async function getSocialIntelligence(
+  keyword: string,
+  urls: string[]
+): Promise<{ reddit: RedditResult[]; pinterest: PinterestResult[] }> {
+  if (isMockMode()) {
+    return { reddit: [], pinterest: [] }
+  }
+
+  const client = getDataForSEOClient()
+  const trimmedKeyword = keyword.trim()
+  if (!trimmedKeyword) {
+    return { reddit: [], pinterest: [] }
+  }
+
+  const topUrls = urls.filter(Boolean).slice(0, 10)
+  const redditPayload = [{ keyword: trimmedKeyword, depth: 20 }]
+  const pinterestPayload = topUrls.length > 0
+    ? [{ targets: topUrls }]
+    : [{ keyword: trimmedKeyword, depth: 10 }]
+
+  const [redditRes, pinterestRes] = await Promise.all([
+    client.post<DataForSEOResponse<{ items?: Array<Record<string, unknown>> }>>(
+      DATAFORSEO_ENDPOINTS.REDDIT_LIVE,
+      redditPayload
+    ),
+    client.post<DataForSEOResponse<Record<string, unknown>>>(
+      DATAFORSEO_ENDPOINTS.PINTEREST_LIVE,
+      pinterestPayload
+    ),
+  ])
+
+  const redditItems =
+    redditRes.data.tasks[0]?.result?.[0]?.items ?? []
+
+  const reddit: RedditResult[] = redditItems.flatMap((item) => {
+    const title = typeof item.title === "string" ? item.title.trim() : ""
+    const url = typeof item.url === "string" ? item.url.trim() : ""
+    if (!title || !url) return []
+    const upvotes = parseCount(item.score as number | string | undefined)
+    return [{
+      title,
+      url,
+      subreddit: typeof item.subreddit === "string" ? item.subreddit.trim() : undefined,
+      upvotes: typeof upvotes === "number" ? upvotes : undefined,
+      comments: parseCount(item.comments as number | string | undefined) ?? undefined,
+      date: typeof item.date === "string" ? item.date : undefined,
+    }]
+  })
+
+  const pinterestResult = pinterestRes.data.tasks[0]?.result ?? []
+  const firstPinterest = Array.isArray(pinterestResult) ? pinterestResult[0] : undefined
+  const pinterestItems = (firstPinterest as { items?: Array<Record<string, unknown>> } | undefined)?.items ?? []
+
+  let pinterest: PinterestResult[] = pinterestItems
+    .map((item) => {
+      const url = typeof item.url === "string" ? item.url.trim() : ""
+      if (!url) return null
+      const pinCount = parseCount(item.pins_count as number | string | undefined) ?? 0
+      return { url, pin_count: pinCount }
+    })
+    .filter((entry): entry is PinterestResult => entry !== null)
+
+  if (pinterest.length === 0 && Array.isArray(pinterestResult)) {
+    pinterest = pinterestResult
+      .map((item) => {
+        const url = typeof item.target === "string"
+          ? item.target.trim()
+          : typeof item.url === "string"
+            ? item.url.trim()
+            : ""
+        if (!url) return null
+        const pinCount =
+          parseCount(item.pins_count as number | string | undefined) ??
+          parseCount(item.pin_count as number | string | undefined) ??
+          0
+        return { url, pin_count: pinCount }
+      })
+      .filter((entry): entry is PinterestResult => entry !== null)
+  }
+
+  return { reddit, pinterest }
+}
+
+export async function getQuoraForensic(
+  keyword: string,
+  location: number = 2840
+): Promise<QuoraResult[]> {
+  if (isMockMode()) {
+    return []
+  }
+
+  const client = getDataForSEOClient()
+  const trimmedKeyword = keyword.trim()
+  if (!trimmedKeyword) return []
+
+  const query = `site:quora.com "${trimmedKeyword}"`
+  const response = await client.post<DataForSEOResponse<{ items: SerpResultItem[] }>>(
+    DATAFORSEO_ENDPOINTS.QUORA_SNIFFER,
+    [{
+      keyword: query,
+      location_code: location,
+      language_code: "en",
+      depth: 10,
+    }]
+  )
+
+  const items = response.data.tasks[0]?.result?.[0]?.items ?? []
+  const quoraResults = items
+    .filter((item) => typeof item.url === "string" && item.url.includes("quora.com"))
+    .slice(0, 5)
+    .map((item) => {
+      const snippet = typeof item.description === "string" ? item.description.trim() : undefined
+      const answersCount =
+        extractSnippetCount("answers", snippet) ??
+        extractSnippetCount("upvotes", snippet)
+
+      return {
+        thread_title: item.title?.trim() || "",
+        link: item.url,
+        snippet,
+        answers_count: answersCount,
+        date: undefined,
+      }
+    })
+    .filter((entry) => entry.thread_title.length > 0)
+
+  return quoraResults
 }

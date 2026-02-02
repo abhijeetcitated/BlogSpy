@@ -7,22 +7,23 @@
 // Connected to Zustand store (useKeywordStore)
 // ============================================
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { RotateCcw, Search, X } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { ChevronDown, RotateCcw, Search, X } from "lucide-react"
+import { useDebounce } from "@/hooks/use-debounce"
 
 import { useKeywordStore } from "../../store"
-import { VolumeFilter } from "./volume"
-import { KDFilter } from "./kd"
-import { IntentFilter } from "./intent"
-import { CPCFilter } from "./cpc"
-import { GeoFilter } from "./geo"
+import { KD_LEVELS } from "../../constants"
 import { WeakSpotFilter } from "./weak-spot"
-import { SerpFilter } from "./serp"
 import { TrendFilter } from "./trend"
-import { IncludeExcludeFilter } from "./include-exclude"
+import { IncludeExcludeFilter } from "./IncludeExcludeFilter"
+import { RangeFilter } from "./RangeFilter"
+import { IntentFilter } from "./IntentFilter"
+import { SerpFilter } from "./SerpFilter"
 
 // ============================================
 // FILTER BAR COMPONENT
@@ -33,7 +34,7 @@ export function FilterBar() {
   // ZUSTAND STORE CONNECTION
   // ─────────────────────────────────────────
   const filters = useKeywordStore((state) => state.filters)
-  const setFilter = useKeywordStore((state) => state.setFilter)
+  const setSearchText = useKeywordStore((state) => state.setSearchText)
   const resetFilters = useKeywordStore((state) => state.resetFilters)
 
   // ─────────────────────────────────────────
@@ -48,26 +49,27 @@ export function FilterBar() {
   const [trendOpen, setTrendOpen] = useState(false)
   const [weakSpotOpen, setWeakSpotOpen] = useState(false)
 
-  // Temp state for filters (before Apply)
-  const [tempVolumeRange, setTempVolumeRange] = useState(filters.volumeRange)
-  const [tempKdRange, setTempKdRange] = useState(filters.kdRange)
-  const [tempCpcRange, setTempCpcRange] = useState(filters.cpcRange)
-  const [tempGeoRange, setTempGeoRange] = useState(filters.geoRange)
-  const [tempIntents, setTempIntents] = useState(filters.selectedIntents)
-  const [tempSerpFeatures, setTempSerpFeatures] = useState(filters.selectedSerpFeatures)
-  const [tempTrendDirection, setTempTrendDirection] = useState(filters.trendDirection)
-  const [tempMinGrowth, setTempMinGrowth] = useState(filters.minTrendGrowth)
-  const [tempHasWeakSpot, setTempHasWeakSpot] = useState<boolean | null>(
-    filters.weakSpotToggle === "with" ? true : filters.weakSpotToggle === "without" ? false : null
+  // Debounced search input state
+  const [searchValue, setSearchValue] = useState(filters.searchText)
+  const debouncedSearchValue = useDebounce(searchValue, 300)
+
+  useEffect(() => {
+    setSearchText(debouncedSearchValue)
+  }, [debouncedSearchValue, setSearchText])
+
+  useEffect(() => {
+    setSearchValue(filters.searchText)
+  }, [filters.searchText])
+
+  const kdPresets = useMemo(
+    () =>
+      KD_LEVELS.map((level) => ({
+        label: level.label,
+        range: [level.min, level.max] as [number, number],
+        color: level.color,
+      })),
+    []
   )
-  const [tempWeakSpotTypes, setTempWeakSpotTypes] = useState(filters.weakSpotTypes)
-
-  // Preset states
-  const [volumePreset, setVolumePreset] = useState<string | null>(null)
-
-  // Include/Exclude input state
-  const [includeInput, setIncludeInput] = useState("")
-  const [excludeInput, setExcludeInput] = useState("")
 
   // ─────────────────────────────────────────
   // COUNT ACTIVE FILTERS
@@ -75,157 +77,43 @@ export function FilterBar() {
   const activeFilterCount = useMemo(() => {
     let count = 0
     if (filters.searchText) count++
-    if (filters.volumeRange[0] > 0 || filters.volumeRange[1] < 1000000) count++
+    if (filters.volumeRange[0] > 0 || filters.volumeRange[1] < 10000000) count++
     if (filters.kdRange[0] > 0 || filters.kdRange[1] < 100) count++
-    if (filters.cpcRange[0] > 0 || filters.cpcRange[1] < 100) count++
+    if (filters.cpcRange[0] > 0 || filters.cpcRange[1] < 1000) count++
     if (filters.geoRange[0] > 0 || filters.geoRange[1] < 100) count++
     if (filters.selectedIntents.length > 0) count++
     if (filters.selectedSerpFeatures.length > 0) count++
-    if (filters.includeTerms.length > 0) count++
-    if (filters.excludeTerms.length > 0) count++
-    if (filters.trendDirection !== null) count++
+    if (filters.includeKeywords.length > 0 || filters.includeTerms.length > 0) count++
+    if (filters.excludeKeywords.length > 0 || filters.excludeTerms.length > 0) count++
+    if (filters.selectedTrend.length > 0 || filters.minTrendGrowth > 0) count++
     if (filters.weakSpotToggle !== "all") count++
     return count
   }, [filters])
+
+  const volumeActive = filters.volumeRange[0] > 0 || filters.volumeRange[1] < 10000000
+  const kdActive = filters.kdRange[0] > 0 || filters.kdRange[1] < 100
+  const cpcActive = filters.cpcRange[0] > 0 || filters.cpcRange[1] < 1000
+  const geoActive = filters.geoRange[0] > 0 || filters.geoRange[1] < 100
 
   // ─────────────────────────────────────────
   // HANDLERS
   // ─────────────────────────────────────────
 
   // Search text
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setFilter("searchText", value)
-    },
-    [setFilter]
-  )
-
-  // Volume
-  const handleVolumeApply = useCallback(() => {
-    setFilter("volumeRange", tempVolumeRange)
-    setVolumeOpen(false)
-  }, [setFilter, tempVolumeRange])
-
-  // KD
-  const handleKdApply = useCallback(() => {
-    setFilter("kdRange", tempKdRange)
-    setKdOpen(false)
-  }, [setFilter, tempKdRange])
-
-  // CPC
-  const handleCpcApply = useCallback(() => {
-    setFilter("cpcRange", tempCpcRange)
-    setCpcOpen(false)
-  }, [setFilter, tempCpcRange])
-
-  // GEO
-  const handleGeoApply = useCallback(() => {
-    setFilter("geoRange", tempGeoRange)
-    setGeoOpen(false)
-  }, [setFilter, tempGeoRange])
-
-  // Intent
-  const handleToggleIntent = useCallback((value: string) => {
-    setTempIntents((prev) =>
-      prev.includes(value)
-        ? prev.filter((i) => i !== value)
-        : [...prev, value]
-    )
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value)
   }, [])
 
-  const handleIntentApply = useCallback(() => {
-    setFilter("selectedIntents", tempIntents)
-    setIntentOpen(false)
-  }, [setFilter, tempIntents])
+  const clearSearch = useCallback(() => {
+    setSearchValue("")
+    setSearchText("")
+  }, [setSearchText])
 
-  // SERP Features
-  const handleToggleSerpFeature = useCallback((feature: string) => {
-    setTempSerpFeatures((prev) =>
-      prev.includes(feature as never)
-        ? prev.filter((f) => f !== feature)
-        : [...prev, feature as never]
-    )
-  }, [])
-
-  const handleSerpApply = useCallback(() => {
-    setFilter("selectedSerpFeatures", tempSerpFeatures)
-    setSerpOpen(false)
-  }, [setFilter, tempSerpFeatures])
-
-  // Trend
-  const handleTrendApply = useCallback(() => {
-    setFilter("trendDirection", tempTrendDirection)
-    setFilter("minTrendGrowth", tempMinGrowth)
-    setTrendOpen(false)
-  }, [setFilter, tempTrendDirection, tempMinGrowth])
-
-  // Weak Spot
-  const handleWeakSpotApply = useCallback(() => {
-    const toggle = tempHasWeakSpot === true ? "with" : tempHasWeakSpot === false ? "without" : "all"
-    setFilter("weakSpotToggle", toggle)
-    setFilter("weakSpotTypes", tempWeakSpotTypes)
-    setWeakSpotOpen(false)
-  }, [setFilter, tempHasWeakSpot, tempWeakSpotTypes])
-
-  const handleToggleWeakSpotType = useCallback((type: string) => {
-    setTempWeakSpotTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    )
-  }, [])
-
-  // Include Terms
-  const handleAddIncludeTerm = useCallback(() => {
-    if (includeInput.trim()) {
-      setFilter("includeTerms", [...filters.includeTerms, includeInput.trim()])
-      setIncludeInput("")
-    }
-  }, [setFilter, filters.includeTerms, includeInput])
-
-  const handleRemoveIncludeTerm = useCallback(
-    (term: string) => {
-      setFilter(
-        "includeTerms",
-        filters.includeTerms.filter((t) => t !== term)
-      )
-    },
-    [setFilter, filters.includeTerms]
-  )
-
-  // Exclude Terms
-  const handleAddExcludeTerm = useCallback(() => {
-    if (excludeInput.trim()) {
-      setFilter("excludeTerms", [...filters.excludeTerms, excludeInput.trim()])
-      setExcludeInput("")
-    }
-  }, [setFilter, filters.excludeTerms, excludeInput])
-
-  const handleRemoveExcludeTerm = useCallback(
-    (term: string) => {
-      setFilter(
-        "excludeTerms",
-        filters.excludeTerms.filter((t) => t !== term)
-      )
-    },
-    [setFilter, filters.excludeTerms]
-  )
+  // Intent + SERP apply handled inside filters
 
   // Reset all
   const handleResetFilters = useCallback(() => {
     resetFilters()
-    // Reset local temp states
-    setTempVolumeRange([0, 1000000])
-    setTempKdRange([0, 100])
-    setTempCpcRange([0, 100])
-    setTempGeoRange([0, 100])
-    setTempIntents([])
-    setTempSerpFeatures([])
-    setTempTrendDirection(null)
-    setTempMinGrowth(null)
-    setTempHasWeakSpot(null)
-    setTempWeakSpotTypes([])
-    setVolumePreset(null)
-    setIncludeInput("")
-    setExcludeInput("")
   }, [resetFilters])
 
   // ─────────────────────────────────────────
@@ -239,16 +127,23 @@ export function FilterBar() {
         <Input
           type="text"
           placeholder="Filter keywords..."
-          value={filters.searchText}
+          value={searchValue}
           onChange={(e) => handleSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.preventDefault()
+              clearSearch()
+            }
+          }}
           className="pl-8 pr-7 h-8 text-sm bg-muted/30 border-border/50"
         />
-        {filters.searchText && (
+        {searchValue && (
           <Button
             variant="ghost"
             size="icon"
             className="absolute right-0.5 top-1/2 -translate-y-1/2 h-6 w-6"
-            onClick={() => handleSearchChange("")}
+            onClick={clearSearch}
+            aria-label="Clear search"
           >
             <X className="h-3.5 w-3.5" />
           </Button>
@@ -259,62 +154,126 @@ export function FilterBar() {
       <div className="h-5 w-px bg-border/50 shrink-0" />
 
       {/* Volume Filter */}
-      <VolumeFilter
-        open={volumeOpen}
-        onOpenChange={setVolumeOpen}
-        tempRange={tempVolumeRange}
-        onTempRangeChange={setTempVolumeRange}
-        volumePreset={volumePreset}
-        onPresetChange={setVolumePreset}
-        onApply={handleVolumeApply}
-      />
+      <Popover open={volumeOpen} onOpenChange={setVolumeOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-7 sm:h-9 gap-0.5 sm:gap-1.5 bg-secondary/50 border-border text-foreground text-[11px] sm:text-sm px-1.5 sm:px-3 shrink-0 min-w-0",
+              volumeActive && "border-[#FFD700]/70"
+            )}
+          >
+            Vol
+            <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-3" align="start">
+          <RangeFilter
+            label="Volume"
+            min={0}
+            max={10000000}
+            step={100}
+            unit="Vol"
+            storeKey="volumeRange"
+          />
+        </PopoverContent>
+      </Popover>
 
       {/* KD Filter */}
-      <KDFilter
-        open={kdOpen}
-        onOpenChange={setKdOpen}
-        tempRange={tempKdRange}
-        onTempRangeChange={setTempKdRange}
-        onApply={handleKdApply}
-      />
+      <Popover open={kdOpen} onOpenChange={setKdOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-7 sm:h-9 gap-0.5 sm:gap-1.5 bg-secondary/50 border-border text-foreground text-[11px] sm:text-sm px-1.5 sm:px-3 shrink-0 min-w-0",
+              kdActive && "border-[#FFD700]/70"
+            )}
+          >
+            KD
+            <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-3" align="start">
+          <RangeFilter
+            label="KD"
+            min={0}
+            max={100}
+            step={1}
+            unit="%"
+            presets={kdPresets}
+            storeKey="kdRange"
+          />
+        </PopoverContent>
+      </Popover>
 
       {/* CPC Filter */}
-      <CPCFilter
-        open={cpcOpen}
-        onOpenChange={setCpcOpen}
-        tempRange={tempCpcRange}
-        onTempRangeChange={setTempCpcRange}
-        onApply={handleCpcApply}
-      />
+      <Popover open={cpcOpen} onOpenChange={setCpcOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-7 sm:h-9 gap-0.5 sm:gap-1.5 bg-secondary/50 border-border text-foreground text-[11px] sm:text-sm px-1.5 sm:px-3 shrink-0 min-w-0",
+              cpcActive && "border-[#FFD700]/70"
+            )}
+          >
+            CPC
+            <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-3" align="start">
+          <RangeFilter
+            label="CPC"
+            min={0}
+            max={1000}
+            step={0.1}
+            unit="$"
+            storeKey="cpcRange"
+          />
+        </PopoverContent>
+      </Popover>
 
       {/* Intent Filter */}
       <IntentFilter
         open={intentOpen}
         onOpenChange={setIntentOpen}
         selectedIntents={filters.selectedIntents}
-        tempSelectedIntents={tempIntents}
-        onToggleIntent={handleToggleIntent}
-        onApply={handleIntentApply}
       />
 
       {/* GEO Filter */}
-      <GeoFilter
-        open={geoOpen}
-        onOpenChange={setGeoOpen}
-        tempRange={tempGeoRange}
-        onTempRangeChange={setTempGeoRange}
-        onApply={handleGeoApply}
-      />
+      <Popover open={geoOpen} onOpenChange={setGeoOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "h-7 sm:h-9 gap-0.5 sm:gap-1.5 bg-secondary/50 border-border text-foreground text-[11px] sm:text-sm px-1.5 sm:px-3 shrink-0 min-w-0",
+              geoActive && "border-[#FFD700]/70"
+            )}
+          >
+            GEO
+            <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-3" align="start">
+          <RangeFilter
+            label="GEO"
+            min={0}
+            max={100}
+            step={1}
+            storeKey="geoRange"
+          />
+        </PopoverContent>
+      </Popover>
 
       {/* Weak Spot Filter */}
       <WeakSpotFilter
         open={weakSpotOpen}
         onOpenChange={setWeakSpotOpen}
-        tempHasWeakSpot={tempHasWeakSpot}
-        tempWeakSpotTypes={tempWeakSpotTypes}
-        onTempHasWeakSpotChange={setTempHasWeakSpot}
-        onToggleWeakSpotType={handleToggleWeakSpotType}
-        onApply={handleWeakSpotApply}
+        selectedTypes={filters.weakSpotTypes}
+        weakSpotToggle={filters.weakSpotToggle}
       />
 
       {/* SERP Features Filter */}
@@ -322,35 +281,16 @@ export function FilterBar() {
         open={serpOpen}
         onOpenChange={setSerpOpen}
         selectedFeatures={filters.selectedSerpFeatures}
-        tempSelectedFeatures={tempSerpFeatures}
-        onToggleFeature={handleToggleSerpFeature}
-        onApply={handleSerpApply}
       />
 
       {/* Trend Filter */}
       <TrendFilter
         open={trendOpen}
         onOpenChange={setTrendOpen}
-        tempTrendDirection={tempTrendDirection}
-        tempMinGrowth={tempMinGrowth}
-        onTempTrendDirectionChange={setTempTrendDirection}
-        onTempMinGrowthChange={setTempMinGrowth}
-        onApply={handleTrendApply}
       />
 
       {/* Include/Exclude Filter */}
-      <IncludeExcludeFilter
-        includeTerms={filters.includeTerms}
-        excludeTerms={filters.excludeTerms}
-        includeInput={includeInput}
-        excludeInput={excludeInput}
-        onIncludeInputChange={setIncludeInput}
-        onExcludeInputChange={setExcludeInput}
-        onAddIncludeTerm={handleAddIncludeTerm}
-        onAddExcludeTerm={handleAddExcludeTerm}
-        onRemoveIncludeTerm={handleRemoveIncludeTerm}
-        onRemoveExcludeTerm={handleRemoveExcludeTerm}
-      />
+      <IncludeExcludeFilter />
 
       {/* Reset Button */}
       {activeFilterCount > 0 && (

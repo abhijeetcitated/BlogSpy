@@ -75,7 +75,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
-import { useAutoOptimize } from '@/src/features/ai-writer/hooks/tools/use-auto-optimize';
+import { useAutoOptimize } from '@/features/ai-writer/hooks/tools/use-auto-optimize';
 import {
   OptimizationAction,
   OptimizationCategory,
@@ -86,7 +86,7 @@ import {
   OPTIMIZATION_TABS,
   OPTIMIZATION_LEVELS,
   OptimizationLevel
-} from '@/src/features/ai-writer/types/tools/auto-optimize.types';
+} from '@/features/ai-writer/types/tools/auto-optimize.types';
 
 // =============================================================================
 // COMPONENT PROPS

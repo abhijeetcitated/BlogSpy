@@ -20,8 +20,8 @@
  * @see _INTEGRATION_GUIDE.ts for full architecture
  */
 
-import { getOpenRouter, MODELS } from "@/src/lib/ai/openrouter"
-import { getDataForSEOClient } from "@/src/lib/seo/dataforseo"
+import { getOpenRouter, MODELS } from "@/lib/ai/openrouter"
+import { getDataForSEOClient } from "@/lib/seo/dataforseo"
 import { env } from "@/config/env"
 import type { AIPlatform } from "../types"
 import { 

@@ -26,7 +26,7 @@ import {
   SNIPPET_TEMPLATES,
   QUALITY_THRESHOLDS,
   OPTIMAL_WORD_COUNTS
-} from '@/src/features/ai-writer/types/tools/snippet-optimizer.types';
+} from '@/features/ai-writer/types/tools/snippet-optimizer.types';
 
 // =============================================================================
 // TEXT UTILITIES

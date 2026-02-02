@@ -2,7 +2,7 @@
 // KEYWORD RESEARCH - Type Definitions
 // ============================================
 
-import type { CTRStealingFeature } from "@/types/rtv.types"
+import type { CTRStealingFeature } from "@features/rtv/types/rtv.types"
 import type { 
   SortDirection, 
   Country as SharedCountry,
@@ -43,14 +43,25 @@ export type SerpFeatureType =
  */
 export type SERPFeature = SerpFeatureType
 
+export type WeakSpotPlatform = "reddit" | "quora" | "pinterest" | "medium" | "forums"
+
+export interface WeakSpotEntry {
+  platform: WeakSpotPlatform
+  rank: number
+  icon?: WeakSpotPlatform
+  url?: string
+}
+
 /**
  * WeakSpots - Ranks for Reddit, Quora, Pinterest in top 10 SERP
  * null = platform not in top 10
+ * ranked = optional expanded list for additional weak domains
  */
 export interface WeakSpots {
   reddit: number | null
   quora: number | null
   pinterest: number | null
+  ranked?: WeakSpotEntry[]
 }
 
 export interface Keyword {
@@ -61,6 +72,9 @@ export interface Keyword {
   intent: ("I" | "C" | "T" | "N")[]
   volume: number
   trend: number[]
+  /** Raw monthly trend values (oldest -> newest) */
+  trendRaw?: number[]
+  trendStatus?: "rising" | "falling" | "stable"
   /** @deprecated Use weakSpots instead */
   weakSpot?: { type: "reddit" | "quora" | "pinterest" | null; rank?: number }
   /** Platform ranks in top 10 SERP - null means not present */
@@ -77,11 +91,16 @@ export interface Keyword {
     icon?: "bot" | "map" | "snippet" | "ad" | "video"
     color?: string
   }>
-  geoScore?: number
+  geoScore?: number | null
   hasAio?: boolean
   // Refresh tracking
   lastUpdated?: Date
+  lastRefreshedAt?: Date | string | null
+  lastLabsUpdate?: Date | string | null
+  lastSerpUpdate?: Date | string | null
   isRefreshing?: boolean
+  serpStatus?: "pending" | "completed" | "failed"
+  fromCache?: boolean
   // Future API integration fields
   updatedAt?: string
   dataSource?: "dataforseo" | "semrush" | "mock"
@@ -123,6 +142,7 @@ export type KeywordResearchSortField =
   | "cpc" 
   | "trend" 
   | "intent"
+  | "geo"
   | "geoScore" 
   | "aioScore"
   | "decayScore"
@@ -133,6 +153,11 @@ export type KeywordResearchSortField =
 
 // Legacy alias for backward compatibility
 export type SortField = KeywordResearchSortField
+
+export interface KeywordSortOptions {
+  field: SortField
+  direction: SortDirection
+}
 
 // Range types
 export type VolumeRange = [number, number]

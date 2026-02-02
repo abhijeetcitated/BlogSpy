@@ -27,7 +27,7 @@ import {
   DEFAULT_PAA_FILTERS,
   QUESTION_TYPE_LABELS,
   QUESTION_CATEGORY_LABELS
-} from '@/src/features/ai-writer/types/tools/paa.types';
+} from '@/features/ai-writer/types/tools/paa.types';
 
 // =============================================================================
 // QUESTION EXTRACTION & PARSING

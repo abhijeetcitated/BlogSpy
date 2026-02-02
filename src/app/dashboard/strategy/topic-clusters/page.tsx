@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { TopicClusterContent } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { TopicClusterContent } from "@features/topic-clusters"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -565,6 +565,7 @@ export default function TopicClustersPage() {
     </ErrorBoundary>
   )
 }
+
 
 
 

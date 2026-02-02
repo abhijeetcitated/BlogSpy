@@ -3,7 +3,7 @@
 import React from "react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import type { WeakSpots } from "../../../../types"
+import type { WeakSpots, WeakSpotEntry, WeakSpotPlatform } from "../../../../types"
 
 // ============================================
 // OFFICIAL BRAND SVG ICONS
@@ -74,6 +74,49 @@ const PinterestSVG = React.memo(function PinterestSVG({
     fill="#E60023"
   >
     <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345c-.091.378-.293 1.194-.332 1.361-.053.218-.173.265-.4.16-1.492-.695-2.424-2.879-2.424-4.635 0-3.77 2.739-7.227 7.9-7.227 4.147 0 7.37 2.955 7.37 6.899 0 4.117-2.596 7.431-6.199 7.431-1.211 0-2.348-.629-2.738-1.373 0 0-.599 2.282-.745 2.838-.269 1.039-1.001 2.34-1.491 3.134C9.571 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z" />
+  </svg>
+  )
+})
+
+/**
+ * Medium Official Icon (M blocks)
+ * Brand Color: #00AB6C (Medium Green)
+ * Source: https://simpleicons.org/?q=medium
+ */
+const MediumSVG = React.memo(function MediumSVG({
+  className,
+  ...props
+}: React.SVGProps<SVGSVGElement>) {
+  return (
+  <svg
+    viewBox="0 0 24 24"
+    className={cn("w-5 h-5 min-w-5", className)}
+    aria-label="Medium"
+    {...props}
+    fill="#00AB6C"
+  >
+    <path d="M2 4.5v15l6-3v-9l-6-3zm7 3v9l6 3v-15l-6 3zm7-3v15l6-3v-9l-6-3z" />
+  </svg>
+  )
+})
+
+/**
+ * Forums Icon (Generic Community)
+ * Brand Color: #64748B (Slate)
+ */
+const ForumsSVG = React.memo(function ForumsSVG({
+  className,
+  ...props
+}: React.SVGProps<SVGSVGElement>) {
+  return (
+  <svg
+    viewBox="0 0 24 24"
+    className={cn("w-5 h-5 min-w-5", className)}
+    aria-label="Forums"
+    {...props}
+    fill="#64748B"
+  >
+    <path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4V6a2 2 0 0 1 2-2z" />
   </svg>
   )
 })
@@ -185,6 +228,23 @@ const getStrategy = (platform: string, rank: number): Strategy => {
   }
 }
 
+type PlatformConfig = {
+  label: string
+  Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+}
+
+const PLATFORM_CONFIG: Record<WeakSpotPlatform, PlatformConfig> = {
+  reddit: { label: "Reddit", Icon: RedditSVG },
+  quora: { label: "Quora", Icon: QuoraSVG },
+  pinterest: { label: "Pinterest", Icon: PinterestSVG },
+  medium: { label: "Medium", Icon: MediumSVG },
+  forums: { label: "Forums", Icon: ForumsSVG },
+}
+
+function getPlatformConfig(platform: WeakSpotPlatform): PlatformConfig {
+  return PLATFORM_CONFIG[platform]
+}
+
 // ============================================
 // TYPES
 // ============================================
@@ -199,26 +259,35 @@ interface WeakSpotColumnProps {
 // ============================================
 
 export function WeakSpotColumn({ weakSpots, className }: WeakSpotColumnProps) {
-  // Check if any weak spots exist
-  const hasReddit = weakSpots.reddit !== null && weakSpots.reddit <= 10
-  const hasQuora = weakSpots.quora !== null && weakSpots.quora <= 10
-  const hasPinterest = weakSpots.pinterest !== null && weakSpots.pinterest <= 10
+  const rankedEntries = Array.isArray(weakSpots?.ranked) ? [...weakSpots.ranked] : []
+  const legacyEntries: WeakSpotEntry[] = []
 
-  const redditRank = hasReddit ? weakSpots.reddit : null
-  const quoraRank = hasQuora ? weakSpots.quora : null
-  const pinterestRank = hasPinterest ? weakSpots.pinterest : null
-
-  // No weak spots - return dash
-  if (redditRank === null && quoraRank === null && pinterestRank === null) {
-    return <span className={cn("text-muted-foreground text-xs", className)}>—</span>
+  if (rankedEntries.length === 0) {
+    if (typeof weakSpots.reddit === "number") {
+      legacyEntries.push({ platform: "reddit", rank: weakSpots.reddit })
+    }
+    if (typeof weakSpots.quora === "number") {
+      legacyEntries.push({ platform: "quora", rank: weakSpots.quora })
+    }
+    if (typeof weakSpots.pinterest === "number") {
+      legacyEntries.push({ platform: "pinterest", rank: weakSpots.pinterest })
+    }
   }
 
-  const platformItems: Array<{ platform: "Reddit" | "Quora" | "Pinterest"; rank: number }> = []
-  if (typeof redditRank === "number") platformItems.push({ platform: "Reddit", rank: redditRank })
-  if (typeof quoraRank === "number") platformItems.push({ platform: "Quora", rank: quoraRank })
-  if (typeof pinterestRank === "number") platformItems.push({ platform: "Pinterest", rank: pinterestRank })
+  const entries = (rankedEntries.length > 0 ? rankedEntries : legacyEntries)
+    .filter((entry) => typeof entry.rank === "number" && entry.rank > 0)
+    .sort((a, b) => a.rank - b.rank)
 
-  const tooltipLabel = `Strategic Analysis: ${platformItems.map((p) => p.platform).join(", ")}`
+  if (entries.length === 0) {
+    return <span className={cn("text-muted-foreground text-xs", className)}>-</span>
+  }
+
+  const platformItems = entries.map((entry) => {
+    const config = getPlatformConfig(entry.platform)
+    return { ...entry, label: config.label, Icon: config.Icon }
+  })
+
+  const tooltipLabel = `Strategic Analysis: ${platformItems.map((p) => p.label).join(", ")}`
 
   return (
     <Tooltip>
@@ -233,29 +302,16 @@ export function WeakSpotColumn({ weakSpots, className }: WeakSpotColumnProps) {
           )}
           aria-label={tooltipLabel}
         >
-          {/* Reddit */}
-          {hasReddit && (
-            <div className="flex items-center gap-1.5" title={`Reddit Rank #${weakSpots.reddit}`}>
-              <RedditSVG />
-              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">#{weakSpots.reddit}</span>
+          {platformItems.map(({ platform, label, rank, Icon }) => (
+            <div
+              key={`${platform}-${rank}`}
+              className="flex items-center gap-1.5"
+              title={`${label} Rank: #${rank}`}
+            >
+              <Icon />
+              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">#{rank}</span>
             </div>
-          )}
-
-          {/* Quora */}
-          {hasQuora && (
-            <div className="flex items-center gap-1.5" title={`Quora Rank #${weakSpots.quora}`}>
-              <QuoraSVG />
-              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">#{weakSpots.quora}</span>
-            </div>
-          )}
-
-          {/* Pinterest */}
-          {hasPinterest && (
-            <div className="flex items-center gap-1.5" title={`Pinterest Rank #${weakSpots.pinterest}`}>
-              <PinterestSVG />
-              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">#{weakSpots.pinterest}</span>
-            </div>
-          )}
+          ))}
         </div>
       </TooltipTrigger>
 
@@ -266,12 +322,8 @@ export function WeakSpotColumn({ weakSpots, className }: WeakSpotColumnProps) {
           </p>
 
           <div className="flex flex-col gap-3">
-            {platformItems.map(({ platform, rank }) => {
+            {platformItems.map(({ platform, label, rank, Icon }) => {
               const strategy = getStrategy(platform, rank)
-              const platformLabel = platform === "Pinterest" ? "Pinterest" : platform
-
-              const PlatformBrandIcon =
-                platform === "Reddit" ? RedditSVG : platform === "Quora" ? QuoraSVG : PinterestSVG
 
               return (
                 <div
@@ -287,9 +339,9 @@ export function WeakSpotColumn({ weakSpots, className }: WeakSpotColumnProps) {
                           {strategy.title}
                         </p>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <PlatformBrandIcon className="w-3.5 h-3.5 min-w-3.5" />
+                          <Icon className="w-3.5 h-3.5 min-w-3.5" />
                           <span className="text-[11px] text-gray-600 dark:text-gray-300">
-                            {platformLabel} #{rank}
+                            {label} #{rank}
                           </span>
                         </div>
                       </div>
@@ -308,5 +360,6 @@ export function WeakSpotColumn({ weakSpots, className }: WeakSpotColumnProps) {
     </Tooltip>
   )
 }
+
 
 export default WeakSpotColumn

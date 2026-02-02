@@ -32,7 +32,7 @@ import type {
   FeatureFrequency,
   CompetitorSearchIntent,
   AnalysisSettings
-} from '@/src/features/ai-writer/types/tools/competitor-analysis.types';
+} from '@/features/ai-writer/types/tools/competitor-analysis.types';
 
 // -----------------------------------------------------------------------------
 // ID Generation Utility
@@ -1350,5 +1350,5 @@ export function calculateFeatureFrequency(competitors: SERPCompetitor[]): Featur
 
 export {
   DEFAULT_ANALYSIS_SETTINGS
-} from '@/src/features/ai-writer/types/tools/competitor-analysis.types';
+} from '@/features/ai-writer/types/tools/competitor-analysis.types';
 

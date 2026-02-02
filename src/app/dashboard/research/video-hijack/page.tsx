@@ -1,5 +1,5 @@
-import { VideoHijackContent } from "@/components/features/video-hijack"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { VideoHijackContent } from "@features/video-hijack"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function VideoHijackPage() {
   return (
@@ -8,3 +8,4 @@ export default function VideoHijackPage() {
     </ErrorBoundary>
   )
 }
+

@@ -10,6 +10,8 @@ import { useState, useEffect } from "react"
 import { Zap, Loader2, Plus, CreditCard, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useAction } from "next-safe-action/hooks"
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client"
 
 import {
   Dialog,
@@ -22,6 +24,7 @@ import {
 
 import { getUserCreditsAction } from "../../actions/refresh-keyword"
 import { useKeywordStore } from "../../store"
+import { createCheckoutSession } from "@/features/billing/actions/create-checkout"
 
 // ============================================
 // PRICING PLANS
@@ -72,6 +75,7 @@ export function CreditBalance() {
   const [isLoading, setIsLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null)
+  const { executeAsync, status } = useAction(createCheckoutSession)
 
   // Fetch credits on mount
   useEffect(() => {
@@ -99,19 +103,106 @@ export function CreditBalance() {
     fetchCredits()
   }, [credits, setCredits])
 
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return
+
+    const supabase = getSupabaseBrowserClient()
+    let isActive = true
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const subscribe = async () => {
+      try {
+        const { data } = await supabase.auth.getUser()
+        const user = data?.user
+        if (!user || !isActive) return
+
+        channel = supabase
+          .channel("public:bill_credits")
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "bill_credits",
+              filter: `user_id=eq.${user.id}`,
+            },
+            (payload) => {
+              const updated = payload.new as { credits_total?: number; credits_used?: number }
+              if (
+                typeof updated.credits_total === "number" &&
+                typeof updated.credits_used === "number"
+              ) {
+                setCredits(updated.credits_total - updated.credits_used)
+              }
+            }
+          )
+          .subscribe()
+      } catch (error) {
+        console.warn("[CreditBalance] Realtime subscription failed", error)
+      }
+    }
+
+    subscribe()
+
+    return () => {
+      isActive = false
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [setCredits])
+
   // Handle purchase
+  const getTopUpVariantId = (creditsCount: number) => {
+    if (creditsCount === 100) return process.env.NEXT_PUBLIC_LS_TOPUP_100_ID
+    if (creditsCount === 500) return process.env.NEXT_PUBLIC_LS_TOPUP_500_ID
+    if (creditsCount === 1500) return process.env.NEXT_PUBLIC_LS_TOPUP_1500_ID
+    if (creditsCount === 5000) return process.env.NEXT_PUBLIC_LS_TOPUP_5000_ID
+    return undefined
+  }
+
   const handlePurchase = async (planId: string) => {
+    const plan = CREDIT_PLANS.find((entry) => entry.id === planId)
+    if (!plan) {
+      toast.error("Invalid credit package selected.")
+      return
+    }
+
+    const variantId = getTopUpVariantId(plan.credits)
+    if (!variantId) {
+      toast.error("Payment setup missing for this package.")
+      return
+    }
+
     setPurchaseLoading(planId)
-    
-    // TODO: Integrate with Stripe
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    
-    toast.info("Stripe integration coming soon!", {
-      description: "Credit purchase will be available in the next update.",
-    })
-    
-    setPurchaseLoading(null)
-    setDialogOpen(false)
+
+    try {
+      const result = await executeAsync({
+        variantId,
+        credits: plan.credits,
+        purchaseType: "topup",
+        redirectUrl: window.location.href,
+      })
+
+      const serverError =
+        typeof result?.serverError === "string" ? result.serverError : undefined
+      if (serverError) {
+        toast.error(serverError)
+        return
+      }
+
+      const url = result?.data?.url
+      if (!url) {
+        toast.error("Failed to start checkout.")
+        return
+      }
+      window.location.href = url
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to start checkout.")
+    } finally {
+      setPurchaseLoading(null)
+      setDialogOpen(false)
+    }
   }
 
   // Get color based on credit level
@@ -225,7 +316,7 @@ export function CreditBalance() {
         {/* Footer */}
         <div className="flex items-center justify-center gap-2 pt-2 text-xs text-muted-foreground">
           <CreditCard className="h-3.5 w-3.5" />
-          Secure payment via Stripe
+          Secure billing portal
         </div>
       </DialogContent>
     </Dialog>

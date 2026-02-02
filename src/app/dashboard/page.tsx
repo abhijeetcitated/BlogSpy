@@ -1,5 +1,5 @@
-import { CommandCenter } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { CommandCenter } from "@features/dashboard"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function DashboardPage() {
   return (
@@ -8,6 +8,7 @@ export default function DashboardPage() {
     </ErrorBoundary>
   )
 }
+
 
 
 

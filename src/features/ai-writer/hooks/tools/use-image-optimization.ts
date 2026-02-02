@@ -22,12 +22,12 @@ import {
   OptimizationAction,
   ImageStatus,
   DEFAULT_IMAGE_OPTIMIZATION_SETTINGS
-} from '@/src/features/ai-writer/types/tools/image-optimization.types';
+} from '@/features/ai-writer/types/tools/image-optimization.types';
 import {
   analyzeImageOptimization,
   exportImageReport,
   generateAltTextSuggestion
-} from '@/src/features/ai-writer/utils/tools/image-optimization';
+} from '@/features/ai-writer/utils/tools/image-optimization';
 
 interface UseImageOptimizationOptions {
   initialSettings?: Partial<ImageOptimizationSettings>;

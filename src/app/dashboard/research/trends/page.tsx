@@ -1,5 +1,5 @@
-import { TrendSpotter } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { TrendSpotter } from "@features/trend-spotter"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function TrendsPage() {
   return (
@@ -8,5 +8,6 @@ export default function TrendsPage() {
     </ErrorBoundary>
   )
 }
+
 
 

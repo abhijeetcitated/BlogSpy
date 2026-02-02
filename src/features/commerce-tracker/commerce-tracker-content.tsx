@@ -18,7 +18,7 @@ import { CommerceSummaryCards, CommerceKeywordCard, CommerceFilterBar, CommerceS
 import { AddKeywordDialog } from "./components/AddKeywordDialog"
 import { useCommerceTracker } from "./hooks"
 import { COMMERCE_PLATFORM_CONFIG } from "./constants"
-import { STACK_SPACING } from "@/src/styles"
+import { STACK_SPACING } from "@/styles"
 
 export function CommerceTrackerContent() {
   const {

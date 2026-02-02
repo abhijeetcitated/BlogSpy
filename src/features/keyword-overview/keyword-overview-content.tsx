@@ -19,20 +19,20 @@ import {
   KeywordOverviewSkeleton,
   KeywordOverviewError
 } from "./components"
-import { CommunityDecayCard } from "@/components/ui/community-decay-badge"
-import { generateMockPixelRank } from "@/lib/pixel-calculator"
-import { calculateRTV } from "@/lib/rtv-calculator"
-import { generateMockAIOverviewAnalysis } from "@/lib/ai-overview-analyzer"
-import { generateMockCommunityDecay } from "@/lib/community-decay-calculator"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { CommunityDecayCard } from "@features/community-decay"
+import { generateMockPixelRank } from "@features/pixel-rank/utils/pixel-calculator"
+import { calculateRTV } from "@features/rtv/utils/rtv-calculator"
+import { generateMockAIOverviewAnalysis } from "@features/ai-overview/utils/ai-overview-analyzer"
+import { generateMockCommunityDecay } from "@features/community-decay/utils/community-decay-calculator"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { 
   generateMockDataForKeyword
 } from "./__mocks__/keyword-data"
 import type { DeviceView, KeywordMetrics } from "./types"
-import type { CTRStealingFeature } from "@/types/rtv.types"
-import type { GEOScoreComponents } from "@/types/geo.types"
+import type { CTRStealingFeature } from "@features/rtv/types/rtv.types"
+import type { GEOScoreComponents } from "@features/geo-score/types/geo.types"
 import type { SERPResult } from "./types"
-import { PAGE_PADDING, STACK_SPACING } from "@/src/styles"
+import { PAGE_PADDING, STACK_SPACING } from "@/styles"
 
 // ============================================
 // TYPES

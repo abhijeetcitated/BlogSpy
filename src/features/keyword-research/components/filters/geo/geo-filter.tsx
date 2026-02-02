@@ -34,6 +34,7 @@ export function GeoFilter({
   onApply,
 }: GeoFilterProps) {
   const hasFilter = tempRange[0] > 0 || tempRange[1] < 100
+  const isDirty = hasFilter
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -112,7 +113,13 @@ export function GeoFilter({
             >
               Reset
             </Button>
-            <Button onClick={onApply} className="flex-1 bg-primary hover:bg-primary/90">
+            <Button
+              onClick={onApply}
+              className={cn(
+                "flex-1 bg-primary hover:bg-primary/90",
+                isDirty && "shadow-[0_0_12px_rgba(59,130,246,0.45)]"
+              )}
+            >
               Apply
             </Button>
           </div>

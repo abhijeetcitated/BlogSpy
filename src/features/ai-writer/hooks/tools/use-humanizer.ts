@@ -23,8 +23,8 @@ import {
   UseHumanizerOptions,
   UseHumanizerReturn,
   HumanizationExportOptions
-} from '@/src/features/ai-writer/types/tools/humanizer.types';
-import { humanizeContent, generateDiff, exportHumanizationReport } from '@/src/features/ai-writer/utils/tools/humanizer';
+} from '@/features/ai-writer/types/tools/humanizer.types';
+import { humanizeContent, generateDiff, exportHumanizationReport } from '@/features/ai-writer/utils/tools/humanizer';
 
 export function useHumanizer(
   content: string,

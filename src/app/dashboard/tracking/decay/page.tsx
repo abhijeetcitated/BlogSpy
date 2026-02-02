@@ -1,5 +1,5 @@
-import { ContentDecayContent } from "@/components/features"
-import { ErrorBoundary } from "@/components/common/error-boundary"
+import { ContentDecayContent } from "@features/content-decay"
+import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 
 export default function ContentDecayPage() {
   return (
@@ -8,6 +8,7 @@ export default function ContentDecayPage() {
     </ErrorBoundary>
   )
 }
+
 
 
 

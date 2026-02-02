@@ -6,8 +6,8 @@ import {
   AIOverviewStatusBadge, 
   CitationList, 
   RecommendationsList 
-} from "@/components/ui/ai-overview-card"
-import type { AIOverviewAnalysis } from "@/types/ai-overview.types"
+} from "@features/ai-overview"
+import type { AIOverviewAnalysis } from "@features/ai-overview/types/ai-overview.types"
 
 interface AIOverviewSectionProps {
   analysis: AIOverviewAnalysis

@@ -26,7 +26,7 @@ import {
   CLAIM_TYPE_INFO,
   SOURCE_TYPE_INFO,
   AUTHORITY_INFO
-} from '@/src/features/ai-writer/types/tools/citation.types';
+} from '@/features/ai-writer/types/tools/citation.types';
 
 // =============================================================================
 // TEXT ANALYSIS UTILITIES

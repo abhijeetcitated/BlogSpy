@@ -2,7 +2,7 @@ import { z } from "zod"
 import { NextResponse } from "next/server"
 
 import { createApiHandler, ApiError } from "@/lib/api/route-helpers"
-import { fetchRegionInterests } from "@/src/features/trend-spotter/services/trend-api"
+import { fetchRegionInterests } from "@/features/trend-spotter/services/trend-api"
 
 const RegionSchema = z.object({
   country: z.string().min(2).max(100),

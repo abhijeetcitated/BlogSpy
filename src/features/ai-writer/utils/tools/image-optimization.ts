@@ -27,7 +27,7 @@ import {
   SIZE_THRESHOLDS,
   ALT_TEXT_THRESHOLDS,
   GENERIC_ALT_PATTERNS
-} from '@/src/features/ai-writer/types/tools/image-optimization.types';
+} from '@/features/ai-writer/types/tools/image-optimization.types';
 
 // ============================================================================
 // PARSING UTILITIES

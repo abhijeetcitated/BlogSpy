@@ -26,7 +26,7 @@ import {
   RELEVANCE_INFO,
   OPTIMAL_LINKS_PER_1000_WORDS,
   MAX_LINKS_PER_1000_WORDS
-} from '@/src/features/ai-writer/types/tools/internal-linking.types';
+} from '@/features/ai-writer/types/tools/internal-linking.types';
 
 // =============================================================================
 // TEXT ANALYSIS UTILITIES

@@ -22,11 +22,11 @@ import {
   UseSnippetOptimizerOptions,
   UseSnippetOptimizerReturn,
   DEFAULT_SNIPPET_SETTINGS
-} from '@/src/features/ai-writer/types/tools/snippet-optimizer.types';
+} from '@/features/ai-writer/types/tools/snippet-optimizer.types';
 import {
   analyzeForSnippets,
   exportSnippetReport
-} from '@/src/features/ai-writer/utils/tools/snippet-optimizer';
+} from '@/features/ai-writer/utils/tools/snippet-optimizer';
 
 export function useSnippetOptimizer(
   options: UseSnippetOptimizerOptions = {}
