@@ -12,6 +12,9 @@ type QStashEmailPayload = {
   tags?: string[]
 }
 
+const hasQstashSigningKeys =
+  !!process.env.QSTASH_CURRENT_SIGNING_KEY && !!process.env.QSTASH_NEXT_SIGNING_KEY
+
 async function handler(request: Request) {
   let payload: QStashEmailPayload | null = null
 
@@ -45,4 +48,14 @@ async function handler(request: Request) {
   return NextResponse.json({ success: true, id: result.id })
 }
 
-export const POST = verifySignatureAppRouter(handler)
+export const POST = async (request: Request) => {
+  if (!hasQstashSigningKeys) {
+    return NextResponse.json(
+      { error: "QStash signing keys are not configured" },
+      { status: 503 }
+    )
+  }
+
+  const verifiedHandler = verifySignatureAppRouter(handler)
+  return verifiedHandler(request)
+}
