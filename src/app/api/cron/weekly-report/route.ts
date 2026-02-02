@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/server"
-import { emailSender } from "@/lib/alerts"
+import { notificationService } from "@/lib/services/notification.service"
 
 type RankingRow = {
   position: number
@@ -15,6 +15,10 @@ type EmailLayoutInput = {
   preview?: string
   contentHtml: string
   unsubscribeUrl: string
+}
+
+type WeeklyReportPayload = {
+  userId: string
 }
 
 function getAppUrl() {
@@ -157,13 +161,21 @@ async function logWeeklyReport(
   })
 }
 
-export async function GET(request: Request) {
+function requireCronAuth(request: Request) {
   const secret = process.env.CRON_SECRET
   const authHeader = request.headers.get("authorization") || ""
-  if (!secret || authHeader !== secret) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!secret) {
+    return { ok: false, response: NextResponse.json({ error: "CRON_SECRET missing" }, { status: 500 }) }
   }
 
+  if (authHeader !== `Bearer ${secret}`) {
+    return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  }
+
+  return { ok: true }
+}
+
+async function processWeeklyReport(userId: string) {
   const supabase = createAdminClient() as unknown as {
     from: (table: string) => any
     auth: {
@@ -171,6 +183,87 @@ export async function GET(request: Request) {
         getUserById: (id: string) => Promise<{ data: { user: { email?: string } | null } }>
       }
     }
+  }
+
+  const { data: userData } = await supabase.auth.admin.getUserById(userId)
+  const email = userData?.user?.email
+  if (!email) {
+    return { success: false, reason: "missing_email" }
+  }
+
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const summary = await fetchRankSummary(supabase, userId, since)
+  if (summary.total === 0 && summary.winners.length === 0 && summary.losers.length === 0) {
+    return { success: false, reason: "no_data" }
+  }
+
+  const unsubscribeUrl = buildUnsubscribeUrl(userId)
+  const winnersHtml =
+    summary.winners.length === 0
+      ? "<li>No significant winners this week.</li>"
+      : summary.winners
+          .map(
+            (row) =>
+              `<li>${escapeHtml(row.keyword)} - +${row.change} (now #${row.position})</li>`
+          )
+          .join("")
+
+  const losersHtml =
+    summary.losers.length === 0
+      ? "<li>No significant losers this week.</li>"
+      : summary.losers
+          .map(
+            (row) =>
+              `<li>${escapeHtml(row.keyword)} - ${row.change} (now #${row.position})</li>`
+          )
+          .join("")
+
+  const contentHtml = `
+    <p style="margin:0 0 16px;">Here is your weekly summary for the last 7 days.</p>
+    <p style="margin:0 0 20px;">Total tracked movements: <strong>${summary.total}</strong></p>
+    <h2 style="margin:0 0 8px;color:#FFD700;font-size:16px;">Top Winners</h2>
+    <ul style="margin:0 0 20px;padding-left:18px;">${winnersHtml}</ul>
+    <h2 style="margin:0 0 8px;color:#FFD700;font-size:16px;">Top Losers</h2>
+    <ul style="margin:0;padding-left:18px;">${losersHtml}</ul>
+  `
+
+  const html = renderEmailLayout({
+    title: "Citated Weekly Digest",
+    preview: "Your weekly SEO performance summary",
+    unsubscribeUrl,
+    contentHtml,
+  })
+
+  await notificationService.queueEmail({
+    to: email,
+    subject: "Citated Weekly Digest",
+    html,
+    tags: ["weekly-digest"],
+  })
+
+  await logWeeklyReport(supabase, userId, "sent", {
+    total: summary.total,
+    winners: summary.winners,
+    losers: summary.losers,
+  })
+
+  return { success: true }
+}
+
+export async function GET(request: Request) {
+  const auth = requireCronAuth(request)
+  if (!auth.ok) {
+    return auth.response
+  }
+
+  const qstashUrl = process.env.QSTASH_URL
+  const qstashToken = process.env.QSTASH_TOKEN
+  if (!qstashUrl || !qstashToken) {
+    return NextResponse.json({ error: "QSTASH_URL or QSTASH_TOKEN missing" }, { status: 500 })
+  }
+
+  const supabase = createAdminClient() as unknown as {
+    from: (table: string) => any
   }
 
   const { data: recipients, error } = await supabase
@@ -183,71 +276,52 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to load notification settings" }, { status: 500 })
   }
 
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const targetUrl = `${getAppUrl()}/api/cron/weekly-report`
+  const tasks = []
 
   for (const recipient of recipients ?? []) {
     const userId = recipient.user_id as string
-    const { data: userData } = await supabase.auth.admin.getUserById(userId)
-    const email = userData?.user?.email
-    if (!email) {
-      continue
-    }
-
-    const summary = await fetchRankSummary(supabase, userId, since)
-    if (summary.total === 0 && summary.winners.length === 0 && summary.losers.length === 0) {
-      continue
-    }
-
-    const unsubscribeUrl = buildUnsubscribeUrl(userId)
-    const winnersHtml =
-      summary.winners.length === 0
-        ? "<li>No significant winners this week.</li>"
-        : summary.winners
-            .map(
-              (row) =>
-                `<li>${escapeHtml(row.keyword)} - +${row.change} (now #${row.position})</li>`
-            )
-            .join("")
-
-    const losersHtml =
-      summary.losers.length === 0
-        ? "<li>No significant losers this week.</li>"
-        : summary.losers
-            .map(
-              (row) =>
-                `<li>${escapeHtml(row.keyword)} - ${row.change} (now #${row.position})</li>`
-            )
-            .join("")
-
-    const contentHtml = `
-      <p style="margin:0 0 16px;">Here is your weekly summary for the last 7 days.</p>
-      <p style="margin:0 0 20px;">Total tracked movements: <strong>${summary.total}</strong></p>
-      <h2 style="margin:0 0 8px;color:#FFD700;font-size:16px;">Top Winners</h2>
-      <ul style="margin:0 0 20px;padding-left:18px;">${winnersHtml}</ul>
-      <h2 style="margin:0 0 8px;color:#FFD700;font-size:16px;">Top Losers</h2>
-      <ul style="margin:0;padding-left:18px;">${losersHtml}</ul>
-    `
-
-    const html = renderEmailLayout({
-      title: "Citated Weekly Digest",
-      preview: "Your weekly SEO performance summary",
-      unsubscribeUrl,
-      contentHtml,
-    })
-
-    const result = await emailSender.send({
-      to: email,
-      subject: "Citated Weekly Digest",
-      html,
-      tags: ["weekly-digest"],
-    })
-
-    await logWeeklyReport(supabase, userId, result.success ? "sent" : "failed", {
-      total: summary.total,
-      winners: summary.winners,
-      losers: summary.losers,
-    })
+    tasks.push(
+      fetch(`${qstashUrl}/v2/publish/${encodeURIComponent(targetUrl)}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${qstashToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          body: JSON.stringify({ userId }),
+          headers: {
+            Authorization: `Bearer ${process.env.CRON_SECRET}`,
+            "Content-Type": "application/json",
+          },
+        }),
+      })
+    )
   }
 
-  return NextResponse.json({ success: true })
+  await Promise.all(tasks)
+
+  return NextResponse.json({ success: true, queued: tasks.length })
+}
+
+export async function POST(request: Request) {
+  const auth = requireCronAuth(request)
+  if (!auth.ok) {
+    return auth.response
+  }
+
+  let payload: WeeklyReportPayload | null = null
+  try {
+    payload = (await request.json()) as WeeklyReportPayload
+  } catch {
+    payload = null
+  }
+
+  if (!payload?.userId) {
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 })
+  }
+
+  const result = await processWeeklyReport(payload.userId)
+
+  return NextResponse.json({ success: result.success })
 }

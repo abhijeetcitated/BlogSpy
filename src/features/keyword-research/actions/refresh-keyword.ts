@@ -8,10 +8,10 @@ import "server-only"
 import { z } from "zod"
 import { headers } from "next/headers"
 import { Redis } from "@upstash/redis"
-import { Ratelimit } from "@upstash/ratelimit"
 
 import { publicAction } from "@/lib/safe-action"
 import { createAdminClient, createClient } from "@/lib/supabase/server"
+import { enforceKeywordRateLimit } from "@/lib/ratelimit"
 import { getNumericLocationCode } from "@/config/locations"
 import { keywordService } from "../services/keyword.service"
 import { liveSerpService } from "../services/live-serp"
@@ -54,11 +54,6 @@ const BANNED_SET_KEY = "banned_ips"
 const BAN_TTL_SECONDS = 24 * 60 * 60
 
 const penaltyRedis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-})
-
-const rateLimitRedis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 })
@@ -175,6 +170,26 @@ export const refreshKeyword = publicAction
 
     if (authError || !user) {
       throw new Error("PLG_LOGIN_REQUIRED")
+    }
+
+    const { data: billingProfile } = await supabase
+      .from("core_profiles")
+      .select("billing_tier")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    const requestHeaders = await headers()
+    const rateLimitResult = await enforceKeywordRateLimit({
+      userId: user.id,
+      plan: billingProfile?.billing_tier ?? "free",
+      ip: getClientIpFromHeaders(requestHeaders),
+      userAgent: requestHeaders.get("user-agent") ?? "unknown",
+      route: "keyword-research:refresh",
+    })
+    if (!rateLimitResult.success) {
+      const rateError = new Error("RATE_LIMITED")
+      ;(rateError as Error & { status?: number }).status = 429
+      throw rateError
     }
 
     const idempotencyKey = parsedInput.idempotency_key?.trim()

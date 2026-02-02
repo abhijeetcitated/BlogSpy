@@ -1,7 +1,7 @@
 import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/server"
-import { emailSender } from "@/lib/alerts"
+import { notificationService } from "@/lib/services/notification.service"
 
 type EventType = "rank_drop" | "traffic_drop"
 
@@ -170,14 +170,14 @@ export async function triggerAlert(userId: string, eventType: EventType, data: R
       contentHtml,
     })
 
-    const result = await emailSender.send({
+    await notificationService.queueEmail({
       to: recipient,
       subject,
       html,
       tags: ["rank-alert"],
     })
 
-    await logNotification(userId, eventType, result.success ? "sent" : "failed", {
+    await logNotification(userId, eventType, "sent", {
       keyword: rankData.keyword,
       drop,
       previousPosition: rankData.previousPosition,
@@ -215,14 +215,14 @@ export async function triggerAlert(userId: string, eventType: EventType, data: R
     contentHtml,
   })
 
-  const result = await emailSender.send({
+  await notificationService.queueEmail({
     to: recipient,
     subject,
     html,
     tags: ["traffic-alert"],
   })
 
-  await logNotification(userId, eventType, result.success ? "sent" : "failed", {
+  await logNotification(userId, eventType, "sent", {
     url: trafficData.url,
     previousTraffic: trafficData.previousTraffic,
     currentTraffic: trafficData.currentTraffic,

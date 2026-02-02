@@ -110,6 +110,29 @@ function createSupabaseClient(request: NextRequest) {
   return { supabase, response }
 }
 
+async function isUserSuspicious(supabase: ReturnType<typeof createSupabaseClient>["supabase"], userId: string) {
+  const { data: profile } = await supabase
+    .from("core_profiles")
+    .select("suspicious, suspicious_until")
+    .eq("id", userId)
+    .maybeSingle()
+
+  if (!profile?.suspicious) {
+    return false
+  }
+
+  if (!profile.suspicious_until) {
+    return true
+  }
+
+  const untilTime = new Date(profile.suspicious_until).getTime()
+  if (Number.isNaN(untilTime)) {
+    return true
+  }
+
+  return Date.now() < untilTime
+}
+
 export async function middleware(request: NextRequest) {
   const { supabase, response } = createSupabaseClient(request)
   const { data: { user } } = await supabase.auth.getUser()
@@ -137,6 +160,16 @@ export async function middleware(request: NextRequest) {
     redirectUrl.search = ""
 
     return copyResponseCookies(response, NextResponse.redirect(redirectUrl))
+  }
+
+  if (pathname.startsWith("/api/research/") && user) {
+    const suspicious = await isUserSuspicious(supabase, user.id)
+    if (suspicious) {
+      return copyResponseCookies(
+        response,
+        NextResponse.json({ error: "Account temporarily restricted." }, { status: 403 })
+      )
+    }
   }
 
   const shouldProtect =

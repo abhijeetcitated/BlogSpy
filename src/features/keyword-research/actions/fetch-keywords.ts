@@ -15,7 +15,7 @@ import { creditBanker } from "@/lib/services/credit-banker.service"
 import { getDataForSEOClient, DATAFORSEO_ENDPOINTS, type DataForSEOResponse } from "@/lib/seo/dataforseo"
 import { keywordService } from "../services/keyword.service"
 import { liveSerpService } from "../services/live-serp"
-import { enforceAnalyzeRateLimit } from "../services/rate-limit.service"
+import { enforceKeywordRateLimit } from "@/lib/ratelimit"
 import { buildCacheSlug, sanitizeKeywordInput } from "../utils/input-parser"
 import { calculateRTV } from "../utils/rtv-calculator"
 import { buildKwCachePayload } from "../utils/data-mapper"
@@ -926,13 +926,17 @@ export const bulkSearchKeywords = authenticatedAction
       .eq("id", user.id)
       .maybeSingle()
 
-    const { success: rateOk } = await enforceAnalyzeRateLimit({
+    const rateLimitResult = await enforceKeywordRateLimit({
       userId: user.id,
       plan: billingProfile?.billing_tier ?? "free",
       ip: getClientIp(requestHeaders),
+      userAgent: requestHeaders.get("user-agent") ?? "unknown",
+      route: "keyword-research:bulk",
     })
-    if (!rateOk) {
-      throw new Error("RATE_LIMITED")
+    if (!rateLimitResult.success) {
+      const rateError = new Error("RATE_LIMITED")
+      ;(rateError as Error & { status?: number }).status = 429
+      throw rateError
     }
 
     const idempotencyKey = ctx.idempotencyKey ?? parsedInput.idempotency_key
