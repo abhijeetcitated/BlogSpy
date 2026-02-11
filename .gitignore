@@ -49,6 +49,7 @@ tmpclaude-*
 .cursor/
 .roo/
 .amazonq/
+.github/
 .cursorrules
 .cursorignore
 .kilocodemodes
