@@ -3,12 +3,13 @@ import "server-only"
 import { createSafeActionClient } from "next-safe-action"
 import { headers } from "next/headers"
 import { z } from "zod"
-import { Redis } from "@upstash/redis"
+import { Ratelimit } from "@upstash/ratelimit"
+import { redis as penaltyRedis } from "@/lib/redis"
 import { createClient } from "@/lib/supabase/server"
 
 export interface AuthenticatedActionContext {
   userId: string
-  email: string
+  email: string | null
   idempotencyKey: string | null
 }
 
@@ -37,20 +38,62 @@ const HONEYPOT_FIELDS = ["user_system_priority", "admin_validation_token"] as co
 const BANNED_SET_KEY = "banned_ips"
 const BAN_TTL_SECONDS = 24 * 60 * 60
 
-const penaltyRedis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+// Redis singleton imported as penaltyRedis from @/lib/redis
+
+// ── Per-user rate limiter (30 requests / 60 seconds sliding window) ──
+const actionRateLimiter = new Ratelimit({
+  redis: penaltyRedis,
+  limiter: Ratelimit.slidingWindow(30, "60 s"),
+  analytics: true,
+  prefix: "citated:ratelimit:action",
 })
 
-function getClientIpFromHeaders(requestHeaders: Headers): string {
-  const forwardedFor = requestHeaders.get("x-forwarded-for")
-  if (forwardedFor) {
-    const [first] = forwardedFor.split(",")
-    if (first) return first.trim()
+// ── IP-based rate limiter for public (unauthenticated) actions ──
+const publicActionRateLimiter = new Ratelimit({
+  redis: penaltyRedis,
+  limiter: Ratelimit.slidingWindow(20, "60 s"),
+  analytics: true,
+  prefix: "citated:ratelimit:public",
+})
+
+// 🔒 SECURITY: Robust IP Extraction
+// Prioritizes platform-specific headers (Cloudflare, Vercel) over X-Forwarded-For
+// to prevent spoofing. X-Forwarded-For is only trusted if explicitly enabled.
+function isValidIp(ip: string): boolean {
+  // Basic IPv4
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
+    return ip.split(".").every(o => {
+      const n = Number(o)
+      return n >= 0 && n <= 255
+    })
   }
+  // Basic IPv6 check
+  return /^[0-9a-fA-F:]+$/.test(ip) && ip.includes(":")
+}
+
+function getClientIpFromHeaders(requestHeaders: Headers): string {
+  // 1. Direct Platform Headers (Best Trust)
+  const cfIp = requestHeaders.get("cf-connecting-ip")
+  if (cfIp && isValidIp(cfIp)) return cfIp
 
   const realIp = requestHeaders.get("x-real-ip")
-  return realIp ?? "unknown"
+  if (realIp && isValidIp(realIp)) return realIp
+
+  // 2. X-Forwarded-For (Trust only if configured)
+  // Vercel/Supabase Edge usually strips untrusted xff, but we double-check config
+  if (process.env.TRUST_X_FORWARDED_FOR === "true") {
+    const forwardedFor = requestHeaders.get("x-forwarded-for")
+    if (forwardedFor) {
+      const [first] = forwardedFor.split(",")
+      if (first) {
+        const trimmed = first.trim()
+        if (isValidIp(trimmed)) return trimmed
+      }
+    }
+  }
+
+  // 3. Fallback
+  return "unknown"
 }
 
 function getHoneytokenHits(parsedInput: unknown): string[] {
@@ -100,13 +143,51 @@ async function addToBanList(ip: string): Promise<void> {
 
 const safeActionClient = createSafeActionClient({
   handleServerError: (error) => {
-    const message = error instanceof Error ? error.message : "UNKNOWN_SERVER_ERROR"
-    console.error("ACTION_SERVER_ERROR:", message)
-    return message
+    const rawMessage = error instanceof Error ? error.message : "UNKNOWN_SERVER_ERROR"
+    const normalizedMessage = rawMessage.trim().toUpperCase()
+    const isSafeCode = /^[A-Z0-9_]{3,80}$/.test(normalizedMessage)
+    const publicCode = isSafeCode ? normalizedMessage : "INTERNAL_SERVER_ERROR"
+
+    console.error("ACTION_SERVER_ERROR:", rawMessage)
+    return publicCode
   },
 })
 
-export const publicAction = safeActionClient
+// ── publicAction: honeypot + IP ban + IP-based rate limiting ──
+export const publicAction = safeActionClient.use(async ({ clientInput, next, ctx }) => {
+  const parsedInput = clientInput as Record<string, unknown> | null
+
+  // 1. Honeypot bot detection
+  if (isBotRequest(parsedInput)) {
+    const requestHeaders = await headers()
+    const clientIp = getClientIpFromHeaders(requestHeaders)
+    try { await addToBanList(clientIp) } catch { /* swallow */ }
+    throw new Error("An unexpected error occurred")
+  }
+
+  // 2. IP ban check
+  const requestHeaders = await headers()
+  const clientIp = getClientIpFromHeaders(requestHeaders)
+  try {
+    const isBanned = await penaltyRedis.sismember(BANNED_SET_KEY, clientIp)
+    if (isBanned) {
+      throw new Error("An unexpected error occurred")
+    }
+  } catch (error) {
+    // If Redis is down, fail open but log
+    if (error instanceof Error && error.message === "An unexpected error occurred") throw error
+    console.warn("[SECURITY] IP ban check failed", { ip: clientIp })
+  }
+
+  // 3. IP-based rate limiting
+  const { success: rateLimitOk } = await publicActionRateLimiter.limit(clientIp)
+  if (!rateLimitOk) {
+    console.warn("[SECURITY] Public action rate limit exceeded", { ip: clientIp })
+    throw new Error("RATE_LIMIT_EXCEEDED")
+  }
+
+  return next({ ctx })
+})
 
 export const authenticatedAction = safeActionClient.use(async ({ clientInput, next, ctx }) => {
   const parsedInput = clientInput as Record<string, unknown> | null
@@ -154,11 +235,23 @@ export const authenticatedAction = safeActionClient.use(async ({ clientInput, ne
     throw new Error("PLG_LOGIN_REQUIRED")
   }
 
+  // ── Per-user rate limiting (sliding window) ──
+  const { success: rateLimitOk, remaining, reset } = await actionRateLimiter.limit(user.id)
+  if (!rateLimitOk) {
+    const retryAfterSec = Math.max(1, Math.ceil((reset - Date.now()) / 1000))
+    console.warn("[SECURITY] Rate limit exceeded", {
+      userId: user.id,
+      remaining,
+      retryAfterSec,
+    })
+    throw new Error("RATE_LIMIT_EXCEEDED")
+  }
+
   return next({
     ctx: {
       ...ctx,
       userId: user.id,
-      email: user.email ?? "",
+      email: user.email ?? null,
       idempotencyKey: await resolveIdempotencyKey(parsedInput),
     },
   })

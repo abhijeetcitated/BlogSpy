@@ -25,7 +25,7 @@ const mockUser = {
   plan: "pro",
   billingCycle: "monthly",
   nextBillingDate: "Jan 15, 2025",
-  stripeCustomerId: "cus_xxx",
+  lemonsqueezyCustomerId: "ls_cus_xxx",
 }
 
 // Plans configuration
@@ -185,17 +185,17 @@ export default function BillingPage() {
 
   const handleUpgrade = async (planId: string) => {
     setIsLoading(true)
-    // Mock API call - will be replaced with real Stripe checkout
+    // Mock API call - will be replaced with real Lemon Squeezy checkout
     await new Promise(resolve => setTimeout(resolve, 1000))
-    alert(`Upgrade to ${planId} - Stripe checkout will open here`)
+    alert(`Upgrade to ${planId} - Lemon Squeezy checkout will open here`)
     setIsLoading(false)
   }
 
   const handleManageSubscription = async () => {
     setIsLoading(true)
-    // Mock API call - will be replaced with Stripe customer portal
+    // Mock API call - will be replaced with Lemon Squeezy customer portal
     await new Promise(resolve => setTimeout(resolve, 500))
-    alert("Stripe Customer Portal will open here")
+    alert("Lemon Squeezy Customer Portal will open here")
     setIsLoading(false)
   }
 

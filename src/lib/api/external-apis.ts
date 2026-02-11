@@ -164,36 +164,24 @@ export const SupabaseConfig = {
 } as const
 
 // ============================================
-// STRIPE (Payments)
+// LEMON SQUEEZY (Payments)
 // ============================================
 
-export const StripeConfig = {
-  get secretKey(): string | undefined {
-    return process.env.STRIPE_SECRET_KEY
+export const LemonSqueezyConfig = {
+  get apiKey(): string | undefined {
+    return process.env.LEMONSQUEEZY_API_KEY
   },
-  
-  get publishableKey(): string | undefined {
-    return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-  },
-  
+
   get webhookSecret(): string | undefined {
-    return process.env.STRIPE_WEBHOOK_SECRET
+    return process.env.LEMONSQUEEZY_WEBHOOK_SECRET
   },
-  
+
+  get storeId(): string | undefined {
+    return process.env.LEMONSQUEEZY_STORE_ID
+  },
+
   get isConfigured(): boolean {
-    return !!(this.secretKey && this.publishableKey)
-  },
-  
-  /** Price IDs for subscription plans */
-  prices: {
-    pro: {
-      monthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID || "price_pro_monthly",
-      yearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID || "price_pro_yearly",
-    },
-    enterprise: {
-      monthly: process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID || "price_enterprise_monthly",
-      yearly: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID || "price_enterprise_yearly",
-    },
+    return !!(this.apiKey && this.storeId)
   },
 } as const
 
@@ -239,9 +227,9 @@ export function getApiStatus() {
       configured: SupabaseConfig.isConfigured,
       name: "Supabase",
     },
-    stripe: {
-      configured: StripeConfig.isConfigured,
-      name: "Stripe",
+    lemonsqueezy: {
+      configured: LemonSqueezyConfig.isConfigured,
+      name: "Lemon Squeezy",
     },
     openai: {
       configured: OpenAIConfig.isConfigured,

@@ -19,7 +19,6 @@ interface ActionsDropdownProps {
   onAddToCalendar: () => void
   onViewSerp: () => void
   onCopy: () => void
-  onCheckForum?: () => void
 }
 
 export function ActionsDropdown({ 
@@ -29,7 +28,6 @@ export function ActionsDropdown({
   onAddToCalendar,
   onViewSerp,
   onCopy,
-  onCheckForum,
 }: ActionsDropdownProps) {
   const handleCopy = () => {
     onCopy()
@@ -83,15 +81,6 @@ export function ActionsDropdown({
           <Copy className="w-4 h-4 mr-2.5" />
           Copy Keyword
         </DropdownMenuItem>
-        {onCheckForum && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onCheckForum}>
-              <ExternalLink className="w-4 h-4 mr-2.5" />
-              Scan Reddit/Quora (1 Credit)
-            </DropdownMenuItem>
-          </>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

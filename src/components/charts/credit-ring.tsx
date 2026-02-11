@@ -31,7 +31,7 @@ export function CreditRing({ used, total }: CreditRingProps) {
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             transform="rotate(-90 50 50)"
-            className="transition-all duration-500"
+            className="transition-[stroke-dashoffset] duration-500"
           />
           <defs>
             <linearGradient id="creditGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -42,7 +42,7 @@ export function CreditRing({ used, total }: CreditRingProps) {
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-xl font-semibold text-foreground">{remaining}</span>
-          <span className="text-xs text-muted-foreground">/ {total}</span>
+          <span className="text-[10px] text-muted-foreground">/ {total} left</span>
         </div>
       </div>
     </div>

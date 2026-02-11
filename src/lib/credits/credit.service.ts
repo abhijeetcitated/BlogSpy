@@ -387,7 +387,7 @@ class CreditService {
   async upgradePlan(
     userId: string,
     newPlan: CreditBalance["plan"],
-    stripeSubscriptionId?: string
+    lemonsqueezySubscriptionId?: string
   ): Promise<boolean> {
     try {
       const supabase = await createClient()
@@ -400,7 +400,7 @@ class CreditService {
           plan: newPlan,
           credits_total: planLimits.monthlyCredits,
           credits_used: 0,
-          stripe_subscription_id: stripeSubscriptionId,
+          lemonsqueezy_subscription_id: lemonsqueezySubscriptionId,
           reset_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           last_reset_at: new Date().toISOString(),
         })

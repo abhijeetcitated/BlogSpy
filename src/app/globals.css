@@ -513,6 +513,16 @@ body {
   animation: gold-pulse 3s ease-in-out infinite;
 }
 
+/* Subtle pulse animation for scan button */
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(var(--color-primary), 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(var(--color-primary), 0.15);
+  }
+}
+
 /* Noise texture overlay */
 .noise-bg {
   position: relative;

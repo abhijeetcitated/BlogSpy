@@ -41,7 +41,7 @@ export const fetchKeywords = publicAction
     const matchType = (parsedInput.matchType ?? "broad").toString()
     const country = parsedInput.country || "US"
     const languageCode = parsedInput.languageCode?.trim().toLowerCase() || "en"
-    const deviceType = parsedInput.deviceType?.trim().toLowerCase() || "desktop"
+    const deviceType = normalizeDeviceType(parsedInput.deviceType)
     const numericLocationCode = getNumericLocationCode(country)
     const keyword = sanitizeKeywordInput(parsedInput.query)
 
@@ -202,6 +202,17 @@ function isFreshTimestamp(timestamp: string | null | undefined, ttlMs: number): 
 
 function normalizeKeywordKey(keyword: string): string {
   return keyword.trim().toLowerCase()
+}
+
+const DEVICE_TYPES = new Set(["desktop", "mobile", "tablet"] as const)
+type DeviceType = "desktop" | "mobile" | "tablet"
+
+function normalizeDeviceType(value?: string): DeviceType {
+  const normalized = value?.trim().toLowerCase()
+  if (normalized && DEVICE_TYPES.has(normalized as DeviceType)) {
+    return normalized as DeviceType
+  }
+  return "desktop"
 }
 
 function resolvePostbackUrl(requestHeaders: Headers): string | null {
@@ -761,6 +772,7 @@ async function runSplitTimingSearch({
           slug: request.slug,
           keyword: request.keyword,
           country_code: country,
+          location_code: numericLocationCode,
           language_code: languageCode,
           device_type: deviceType,
           match_type: matchType,
@@ -817,7 +829,7 @@ async function runSplitTimingSearch({
   if (cacheRows.length > 0) {
     const { error: upsertError } = await admin
       .from("kw_cache")
-      .upsert(cacheRows, { onConflict: "slug" })
+      .upsert(cacheRows, { onConflict: "keyword,location_code,language_code,device_type" })
 
     if (upsertError) {
       console.warn("[KeywordCache] Failed to persist cache rows", upsertError.message)
@@ -873,7 +885,7 @@ export const bulkSearchKeywords = authenticatedAction
     const matchType = (parsedInput.matchType ?? "broad").toString()
     const country = parsedInput.country || "US"
     const languageCode = parsedInput.languageCode?.trim().toLowerCase() || "en"
-    const deviceType = parsedInput.deviceType?.trim().toLowerCase() || "desktop"
+    const deviceType = normalizeDeviceType(parsedInput.deviceType)
     const numericLocationCode = getNumericLocationCode(country)
     const keywordInputs =
       parsedInput.keywords?.length ? parsedInput.keywords : parsedInput.keyword ? [parsedInput.keyword] : []
@@ -976,34 +988,34 @@ export const bulkSearchKeywords = authenticatedAction
     const bypassCredits = process.env.BYPASS_CREDITS === "true" && process.env.NODE_ENV !== "production"
 
     const featureName = forensicRequested ? "Keyword Explorer - Forensic" : "Keyword Explorer - Discovery"
-    const metadata = {
-      country,
-      languageCode,
-      deviceType,
-      matchType,
-      keywordCount: sanitizedKeywords.length,
-      depth,
-      forensic: forensicRequested,
-    }
-
     let balance: number | null = 0
     let chargeId: string | null = null
     if (!bypassCredits) {
-      const charge = await creditBanker.deduct(user.id, totalAmount, featureName, description, metadata)
+      const { data, error } = await supabase.rpc("deduct_credits_atomic", {
+        p_user_id: user.id,
+        p_amount: totalAmount,
+        p_idempotency_key: idempotencyKey,
+        p_description: description,
+      })
 
-      if (!charge.success) {
-        const error = new Error(charge.error)
-        ;(error as Error & { status?: number }).status =
-          charge.error === "INSUFFICIENT_CREDITS" ? 402 : 500
-        throw error
+      if (error) {
+        if (error.message.includes("INSUFFICIENT_CREDITS")) {
+          const insufficientError = new Error("INSUFFICIENT_CREDITS")
+          ;(insufficientError as Error & { status?: number }).status = 402
+          throw insufficientError
+        }
+        throw new Error(error.message)
       }
 
-      chargeId = charge.idempotencyKey
-      balance = typeof charge.remaining === "number" ? charge.remaining : null
+      const rpcResult = Array.isArray(data) ? data[0] : data
+      const remaining = rpcResult && typeof rpcResult.balance === "number" ? rpcResult.balance : null
 
-      if (balance === null) {
+      if (remaining === null) {
         throw new Error("CREDITS_BALANCE_UNAVAILABLE")
       }
+
+      chargeId = idempotencyKey
+      balance = remaining
     }
 
     let serpDispatchMode: SerpDispatchMode = "skip"

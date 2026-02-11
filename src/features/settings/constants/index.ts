@@ -23,12 +23,12 @@ export const SETTINGS_TABS: {
 ]
 
 export const DEFAULT_NOTIFICATIONS: NotificationSettings = {
-  weeklySeoReport: true,
-  rankAlerts: true,
-  decayAlerts: false,
-  competitorAlerts: false,
-  productUpdates: true,
-  unsubscribeAll: false,
+  weeklyreport: true,
+  rankalerts: true,
+  decayalerts: true,
+  competitoralerts: false,
+  productupdates: false,
+  unsubscribeall: false,
 }
 
 export const MOCK_PLAN: PlanInfo = {
@@ -46,35 +46,35 @@ export const MASKED_API_KEY = "sk_live_•••••••••••••�
 export const NOTIFICATION_OPTIONS = {
   reports: [
     {
-      id: "weeklySeoReport",
-      label: "Weekly SEO Report",
+      id: "weeklyreport",
+      label: "Weekly Report",
       description: "Receive a concise performance digest every Monday",
     },
   ],
-  rankAlerts: [
+  rankalerts: [
     {
-      id: "rankAlerts",
+      id: "rankalerts",
       label: "Rank Drop Alerts",
       description: "Get notified when your tracked keywords drop significantly",
     },
   ],
-  decayAlerts: [
+  decayalerts: [
     {
-      id: "decayAlerts",
+      id: "decayalerts",
       label: "Content Decay Alerts",
       description: "Be alerted when your content starts losing traffic or rankings",
     },
   ],
-  competitorAlerts: [
+  competitoralerts: [
     {
-      id: "competitorAlerts",
+      id: "competitoralerts",
       label: "Competitor Movement Alerts",
       description: "Know when competitors outrank you for tracked keywords",
     },
   ],
   other: [
     {
-      id: "productUpdates",
+      id: "productupdates",
       label: "Product Updates",
       description: "Get notified about new features and improvements",
     },

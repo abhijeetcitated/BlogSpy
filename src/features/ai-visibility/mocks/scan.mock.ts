@@ -12,10 +12,8 @@
 import type { 
   GoogleDataResult, 
   AIResponseResult, 
-  VirtualPlatformResult, 
   FullScanResult,
-  TechAuditData,
-} from "../services/scan.service"
+} from "../types"
 import type { AIPlatform } from "../types"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -71,6 +69,14 @@ const MOCK_AI_RESPONSES: Record<AIPlatform, (keyword: string, brandName: string)
     sentiment: "positive",
   }),
   
+  "google-ai-mode": (keyword, brandName) => ({
+    platform: "google-ai-mode",
+    status: Math.random() > 0.35 ? "visible" : "hidden",
+    snippet: `In an interactive AI session about ${keyword}, ${brandName} was highlighted for its comprehensive toolset and strong industry presence. Users can explore more by asking follow-up questions.`,
+    mentionContext: `Google AI Mode cites ${brandName} in conversational context for ${keyword}.`,
+    sentiment: Math.random() > 0.5 ? "positive" : "neutral",
+  }),
+  
   chatgpt: (keyword, brandName) => ({
     platform: "chatgpt",
     status: Math.random() > 0.35 ? "visible" : "hidden",
@@ -85,14 +91,6 @@ const MOCK_AI_RESPONSES: Record<AIPlatform, (keyword: string, brandName: string)
     snippet: `According to recent sources, ${brandName} offers solutions for ${keyword}. [1] Their platform has been reviewed positively by industry experts. [2]`,
     mentionContext: `Perplexity cites ${brandName} with source attribution for ${keyword}.`,
     sentiment: "positive",
-  }),
-  
-  searchgpt: (keyword, brandName) => ({
-    platform: "searchgpt",
-    status: Math.random() > 0.4 ? "visible" : "hidden",
-    snippet: `${brandName} is a leading provider in the ${keyword} space, offering comprehensive tools and analytics.`,
-    mentionContext: "SearchGPT recommendation",
-    sentiment: "neutral",
   }),
   
   claude: (keyword, brandName) => ({
@@ -111,13 +109,7 @@ const MOCK_AI_RESPONSES: Record<AIPlatform, (keyword: string, brandName: string)
     sentiment: "neutral",
   }),
   
-  "apple-siri": (keyword, brandName) => ({
-    platform: "apple-siri",
-    status: Math.random() > 0.5 ? "visible" : "hidden",
-    snippet: `${brandName} provides services related to ${keyword}.`,
-    mentionContext: "Siri voice response",
-    sentiment: "neutral",
-  }),
+
 }
 
 export function getMockAIResponse(keyword: string, brandName: string, platform: AIPlatform): AIResponseResult {
@@ -138,74 +130,6 @@ export function getMockAIResponse(keyword: string, brandName: string, platform: 
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// MOCK VIRTUAL PLATFORMS
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
-
-export function getMockVirtualPlatforms(
-  googleData: GoogleDataResult,
-  chatgptData: AIResponseResult,
-  techAudit: TechAuditData
-): VirtualPlatformResult {
-  // SearchGPT - proxy from perplexity-style response
-  const searchgptVisible = Math.random() > 0.35
-  
-  // Siri - calculated from multiple factors
-  const siriFactors: string[] = []
-  let siriScore = 0
-  
-  if (googleData.status === "visible" && googleData.rank && googleData.rank <= 3) {
-    siriScore += 30
-    siriFactors.push(`✓ Google rank #${googleData.rank}`)
-  } else {
-    siriFactors.push("✗ Not in top 3 Google results")
-  }
-  
-  if (chatgptData.status === "visible") {
-    siriScore += 25
-    siriFactors.push("✓ Visible in ChatGPT")
-  } else {
-    siriFactors.push("✗ Not visible in ChatGPT")
-  }
-  
-  if (techAudit.applebot_allowed) {
-    siriScore += 25
-    siriFactors.push("✓ Applebot allowed")
-  } else {
-    siriFactors.push("✗ Applebot blocked")
-  }
-  
-  if (techAudit.gptbot_allowed) {
-    siriScore += 10
-    siriFactors.push("✓ GPTBot allowed")
-  }
-  
-  if (techAudit.googlebot_allowed) {
-    siriScore += 10
-    siriFactors.push("✓ Googlebot allowed")
-  }
-  
-  const siriStatus: VirtualPlatformResult["siri"]["status"] = 
-    siriScore >= 70 ? "ready" :
-    siriScore >= 40 ? "at-risk" : 
-    "not-ready"
-  
-  return {
-    searchgpt: {
-      status: searchgptVisible ? "visible" : "hidden",
-      snippet: searchgptVisible 
-        ? "Based on web search, your brand appears in relevant results for this query."
-        : "",
-      note: "Proxied from Perplexity (SearchGPT API not yet public)",
-    },
-    siri: {
-      status: siriStatus,
-      score: siriScore,
-      factors: siriFactors,
-    },
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════════════════════
 // FULL MOCK SCAN
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -213,7 +137,6 @@ export async function getMockFullScanResult(
   keyword: string, 
   brandName: string,
   brandDomain: string,
-  techAudit: TechAuditData
 ): Promise<FullScanResult> {
   // Simulate realistic API delay (1.5-2.5s)
   await mockDelay(2000)
@@ -222,27 +145,24 @@ export async function getMockFullScanResult(
   
   // Generate mock data for each platform
   const google = getMockGoogleData(keyword, brandName)
+  const googleAiMode = getMockGoogleData(keyword, brandName)
   const chatgpt = getMockAIResponse(keyword, brandName, "chatgpt")
   const claude = getMockAIResponse(keyword, brandName, "claude")
   const gemini = getMockAIResponse(keyword, brandName, "gemini")
   const perplexity = getMockAIResponse(keyword, brandName, "perplexity")
   
-  // Calculate virtual platforms
-  const virtualPlatforms = getMockVirtualPlatforms(google, chatgpt, techAudit)
-  
   // Calculate overall score
   const visibilityResults = [
     google.status === "visible",
+    googleAiMode.status === "visible",
     chatgpt.status === "visible",
     claude.status === "visible",
     gemini.status === "visible",
     perplexity.status === "visible",
-    virtualPlatforms.searchgpt.status === "visible",
-    virtualPlatforms.siri.status === "ready",
   ]
   
   const visiblePlatforms = visibilityResults.filter(Boolean).length
-  const totalPlatforms = 7
+  const totalPlatforms = 6
   const overallScore = Math.round((visiblePlatforms / totalPlatforms) * 100)
   
   return {
@@ -250,12 +170,11 @@ export async function getMockFullScanResult(
     brandName,
     timestamp,
     google,
+    googleAiMode,
     chatgpt,
     claude,
     gemini,
     perplexity,
-    searchgpt: virtualPlatforms.searchgpt,
-    siri: virtualPlatforms.siri,
     overallScore,
     visiblePlatforms,
     totalPlatforms,

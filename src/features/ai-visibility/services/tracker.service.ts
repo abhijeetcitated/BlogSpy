@@ -363,52 +363,6 @@ export class TrackerService {
 
     return false
   }
-
-  /**
-   * Calculate Siri readiness based on Google rank
-   * Logic: If Google Rank <= 3 AND Applebot allowed → Ready
-   */
-  async calculateSiriReadiness(
-    query: string,
-    applebotAllowed: boolean
-  ): Promise<{ status: "ready" | "at-risk" | "not-ready"; score: number }> {
-    // 🎭 MOCK MODE: Return fake data without real API calls
-    if (isMockMode()) {
-      console.log(`[Mock Mode] calculateSiriReadiness - ${query}`)
-      await mockDelay(800)
-      
-      const mockScore = Math.floor(Math.random() * 100)
-      let status: "ready" | "at-risk" | "not-ready"
-      if (mockScore >= 70) status = "ready"
-      else if (mockScore >= 40) status = "at-risk"
-      else status = "not-ready"
-      
-      return { status, score: mockScore }
-    }
-    
-    const ranking = await this.getRanking(query)
-
-    let score = 0
-
-    // Google Rank factor (70 points max)
-    if (ranking.position) {
-      if (ranking.position <= 1) score += 70
-      else if (ranking.position <= 3) score += 50
-      else if (ranking.position <= 5) score += 30
-      else if (ranking.position <= 10) score += 10
-    }
-
-    // Applebot factor (30 points)
-    if (applebotAllowed) score += 30
-
-    // Determine status
-    let status: "ready" | "at-risk" | "not-ready"
-    if (score >= 70) status = "ready"
-    else if (score >= 40) status = "at-risk"
-    else status = "not-ready"
-
-    return { status, score }
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════

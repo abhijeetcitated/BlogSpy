@@ -157,7 +157,13 @@ const nextConfig: NextConfig = {
     serverActions: {
       allowedOrigins: [
         "localhost:3000",
-        "blogspy.com",
+        "citated.com",
+        "www.citated.com",
+        // Vercel preview deployments (set VERCEL_PROJECT_PRODUCTION_URL in env)
+        ...(process.env.VERCEL_URL ? [process.env.VERCEL_URL] : []),
+        ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
+          ? [process.env.VERCEL_PROJECT_PRODUCTION_URL]
+          : []),
       ],
     },
   },

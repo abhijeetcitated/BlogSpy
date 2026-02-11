@@ -1,0 +1,1007 @@
+{
+  "summary": {
+    "generatedAt": "2026-02-07T08:57:47.692Z",
+    "totalScannedFiles": 1438,
+    "totalRoutesMapped": 69,
+    "totalDbTouchFiles": 52,
+    "totalIntegrationTouchFiles": 158
+  },
+  "files": [
+    {
+      "file": "src/app/(auth)/actions/auth.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/(auth)/actions/forgot-password.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/(auth)/actions/reset-password.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/(auth)/reset-password/page.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/(marketing)/features/page.tsx",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/app/api/cron/cleanup/route.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/api/cron/weekly-report/route.ts",
+      "providers": [
+        "upstash",
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/api/debug-log/route.ts",
+      "providers": [
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/app/api/keywords/research/route.ts",
+      "providers": [
+        "dataforseo",
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/api/trend-spotter/analyze/route.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/api/video-hijack/search/route.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/api/video-hijack/youtube/route.ts",
+      "providers": [
+        "dataforseo",
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/api/webhooks/lemon-squeezy/route.ts",
+      "providers": [
+        "supabase",
+        "lemonsqueezy",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/app/api/webhooks/qstash/route.ts",
+      "providers": [
+        "upstash"
+      ]
+    },
+    {
+      "file": "src/app/api/webhooks/serp/route.ts",
+      "providers": [
+        "dataforseo",
+        "supabase",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/app/auth/callback/route.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/dashboard/ai-visibility/page.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/dashboard/billing/page.tsx",
+      "providers": [
+        "supabase",
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/app/dashboard/layout.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/app/layout.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/components/shared/layout/app-sidebar.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/config/env.ts",
+      "providers": [
+        "dataforseo",
+        "supabase",
+        "lemonsqueezy",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/config/routes.ts",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/constants/api-endpoints.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/contexts/auth-context.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/contexts/user-context.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/ai-overview/utils/ai-overview-analyzer.ts",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/ai-visibility/actions/run-tracker.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/ai-visibility/constants/index.tsx",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/ai-visibility/services/audit.service.ts",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/ai-visibility/services/citation.service.ts",
+      "providers": [
+        "dataforseo",
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/ai-visibility/services/defense.service.ts",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/ai-visibility/services/scan.service.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/ai-visibility/services/tracker.service.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/ai-visibility/_INTEGRATION_GUIDE.ts",
+      "providers": [
+        "dataforseo",
+        "supabase",
+        "lemonsqueezy",
+        "openai",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/features/ai-writer/actions/charge-credits.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/ai-writer/constants/index.ts",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/ai-writer/hooks/tools/use-competitor-analysis.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/ai-writer/utils/tools/paa.ts",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/billing/actions/billing-actions.ts",
+      "providers": [
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/features/billing/actions/create-checkout.ts",
+      "providers": [
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/features/billing/actions/get-portal-url.ts",
+      "providers": [
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/features/content-decay/services/decay-detection.service.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/dashboard/actions/create-project.ts",
+      "providers": [
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/features/dashboard/actions/fetch-stats.ts",
+      "providers": [
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/features/dashboard/actions/get-projects.ts",
+      "providers": [
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/features/integrations/ga4/services/ga4.service.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/integrations/gsc/services/gsc.service.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/integrations/shared/alert-preferences/NotificationChannels.tsx",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/features/integrations/shared/alert-preferences/types.ts",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/features/integrations/shared/AlertPreferencesTab.tsx",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/actions/check-task-status.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/actions/fetch-keywords.ts",
+      "providers": [
+        "dataforseo",
+        "upstash",
+        "supabase",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/actions/fetch-social-intel.ts",
+      "providers": [
+        "dataforseo",
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/actions/refresh-bulk.ts",
+      "providers": [
+        "dataforseo",
+        "supabase",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/actions/refresh-keyword.ts",
+      "providers": [
+        "dataforseo",
+        "upstash",
+        "supabase",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/components/header/CreditBalance.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/components/table/KeywordTable.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/config/locations.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/data/mock-keywords.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/keyword-research-content.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/services/keyword-discovery.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/services/keyword.service.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/services/live-serp.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/services/preset.service.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/services/rate-limit.service.ts",
+      "providers": [
+        "upstash"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/services/social.service.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/types/api.types.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/types/index.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/utils/country-normalizer.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/utils/data-mapper.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/utils/filter-utils.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/utils/rtv-calculator.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/utils/serp-feature-normalizer.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/utils/serp-parser.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/keyword-research/__mocks__/keyword-data.ts",
+      "providers": [
+        "dataforseo",
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/components/NewsCreditPurchaseCard.tsx",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/config/api-pricing.config.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/constants/index.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/index.ts",
+      "providers": [
+        "dataforseo",
+        "supabase",
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/news-tracker-content-refactored.tsx",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/news-tracker-content.tsx",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/services/credit.service.refactored.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/services/credit.service.ts",
+      "providers": [
+        "supabase",
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/services/news-tracker.service.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/types/api.types.ts",
+      "providers": [
+        "dataforseo",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/features/news-tracker/types/credits.types.ts",
+      "providers": [
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/features/notifications/services/notifications.service.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/rank-tracker/actions/add-keyword.ts",
+      "providers": [
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/features/rank-tracker/constants/platforms.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/delete-account.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/delete-user-account.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/notification-settings.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/profile-actions.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/security-actions.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/update-notifications.ts",
+      "providers": [
+        "supabase",
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/update-preferences.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/update-user-general-settings.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/update-user-profile.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/actions/user-actions.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/components/ApiKeysTab.tsx",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/settings/components/BillingTab.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/components/GeneralTab.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/settings/components/UsageTab.tsx",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/features/social-tracker/credits/types/credit.types.ts",
+      "providers": [
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/features/topic-clusters/utils/clustering-algorithm.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/trend-spotter/components/content-strategy.tsx",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/trend-spotter/components/trend-spotter.tsx",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/trend-spotter/services/trend-api.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/trend-spotter/services/trend-spotter.api.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/trend-spotter/trend-spotter.tsx",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/trend-spotter/utils/trend-transform.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/trend-spotter/__mocks__/geo-data.ts",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/features/video-hijack/constants/index.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/features/video-hijack/services/youtube.service.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/lib/ai/openrouter.ts",
+      "providers": [
+        "openai"
+      ]
+    },
+    {
+      "file": "src/lib/alerts/dispatcher.ts",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/alerts/index.ts",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/alerts/slack-sender.ts",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/alerts/webhook-sender.ts",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/api/external-apis.ts",
+      "providers": [
+        "dataforseo",
+        "supabase",
+        "lemonsqueezy",
+        "openai",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/api/route-helpers.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/api-response.ts",
+      "providers": [
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/lib/auth/server-auth.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/auth-utils.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/billing/lemonsqueezy.ts",
+      "providers": [
+        "lemonsqueezy",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/clerk.ts",
+      "providers": [
+        "supabase",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/client.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/credits/credit.service.ts",
+      "providers": [
+        "supabase",
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/lib/dal/user.ts",
+      "providers": [
+        "supabase",
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/lib/dataforseo/locations.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/lib/index.ts",
+      "providers": [
+        "dataforseo",
+        "lemonsqueezy"
+      ]
+    },
+    {
+      "file": "src/lib/logger.ts",
+      "providers": [
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/lib/payments/index.ts",
+      "providers": [
+        "lemonsqueezy",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/payments/lemonsqueezy.ts",
+      "providers": [
+        "lemonsqueezy",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/prisma.ts",
+      "providers": [
+        "supabase",
+        "prisma"
+      ]
+    },
+    {
+      "file": "src/lib/rate-limit.ts",
+      "providers": [
+        "upstash"
+      ]
+    },
+    {
+      "file": "src/lib/ratelimit.ts",
+      "providers": [
+        "upstash",
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/safe-action.ts",
+      "providers": [
+        "upstash",
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/security.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/seo/dataforseo.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/lib/seo/index.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/lib/server.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/services/credit-banker.service.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/services/event-dispatcher.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/services/notification.service.ts",
+      "providers": [
+        "upstash",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/lib/supabase/admin.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/supabase/client.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/supabase/middleware.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/lib/supabase/server.ts",
+      "providers": [
+        "supabase"
+      ]
+    },
+    {
+      "file": "src/services/alerts.service.ts",
+      "providers": [
+        "supabase",
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/services/dataforseo/client.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/services/dataforseo/index.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/services/dataforseo/keywords.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/services/dataforseo/serp.ts",
+      "providers": [
+        "dataforseo"
+      ]
+    },
+    {
+      "file": "src/types/alerts.types.ts",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/types/decay-detection.types.ts",
+      "providers": [
+        "webhook"
+      ]
+    },
+    {
+      "file": "src/types/supabase.ts",
+      "providers": [
+        "supabase",
+        "lemonsqueezy"
+      ]
+    }
+  ]
+}

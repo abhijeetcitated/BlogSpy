@@ -1,0 +1,71 @@
+﻿integrations:
+  - id: supabase
+    category: database-auth-realtime
+    criticality: high
+    usage_paths:
+      - src/lib/supabase
+      - src/lib/auth
+      - src/features/**/actions
+      - src/app/**/route.ts
+    verification:
+      - auth context check
+      - RLS/policy validation
+      - table access smoke query
+
+  - id: prisma
+    category: orm
+    criticality: high
+    usage_paths:
+      - prisma/schema.prisma
+      - src/lib/prisma.ts
+      - src/features/**/actions
+    verification:
+      - generate client
+      - migration compatibility
+      - transactional integrity for multi-write
+
+  - id: upstash
+    category: queue-ratelimit-cache
+    criticality: medium
+    usage_paths:
+      - src/lib/ratelimit.ts
+      - queue/webhook handlers
+    verification:
+      - retry policy
+      - failure callback / DLQ
+      - key/tenant isolation
+
+  - id: dataforseo
+    category: external-seo-provider
+    criticality: high
+    usage_paths:
+      - src/lib/seo/dataforseo.ts
+      - src/features/**/services
+      - src/features/**/actions
+    verification:
+      - endpoint/limit compatibility
+      - timeout and retry controls
+      - fallback behavior
+      - cost guardrails
+
+  - id: lemonsqueezy
+    category: billing
+    criticality: high
+    usage_paths:
+      - src/app/api/webhooks/lemon-squeezy/route.ts
+      - src/features/billing/actions
+    verification:
+      - webhook signature check
+      - idempotent event handling
+      - billing state consistency
+
+  - id: qstash-webhooks
+    category: async-jobs
+    criticality: high
+    usage_paths:
+      - src/app/api/webhooks/qstash/route.ts
+      - cron/reporting flows
+    verification:
+      - webhook verification
+      - retries and dead-letter handling
+      - duplicate event safety

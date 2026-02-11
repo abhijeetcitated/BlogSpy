@@ -118,7 +118,7 @@ export type TransactionStatus =
  */
 export type PaymentMethod = 
   | "razorpay"
-  | "stripe"
+  | "lemonsqueezy"
   | "paypal"
   | "upi"
   | "netbanking"

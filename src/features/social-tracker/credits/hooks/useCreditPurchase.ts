@@ -1,6 +1,6 @@
 /**
  * Credit Purchase Hook
- * Manages credit purchase flow with Stripe
+ * Manages credit purchase flow with Lemon Squeezy
  */
 
 "use client"

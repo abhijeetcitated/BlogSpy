@@ -11,8 +11,6 @@ export {
   MOCK_PERPLEXITY_RESULT,
   MOCK_CLAUDE_RESULT,
   MOCK_GEMINI_RESULT,
-  MOCK_SEARCHGPT_RESULT,
-  MOCK_SIRI_RESULT,
   createMockScanResult,
   mockScanDelay,
 } from "./mock-scan-results"

@@ -175,7 +175,7 @@ export function SocialTrackerContent() {
     toast.success(`Purchasing ${credits} credits for $${price}`, {
       description: "Redirecting to payment...",
     })
-    // TODO: Integrate with Stripe
+    // TODO: Integrate with Lemon Squeezy
   }, [])
 
   const handleOpenAddModal = useCallback(() => setIsAddModalOpen(true), [])

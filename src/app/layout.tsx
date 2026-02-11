@@ -8,6 +8,8 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { UserProvider } from "@/contexts/user-context"
 import { QueryProvider } from "@/contexts/query-provider"
 import { ThemeProvider } from "@/components/shared/theme-provider"
+import { CommandMenu } from "@/components/shared/command-menu"
+import { GlobalModals } from "@/components/shared/global-modals"
 import { createServerClient } from "@/lib/supabase/server"
 import "./globals.css"
 
@@ -96,6 +98,8 @@ export default async function RootLayout({
             <AuthProvider serverAccessToken={serverAccessToken}>
               <UserProvider>
                 <Suspense fallback={null}>{children}</Suspense>
+                <CommandMenu />
+                <GlobalModals />
               </UserProvider>
             </AuthProvider>
           </QueryProvider>

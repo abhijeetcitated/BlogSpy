@@ -38,11 +38,17 @@ export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.SUPABASE_SERVICE_KEY
 
-  if (!url || !serviceKey) {
-    throw new Error("Missing Supabase environment variables")
+  if (!url) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable")
+  }
+
+  if (!serviceKey) {
+    throw new Error(
+      "Missing SUPABASE_SERVICE_ROLE_KEY environment variable. " +
+      "Admin operations require the service role key — never fall back to the anon key."
+    )
   }
 
   return createSupabaseServerClient(url, serviceKey, {

@@ -13,8 +13,7 @@ import type {
   FullScanResult,
   GoogleDataResult,
   AIResponseResult,
-  VirtualPlatformResult,
-} from "../services/scan.service"
+} from "../types"
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // INDIVIDUAL PLATFORM MOCK RESULTS
@@ -75,28 +74,15 @@ export const MOCK_GEMINI_RESULT: AIResponseResult = {
 }
 
 /**
- * SearchGPT - VISIBLE (proxied from Perplexity)
+ * Google AI Mode - VISIBLE with interactive citation
  */
-export const MOCK_SEARCHGPT_RESULT: VirtualPlatformResult["searchgpt"] = {
+export const MOCK_GOOGLE_AI_MODE_RESULT: GoogleDataResult = {
   status: "visible",
-  snippet: "BlogSpy provides comprehensive AI visibility tracking with real-time monitoring across multiple platforms.",
-  note: "Simulated via Perplexity Sonar (shared Bing index)",
+  rank: 2,
+  snippet: "In an interactive AI Mode session about SEO tools, BlogSpy is highlighted for its comprehensive AI visibility tracking across ChatGPT, Claude, Perplexity, and other AI assistants. It offers real-time citation monitoring and GEO optimization insights.",
+  source: "ai_overview",
 }
 
-/**
- * Apple Siri - READY status
- */
-export const MOCK_SIRI_RESULT: VirtualPlatformResult["siri"] = {
-  status: "ready",
-  score: 85,
-  factors: [
-    "✅ Google #1 position",
-    "✅ Visible in ChatGPT responses",
-    "✅ Applebot allowed in robots.txt",
-    "✅ GPTBot allowed in robots.txt",
-    "✅ Googlebot allowed in robots.txt",
-  ],
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // COMPLETE MOCK SCAN RESULT
@@ -118,17 +104,16 @@ export const MOCK_SIRI_RESULT: VirtualPlatformResult["siri"] = {
 export function createMockScanResult(keyword: string, brandName: string): FullScanResult {
   // Calculate visibility
   const visibilityResults = [
-    MOCK_GOOGLE_RESULT.status === "visible",      // true
-    MOCK_CHATGPT_RESULT.status === "visible",     // true
-    MOCK_CLAUDE_RESULT.status === "visible",      // false
-    MOCK_GEMINI_RESULT.status === "visible",      // true
-    MOCK_PERPLEXITY_RESULT.status === "visible",  // true
-    MOCK_SEARCHGPT_RESULT.status === "visible",   // true
-    MOCK_SIRI_RESULT.status === "ready",          // true
+    MOCK_GOOGLE_RESULT.status === "visible",           // true
+    MOCK_GOOGLE_AI_MODE_RESULT.status === "visible",   // true
+    MOCK_CHATGPT_RESULT.status === "visible",          // true
+    MOCK_CLAUDE_RESULT.status === "visible",           // false
+    MOCK_GEMINI_RESULT.status === "visible",           // true
+    MOCK_PERPLEXITY_RESULT.status === "visible",       // true
   ]
   
   const visiblePlatforms = visibilityResults.filter(Boolean).length
-  const totalPlatforms = 7
+  const totalPlatforms = 6
   const overallScore = Math.round((visiblePlatforms / totalPlatforms) * 100)
 
   return {
@@ -136,15 +121,14 @@ export function createMockScanResult(keyword: string, brandName: string): FullSc
     brandName,
     timestamp: new Date().toISOString(),
     google: MOCK_GOOGLE_RESULT,
+    googleAiMode: MOCK_GOOGLE_AI_MODE_RESULT,
     chatgpt: MOCK_CHATGPT_RESULT,
     claude: MOCK_CLAUDE_RESULT,
     gemini: MOCK_GEMINI_RESULT,
     perplexity: MOCK_PERPLEXITY_RESULT,
-    searchgpt: MOCK_SEARCHGPT_RESULT,
-    siri: MOCK_SIRI_RESULT,
-    overallScore,        // 86% (6/7 visible)
-    visiblePlatforms,    // 6
-    totalPlatforms,      // 7
+    overallScore,        // 83% (5/6 visible)
+    visiblePlatforms,    // 5
+    totalPlatforms,      // 6
   }
 }
 
@@ -157,15 +141,14 @@ export const MOCK_SCAN_RESULTS: FullScanResult = {
   brandName: "BlogSpy",
   timestamp: new Date().toISOString(),
   google: MOCK_GOOGLE_RESULT,
+  googleAiMode: MOCK_GOOGLE_AI_MODE_RESULT,
   chatgpt: MOCK_CHATGPT_RESULT,
   claude: MOCK_CLAUDE_RESULT,
   gemini: MOCK_GEMINI_RESULT,
   perplexity: MOCK_PERPLEXITY_RESULT,
-  searchgpt: MOCK_SEARCHGPT_RESULT,
-  siri: MOCK_SIRI_RESULT,
-  overallScore: 86,
-  visiblePlatforms: 6,
-  totalPlatforms: 7,
+  overallScore: 83,
+  visiblePlatforms: 5,
+  totalPlatforms: 6,
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════

@@ -40,12 +40,12 @@ export const SECURITY_HEADERS = {
   // Content Security Policy
   "Content-Security-Policy": [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://challenges.cloudflare.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.stripe.com https://*.supabase.co https://*.googleapis.com wss://*.supabase.co",
-    "frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com",
+    "connect-src 'self' https://*.supabase.co https://*.googleapis.com wss://*.supabase.co",
+    "frame-src 'self' https://challenges.cloudflare.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

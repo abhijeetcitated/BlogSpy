@@ -16,15 +16,59 @@ import {
   AgenticSuggestions,
   quickActions,
   recentActivity,
-  agenticSuggestions,
 } from "./components"
+import type { AgenticSuggestion } from "./components"
 import { getGreetingData, type GreetingData } from "./utils"
-import { useCommandPaletteContext, getModifierKey } from "@/features/command-palette"
+import { getModifierKey } from "@/features/command-palette"
+import { useUIStore } from "@/store/ui-store"
+import { useShallow } from "zustand/shallow"
 import { STACK_SPACING } from "@/styles"
 
-export function CommandCenter() {
-  // Command palette context
-  const { open: openCommandPalette } = useCommandPaletteContext()
+interface CommandCenterProps {
+  trendSpotterLabel?: string
+  hasProject?: boolean
+  onAddProject?: () => void
+  suggestions?: AgenticSuggestion[]
+  onRefreshSuggestions?: () => void
+  onLiveRefreshSuggestions?: () => void
+  suggestionsLoading?: boolean
+  liveRefreshPending?: boolean
+  suggestionsError?: boolean
+  stats?: {
+    rankCount: number
+    avgRank: number
+    rankDelta: number
+    decayCount: number
+    creditUsed: number
+    creditTotal: number
+    trendName: string
+    trendGrowth: number
+    recentLogs: {
+      id: string
+      actionType: string
+      description: string
+      createdAt: string
+    }[]
+  }
+}
+
+export function CommandCenter({
+  trendSpotterLabel,
+  hasProject,
+  onAddProject,
+  stats,
+  suggestions = [],
+  onRefreshSuggestions,
+  onLiveRefreshSuggestions,
+  suggestionsLoading = false,
+  liveRefreshPending = false,
+  suggestionsError = false,
+}: CommandCenterProps) {
+  const { openCommandPalette } = useUIStore(
+    useShallow((state) => ({
+      openCommandPalette: state.openCommandPalette,
+    }))
+  )
   
   // State for greeting (to avoid hydration mismatch)
   const [greetingData, setGreetingData] = useState<GreetingData | null>(null)
@@ -62,14 +106,14 @@ export function CommandCenter() {
         onClick={openCommandPalette}
         className="w-full text-left"
       >
-        <Card className="bg-linear-to-br from-card via-card to-emerald-950/10 border-border/50 backdrop-blur-sm relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition-all">
+        <Card className="bg-linear-to-br from-card via-card to-emerald-950/10 border-border/50 relative overflow-hidden group cursor-pointer hover:border-emerald-500/30 transition-colors duration-200">
           <div className="absolute inset-0 bg-linear-to-r from-emerald-500/5 via-transparent to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <CardContent className="p-4 sm:p-6 md:p-8 relative">
             <div className="max-w-3xl mx-auto space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                 <div 
-                  className="h-12 sm:h-14 md:h-16 pl-10 sm:pl-14 pr-4 sm:pr-20 md:pr-24 text-sm sm:text-base md:text-lg bg-background/80 border border-border hover:border-emerald-500/30 transition-all rounded-lg sm:rounded-xl flex items-center text-muted-foreground/50"
+                  className="h-12 sm:h-14 md:h-16 pl-10 sm:pl-14 pr-4 sm:pr-20 md:pr-24 text-sm sm:text-base md:text-lg bg-background/80 border border-border hover:border-emerald-500/30 transition-colors rounded-lg sm:rounded-xl flex items-center text-muted-foreground/50"
                 >
                   <span className="hidden sm:inline">Search for a keyword, domain, or press {modifierKey}K...</span>
                   <span className="sm:hidden">Tap to search...</span>
@@ -86,10 +130,24 @@ export function CommandCenter() {
       </button>
 
       {/* Bento Grid */}
-      <BentoGrid quickActions={quickActions} recentActivity={recentActivity} />
+      <BentoGrid
+        quickActions={quickActions}
+        recentActivity={recentActivity}
+        trendSpotterLabel={trendSpotterLabel}
+        hasProject={hasProject}
+        onAddProject={onAddProject}
+        stats={stats}
+      />
 
       {/* Agentic AI Suggestions Section */}
-      <AgenticSuggestions suggestions={agenticSuggestions} />
+      <AgenticSuggestions
+        suggestions={suggestions}
+        onRefresh={onRefreshSuggestions}
+        onLiveRefresh={onLiveRefreshSuggestions}
+        isLoading={suggestionsLoading}
+        isLiveRefreshPending={liveRefreshPending}
+        error={suggestionsError}
+      />
     </div>
   )
 }

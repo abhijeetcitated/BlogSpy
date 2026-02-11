@@ -1,4 +1,4 @@
-# BlogSpy — Founder-Facing Product Report (Internal)
+# BlogSpy â€” Founder-Facing Product Report (Internal)
 
 **Audience:** Founder / leadership (internal)
 
@@ -8,19 +8,19 @@
 
 ## 1) Executive summary
 
-BlogSpy is an **AI-powered SEO SaaS** built as a **single workspace** that connects: research → strategy → creation → optimization → tracking.
+BlogSpy is an **AI-powered SEO SaaS** built as a **single workspace** that connects: research â†’ strategy â†’ creation â†’ optimization â†’ tracking.
 
 **Core promise:** help creators, agencies, and growth teams **ship more winning content with higher confidence** by combining competitive intelligence, SEO metrics, and AI-assisted execution.
 
 **Differentiation (what makes it non-commodity):**
 - **AI Visibility** as a first-class workflow (optimize for AI answer engines, not just blue links) ([`docs/AI_VISIBILITY_FEATURE_SPEC.md`](../docs/AI_VISIBILITY_FEATURE_SPEC.md:1)).
-- **Workflow integration across tools** (Keyword → Roadmap/Clusters → AI Writer → On-page/Schema → Rank/Decay/Alerts) ([`docs/blogspy-complete-features-explanation.md`](../docs/blogspy-complete-features-explanation.md:428)).
-- **Opportunity scoring** patterns across multiple surfaces (KD, GEO, RTV, “hijack” style opportunity framing) as decision support.
+- **Workflow integration across tools** (Keyword â†’ Roadmap/Clusters â†’ AI Writer â†’ On-page/Schema â†’ Rank/Decay/Alerts) ([`docs/blogspy-complete-features-explanation.md`](../docs/blogspy-complete-features-explanation.md:428)).
+- **Opportunity scoring** patterns across multiple surfaces (KD, GEO, RTV, â€œhijackâ€ style opportunity framing) as decision support.
 
 **Current state (important internal caveats):**
 - Product scope is broad (27 tools), but polish and production readiness varies by feature.
 - Several modules have known technical debt (very large files, missing boundaries/lazy loading patterns) that can impact maintainability and performance ([`docs/FEATURES-FIX-TODO.md`](../docs/FEATURES-FIX-TODO.md:50)).
-- Feature quality audits exist; some areas are reference-quality and can become “gold standards” for the rest of the codebase ([`docs/feature-analysis-summary.md`](../docs/feature-analysis-summary.md:8)).
+- Feature quality audits exist; some areas are reference-quality and can become â€œgold standardsâ€ for the rest of the codebase ([`docs/feature-analysis-summary.md`](../docs/feature-analysis-summary.md:8)).
 
 ---
 
@@ -36,9 +36,9 @@ BlogSpy is an **AI-powered SEO SaaS** built as a **single workspace** that conne
 Search is fragmenting:
 - Traditional SERP competition is higher.
 - AI answer interfaces are becoming a parallel distribution channel.
-- Teams need a faster loop from “insight” → “publish” → “measure” without switching tools.
+- Teams need a faster loop from â€œinsightâ€ â†’ â€œpublishâ€ â†’ â€œmeasureâ€ without switching tools.
 
-### 2.4 Unique mechanisms (the “how”)
+### 2.4 Unique mechanisms (the â€œhowâ€)
 - **AI-first execution loop:** AI Writer + structured recommendations and checklists (content, entities, citations, internal links) ([`docs/blogspy-complete-system-architecture.md`](../docs/blogspy-complete-system-architecture.md:232)).
 - **Competitive intelligence at multiple layers:** competitor gap, SERP features, communities, social, video.
 - **Automation & monitoring:** rank tracking, decay detection, alerts and digests (route structure suggests cron surfaces exist) ([`plans/blogspy-complete-structure.md`](blogspy-complete-structure.md:70)).
@@ -61,51 +61,51 @@ Teams and individuals where **content is a primary growth channel**, and the cos
 | SEO agency operator | Repeatable wins across client accounts | Reporting overhead; hard to standardize playbooks | Multi-client workflow + competitive insights | Net retention, client results |
 | In-house growth marketer | Build predictable pipeline from content | Stakeholder pressure; attribution ambiguity | ROI + forecast and monitoring | Leads/revenue attributed |
 | Affiliate / commerce content operator | Find money keywords + best offers | Monetization uncertainty; fierce SERP competition | Commerce opportunities + projections | Earnings, conversion rate |
-| Video-first creator expanding to search | Find video SERP opportunities | Doesn’t know where video can win in SERP | Video opportunity framing | Video views from search |
+| Video-first creator expanding to search | Find video SERP opportunities | Doesnâ€™t know where video can win in SERP | Video opportunity framing | Video views from search |
 
 ---
 
-## 4) Product scope — feature suite (27 tools)
+## 4) Product scope â€” feature suite (27 tools)
 
 Grouped by user value (derived from [`README.md`](../README.md:10) and feature docs).
 
 ### 4.1 Keyword research & discovery
-- **Keyword Explorer** — discover keyword ideas with core metrics ([`README.md`](../README.md:12)).
-- **Keyword Overview** — deep analysis + SERP breakdown.
-- **Keyword Magic** — large-scale keyword discovery with rich filtering ([`docs/blogspy-complete-feature-report.md`](../docs/blogspy-complete-feature-report.md:65)).
-- **Trend Spotter** — early trend detection & trajectory framing.
+- **Keyword Explorer** â€” discover keyword ideas with core metrics ([`README.md`](../README.md:12)).
+- **Keyword Overview** â€” deep analysis + SERP breakdown.
+- **Keyword Magic** â€” large-scale keyword discovery with rich filtering ([`docs/blogspy-complete-feature-report.md`](../docs/blogspy-complete-feature-report.md:65)).
+- **Trend Spotter** â€” early trend detection & trajectory framing.
 
 ### 4.2 Competitive intelligence
-- **Competitor Gap** — multi-competitor keyword gaps and weak spots ([`docs/blogspy-complete-feature-report.md`](../docs/blogspy-complete-feature-report.md:109)).
-- **Snippet Stealer** — win SERP features (featured snippets, PAA).
-- **Citation Checker** — authority/citation signals.
-- **Community Tracker** — Reddit/Quora monitoring for opportunities.
+- **Competitor Gap** â€” multi-competitor keyword gaps and weak spots ([`docs/blogspy-complete-feature-report.md`](../docs/blogspy-complete-feature-report.md:109)).
+- **Snippet Stealer** â€” win SERP features (featured snippets, PAA).
+- **Citation Checker** â€” authority/citation signals.
+- **Community Tracker** â€” Reddit/Quora monitoring for opportunities.
 
 ### 4.3 Strategy & planning
-- **Topic Clusters** — pillar/cluster architecture and internal linking plan.
-- **Content Roadmap** — long-horizon plan with prioritization.
-- **Content Calendar** — operational schedule and workflow.
+- **Topic Clusters** â€” pillar/cluster architecture and internal linking plan.
+- **Content Roadmap** â€” long-horizon plan with prioritization.
+- **Content Calendar** â€” operational schedule and workflow.
 
 ### 4.4 Creation & optimization
-- **AI Writer** — AI-assisted writing with SEO optimization ([`README.md`](../README.md:22)).
-- **On-Page Checker** — technical/on-page audits.
-- **Schema Generator** — structured data generation and validation support.
+- **AI Writer** â€” AI-assisted writing with SEO optimization ([`README.md`](../README.md:22)).
+- **On-Page Checker** â€” technical/on-page audits.
+- **Schema Generator** â€” structured data generation and validation support.
 
 ### 4.5 Tracking & monitoring
-- **Rank Tracker** — position monitoring and trends.
-- **Content Decay** — detect declining pages and revive.
-- **News Tracker** — news/trending story monitoring for content response.
-- **Social Tracker** — social signals, hashtags, platform-specific insights.
+- **Rank Tracker** â€” position monitoring and trends.
+- **Content Decay** â€” detect declining pages and revive.
+- **News Tracker** â€” news/trending story monitoring for content response.
+- **Social Tracker** â€” social signals, hashtags, platform-specific insights.
 
 ### 4.6 Monetization
-- **Content ROI** — attribution/ROI modeling for content.
-- **Affiliate Finder** — monetization discovery.
-- **Earnings / monetization calculators** — projections and network comparisons.
-- **Commerce Tracker** — affiliate/ecom opportunity scoring.
+- **Content ROI** â€” attribution/ROI modeling for content.
+- **Affiliate Finder** â€” monetization discovery.
+- **Earnings / monetization calculators** â€” projections and network comparisons.
+- **Commerce Tracker** â€” affiliate/ecom opportunity scoring.
 
 ### 4.7 Platform utilities
-- **Command Palette** — power-user navigation and actions ([`docs/blogspy-complete-feature-report.md`](../docs/blogspy-complete-feature-report.md:356)).
-- **Notifications/Alerts framework** — proactive updates (present in docs; operationalization varies).
+- **Command Palette** â€” power-user navigation and actions ([`docs/blogspy-complete-feature-report.md`](../docs/blogspy-complete-feature-report.md:356)).
+- **Notifications/Alerts framework** â€” proactive updates (present in docs; operationalization varies).
 
 **Note:** Some feature names appear both as marketing-level names and internal route groupings; treat the above as the customer-facing framing.
 
@@ -120,10 +120,10 @@ Grouped by user value (derived from [`README.md`](../README.md:10) and feature d
 4. Execute content (AI Writer)
 5. Ship technical polish (On-page Checker + Schema)
 6. Track outcomes (Rank Tracker + Decay)
-7. Iterate via alerts and “next best actions”
+7. Iterate via alerts and â€œnext best actionsâ€
 
 ### 5.2 Agency workflow (repeatable)
-- Same loop as above, plus competitive comparisons and reporting surfaces. The product’s long-term moat is becoming the “operating system” for repeatable client outcomes.
+- Same loop as above, plus competitive comparisons and reporting surfaces. The productâ€™s long-term moat is becoming the â€œoperating systemâ€ for repeatable client outcomes.
 
 ---
 
@@ -139,9 +139,9 @@ This section is a **founder proposal** aligned with:
 - **Enterprise tier**: target agencies/teams needing volume, workflows, and support.
 
 ### 6.2 What should be metered
-- External API-heavy actions (SERP pulls, bulk keyword expansions, AI visibility checks) → credits.
-- Automation frequency (daily/weekly) → higher tiers.
-- Seat count and projects → team tiers.
+- External API-heavy actions (SERP pulls, bulk keyword expansions, AI visibility checks) â†’ credits.
+- Automation frequency (daily/weekly) â†’ higher tiers.
+- Seat count and projects â†’ team tiers.
 
 ### 6.3 Pricing tiers (initial draft)
 
@@ -161,15 +161,15 @@ This section is a **founder proposal** aligned with:
 
 ### 7.1 Now (stabilize + monetize)
 - Authentication + account lifecycle hardened (dev-mode shortcuts removed where needed) ([`docs/blogspy-complete-system-architecture.md`](../docs/blogspy-complete-system-architecture.md:970)).
-- Billing + plans implemented end-to-end (Stripe flows, gating, credits).
+- Billing + plans implemented end-to-end (Lemon Squeezy flows, gating, credits).
 - API cost controls: credit enforcement, rate limiting, caching defaults.
 - Quality gates: address P1 tech debt that blocks iteration speed (large files, missing boundaries, lazy loading) ([`docs/FEATURES-FIX-TODO.md`](../docs/FEATURES-FIX-TODO.md:50)).
-- Pick 3–5 “hero workflows” and ensure they are delightful (onboarding → first win).
+- Pick 3â€“5 â€œhero workflowsâ€ and ensure they are delightful (onboarding â†’ first win).
 
 ### 7.2 Next (win a niche)
 - AI Visibility MVP as a differentiated wedge (Google AI Overviews + Perplexity) ([`docs/AI_VISIBILITY_FEATURE_SPEC.md`](../docs/AI_VISIBILITY_FEATURE_SPEC.md:37)).
 - Deep integrations that improve retention (GA4, GSC data flows).
-- Better content planning cohesion: Roadmap ↔ Clusters ↔ Calendar ↔ AI Writer.
+- Better content planning cohesion: Roadmap â†” Clusters â†” Calendar â†” AI Writer.
 - Reporting surfaces: shareable client reports for agencies.
 
 ### 7.3 Later (moat and scale)
@@ -188,11 +188,11 @@ This section is a **founder proposal** aligned with:
 
 ### 8.2 Data quality risk
 - **Risk:** third-party metrics noisy or delayed; can reduce trust.
-- **Mitigation:** clear “data freshness” UI, confidence indicators, and transparent source labeling.
+- **Mitigation:** clear â€œdata freshnessâ€ UI, confidence indicators, and transparent source labeling.
 
 ### 8.3 Product sprawl risk
 - **Risk:** 27 tools can dilute onboarding and positioning.
-- **Mitigation:** package as workflows and “job bundles” rather than a tool list.
+- **Mitigation:** package as workflows and â€œjob bundlesâ€ rather than a tool list.
 
 ### 8.4 Maintainability/performance risk
 - **Risk:** large files and missing lazy loading can slow iteration and degrade UX.

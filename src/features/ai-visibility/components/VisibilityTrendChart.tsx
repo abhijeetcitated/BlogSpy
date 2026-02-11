@@ -26,6 +26,32 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
     ? Math.round(((lastTotal - firstTotal) / firstTotal) * 100)
     : 0
 
+  // Empty state when no trend data
+  if (!data || data.length === 0) {
+    return (
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-2 px-3 sm:px-6">
+          <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
+            Citation Trends
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 sm:px-6 pb-6 sm:pb-8">
+          <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center">
+            <div className="p-3 rounded-full bg-muted/50 mb-4">
+              <TrendingUp className="h-8 w-8 text-muted-foreground/40" />
+            </div>
+            <h3 className="text-sm sm:text-base font-semibold text-foreground mb-1.5">
+              No trend data yet
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
+              Run multiple scans over time to see how your AI visibility changes across platforms.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-2 px-3 sm:px-6">
@@ -50,10 +76,15 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 5, left: -30, bottom: 0 }}>
               <defs>
-                {/* Google AI Overviews - Red (NEW) */}
+                {/* Google AI Overviews - Red */}
                 <linearGradient id="googleAioGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
+                {/* Google AI Mode - Purple */}
+                <linearGradient id="googleAiModeGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
                 </linearGradient>
                 {/* ChatGPT - Green */}
                 <linearGradient id="chatgptGradient" x1="0" y1="0" x2="0" y2="1">
@@ -74,11 +105,6 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
                 <linearGradient id="geminiGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-                {/* Apple Siri - Pink */}
-                <linearGradient id="appleSiriGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ec4899" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis 
@@ -122,7 +148,7 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
                   </span>
                 )}
               />
-              {/* Google AI Overviews - NEW */}
+              {/* Google AI Overviews */}
               <Area
                 type="monotone"
                 dataKey="googleAio"
@@ -131,6 +157,17 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#googleAioGradient)"
+                stackId="1"
+              />
+              {/* Google AI Mode */}
+              <Area
+                type="monotone"
+                dataKey="googleAiMode"
+                name="Google AI Mode"
+                stroke="#a855f7"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#googleAiModeGradient)"
                 stackId="1"
               />
               <Area
@@ -171,16 +208,6 @@ export function VisibilityTrendChart({ data }: VisibilityTrendChartProps) {
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#geminiGradient)"
-                stackId="1"
-              />
-              <Area
-                type="monotone"
-                dataKey="appleSiri"
-                name="Apple Siri"
-                stroke="#ec4899"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#appleSiriGradient)"
                 stackId="1"
               />
             </AreaChart>

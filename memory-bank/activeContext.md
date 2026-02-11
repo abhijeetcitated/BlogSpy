@@ -38,7 +38,7 @@
       - Updated [`src/features/keyword-research/utils/rtv-calculator.ts`](src/features/keyword-research/utils/rtv-calculator.ts:86) - Aligned loss rules with DataForSEO API structure
       - Updated [`src/features/keyword-research/components/drawers/OverviewTab.tsx`](src/features/keyword-research/components/drawers/OverviewTab.tsx:1) - Added AI Overview detection + purple badge on GEO Score card
       - RTV now uses `realTraffic` directly from `calculateRtv()`
-      - GEO Score card displays "🤖 AI Overview Active" purple badge when `hasAio` or `serpFeatures` includes "ai_overview"
+      - GEO Score card displays "ðŸ¤– AI Overview Active" purple badge when `hasAio` or `serpFeatures` includes "ai_overview"
 
 ### 2026-01-05
 
@@ -77,7 +77,7 @@
 
 | Item | Priority | Status |
 |------|----------|--------|
-| Stripe real integration | High | Mock only |
+| Lemon Squeezy real integration | High | Mock only |
 | Test suite setup | High | Not started |
 | Remove Clerk legacy code | Medium | In codebase |
 | CI/CD pipeline | Medium | Not configured |
@@ -110,7 +110,7 @@ Based on recent activity:
 
 ## Next Steps
 
-1. Implement real Stripe payment integration
+1. Implement real Lemon Squeezy payment integration
 2. Set up Jest + Playwright test suite
 3. Remove legacy Clerk references
 4. Configure GitHub Actions CI/CD

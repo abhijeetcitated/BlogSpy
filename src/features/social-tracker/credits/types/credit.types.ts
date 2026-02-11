@@ -131,7 +131,7 @@ export interface CreditTransactionMetadata {
 // PURCHASE & CHECKOUT
 // ============================================
 
-export type PaymentMethod = "razorpay" | "stripe" | "paytm" | "upi"
+export type PaymentMethod = "razorpay" | "lemonsqueezy" | "paytm" | "upi"
 
 export type PurchaseStatus = 
   | "initiated"

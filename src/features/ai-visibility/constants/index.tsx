@@ -18,6 +18,15 @@ export const PlatformIcons: Record<string, () => React.JSX.Element> = {
       className="w-5 h-5"
     />
   ),
+  "google-ai-mode": () => (
+    <Image 
+      src={`${ICON_BASE_PATH}/google-aio.svg`} 
+      alt="Google AI Mode" 
+      width={20} 
+      height={20}
+      className="w-5 h-5"
+    />
+  ),
   chatgpt: () => (
     <Image 
       src={`${ICON_BASE_PATH}/chatgpt.svg`} 
@@ -31,15 +40,6 @@ export const PlatformIcons: Record<string, () => React.JSX.Element> = {
     <Image 
       src={`${ICON_BASE_PATH}/perplexity.svg`} 
       alt="Perplexity" 
-      width={20} 
-      height={20}
-      className="w-5 h-5 dark:invert"
-    />
-  ),
-  searchgpt: () => (
-    <Image 
-      src={`${ICON_BASE_PATH}/searchgpt.svg`} 
-      alt="SearchGPT" 
       width={20} 
       height={20}
       className="w-5 h-5 dark:invert"
@@ -63,29 +63,31 @@ export const PlatformIcons: Record<string, () => React.JSX.Element> = {
       className="w-5 h-5"
     />
   ),
-  "apple-siri": () => (
-    <Image 
-      src={`${ICON_BASE_PATH}/apple-siri.svg`} 
-      alt="Apple Siri" 
-      width={20} 
-      height={20}
-      className="w-5 h-5"
-    />
-  ),
 }
 
-// AI Platform configurations (Updated: New order with Google AIO, SearchGPT, Apple Siri)
+// AI Platform configurations
 export const AI_PLATFORMS: Record<string, AIPlatformConfig> = {
   "google-aio": {
     id: "google-aio",
-    name: "Google AI Overviews",
+    name: "Google AI Overview",
     logo: "google-aio",
-    color: "text-red-400",
-    bgColor: "bg-red-500/10",
-    marketShare: 35,
+    color: "text-foreground",
+    bgColor: "bg-muted/10",
+    marketShare: 30,
     citationStyle: "AI Overview snippets",
-    description: "Google Search AI-powered summaries",
-    apiSource: "serper",
+    description: "Auto-generated AI summaries above search results",
+    apiSource: "dataforseo",
+  },
+  "google-ai-mode": {
+    id: "google-ai-mode",
+    name: "Google AI Mode",
+    logo: "google-ai-mode",
+    color: "text-foreground",
+    bgColor: "bg-muted/10",
+    marketShare: 10,
+    citationStyle: "Conversational citations",
+    description: "Interactive AI chat within Google Search",
+    apiSource: "dataforseo",
   },
   chatgpt: {
     id: "chatgpt",
@@ -96,64 +98,40 @@ export const AI_PLATFORMS: Record<string, AIPlatformConfig> = {
     marketShare: 30,
     citationStyle: "Inline references",
     description: "OpenAI's flagship conversational AI",
-    apiSource: "openrouter",
+    apiSource: "dataforseo",
   },
   perplexity: {
     id: "perplexity",
     name: "Perplexity",
     logo: "perplexity",
-    color: "text-cyan-400",
-    bgColor: "bg-cyan-500/10",
+    color: "text-foreground",
+    bgColor: "bg-muted/10",
     marketShare: 12,
     citationStyle: "Direct source links",
     description: "AI-powered search engine",
-    apiSource: "openrouter",
-  },
-  searchgpt: {
-    id: "searchgpt",
-    name: "ChatGPT Search",
-    logo: "searchgpt",
-    color: "text-foreground",
-    bgColor: "bg-muted/10",
-    marketShare: 5,
-    citationStyle: "Web search citations",
-    description: "OpenAI's search engine",
-    apiSource: "openrouter",
-    isComingSoon: true,
+    apiSource: "dataforseo",
   },
   claude: {
     id: "claude",
     name: "Claude",
     logo: "claude",
-    color: "text-orange-400",
-    bgColor: "bg-orange-500/10",
+    color: "text-foreground",
+    bgColor: "bg-muted/10",
     marketShare: 10,
     citationStyle: "Source attribution",
     description: "Anthropic's AI assistant",
-    apiSource: "openrouter",
+    apiSource: "dataforseo",
   },
   gemini: {
     id: "gemini",
     name: "Gemini",
     logo: "gemini",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/10",
+    color: "text-foreground",
+    bgColor: "bg-muted/10",
     marketShare: 8,
     citationStyle: "Web citations",
     description: "Google's multimodal AI",
-    apiSource: "openrouter",
-  },
-  "apple-siri": {
-    id: "apple-siri",
-    name: "Apple Siri",
-    logo: "apple-siri",
-    color: "text-pink-400",
-    bgColor: "bg-pink-500/10",
-    marketShare: 4,
-    citationStyle: "Voice response",
-    description: "Apple's voice assistant (Readiness check)",
-    apiSource: "internal",
-    isReadinessOnly: true,
+    apiSource: "dataforseo",
   },
 }
 

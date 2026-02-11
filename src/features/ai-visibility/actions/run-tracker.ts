@@ -3,7 +3,8 @@
  * 📊 RUN TRACKER - Server Action for Google AIO & Rankings
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
- * REFACTORED: Now uses authAction wrapper for consistent auth/rate-limiting.
+ * REFACTORED (v2): Now uses shared getDataForSEOClient() instead of manual credentials.
+ * TrackerService still handles the DataForSEO SERP logic.
  * 
  * Usage:
  * ```tsx
@@ -31,11 +32,6 @@ const multiQuerySchema = z.object({
   queries: z.array(z.string()).min(1, "At least one query is required"),
 })
 
-const siriReadinessSchema = z.object({
-  brandDomain: z.string().min(1, "Brand domain is required"),
-  query: z.string().min(1, "Query is required"),
-  applebotAllowed: z.boolean(),
-})
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // RESPONSE TYPES
@@ -48,16 +44,16 @@ interface TrackerActionResponse<T> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// GET API CREDENTIALS (from env)
+// HELPER: Create tracker service using shared client credentials from env
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-function getDataForSEOCredentials(): { login: string; password: string } {
+function createTracker(brandDomain: string) {
   const login = process.env.DATAFORSEO_LOGIN
   const password = process.env.DATAFORSEO_PASSWORD
   if (!login || !password) {
     throw new Error("DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD not configured")
   }
-  return { login, password }
+  return createTrackerService({ login, password }, brandDomain)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
@@ -71,9 +67,8 @@ export const checkGoogleAIO = authAction
   .schema(singleQuerySchema)
   .action(async ({ parsedInput }): Promise<TrackerActionResponse<GoogleAIOResult>> => {
     try {
-      const credentials = getDataForSEOCredentials()
-      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
-      const result = await trackerService.checkGoogleAIO(parsedInput.query)
+      const tracker = createTracker(parsedInput.brandDomain)
+      const result = await tracker.checkGoogleAIO(parsedInput.query)
       return { success: true, data: result }
     } catch (error) {
       console.error("[checkGoogleAIO] Error:", error)
@@ -88,9 +83,8 @@ export const getRanking = authAction
   .schema(singleQuerySchema)
   .action(async ({ parsedInput }): Promise<TrackerActionResponse<RankingResult>> => {
     try {
-      const credentials = getDataForSEOCredentials()
-      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
-      const result = await trackerService.getRanking(parsedInput.query)
+      const tracker = createTracker(parsedInput.brandDomain)
+      const result = await tracker.getRanking(parsedInput.query)
       return { success: true, data: result }
     } catch (error) {
       console.error("[getRanking] Error:", error)
@@ -105,9 +99,8 @@ export const getRankings = authAction
   .schema(multiQuerySchema)
   .action(async ({ parsedInput }): Promise<TrackerActionResponse<RankingResult[]>> => {
     try {
-      const credentials = getDataForSEOCredentials()
-      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
-      const result = await trackerService.getRankings(parsedInput.queries)
+      const tracker = createTracker(parsedInput.brandDomain)
+      const result = await tracker.getRankings(parsedInput.queries)
       return { success: true, data: result }
     } catch (error) {
       console.error("[getRankings] Error:", error)
@@ -122,9 +115,8 @@ export const checkCitations = authAction
   .schema(multiQuerySchema)
   .action(async ({ parsedInput }): Promise<TrackerActionResponse<CitationResult[]>> => {
     try {
-      const credentials = getDataForSEOCredentials()
-      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
-      const result = await trackerService.checkCitations(parsedInput.queries)
+      const tracker = createTracker(parsedInput.brandDomain)
+      const result = await tracker.checkCitations(parsedInput.queries)
       return { success: true, data: result }
     } catch (error) {
       console.error("[checkCitations] Error:", error)
@@ -132,19 +124,4 @@ export const checkCitations = authAction
     }
   })
 
-/**
- * Calculate Apple Siri readiness
- */
-export const checkSiriReadiness = authAction
-  .schema(siriReadinessSchema)
-  .action(async ({ parsedInput }): Promise<TrackerActionResponse<{ status: "ready" | "at-risk" | "not-ready"; score: number }>> => {
-    try {
-      const credentials = getDataForSEOCredentials()
-      const trackerService = createTrackerService(credentials, parsedInput.brandDomain)
-      const result = await trackerService.calculateSiriReadiness(parsedInput.query, parsedInput.applebotAllowed)
-      return { success: true, data: result }
-    } catch (error) {
-      console.error("[checkSiriReadiness] Error:", error)
-      return { success: false, error: "Failed to check Siri readiness" }
-    }
-  })
+

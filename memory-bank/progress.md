@@ -23,7 +23,7 @@
 
 ---
 
-## 2026-01-06 - Keyword Explorer Backend: DataForSEO → Keyword Mapping
+## 2026-01-06 - Keyword Explorer Backend: DataForSEO â†’ Keyword Mapping
 
 ### Completed
 
@@ -90,7 +90,7 @@
 
 | Task | Priority | Status |
 |------|----------|--------|
-| Implement real Stripe | High | Not started |
+| Implement real Lemon Squeezy | High | Not started |
 | Add test suite (Jest + Playwright) | High | Not started |
 | Remove Clerk legacy code | Medium | Not started |
 | Setup CI/CD | Medium | Not started |

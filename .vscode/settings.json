@@ -20,7 +20,7 @@
         "cursor-global": true,
         "cursor-workspace": true
     },
-    "chat.mcp.autostart": true,
+    "chat.mcp.autostart": "newAndOutdated",
     "chat.mcp.gallery.enabled": true,
 
     // ═══════════════════════════════════════════════════════════════
@@ -92,7 +92,7 @@
     // 💬 CHAT UX IMPROVEMENTS
     // ═══════════════════════════════════════════════════════════════
     "chat.editRequests": "inline",
-    "chat.viewSessions.orientation": "sideBySide",
+    "chat.viewSessions.orientation": "stacked",
     "chat.notifyWindowOnConfirmation": true,
     "inlineChat.holdToSpeak": true,
     "inlineChat.lineNaturalLanguageHint": true,
@@ -117,5 +117,15 @@
     "editor.tabCompletion": "on",
     "editor.wordBasedSuggestions": "off",
     "editor.defaultFoldingRangeProvider": "GitHub.copilot-chat",
-    "github.copilot.chat.tools.memory.enabled": true
+    "github.copilot.chat.tools.memory.enabled": true,
+    "chat.mcp.serverSampling": {
+        "blogspy-saas/.vscode/mcp.json: upstash": {
+            "allowedModels": [
+                "copilot/gpt-5.2-codex",
+                "copilot/claude-opus-4.5",
+                "copilot/gemini-3-pro-preview"
+            ]
+        }
+    },
+    "git.ignoreLimitWarning": true
 }

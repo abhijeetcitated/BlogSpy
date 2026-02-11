@@ -8,12 +8,35 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
+  Info,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PlatformIcons, AI_PLATFORMS } from "../constants"
 
-// Sample data for Hallucination Defense Log
-const SAMPLE_DEFENSE_LOG = [
+// ═══════════════════════════════════════════════════════════════════════════
+// TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface DefenseLogEntry {
+  id: string
+  platform: string
+  type: string
+  status: "error" | "accurate" | "outdated"
+  message: string
+  detail: string
+  timestamp: string
+}
+
+export interface FactPricingGuardProps {
+  entries?: DefenseLogEntry[]
+  isDemoMode?: boolean
+  onRunCheck?: () => void
+  isChecking?: boolean
+  lastCheckedAt?: string | null
+}
+
+// Sample data for demo mode
+const SAMPLE_DEFENSE_LOG: DefenseLogEntry[] = [
   {
     id: "1",
     platform: "chatgpt",
@@ -52,7 +75,20 @@ const SAMPLE_DEFENSE_LOG = [
   },
 ]
 
-export function FactPricingGuard() {
+export function FactPricingGuard({
+  entries,
+  isDemoMode = false,
+  onRunCheck,
+  isChecking = false,
+  lastCheckedAt,
+}: FactPricingGuardProps) {
+  // Use real entries or demo data
+  const displayEntries = entries && entries.length > 0
+    ? entries
+    : isDemoMode
+      ? SAMPLE_DEFENSE_LOG
+      : []
+
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "error":
@@ -90,8 +126,8 @@ export function FactPricingGuard() {
     }
   }
 
-  const errorCount = SAMPLE_DEFENSE_LOG.filter(l => l.status === "error").length
-  const outdatedCount = SAMPLE_DEFENSE_LOG.filter(l => l.status === "outdated").length
+  const errorCount = displayEntries.filter(l => l.status === "error").length
+  const outdatedCount = displayEntries.filter(l => l.status === "outdated").length
 
   return (
     <Card className="bg-card border-border">
@@ -112,17 +148,26 @@ export function FactPricingGuard() {
                 {outdatedCount} Outdated
               </Badge>
             )}
-            <Button variant="ghost" size="sm" className="h-6 sm:h-7 px-1.5 sm:px-2 text-[10px] sm:text-xs">
-              <RefreshCw className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-              <span className="hidden xs:inline">Verify All</span>
-              <span className="xs:hidden">Verify</span>
+            <Button variant="ghost" size="sm" className="h-6 sm:h-7 px-1.5 sm:px-2 text-[10px] sm:text-xs" onClick={onRunCheck} disabled={isChecking}>
+              <RefreshCw className={`h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 ${isChecking ? "animate-spin" : ""}`} />
+              <span className="hidden xs:inline">{isChecking ? "Checking…" : "Verify All"}</span>
+              <span className="xs:hidden">{isChecking ? "…" : "Verify"}</span>
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+        {displayEntries.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-6 text-center">
+            <Info className="h-8 w-8 text-muted-foreground/40 mb-2" />
+            <p className="text-sm text-muted-foreground">No fact checks yet</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Run a scan first to check AI accuracy about your brand
+            </p>
+          </div>
+        ) : (
         <div className="space-y-2">
-          {SAMPLE_DEFENSE_LOG.map((log) => {
+          {displayEntries.map((log) => {
             const platform = AI_PLATFORMS[log.platform]
             const statusConfig = getStatusConfig(log.status)
             const StatusIcon = statusConfig.icon
@@ -164,16 +209,19 @@ export function FactPricingGuard() {
             )
           })}
         </div>
+        )}
 
         {/* Footer */}
+        {displayEntries.length > 0 && (
         <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-border flex-wrap">
           <p className="text-[9px] sm:text-xs text-muted-foreground">
-            Last scan: 2 hours ago
+            Last scan: {lastCheckedAt || (isDemoMode ? "2 hours ago" : "Never")}
           </p>
           <Button variant="outline" size="sm" className="h-6 sm:h-7 text-[10px] sm:text-xs px-2 sm:px-3">
             View Report
           </Button>
         </div>
+        )}
       </CardContent>
     </Card>
   )

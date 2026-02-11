@@ -35,22 +35,22 @@ export function getGreeting(date: Date = new Date()): GreetingConfig {
   const greetings: Record<TimeOfDay, GreetingConfig> = {
     morning: {
       greeting: "Good morning",
-      emoji: "🌅",
+      emoji: "",
       timeOfDay: "morning",
     },
     afternoon: {
       greeting: "Good afternoon", 
-      emoji: "☀️",
+      emoji: "",
       timeOfDay: "afternoon",
     },
     evening: {
       greeting: "Good evening",
-      emoji: "🌆",
+      emoji: "",
       timeOfDay: "evening",
     },
     night: {
-      greeting: "Good night",
-      emoji: "🌙",
+      greeting: "Late-night drive",
+      emoji: "",
       timeOfDay: "night",
     },
   }
@@ -114,11 +114,12 @@ export interface GreetingData {
 export function getGreetingData(userName?: string): GreetingData {
   const now = new Date()
   const { greeting, emoji, timeOfDay } = getGreeting(now)
+  const nightMessage = "The world is quiet—your momentum isn’t. This night will pay you back."
   
   return {
     greeting: userName ? `${greeting}, ${userName}!` : `${greeting}!`,
     emoji,
-    message: getMotivationalMessage(),
+    message: timeOfDay === "night" ? nightMessage : getMotivationalMessage(),
     date: formatDate(now),
     time: formatTime(now),
     timeOfDay,

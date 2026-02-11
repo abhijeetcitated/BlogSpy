@@ -8,7 +8,7 @@
  * 
  * Integration Points (TODO):
  * 1. Razorpay - Primary payment gateway
- * 2. Stripe - International payments
+ * 2. Lemon Squeezy - International payments
  * 3. Supabase - Database storage
  * 
  * @version 2.0.0
@@ -156,7 +156,7 @@ class CreditService {
       const tax = Math.round(price * taxRate)
       const totalAmount = price + tax
 
-      // TODO: Integrate with Razorpay/Stripe
+      // TODO: Integrate with Razorpay/Lemon Squeezy
       const paymentId = `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 

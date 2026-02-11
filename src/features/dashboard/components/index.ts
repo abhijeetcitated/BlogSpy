@@ -4,11 +4,12 @@
 
 export { BentoGrid } from "./bento-grid"
 export { AgenticSuggestions } from "./agentic-suggestions"
+export { AddProjectDialog } from "./AddProjectDialog"
+export { ProjectSwitcher } from "./ProjectSwitcher"
 export {
   quickActions,
   recentSearches,
   recentActivity,
-  agenticSuggestions,
   type QuickAction,
   type RecentSearch,
   type RecentActivity,

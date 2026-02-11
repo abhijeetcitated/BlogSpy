@@ -7,7 +7,7 @@ import { PAGE_PADDING, STACK_SPACING } from "@/styles/responsive"
 import { AnalysisForm } from "../components/analysis-form"
 import { GapAnalysisTable } from "../components/gap-analysis-table"
 import { ForumIntelTable } from "../components/forum-intel-table"
-import { MOCK_GAP_DATA, MOCK_FORUM_INTEL_DATA } from "../__mocks__/gap-data"
+import { MOCK_FORUM_INTEL_DATA } from "../__mocks__/gap-data"
 import { FilterBar } from "./components/FilterBar"
 import { ForumSearchBar } from "./components/ForumSearchBar"
 import { Header } from "./components/Header"
@@ -59,13 +59,14 @@ export const CompetitorGapContent = () => {
     filteredGapKeywords: baseGapKeywords,
     filteredForumPosts,
     forumStats,
+    handleVerifyTopKeywords,
     handleGapSelectAll,
     handleGapSelectRow,
     handleForumSelectAll,
     handleForumSelectRow,
     formatNumber,
   } = useCompetitorGap({
-    initialGapData: MOCK_GAP_DATA,
+    initialGapData: [],
     initialForumData: MOCK_FORUM_INTEL_DATA,
   })
 
@@ -214,6 +215,7 @@ export const CompetitorGapContent = () => {
                 onExport={handleExport}
                 onBulkAddToRoadmap={handleBulkAddToRoadmap}
                 onCopySelected={handleCopySelected}
+                onVerifyTopKeywords={() => handleVerifyTopKeywords(5)}
                 selectedCount={selectedGapRows.size}
                 isGapAnalysis
               />

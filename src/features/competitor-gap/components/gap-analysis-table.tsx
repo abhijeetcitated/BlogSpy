@@ -15,9 +15,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { toast } from "sonner"
 import type { GapKeyword, ForumIntelPost, SortField, SortDirection } from "../types"
-import { useKeywordStore } from "@/features/keyword-research/store"
 import { handleFeatureAccess } from "@/lib/feature-guard"
 import {
   IntentBadge,
@@ -42,7 +40,6 @@ interface GapAnalysisTableProps {
   onSelectRow: (id: string, checked: boolean) => void
   onAddToRoadmap: (keyword: GapKeyword) => void
   onWriteArticle?: (keyword: GapKeyword) => void
-  selectedCountryCode?: string
 }
 
 type ColumnMeta = {
@@ -63,7 +60,6 @@ export function GapAnalysisTable({
   onSelectRow,
   onAddToRoadmap,
   onWriteArticle,
-  selectedCountryCode,
 }: GapAnalysisTableProps) {
   const [forumDialogOpen, setForumDialogOpen] = useState(false)
   const [selectedKeywordForForum, setSelectedKeywordForForum] = useState<string | null>(null)
@@ -72,7 +68,6 @@ export function GapAnalysisTable({
   const [forumSortField, setForumSortField] = useState<SortField>("opportunity")
   const [forumSortDirection, setForumSortDirection] = useState<SortDirection>("desc")
   const [forumSelectedRows, setForumSelectedRows] = useState<Set<string>>(new Set())
-  const credits = useKeywordStore((state) => state.credits)
 
   const handleWrite = useCallback((keyword: GapKeyword) => {
     handleFeatureAccess("AI_WRITER", () => {
@@ -109,18 +104,6 @@ export function GapAnalysisTable({
       return next
     })
   }
-
-  const handleCheckForum = useCallback(async (keyword: GapKeyword) => {
-    if (credits !== null && credits < 1) {
-      toast.error("Insufficient credits", {
-        description: "Forum intel requires 1 credit.",
-      })
-      return
-    }
-
-    void keyword
-    toast.info("This feature is being rebuilt in V2")
-  }, [credits, selectedCountryCode])
 
   const volumeFormatter = useMemo(
     () =>
@@ -358,7 +341,6 @@ export function GapAnalysisTable({
                 )
               }
               onCopy={() => navigator.clipboard.writeText(row.original.keyword)}
-              onCheckForum={() => handleCheckForum(row.original)}
             />
           </div>
         ),

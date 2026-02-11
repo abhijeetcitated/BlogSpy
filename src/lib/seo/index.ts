@@ -14,4 +14,12 @@ export {
   type SerpResultItem,
 } from "./dataforseo"
 
+export {
+  fetchDomainIntersection,
+  fetchOrganicVerify,
+  fetchRankedKeywordsOptional,
+  GapProviderError,
+  isProviderHardStop,
+} from "./dataforseo-gap"
+
 export * from "./metadata"

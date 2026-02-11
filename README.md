@@ -1,4 +1,4 @@
-# 🔍 BlogSpy - Modern SEO SaaS Platform
+# ðŸ” BlogSpy - Modern SEO SaaS Platform
 
 > Enterprise-grade SEO dashboard for keyword research, rank tracking, and content optimization.
 
@@ -7,28 +7,28 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?logo=tailwindcss)
 ![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma)
 
-## ✨ Features
+## âœ¨ Features
 
-### 🔑 Keyword Research
+### ðŸ”‘ Keyword Research
 - **Keyword Explorer** - Discover thousands of keyword ideas with volume, difficulty, CPC
 - **Keyword Overview** - Deep dive into any keyword with SERP analysis
 - **Trend Spotter** - Find emerging topics before they peak
 
-### 📊 Rank Tracking
+### ðŸ“Š Rank Tracking
 - **Rank Tracker** - Monitor keyword positions across search engines
 - **Competitor Gap** - Find untapped keyword opportunities
 - **Content Decay** - Identify declining content for updates
 
-### ✍️ Content Tools
+### âœï¸ Content Tools
 - **AI Writer** - Generate SEO-optimized content with AI
 - **On-Page Checker** - Analyze pages for SEO issues
 - **Snippet Stealer** - Optimize for featured snippets
 
-### 🗺️ Content Strategy
+### ðŸ—ºï¸ Content Strategy
 - **Topic Clusters** - Build semantic content clusters
 - **Content Roadmap** - Plan your content calendar
 
-## 🏗️ Tech Stack
+## ðŸ—ï¸ Tech Stack
 
 | Category | Technology |
 |----------|------------|
@@ -39,39 +39,39 @@
 | State | Zustand |
 | Database | PostgreSQL (Prisma ORM) |
 | Auth | Clerk |
-| Payments | Stripe |
+| Payments | Lemon Squeezy |
 | SEO Data | DataForSEO API |
 | Deployment | Vercel |
 
-## 📁 Project Structure
+## ðŸ“ Project Structure
 
 ```
 blogspy-saas/
-├── app/                    # Next.js App Router pages
-│   ├── (auth)/            # Auth routes (login, register)
-│   ├── (marketing)/       # Marketing pages (blog, features)
-│   ├── api/               # API routes
-│   └── dashboard/         # Protected dashboard routes
-│
-├── components/
-│   ├── ui/                # shadcn/ui components
-│   ├── features/          # Feature components (organized by domain)
-│   ├── layout/            # Layout components (sidebar, nav)
-│   ├── charts/            # Chart components
-│   ├── common/            # Shared components
-│   └── forms/             # Form components
-│
-├── lib/                   # Utilities & helpers
-├── services/              # API service layer
-├── types/                 # TypeScript types
-├── config/                # App configuration
-├── store/                 # Zustand stores
-├── hooks/                 # Custom React hooks
-├── prisma/                # Database schema
-└── public/                # Static assets
+â”œâ”€â”€ app/                    # Next.js App Router pages
+â”‚   â”œâ”€â”€ (auth)/            # Auth routes (login, register)
+â”‚   â”œâ”€â”€ (marketing)/       # Marketing pages (blog, features)
+â”‚   â”œâ”€â”€ api/               # API routes
+â”‚   â””â”€â”€ dashboard/         # Protected dashboard routes
+â”‚
+â”œâ”€â”€ components/
+â”‚   â”œâ”€â”€ ui/                # shadcn/ui components
+â”‚   â”œâ”€â”€ features/          # Feature components (organized by domain)
+â”‚   â”œâ”€â”€ layout/            # Layout components (sidebar, nav)
+â”‚   â”œâ”€â”€ charts/            # Chart components
+â”‚   â”œâ”€â”€ common/            # Shared components
+â”‚   â””â”€â”€ forms/             # Form components
+â”‚
+â”œâ”€â”€ lib/                   # Utilities & helpers
+â”œâ”€â”€ services/              # API service layer
+â”œâ”€â”€ types/                 # TypeScript types
+â”œâ”€â”€ config/                # App configuration
+â”œâ”€â”€ store/                 # Zustand stores
+â”œâ”€â”€ hooks/                 # Custom React hooks
+â”œâ”€â”€ prisma/                # Database schema
+â””â”€â”€ public/                # Static assets
 ```
 
-## 🚀 Getting Started
+## ðŸš€ Getting Started
 
 ### Prerequisites
 
@@ -103,7 +103,7 @@ pnpm dev
 
 ```
 
-## 📜 Scripts
+## ðŸ“œ Scripts
 
 | Command | Description |
 |---------|-------------|
@@ -116,21 +116,21 @@ pnpm dev
 | `pnpm db:push` | Push schema to database |
 | `pnpm db:studio` | Open Prisma Studio |
 
-## 🔒 Security
+## ðŸ”’ Security
 
 - Middleware-based route protection
 - Security headers (HSTS, XSS, etc.)
 - Rate limiting on API routes
 - Input validation with Zod
 
-## 📈 Performance
+## ðŸ“ˆ Performance
 
 - React Server Components
 - Optimized images with next/image
 - Code splitting & lazy loading
 - Turbopack for fast builds
 
-## 🤝 Contributing
+## ðŸ¤ Contributing
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/amazing`)
@@ -138,10 +138,10 @@ pnpm dev
 4. Push to branch (`git push origin feature/amazing`)
 5. Open Pull Request
 
-## 📄 License
+## ðŸ“„ License
 
 Private - All rights reserved.
 
 ---
 
-Built with ❤️ by BlogSpy Team 👋
+Built with â¤ï¸ by BlogSpy Team ðŸ‘‹

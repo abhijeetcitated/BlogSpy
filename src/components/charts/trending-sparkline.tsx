@@ -1,16 +1,48 @@
 "use client"
 
-export function TrendingSparkline() {
-  // Simulated trending data showing spike
-  const data = [20, 25, 22, 30, 28, 35, 45, 65, 85, 95, 100, 98]
+/**
+ * Generates a deterministic growth curve from a growth percentage.
+ * - growthPercent > 0 → upward curve
+ * - growthPercent < 0 → downward curve
+ * - growthPercent === 0 → flat line
+ */
+function buildGrowthCurve(growthPercent: number): number[] {
+  const POINTS = 12
+  const absGrowth = Math.min(Math.abs(growthPercent), 500) // cap for rendering
+  const isNegative = growthPercent < 0
+
+  // Generate an eased curve from baseline to growth target
+  const baseline = 20
+  const peak = baseline + absGrowth * 0.4 // scale for visual
+  const data: number[] = []
+
+  for (let i = 0; i < POINTS; i++) {
+    const t = i / (POINTS - 1) // 0..1
+    // Ease-in-out curve: slow start, fast middle, slight plateau at end
+    const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+    const value = baseline + eased * (peak - baseline)
+    data.push(isNegative ? baseline + peak - value : value)
+  }
+
+  return data
+}
+
+interface TrendingSparklineProps {
+  growthPercent?: number
+}
+
+export function TrendingSparkline({ growthPercent = 0 }: TrendingSparklineProps) {
+  const data = buildGrowthCurve(growthPercent)
   const maxValue = Math.max(...data)
+  const minValue = Math.min(...data)
+  const range = maxValue - minValue || 1
   const height = 40
   const width = 100
 
   const points = data
     .map((value, index) => {
       const x = (index / (data.length - 1)) * width
-      const y = height - (value / maxValue) * height
+      const y = height - ((value - minValue) / range) * height
       return `${x},${y}`
     })
     .join(" ")

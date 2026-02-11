@@ -1,10 +1,10 @@
-import { CommandCenter } from "@features/dashboard"
 import { ErrorBoundary } from "@/components/shared/common/error-boundary"
+import { DashboardClient } from "@/features/dashboard/components/DashboardClient"
 
 export default function DashboardPage() {
   return (
     <ErrorBoundary>
-      <CommandCenter />
+      <DashboardClient />
     </ErrorBoundary>
   )
 }

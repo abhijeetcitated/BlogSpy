@@ -2,27 +2,19 @@
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * AI VISIBILITY SERVICES - Barrel Export
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
+ * 
+ * DELETED (2026-02-08): scan.service, citation.service, defense.service
+ * Reason: OpenRouter-dependent, replaced by DataForSEO-only architecture
+ * Backups: backups/2026-02-08_ai-visibility-delete/
+ * 
+ * ADDED (2026-02-08): dataforseo-visibility.service — core engine using DataForSEO APIs
  */
 
 export { AuditService, createAuditService } from "./audit.service"
-export { DefenseService, createDefenseService, type BrandFacts } from "./defense.service"
 export { TrackerService, createTrackerService } from "./tracker.service"
 export {
-  checkCitationOnPlatform,
-  runFullVisibilityCheck,
-  quickPlatformCheck,
-  type PlatformCheckInput,
-  type PlatformCheckResult,
-  type FullVisibilityCheckInput,
-  type FullVisibilityCheckResult,
-} from "./citation.service"
-
-export {
-  ScanService,
-  createScanService,
-  type GoogleDataResult,
-  type AIResponseResult,
-  type VirtualPlatformResult,
-  type FullScanResult,
-  type TechAuditData,
-} from "./scan.service"
+  runVisibilityScan,
+  checkSinglePlatform,
+  type VisibilityScanInput,
+  type VisibilityScanResult,
+} from "./dataforseo-visibility.service"

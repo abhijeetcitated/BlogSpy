@@ -14,6 +14,7 @@ interface HeaderProps {
 
 export function Header({ mainView, onViewChange, children }: HeaderProps) {
   const isGapAnalysis = mainView === "gap-analysis"
+  const forumDisabled = true
 
   return (
     <div className="py-4 sm:py-5 border-b border-border -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8">
@@ -49,20 +50,22 @@ export function Header({ mainView, onViewChange, children }: HeaderProps) {
             </button>
             <button
               onClick={() => onViewChange("forum-intel")}
+              disabled={forumDisabled}
               className={cn(
                 "flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all border",
-                !isGapAnalysis 
+                !isGapAnalysis && !forumDisabled
                   ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40" 
-                  : "text-muted-foreground hover:text-foreground border-transparent"
+                  : "text-muted-foreground border-transparent",
+                forumDisabled && "opacity-60 cursor-not-allowed"
               )}
             >
-              <MessageSquare className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", !isGapAnalysis && "text-emerald-600 dark:text-emerald-400")} />
+              <MessageSquare className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", !isGapAnalysis && !forumDisabled && "text-emerald-600 dark:text-emerald-400")} />
               <span>Forum</span>
               <Badge 
                 variant="outline" 
-                className="ml-0.5 sm:ml-1 text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-bold border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                className="ml-0.5 sm:ml-1 text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-bold border-amber-500/50 text-amber-600 dark:text-amber-300 bg-amber-500/10"
               >
-                PRO
+                SOON
               </Badge>
             </button>
           </div>

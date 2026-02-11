@@ -139,6 +139,5 @@ export const CLERK_PUBLIC_ROUTES = [
  * Clerk ignored routes (static files, etc.)
  */
 export const CLERK_IGNORED_ROUTES = [
-  "/api/webhooks/stripe",
   "/api/webhooks/clerk",
 ]

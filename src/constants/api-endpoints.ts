@@ -13,6 +13,31 @@ export const DATAFORSEO = {
     GOOGLE_ORGANIC: "/serp/google/organic/live/advanced",
     GOOGLE_MAPS: "/serp/google/maps/live/advanced",
     GOOGLE_NEWS: "/serp/google/news/live/advanced",
+    GOOGLE_AI_MODE: "/serp/google/ai_mode/live/advanced",
+  },
+
+  // DataForSEO Labs — AI (DEPRECATED — use AI_OPTIMIZATION instead)
+  LABS_AI: {
+    LLM_MENTIONS: "/dataforseo_labs/ai/llm_mentions/live",
+  },
+
+  // AI Optimization — LLM Responses (Live per-platform AI queries)
+  // Each endpoint queries a specific AI model and returns the full response + citations
+  // Cost: $0.0006 base + LLM token cost per call
+  // Rate: 2000 req/min global, 30 concurrent per platform
+  AI_OPTIMIZATION: {
+    CHATGPT: "/ai_optimization/chat_gpt/llm_responses/live",
+    CLAUDE: "/ai_optimization/claude/llm_responses/live",
+    GEMINI: "/ai_optimization/gemini/llm_responses/live",
+    PERPLEXITY: "/ai_optimization/perplexity/llm_responses/live",
+  },
+
+  // DataForSEO Labs — Google
+  LABS_GOOGLE: {
+    DOMAIN_INTERSECTION: "/dataforseo_labs/google/domain_intersection/live",
+    RANKED_KEYWORDS: "/dataforseo_labs/google/ranked_keywords/live",
+    LOCATIONS_AND_LANGUAGES: "/dataforseo_labs/locations_and_languages",
+    STATUS: "/dataforseo_labs/status",
   },
 
   // Keywords Data API

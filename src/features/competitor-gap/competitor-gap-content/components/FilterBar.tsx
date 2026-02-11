@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Download, SlidersHorizontal, CalendarPlus, Copy } from "lucide-react"
+import { Search, Download, SlidersHorizontal, CalendarPlus, Copy, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +26,7 @@ interface FilterBarProps {
   onExport: () => void
   onBulkAddToRoadmap?: () => void
   onCopySelected?: () => void
+  onVerifyTopKeywords?: () => void
   selectedCount?: number
   isGapAnalysis: boolean
 }
@@ -42,6 +43,7 @@ export function FilterBar({
   onExport,
   onBulkAddToRoadmap,
   onCopySelected,
+  onVerifyTopKeywords,
   selectedCount = 0,
   isGapAnalysis,
 }: FilterBarProps) {
@@ -120,6 +122,18 @@ export function FilterBar({
           <Download className="w-4 h-4 sm:mr-2" />
           <span className="hidden sm:inline">Export CSV</span>
         </Button>
+
+        {isGapAnalysis && onVerifyTopKeywords && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs sm:text-sm font-medium border-border hover:bg-muted"
+            onClick={onVerifyTopKeywords}
+          >
+            <RefreshCw className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Verify Top 5</span>
+          </Button>
+        )}
 
         {showBulkActions && (
           <>

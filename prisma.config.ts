@@ -32,5 +32,8 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
     url: env("DATABASE_URL"),
+    // @ts-expect-error Prisma config supports directUrl, types lag behind in prisma/config.
+    directUrl: env("DIRECT_URL"),
+    schemas: ["public", "auth"],
   },
 })

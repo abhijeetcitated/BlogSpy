@@ -7,6 +7,7 @@ import {
   fetchUserAction,
   updateProfileAction,
   updateNotificationsAction,
+  softSyncProfileAction,
 } from '@/features/settings/actions/user-actions';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import type { DemoUser } from '@/types/user';
@@ -137,6 +138,44 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           remaining: userData.credits || 1000,
           resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         });
+        return;
+      }
+
+      if (result?.data?.error === 'PROFILE_MISSING') {
+        const syncResult = await softSyncProfileAction({ _ts: Date.now() });
+        if (syncResult?.data?.success && syncResult.data.data) {
+          // Server returns a user object that we map to our internal profile
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const userData = syncResult.data.data as Record<string, any>;
+
+          const serverProfile: UserProfile = {
+            id: userData.id,
+            email: userData.email,
+            name: userData.name,
+            plan: userData.plan || 'FREE',
+            credits: userData.credits || 0,
+            createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+            updatedAt: new Date(),
+            company: userData.company || '',
+            website: userData.website || '',
+            timezone: userData.timezone || undefined,
+            dateFormat: userData.dateFormat || undefined,
+            language: userData.language || 'en-US',
+            auth_provider: userData.auth_provider || 'email',
+            lastPasswordChange: userData.last_password_change ? new Date(userData.last_password_change) : null,
+            notifications: userData.notifications || DEFAULT_NOTIFICATIONS,
+          };
+
+          setProfile(serverProfile);
+
+          setCredits({
+            total: userData.credits || 1000,
+            used: 0,
+            remaining: userData.credits || 1000,
+            resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          });
+          return;
+        }
       } else {
         // Fallback: Use auth user data if server fetch fails
         console.warn('[UserContext] Server fetch failed, using auth user data');

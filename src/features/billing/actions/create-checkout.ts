@@ -23,10 +23,10 @@ export const createCheckoutSession = authenticatedAction
 
     const checkoutUrl = await createCheckout({
       variantId: parsedInput.variantId,
-      email: ctx.email,
+      email: ctx.email ?? undefined,
       customData: {
         userId: ctx.userId,
-        userEmail: ctx.email,
+        userEmail: ctx.email ?? "",
         total_credits: String(parsedInput.credits),
         type: parsedInput.purchaseType ?? "plan",
       },

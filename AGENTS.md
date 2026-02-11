@@ -1,74 +1,110 @@
-# 🐉 DRAGON GOD MODE - CODEX INSTRUCTIONS (v2026)
+﻿# DRAGON GOD MODE - CODEX INSTRUCTIONS (v2026)
 
-> **IDENTITY:** You are the **APEX DEVELOPER**. You do not guess. You verify. You execute with surgical precision.
-> **TARGET:** `blogspy-saas` (Rebranded to **CitaTed**)
+> IDENTITY: APEX DEVELOPER
+> TARGET: blogspy-saas (CitaTed)
 
----
+## Rule 0: Build Gate (Mandatory)
+After ANY code change, run:
 
-## 🛑 PRIME DIRECTIVE: THE BUILD TEST
-**RULE #0:** After **ANY** code change (even a single line), you MUST run:
 ```bash
 npm run build
 ```
--   **IF IT FAILS:** You MUST fix it immediately. Do not ask. Do not proceed.
--   **IF IT PASSES:** Only then are you allowed to mark the task as done.
--   **WHY:** Type safety is our religion.
 
----
+If build fails, fix immediately before marking task done.
 
-## 🧬 TEK STACK DNA (STRICT VERSIONS)
-**WARNING:** This project runs on **BLEEDING EDGE** tech. Do NOT use old patterns.
+## Stack Contract (Strict)
+- Next.js v16.1.1: `params` and `searchParams` are promises in pages.
+- React v19.2.3: use `useActionState`; avoid `forwardRef` unless legacy interop is required.
+- Tailwind v4.1.18: theme via CSS variables in `src/app/globals.css`.
+- Prisma v7.3.0: run `npx prisma generate` after schema changes.
+- Supabase v0.8.0 (`@supabase/ssr`): RLS mandatory.
+- Mutations: use `next-safe-action` + `zod`.
 
-| Dependency | Version | CRITICAL RULE |
-| :--- | :--- | :--- |
-| **Next.js** | **v16.1.1** | `params` and `searchParams` are **PROMISES**. You MUST `await` them in Page components. |
-| **React** | **v19.2.3** | Use `useActionState` (NOT `useFormState`). No `forwardRef` needed (pass `ref` as prop). |
-| **Tailwind** | **v4.1.18** | **NO** `tailwind.config.ts`. Configuration is in CSS variables (`app/globals.css`). |
-| **Prisma** | **v6.19.1** | Run `anpx prisma generate` after any schema change. |
-| **Supabase** | **v0.8.0** | Use `@supabase/ssr`. **RLS IS MANDATORY.** |
-| **Forms** | **Next-Safe-Action** | Use `next-safe-action` + `zod` for type-safe server mutations. |
+## Coding Commandments
+1. App Router only (`src/app`).
+2. Mutations are Server Actions in `src/actions` or `src/app/**/actions.ts`.
+3. Do not create new `src/app/api/**` routes unless webhook/streaming is explicitly required.
+4. No `any` in new code.
+5. Parse all inputs with Zod.
 
----
+## Source-of-Truth Order
+1. `AGENTS.md` (this file)
+2. `.github/copilot-instructions.md`
+3. `.github/instructions/*.instructions.md` (path-scoped)
+4. Prompt / Agent / Skill files
 
-## ⚡ CODING COMMANDMENTS
+If conflicts exist, follow this order and fix lower-priority files.
 
-### 1. Architecture & Structure
--   **App Router Only:** All pages live in `src/app`.
--   **Server Actions:** ALL mutations (POST/PUT/DELETE) must be **Server Actions** in `src/actions` or `src/app/**/actions.ts`.
--   **No API Routes:** Do NOT create `src/app/api/...` unless absolutely necessary for Webhooks/Streaming.
+## Senior Workflow (7 phases + 2 hidden gates)
+- Phase 0 (hidden): Preflight baseline capture.
+- Phase 1: Research and discovery.
+- Phase 2: Security and threat modeling.
+- Phase 3: Wiring blueprint and dependency map.
+- Phase 4: Implementation.
+- Phase 5: Verification and crash testing.
+- Phase 6: Self-correction loop.
+- Phase 7: Future-proof handover.
+- Phase 8 (hidden): Post-merge validation.
 
-### 2. The "Next.js 16" Way (Strict)
--   **Async Params:**
-    ```tsx
-    // ✅ CORRECT (Next.js 15/16)
-    export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-      const { slug } = await params;
-      // ...
-    }
-    ```
--   **Caching:** Data is cached by default. Use `connection()` or `await params` to opt-out correctly if needed.
+## Baseline + Delta Scanning Process
+Before feature work:
+1. One-time baseline scan of required code:
+   - `src/**`
+   - `package.json`, `tsconfig*.json`, `next.config.*`, `proxy.ts`
+   - `prisma/schema.prisma`
+   - auth/supabase/db wiring files under `src/lib/**`, `src/services/**`, `src/actions/**`
+2. Build dependency and wiring maps (imports/exports, routes, actions, data flow).
 
-### 3. Tailwind v4 Styling
--   Do NOT look for `tailwind.config.js` to add colors.
--   Use **CSS Variables** in `globals.css` for themes.
--   Use `class-variance-authority` (cva) for reusable component variants.
+For each feature:
+1. Run delta scan only on impacted files + direct dependents.
+2. Expand scope only when dependency graph requires it.
+3. Refresh machine maps with `npm run maps:generate` weekly and before Tier-3 releases.
 
-### 4. Database & Auth (Supabase)
--   **Server:** `createClient` from `@/lib/supabase/server`.
--   **Client:** `createClient` from `@/lib/supabase/client`.
--   **Middleware:** Ensure `updateSession` is called.
+Default exclude list:
+- logs, build outputs, snapshots, generated files, vendor folders, random docs.
+- exception: always include governance docs (`AGENTS.md`, `.github/instructions/**`, `.github/skills/**/SKILL.md`, `.github/prompts/**`, `.github/agents/**`).
 
-### 5. Type Safety (Zero Tolerance)
--   **No `any`:** If you type `any`, you fail.
--   **Zod Everything:** All inputs (Forms, URL params) must be parsed with Zod.
+## Do Not Break Existing Wiring
+- Never remove existing exports without updating all consumers.
+- Never silently refactor shared modules.
+- If file contracts change, update all importers in the same change.
+- Add explicit backward-compat notes in PR/change summary.
 
----
+## Mandatory Per-Feature Artifacts
+1. `feature-plan.prompt.md` output
+2. `wiring-audit.prompt.md` output
+3. `regression-check.prompt.md` output
 
-## 🧠 WORKFLOW FOR CODEX
-1.  **READ:** Understand the file you are editing.
-2.  **PLAN:** Think about Next.js 16 constraints (Async params?).
-3.  **CODE:** Write the exact code.
-4.  **BUILD:** Run `npm run build`.
-5.  **FIX:** If build fails, fix types.
+No implementation starts before plan + wiring artifacts are complete.
 
-> **FINAL REMINDER:** You are working on **CitaTed**. The logo is `Cita` (White) + `Ted` (Amber). Do not revert branding.
+Artifacts are stored under:
+- `memory-bank/features/<feature-slug>/plan.md`
+- `memory-bank/features/<feature-slug>/wiring-audit.md`
+- `memory-bank/features/<feature-slug>/regression-report.md`
+
+Context files to read before planning:
+- `.github/context/src-index.md`
+- `.github/context/root-critical-files.md`
+- `.github/context/wiring-map.md`
+- `.github/context/integration-catalog.yaml`
+- `.github/context/risk-tier-rules.md`
+- `.github/context/external-research-standards.md`
+- `memory-bank/maps/import-graph.json`
+- `memory-bank/maps/route-action-map.json`
+- `memory-bank/maps/db-table-map.json`
+
+## Agent Role Contracts
+- Planner: read-only analysis, sequencing, risk map, no code edits.
+- Implementer: constrained edits aligned to plan, no silent architecture drift.
+- Reviewer: regression/security/wiring validation and release gate verdict.
+
+## Execution Checklist
+1. Read relevant files.
+2. Produce/refresh feature plan and wiring audit.
+3. Implement minimal safe change set.
+4. Run tests relevant to scope.
+5. Run `npm run build`.
+6. Fix all failures.
+7. Produce regression report and handover notes.
+
+Final reminder: Preserve CitaTed branding (`Cita` white + `Ted` amber).

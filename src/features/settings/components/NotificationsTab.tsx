@@ -1,8 +1,10 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useOptimistic, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Mail, Bell, TrendingUp, TrendingDown, Users, Megaphone } from "lucide-react"
@@ -13,7 +15,7 @@ import { DEFAULT_NOTIFICATIONS, NOTIFICATION_OPTIONS } from "../constants"
 import {
   getNotificationSettings,
   updateNotificationSetting,
-} from "@/features/settings/actions/notification-settings"
+} from "@/features/settings/actions/update-notifications"
 
 const SECTION_CONFIG = [
   {
@@ -25,7 +27,7 @@ const SECTION_CONFIG = [
     bgColor: "bg-blue-500/10",
   },
   {
-    key: "rankAlerts",
+    key: "rankalerts",
     title: "Ranking Alerts",
     description: "Track your keyword positions",
     icon: TrendingUp,
@@ -33,7 +35,7 @@ const SECTION_CONFIG = [
     bgColor: "bg-emerald-500/10",
   },
   {
-    key: "decayAlerts",
+    key: "decayalerts",
     title: "Content Decay Alerts",
     description: "Monitor content performance",
     icon: TrendingDown,
@@ -41,7 +43,7 @@ const SECTION_CONFIG = [
     bgColor: "bg-amber-500/10",
   },
   {
-    key: "competitorAlerts",
+    key: "competitoralerts",
     title: "Competitor Alerts",
     description: "Stay ahead of competition",
     icon: Users,
@@ -62,9 +64,15 @@ const SECTION_CONFIG = [
 const BRAND_GOLD_CLASS = "data-[state=checked]:bg-[#FFD700] data-[state=checked]:text-black"
 
 export function NotificationsTab() {
+  const router = useRouter()
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATIONS)
+  const [billingTier, setBillingTier] = useState("free")
   const [isLoading, setIsLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
+  const [optimisticSettings, setOptimisticSettings] = useOptimistic(
+    settings,
+    (_current, next: NotificationSettings) => next
+  )
   const { executeAsync: executeGetSettings } = useAction(getNotificationSettings)
   const { executeAsync: executeUpdateSetting } = useAction(updateNotificationSetting)
 
@@ -82,6 +90,7 @@ export function NotificationsTab() {
         }
         if (result?.data?.settings && isMounted) {
           setSettings(result.data.settings)
+          setBillingTier(result.data.billingTier ?? "free")
         }
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Failed to load notifications.")
@@ -98,28 +107,64 @@ export function NotificationsTab() {
     }
   }, [executeGetSettings])
 
-  const handleToggle = (key: keyof NotificationSettings, value: boolean) => {
-    const previous = settings[key]
-    setSettings((prev) => ({ ...prev, [key]: value }))
+  const buildNextSettings = (
+    current: NotificationSettings,
+    key: keyof NotificationSettings,
+    value: boolean
+  ) => {
+    const next = { ...current, [key]: value }
+    if (key === "unsubscribeall" && value) {
+      next.weeklyreport = false
+      next.rankalerts = false
+      next.decayalerts = false
+      next.competitoralerts = false
+      next.productupdates = false
+    }
+    if (key !== "unsubscribeall" && value) {
+      next.unsubscribeall = false
+    }
+    return next
+  }
 
+  const handleToggle = (key: keyof NotificationSettings, value: boolean) => {
+    if (key === "competitoralerts" && value && billingTier === "free") {
+      toast.error("Upgrade Required")
+      router.push("/pricing")
+      return
+    }
+
+    const previous = optimisticSettings
+    const nextSettings = buildNextSettings(optimisticSettings, key, value)
     startTransition(async () => {
+      setOptimisticSettings(nextSettings)
       try {
         const result = await executeUpdateSetting({ key, value })
         const serverError =
           typeof result?.serverError === "string" ? result.serverError : undefined
         if (serverError) {
+          if (serverError === "Upgrade Required") {
+            toast.error(serverError)
+            router.push("/pricing")
+            setSettings(previous)
+            setOptimisticSettings(previous)
+            return
+          }
           throw new Error(serverError)
         }
         if (!result?.data?.settings) {
           throw new Error("Failed to update notification settings.")
         }
         setSettings(result.data.settings)
+        toast.success("Preferences updated")
       } catch (error) {
-        setSettings((prev) => ({ ...prev, [key]: previous }))
+        setSettings(previous)
+        setOptimisticSettings(previous)
         toast.error(error instanceof Error ? error.message : "Failed to save notification settings.")
       }
     })
   }
+
+  const masterDisabled = optimisticSettings.unsubscribeall
 
   return (
     <div className="space-y-6">
@@ -171,7 +216,9 @@ export function NotificationsTab() {
               {options.map((option) => (
                 <div
                   key={option.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/30 transition-colors"
+                  className={`flex items-center justify-between p-3 rounded-lg hover:bg-accent/30 transition-colors ${
+                    masterDisabled ? "opacity-50" : ""
+                  }`}
                 >
                   <div className="space-y-0.5 flex-1 mr-4">
                     <Label htmlFor={option.id} className="text-foreground font-medium cursor-pointer">
@@ -179,15 +226,19 @@ export function NotificationsTab() {
                     </Label>
                     <p className="text-sm text-muted-foreground">{option.description}</p>
                   </div>
-                  <Switch
-                    id={option.id}
-                    checked={settings[option.id as keyof NotificationSettings]}
-                    disabled={isLoading || isPending || settings.unsubscribeAll}
-                    onCheckedChange={(checked) =>
-                      handleToggle(option.id as keyof NotificationSettings, checked)
-                    }
-                    className={BRAND_GOLD_CLASS}
-                  />
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-12 rounded-full" />
+                  ) : (
+                    <Switch
+                      id={option.id}
+                      checked={optimisticSettings[option.id as keyof NotificationSettings]}
+                      disabled={isLoading || isPending || masterDisabled}
+                      onCheckedChange={(checked) =>
+                        handleToggle(option.id as keyof NotificationSettings, checked)
+                      }
+                      className={BRAND_GOLD_CLASS}
+                    />
+                  )}
                 </div>
               ))}
             </CardContent>
@@ -205,12 +256,16 @@ export function NotificationsTab() {
                 Turn off all email notifications (you'll still receive critical account alerts)
               </p>
             </div>
-            <Switch
-              checked={settings.unsubscribeAll}
-              disabled={isLoading || isPending}
-              onCheckedChange={(checked) => handleToggle("unsubscribeAll", checked)}
-              className="data-[state=checked]:bg-red-500"
-            />
+            {isLoading ? (
+              <Skeleton className="h-8 w-12 rounded-full" />
+            ) : (
+              <Switch
+                checked={optimisticSettings.unsubscribeall}
+                disabled={isLoading || isPending}
+                onCheckedChange={(checked) => handleToggle("unsubscribeall", checked)}
+                className="data-[state=checked]:bg-red-500"
+              />
+            )}
           </div>
         </CardContent>
       </Card>

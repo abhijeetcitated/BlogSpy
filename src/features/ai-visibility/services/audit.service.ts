@@ -3,7 +3,7 @@
  * 🛡️ AI TECH AUDIT SERVICE - Production-Grade Implementation
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
  * 
- * Scans websites for AI Agent (ChatGPT, Claude, Apple Siri) crawlability.
+ * Scans websites for AI Agent (ChatGPT, Claude) crawlability.
  * 
  * Checks performed:
  * 1. robots.txt - AI Bot access (GPTBot, ClaudeBot, Applebot, CCBot)
@@ -43,7 +43,7 @@ function generateMockAuditResult(domain: string): TechAuditResult {
     robotsTxt: [
       { botId: "gptbot", botName: "GPTBot", platform: "ChatGPT/OpenAI", isAllowed: true, reason: "Explicitly allowed in robots.txt" },
       { botId: "claudebot", botName: "ClaudeBot", platform: "Claude/Anthropic", isAllowed: true, reason: "No specific rule - allowed by default" },
-      { botId: "applebot", botName: "Applebot", platform: "Apple Siri/Spotlight", isAllowed: true, reason: "Explicitly allowed in robots.txt" },
+      { botId: "applebot", botName: "Applebot", platform: "Apple Spotlight/Safari", isAllowed: true, reason: "Explicitly allowed in robots.txt" },
       { botId: "ccbot", botName: "CCBot", platform: "Common Crawl/AI Training", isAllowed: false, reason: "Disallowed: User-agent: CCBot" },
       { botId: "perplexitybot", botName: "PerplexityBot", platform: "Perplexity AI", isAllowed: true, reason: "No specific rule - allowed by default" },
       { botId: "google-extended", botName: "Google-Extended", platform: "Google Gemini", isAllowed: false, reason: "Disallowed: User-agent: Google-Extended" },
@@ -106,7 +106,7 @@ const AI_BOTS = [
     id: "applebot", 
     name: "Applebot", 
     userAgent: "Applebot",
-    platform: "Apple Siri/Spotlight",
+    platform: "Apple Spotlight/Safari",
     description: "Apple's crawler for Siri answers and Safari suggestions"
   },
   { 

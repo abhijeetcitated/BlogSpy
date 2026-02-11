@@ -11,7 +11,6 @@ import {
   TrendingDown,
   Settings,
   ChevronDown,
-  FolderKanban,
   LayoutDashboard,
   Copy,
   Video,
@@ -50,12 +49,20 @@ import {
 import { useProfile, useCredits } from "@/hooks/use-user"
 import { useAuth } from "@/contexts/auth-context"
 import { FEATURE_FLAGS } from "@/config/feature-flags"
+import { ProjectSwitcher } from "@/features/dashboard/components"
+import { useUserStore } from "@/store/user-store"
 
-const projects = [
-  { name: "My Tech Blog", id: "1" },
-  { name: "Marketing Site", id: "2" },
-  { name: "E-commerce Store", id: "3" },
-]
+export type ProjectSummary = {
+  id: string
+  userid: string
+  projectname: string
+  domain: string
+  targetcountry: string
+  icon: string | null
+  gscpropertyid: string | null
+  createdat: string
+  updatedat: string
+}
 
 const researchItems = [
   { title: "Keyword Explorer", icon: Search, href: "/dashboard/research/keyword-magic" },
@@ -85,15 +92,28 @@ const monetizationItems = [
 
 type AppSidebarClientProps = {
   serverIsAuthenticated?: boolean
+  projects?: ProjectSummary[]
 }
 
-export function AppSidebarClient({ serverIsAuthenticated = false }: AppSidebarClientProps) {
-  const [selectedProject, setSelectedProject] = useState(projects[0])
+export function AppSidebarClient({
+  serverIsAuthenticated = false,
+  projects = [],
+}: AppSidebarClientProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    const store = useUserStore.getState()
+    if (projects.length === 0) return
+
+    store.setProjects(projects)
+    if (!store.activeProject) {
+      store.setActiveProject(projects[0])
+    }
+  }, [projects])
 
   // Get user data from context
   const { displayName, email, plan, isLoading: profileLoading } = useProfile()
@@ -133,28 +153,12 @@ export function AppSidebarClient({ serverIsAuthenticated = false }: AppSidebarCl
           </div>
           <span className="text-lg font-semibold text-sidebar-foreground">BlogSpy</span>
         </div>
-
-        {/* Project Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center justify-between w-full px-3 py-2 text-sm rounded-lg bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors text-sidebar-foreground">
-            <div className="flex items-center gap-2">
-              <FolderKanban className="h-4 w-4 text-muted-foreground" />
-              <span className="truncate">{selectedProject.name}</span>
-            </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            {projects.map((project) => (
-              <DropdownMenuItem key={project.id} onClick={() => setSelectedProject(project)} className="cursor-pointer">
-                <FolderKanban className="h-4 w-4 mr-2" />
-                {project.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </SidebarHeader>
 
       <SidebarContent className="px-2">
+        <div className="px-1 pr-3 pb-3">
+          <ProjectSwitcher />
+        </div>
         {/* Dashboard Overview */}
         <SidebarGroup>
           <SidebarGroupContent>

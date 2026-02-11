@@ -1,5 +1,3 @@
-"use server"
-
 import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/server"
@@ -75,10 +73,11 @@ class CreditBanker {
     amount: number,
     feature: string,
     description: string,
-    metadata: Record<string, unknown> = {}
+    metadata: Record<string, unknown> = {},
+    idempotencyKey?: string
   ): Promise<CreditDeductResult> {
     const admin = this.getAdmin()
-    const idempotencyKey = crypto.randomUUID()
+    const resolvedIdempotencyKey = idempotencyKey ?? crypto.randomUUID()
 
     const { data, error } = await admin.rpc("consume_credits_atomic", {
       p_user_id: userId,
@@ -86,52 +85,67 @@ class CreditBanker {
       p_feature_name: feature,
       p_description: description,
       p_metadata: metadata,
-      p_idempotency_key: idempotencyKey,
+      p_idempotency_key: resolvedIdempotencyKey,
     })
 
     if (error) {
-      return { success: false, error: error.message, idempotencyKey }
+      return { success: false, error: error.message, idempotencyKey: resolvedIdempotencyKey }
     }
 
     const result = Array.isArray(data) ? data[0] : data
     if (!result || result.success !== true) {
-      return { success: false, error: "INSUFFICIENT_CREDITS", remaining: result?.balance, idempotencyKey }
+      return {
+        success: false,
+        error: "INSUFFICIENT_CREDITS",
+        remaining: result?.balance,
+        idempotencyKey: resolvedIdempotencyKey,
+      }
     }
 
     return {
       success: true,
       remaining: typeof result.balance === "number" ? result.balance : 0,
-      idempotencyKey,
+      idempotencyKey: resolvedIdempotencyKey,
     }
   }
 
   async refund(
     userId: string,
     amount: number,
-    transactionId: string,
+    idempotencyKeyOrTxId: string,
     reason: string
   ): Promise<CreditRefundResult> {
     const admin = this.getAdmin()
-    let idempotencyKey = transactionId
+    let idempotencyKey = idempotencyKeyOrTxId
 
-    const { data: txRow } = await admin
-      .from("bill_transactions")
-      .select("idempotency_key")
-      .eq("id", transactionId)
-      .maybeSingle()
+    // If the caller passed a transaction UUID (legacy path), look up its idempotency_key
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (isUuid.test(idempotencyKeyOrTxId)) {
+      const { data: txRow } = await admin
+        .from("bill_transactions")
+        .select("idempotency_key")
+        .eq("id", idempotencyKeyOrTxId)
+        .maybeSingle()
 
-    if (txRow?.idempotency_key) {
-      idempotencyKey = txRow.idempotency_key
+      if (txRow?.idempotency_key) {
+        idempotencyKey = txRow.idempotency_key
+      }
     }
 
     const { data, error } = await admin.rpc("refund_credits_atomic", {
       p_user_id: userId,
       p_amount: amount,
       p_idempotency_key: idempotencyKey,
-      p_description: reason,
     })
 
     if (error) {
+      console.error("[CreditBanker.refund] Refund failed:", {
+        userId,
+        amount,
+        reason,
+        idempotencyKey,
+        error: error.message,
+      })
       return { success: false, error: error.message }
     }
 

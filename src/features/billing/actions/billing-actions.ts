@@ -21,10 +21,10 @@ export const createCheckoutAction = authenticatedAction
     const checkoutUrl = await createCheckout({
       variantId: parsedInput.variantId,
       userId: ctx.userId,
-      email: ctx.email,
+      email: ctx.email ?? undefined,
       returnUrl,
       customData: {
-        userEmail: ctx.email,
+        userEmail: ctx.email ?? "",
         credits: parsedInput.credits,
         purchaseType: parsedInput.purchaseType ?? "plan",
       },
@@ -43,7 +43,7 @@ export const getPortalUrl = authenticatedAction
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     const fallbackUrl = parsedInput.redirectUrl ?? `${appUrl}/pricing`
 
-    const portalUrl = await getPortalUrlByEmail(ctx.email)
+    const portalUrl = await getPortalUrlByEmail(ctx.email ?? undefined)
 
     return {
       url: portalUrl ?? fallbackUrl,

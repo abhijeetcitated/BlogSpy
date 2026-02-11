@@ -19,7 +19,7 @@
  * ✅ Credit System - Complete (mock)
  * ✅ Security Layer - Complete
  * ✅ Rate Limiting - Complete
- * ⏳ Payment Gateway - Ready for Razorpay/Stripe
+ * ⏳ Payment Gateway - Ready for Razorpay/Lemon Squeezy
  * ⏳ Real API - Ready for DataForSEO
  * ⏳ Database - Ready for Supabase/Prisma
  * 

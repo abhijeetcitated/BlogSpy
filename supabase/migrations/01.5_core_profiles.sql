@@ -75,6 +75,10 @@ begin
     auth_provider = excluded.auth_provider,
     -- Sirf tabhi update karo agar user ne khud manually nahi badla
     full_name = coalesce(public.core_profiles.full_name, excluded.full_name);
+
+  insert into public.notificationsettings (userid)
+  values (new.id)
+  on conflict (userid) do nothing;
   return new;
 end;
 $$;

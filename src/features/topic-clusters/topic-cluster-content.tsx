@@ -1984,7 +1984,7 @@ export function TopicClusterContent() {
               </div>
               
               <p className="text-xs text-zinc-400 mt-4">
-                Credits never expire. Secure payment via Stripe.
+                Credits never expire. Secure payment via Lemon Squeezy.
               </p>
             </div>
           </div>

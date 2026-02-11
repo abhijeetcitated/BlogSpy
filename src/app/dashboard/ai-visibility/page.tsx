@@ -3,14 +3,17 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
-import { AIVisibilityDashboard, SetupWizard, AddKeywordModal, SetupConfigModal } from "@/features/ai-visibility/components"
-import { runFullScan, type RunScanInput } from "@/features/ai-visibility/actions/run-scan"
-import { addTrackedKeyword, saveVisibilityConfig, listVisibilityConfigs, getVisibilityDashboardData } from "@/features/ai-visibility/actions"
-import type { AIVisibilityConfig, AICitation, VisibilityTrendData } from "@/features/ai-visibility/types"
+import { AIVisibilityDashboard, SetupWizard, AddKeywordModal, SetupConfigModal, type UserProjectOption } from "@/features/ai-visibility/components"
+import { useUserStore } from "@/store/user-store"
+import { runFullScan, type RunScanInput, getCreditBalance, getScanHistory, getKeywordScanResult } from "@/features/ai-visibility/actions/run-scan"
+import { addTrackedKeyword, saveVisibilityConfig, listVisibilityConfigs, getVisibilityDashboardData, getTrackedKeywords, deleteTrackedKeyword } from "@/features/ai-visibility/actions"
+import type { AIVisibilityConfig, AICitation, VisibilityTrendData, TrackedKeyword } from "@/features/ai-visibility/types"
+import type { ScanHistoryEntry } from "@/features/ai-visibility/components"
 import { ErrorBoundary } from "@/components/shared/common/error-boundary"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import type { FullScanResult } from "@/features/ai-visibility/services/scan.service"
+import type { FullScanResult } from "@/features/ai-visibility/types"
+import { detectBrowserCountry } from "@/features/ai-visibility/config/countries"
 import {
   Dialog,
   DialogContent,
@@ -85,10 +88,24 @@ export default function AIVisibilityPage() {
   const [showSetupModal, setShowSetupModal] = useState(false)
   const [showSetupWizard, setShowSetupWizard] = useState(false)
   const [isScanning, setIsScanning] = useState(false)
+  const [selectedCountry, setSelectedCountry] = useState(() => detectBrowserCountry())
   const [lastScanResult, setLastScanResult] = useState<FullScanResult | null>(null)
   const [showAddKeywordModal, setShowAddKeywordModal] = useState(false)
   const [isAddingKeyword, setIsAddingKeyword] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [creditBalance, setCreditBalance] = useState<number | null>(null)
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0)
+  const [dashboardDays, setDashboardDays] = useState(30)
+  const [trackedKeywords, setTrackedKeywords] = useState<TrackedKeyword[]>([])
+  const [isKeywordsLoading, setIsKeywordsLoading] = useState(false)
+  const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>([])
+  const [isScanHistoryLoading, setIsScanHistoryLoading] = useState(false)
+  const [platformMessages, setPlatformMessages] = useState<Record<string, string> | null>(null)
+  
+  // Read active project + projects from Zustand store (sidebar controls active project)
+  const zustandProjects = useUserStore((state) => state.projects)
+  const activeProjectId = useUserStore((state) => state.activeProjectId)
+  const activeProject = useUserStore((state) => state.activeProject)
   
   // ═══════════════════════════════════════════════════════════════════════════
   // GUEST MODE: Check if user is logged in
@@ -106,7 +123,52 @@ export default function AIVisibilityPage() {
 
   const selectedConfig = configs.find((config) => config.id === selectedConfigId) || null
 
-  const refreshConfigs = async (nextSelectedId?: string) => {
+  // Derive whether the active sidebar project has an AI config
+  const needsConfig = !isGuest && !isDemoMode && !!activeProjectId && !selectedConfigId
+
+  // ── Sync: when sidebar activeProjectId changes, find matching AI config ──
+  useEffect(() => {
+    if (!activeProjectId) {
+      setSelectedConfigId(null)
+      return
+    }
+    const matchedConfig = configs.find((c) => c.projectId === activeProjectId)
+    setSelectedConfigId(matchedConfig?.id || null)
+  }, [activeProjectId, configs])
+
+  // ── Backward compat: auto-link orphan configs by domain match ──
+  useEffect(() => {
+    if (zustandProjects.length === 0 || configs.length === 0) return
+    const orphanConfigs = configs.filter((c) => !c.projectId)
+    if (orphanConfigs.length === 0) return
+
+    // For each orphan, find a matching sidebar project by domain
+    const updates: Promise<unknown>[] = []
+    for (const orphan of orphanConfigs) {
+      const matchedProject = zustandProjects.find(
+        (p) => normalizeDomain(p.domain) === normalizeDomain(orphan.trackedDomain)
+      )
+      if (matchedProject) {
+        // Auto-link by saving with project_id
+        updates.push(
+          saveVisibilityConfig({
+            configId: orphan.id,
+            projectId: matchedProject.id,
+            projectName: orphan.projectName,
+            trackedDomain: orphan.trackedDomain,
+            brandKeywords: orphan.brandKeywords,
+            competitorDomains: orphan.competitorDomains,
+          })
+        )
+      }
+    }
+    if (updates.length > 0) {
+      Promise.all(updates).then(() => refreshConfigs())
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zustandProjects.length, configs.length])
+
+  const refreshConfigs = async () => {
     const response = await listVisibilityConfigs({})
     if (response?.serverError) {
       toast.error(response.serverError)
@@ -117,10 +179,6 @@ export default function AIVisibilityPage() {
     if (result?.success) {
       const nextConfigs = result.data || []
       setConfigs(nextConfigs)
-
-      const preferredId = nextSelectedId || selectedConfigId
-      const fallbackId = nextConfigs.find((config) => config.id === preferredId)?.id || nextConfigs[0]?.id || null
-      setSelectedConfigId(fallbackId)
       return nextConfigs
     } else if (result?.error) {
       toast.error(result.error)
@@ -139,8 +197,18 @@ export default function AIVisibilityPage() {
   ) => {
     setIsSavingConfig(true)
     try {
+      // If a sidebar project is active, inject its data
+      const enrichedInput = activeProject
+        ? {
+            ...configInput,
+            projectId: activeProject.id,
+            projectName: configInput.projectName || activeProject.projectname,
+            trackedDomain: configInput.trackedDomain || activeProject.domain,
+          }
+        : configInput
+
       const response = await saveVisibilityConfig({
-        ...configInput,
+        ...enrichedInput,
         configId: editingConfig?.id,
       })
 
@@ -151,13 +219,13 @@ export default function AIVisibilityPage() {
 
       const result = response?.data
       if (result?.success && result.data) {
-        await refreshConfigs(result.data.id)
+        await refreshConfigs()
         setIsDemoMode(false)
         setShowConfigModal(false)
         setEditingConfig(null)
-        toast.success(editingConfig ? "Project updated" : "Project added")
+        toast.success(editingConfig ? "Settings updated" : "AI Visibility configured")
       } else {
-        toast.error(result?.error || "Failed to save project")
+        toast.error(result?.error || "Failed to save settings")
       }
     } finally {
       setIsSavingConfig(false)
@@ -180,12 +248,17 @@ export default function AIVisibilityPage() {
           setIsGuest(!user)
           
           if (user) {
-            const nextConfigs = await refreshConfigs()
+            await refreshConfigs()
             if (!isMounted) return
             setIsDemoMode(false)
-            if (!nextConfigs || !nextConfigs.length) {
-              openConfigModal(null)
-            }
+            // Project selection is handled by auto-select effect (zustandProjects + configs)
+            // Fetch credit balance
+            try {
+              const balResp = await getCreditBalance({})
+              if (isMounted && balResp?.data?.success && balResp.data.data) {
+                setCreditBalance(balResp.data.data.remaining)
+              }
+            } catch { /* ignore balance errors */ }
           } else {
             setIsDemoMode(true)
           }
@@ -220,7 +293,7 @@ export default function AIVisibilityPage() {
     setIsDashboardLoading(true)
 
     const loadDashboard = async () => {
-      const response = await getVisibilityDashboardData({ configId: selectedConfigId })
+      const response = await getVisibilityDashboardData({ configId: selectedConfigId, days: dashboardDays })
 
       if (!isMounted) return
 
@@ -246,7 +319,102 @@ export default function AIVisibilityPage() {
     return () => {
       isMounted = false
     }
-  }, [selectedConfigId, isGuest, isDemoMode])
+  }, [selectedConfigId, isGuest, isDemoMode, dashboardRefreshKey, dashboardDays])
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOAD TRACKED KEYWORDS
+  // ═══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (isGuest || isDemoMode || !selectedConfigId) {
+      setTrackedKeywords([])
+      return
+    }
+
+    let isMounted = true
+    const loadKeywords = async () => {
+      setIsKeywordsLoading(true)
+      try {
+        const response = await getTrackedKeywords({ configId: selectedConfigId })
+        if (!isMounted) return
+        if (response?.data?.success && response.data.data) {
+          setTrackedKeywords(response.data.data as TrackedKeyword[])
+        }
+      } catch {
+        // silent — keywords are non-critical
+      } finally {
+        if (isMounted) setIsKeywordsLoading(false)
+      }
+    }
+    loadKeywords()
+    return () => { isMounted = false }
+  }, [selectedConfigId, isGuest, isDemoMode, dashboardRefreshKey])
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LOAD SCAN HISTORY
+  // ═══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (isGuest || isDemoMode || !selectedConfigId) {
+      setScanHistory([])
+      return
+    }
+
+    let isMounted = true
+    const loadHistory = async () => {
+      setIsScanHistoryLoading(true)
+      try {
+        const response = await getScanHistory({ configId: selectedConfigId, limit: 10 })
+        if (!isMounted) return
+        if (response?.data?.success && response.data.data) {
+          setScanHistory(response.data.data as ScanHistoryEntry[])
+        }
+      } catch {
+        // silent
+      } finally {
+        if (isMounted) setIsScanHistoryLoading(false)
+      }
+    }
+    loadHistory()
+    return () => { isMounted = false }
+  }, [selectedConfigId, isGuest, isDemoMode, dashboardRefreshKey])
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // KEYWORD HANDLERS (delete & scan)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const handleDeleteKeyword = async (keywordId: string) => {
+    try {
+      const response = await deleteTrackedKeyword({ id: keywordId })
+      if (response?.serverError) {
+        toast.error(response.serverError)
+        return
+      }
+      if (response?.data?.success) {
+        toast.success("Keyword removed")
+        setDashboardRefreshKey(prev => prev + 1)
+      } else {
+        toast.error(response?.data?.error || "Failed to delete keyword")
+      }
+    } catch {
+      toast.error("Failed to delete keyword")
+    }
+  }
+
+  const handleScanKeyword = async (keyword: string) => {
+    await handleScan(keyword)
+  }
+
+  const handleViewScanResult = async (scanId: string) => {
+    try {
+      const response = await getKeywordScanResult({ scanId })
+      if (response?.data?.success && response.data.data) {
+        setLastScanResult(response.data.data)
+        toast.success("Scan result loaded")
+      } else {
+        toast.error(response?.data?.error || "Failed to load scan result")
+      }
+    } catch {
+      toast.error("Failed to load scan result")
+    }
+  }
 
   // Handle setup completion
   const handleSetupComplete = async (config: { domain: string; brandName: string }) => {
@@ -275,7 +443,7 @@ export default function AIVisibilityPage() {
 
       const result = response?.data
       if (result?.success && result.data) {
-        await refreshConfigs(result.data.id)
+        await refreshConfigs()
         setHasConfiguredProject(true)
         setIsDemoMode(false)
         setShowSetupWizard(false)
@@ -289,14 +457,24 @@ export default function AIVisibilityPage() {
 
   // Handle demo action click (Scan, Verify, etc.)
   const handleDemoActionClick = () => {
-    // ═══════════════════════════════════════════════════════════════════════════════════════════════
-    // GUEST GATE: Show login modal instead of setup modal for guests
-    // ═══════════════════════════════════════════════════════════════════════════════════════════════
     if (isGuest) {
       setShowLoginModal(true)
       return
     }
-    openConfigModal(null)
+    // If logged in but no sidebar projects, prompt to create one
+    if (zustandProjects.length === 0) {
+      toast.info("Create a project first", {
+        description: "Use the sidebar to add your first project, then come back here to configure AI Visibility.",
+      })
+      return
+    }
+    // If they have a project but no config, open configure modal
+    if (activeProject && !selectedConfig) {
+      openConfigModal(null)
+      return
+    }
+    // Otherwise they're already set up
+    openConfigModal(selectedConfig)
   }
 
   // Handle real scan when not in demo mode
@@ -322,47 +500,109 @@ export default function AIVisibilityPage() {
     const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
     
     if (!isMockMode && !selectedConfig) {
-      toast.error("Please add a project first")
-      openConfigModal(null)
+      toast.error("Please configure AI Visibility for this project first")
+      if (activeProject) {
+        handleConfigureProject(activeProject.id)
+      }
+      return
+    }
+
+    if (!isMockMode && !selectedConfigId) {
+      toast.error("No configuration selected. Please select a project first.")
       return
     }
 
     if (!isMockMode && (!selectedConfig?.trackedDomain || !selectedConfig?.brandKeywords?.[0])) {
-      toast.error("Please complete your project settings")
+      toast.error("Please complete your AI Visibility settings")
       openConfigModal(selectedConfig || null)
       return
     }
 
     setIsScanning(true)
     
+    // Optimistically deduct credits from display immediately
+    const SCAN_COST = 5
+    if (creditBalance !== null && creditBalance !== undefined) {
+      setCreditBalance(prev => Math.max(0, (prev ?? 0) - SCAN_COST))
+    }
+
     try {
       const scanInput: RunScanInput = {
         keyword: trimmedKeyword,
         brandName: selectedConfig?.brandKeywords?.[0] || "BlogSpy",
         targetDomain: selectedConfig?.trackedDomain || "blogspy.io",
+        configId: selectedConfigId!,
+        brandKeywords: selectedConfig?.brandKeywords,
+        competitorDomains: selectedConfig?.competitorDomains,
+        countryCode: selectedCountry !== "WW" ? selectedCountry : undefined,
       }
 
-      const result = await runFullScan(scanInput)
+      const response = await runFullScan(scanInput)
 
-      if (result.success && result.data) {
-        // Store scan result in state
+      if (response?.serverError) {
+        // Revert optimistic deduction on server error
+        setCreditBalance(prev => (prev ?? 0) + SCAN_COST)
+        toast.error(response.serverError)
+        return
+      }
+
+      const result = response?.data
+      if (result?.success && result.data) {
+        // Store scan result + platform messages in state
         setLastScanResult(result.data)
+        setPlatformMessages(result.platformMessages ?? null)
         
         toast.success(
           `Scan complete! Visible on ${result.data.visiblePlatforms}/${result.data.totalPlatforms} platforms`,
           {
-            description: `Used ${result.creditsUsed} credits. Overall score: ${result.data.overallScore}%`,
+            description: `Used ${result.creditsUsed ?? 0} credits. Overall score: ${result.data.overallScore}%`,
           }
         )
         
-        // Refresh the page to get fresh data
-        router.refresh()
+        // Refresh dashboard data and credit balance (confirms actual server balance)
+        setDashboardRefreshKey(prev => prev + 1)
+        try {
+          const balResp = await getCreditBalance({})
+          if (balResp?.data?.success && balResp.data.data) {
+            setCreditBalance(balResp.data.data.remaining)
+          }
+        } catch { /* ignore */ }
       } else {
-        toast.error(result.error || "Scan failed", {
-          description: result.creditsUsed > 0 ? `Credits were refunded.` : undefined,
-        })
+        const errorMsg = result?.error || "Scan failed"
+        // Revert optimistic deduction when credits weren't actually used
+        if ((result?.creditsUsed ?? 0) === 0) {
+          setCreditBalance(prev => (prev ?? 0) + SCAN_COST)
+        } else {
+          // Credits were used but refunded — sync with server
+          try {
+            const balResp = await getCreditBalance({})
+            if (balResp?.data?.success && balResp.data.data) {
+              setCreditBalance(balResp.data.data.remaining)
+            }
+          } catch { /* ignore */ }
+        }
+        // Differentiate error types for better UX
+        if (errorMsg.includes("Insufficient credits")) {
+          toast.error("Not enough credits", {
+            description: "You need 5 credits per scan. Upgrade your plan or wait for renewal.",
+          })
+        } else if (errorMsg.startsWith("COOLDOWN:")) {
+          toast.warning(errorMsg.replace("COOLDOWN: ", ""), {
+            description: "This prevents duplicate charges for the same keyword.",
+          })
+        } else if (errorMsg.includes("rate") || errorMsg.includes("Rate")) {
+          toast.error("Rate limit reached", {
+            description: "Please wait a moment before scanning again.",
+          })
+        } else {
+          toast.error(errorMsg, {
+            description: (result?.creditsUsed ?? 0) > 0 ? "Credits were refunded." : undefined,
+          })
+        }
       }
     } catch (error) {
+      // Revert optimistic deduction on exception
+      setCreditBalance(prev => (prev ?? 0) + SCAN_COST)
       toast.error("Failed to run scan", {
         description: error instanceof Error ? error.message : "Unknown error",
       })
@@ -393,9 +633,11 @@ export default function AIVisibilityPage() {
     }
 
     if (!selectedConfig) {
-      toast.error("Please configure your project first")
+      toast.error("Please configure AI Visibility first")
       setShowAddKeywordModal(false)
-      openConfigModal(null)
+      if (activeProject) {
+        handleConfigureProject(activeProject.id)
+      }
       return
     }
 
@@ -419,7 +661,7 @@ export default function AIVisibilityPage() {
           description: "It will be checked in the next scan.",
         })
         setShowAddKeywordModal(false)
-        router.refresh()
+        setDashboardRefreshKey(prev => prev + 1)
       } else {
         toast.error(result?.error || "Failed to add keyword")
       }
@@ -430,6 +672,13 @@ export default function AIVisibilityPage() {
     } finally {
       setIsAddingKeyword(false)
     }
+  }
+
+  // ── Handle "Configure" button — open config modal for a sidebar project ──
+  const handleConfigureProject = (_projectId: string) => {
+    // Project is already active via sidebar — just open the modal
+    setEditingConfig(null)
+    setShowConfigModal(true)
   }
 
   // Loading state while checking config
@@ -458,7 +707,7 @@ export default function AIVisibilityPage() {
       {/* Demo Mode Banner */}
       {isDemoMode && (
         <DemoBanner 
-          onSetupClick={() => isGuest ? setShowLoginModal(true) : openConfigModal(null)} 
+          onSetupClick={() => isGuest ? setShowLoginModal(true) : handleDemoActionClick()} 
           isGuest={isGuest}
         />
       )}
@@ -476,10 +725,24 @@ export default function AIVisibilityPage() {
         configs={configs}
         selectedConfigId={selectedConfigId}
         onSelectConfig={(configId) => setSelectedConfigId(configId)}
-        onAddConfig={() => openConfigModal(null)}
         onEditConfig={(config) => openConfigModal(config)}
-        reportDomain={selectedConfig?.trackedDomain || (isDemoMode ? "example.com" : undefined)}
+        reportDomain={selectedConfig?.trackedDomain || activeProject?.domain || (isDemoMode ? "example.com" : undefined)}
         isLoading={isDashboardLoading}
+        creditBalance={isDemoMode ? 500 : creditBalance}
+        onDateRangeChange={(days) => setDashboardDays(days)}
+        trackedKeywords={trackedKeywords}
+        isKeywordsLoading={isKeywordsLoading}
+        onDeleteKeyword={handleDeleteKeyword}
+        onScanKeyword={handleScanKeyword}
+        scanHistory={scanHistory}
+        isScanHistoryLoading={isScanHistoryLoading}
+        onViewScanResult={handleViewScanResult}
+        platformMessages={platformMessages}
+        selectedCountry={selectedCountry}
+        onCountryChange={setSelectedCountry}
+        needsConfig={needsConfig}
+        activeProjectName={activeProject?.projectname}
+        onConfigureProject={activeProjectId ? () => handleConfigureProject(activeProjectId) : undefined}
       />
 
       {/* Add Keyword Modal */}
@@ -499,6 +762,11 @@ export default function AIVisibilityPage() {
         onSave={handleSaveConfig}
         existingConfig={editingConfig}
         isSaving={isSavingConfig}
+        linkedProject={
+          activeProject
+            ? { id: activeProject.id, projectname: activeProject.projectname, domain: activeProject.domain, icon: activeProject.icon }
+            : null
+        }
       />
 
       {/* Setup Prompt Modal */}
@@ -530,7 +798,7 @@ export default function AIVisibilityPage() {
             <Button 
               onClick={() => {
                 setShowSetupModal(false)
-                openConfigModal(null)
+                handleDemoActionClick()
               }}
               className="w-full sm:w-auto"
             >

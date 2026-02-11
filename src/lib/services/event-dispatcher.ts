@@ -121,24 +121,24 @@ export async function triggerAlert(userId: string, eventType: EventType, data: R
   }
 
   const { data: settings, error } = await supabase
-    .from("notification_settings")
-    .select("weekly_seo_report, rank_alerts, decay_alerts, competitor_alerts, product_updates, unsubscribe_all")
-    .eq("user_id", userId)
+    .from("notificationsettings")
+    .select("weeklyreport, rankalerts, decayalerts, competitoralerts, productupdates, unsubscribeall")
+    .eq("userid", userId)
     .maybeSingle()
 
   if (error || !settings) {
     return
   }
 
-  if (settings.unsubscribe_all) {
+  if (settings.unsubscribeall) {
     return
   }
 
-  if (eventType === "rank_drop" && !settings.rank_alerts) {
+  if (eventType === "rank_drop" && !settings.rankalerts) {
     return
   }
 
-  if (eventType === "traffic_drop" && !settings.decay_alerts) {
+  if (eventType === "traffic_drop" && !settings.decayalerts) {
     return
   }
 

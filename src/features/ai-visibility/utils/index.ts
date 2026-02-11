@@ -12,6 +12,9 @@ import {
   CitationType,
   TrustMetrics,
   HallucinationRisk,
+  NetSentiment,
+  CompetitorBenchmark,
+  DashboardMetrics,
 } from "../types"
 import { 
   SAMPLE_CITATIONS, 
@@ -65,6 +68,32 @@ export function calculateVisibilityStats(citations: AICitation[]): AIVisibilityS
   const diversityScore = Math.min(30, Object.keys(platformCounts).length * 10)
   const visibilityScore = Math.round(citationScore + positionScore + diversityScore)
 
+  // Calculate real week-over-week change from citation timestamps
+  const now = new Date()
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+
+  const thisWeekCitations = citations.filter(c => {
+    const ts = new Date(c.timestamp)
+    return ts >= oneWeekAgo && ts <= now
+  }).length
+  const lastWeekCitations = citations.filter(c => {
+    const ts = new Date(c.timestamp)
+    return ts >= twoWeeksAgo && ts < oneWeekAgo
+  }).length
+
+  const weekOverWeekChange = lastWeekCitations > 0
+    ? Math.round(((thisWeekCitations - lastWeekCitations) / lastWeekCitations) * 100)
+    : thisWeekCitations > 0 ? 100 : 0
+
+  // Competitor comparison: your mentions vs avg competitor mentions
+  const totalCompetitorMentions = citations.reduce((sum, c) => sum + c.competitors.length, 0)
+  const uniqueCompetitors = new Set(citations.flatMap(c => c.competitors)).size
+  const avgCompetitorMentions = uniqueCompetitors > 0 ? totalCompetitorMentions / uniqueCompetitors : 0
+  const competitorComparison = avgCompetitorMentions > 0
+    ? Math.round(((citations.length - avgCompetitorMentions) / avgCompetitorMentions) * 100)
+    : citations.length > 0 ? 100 : 0
+
   return {
     totalCitations: citations.length,
     uniqueQueries,
@@ -72,16 +101,28 @@ export function calculateVisibilityStats(citations: AICitation[]): AIVisibilityS
     visibilityScore,
     platformLeader,
     topCitedContent,
-    weekOverWeekChange: 15, // Demo value
-    competitorComparison: 23, // Demo: 23% above industry avg
+    weekOverWeekChange,
+    competitorComparison,
   }
 }
 
 // Get platform-specific stats
 export function getPlatformStats(citations: AICitation[]): PlatformStats[] {
+  // Deduplicate: keep only the LATEST citation per (query + platform) combination
+  // This prevents citation counts from inflating when same keyword is scanned multiple times
+  const latestCitations = new Map<string, AICitation>()
+  citations.forEach(c => {
+    const key = `${c.platform}::${c.query}`
+    const existing = latestCitations.get(key)
+    if (!existing || c.timestamp > existing.timestamp) {
+      latestCitations.set(key, c)
+    }
+  })
+  const dedupedCitations = Array.from(latestCitations.values())
+
   const platformMap: Record<string, AICitation[]> = {}
   
-  citations.forEach(c => {
+  dedupedCitations.forEach(c => {
     if (!platformMap[c.platform]) {
       platformMap[c.platform] = []
     }
@@ -108,19 +149,18 @@ export function getPlatformStats(citations: AICitation[]): PlatformStats[] {
 }
 
 // Generate trend data for chart (deterministic to avoid hydration mismatch)
-// Updated: Added Google AIO data
 export function generateTrendData(): VisibilityTrendData[] {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   
   // Use deterministic seed-based values instead of Math.random()
   const seedValues = [
-    { googleAio: 2, chatgpt: 3, perplexity: 2, claude: 2, gemini: 1, appleSiri: 1 },
-    { googleAio: 3, chatgpt: 4, perplexity: 3, claude: 2, gemini: 2, appleSiri: 1 },
-    { googleAio: 3, chatgpt: 5, perplexity: 3, claude: 3, gemini: 2, appleSiri: 2 },
-    { googleAio: 4, chatgpt: 5, perplexity: 4, claude: 3, gemini: 2, appleSiri: 2 },
-    { googleAio: 5, chatgpt: 6, perplexity: 4, claude: 4, gemini: 3, appleSiri: 2 },
-    { googleAio: 5, chatgpt: 7, perplexity: 5, claude: 4, gemini: 3, appleSiri: 3 },
-    { googleAio: 6, chatgpt: 8, perplexity: 5, claude: 5, gemini: 4, appleSiri: 3 },
+    { googleAio: 2, googleAiMode: 1, chatgpt: 3, perplexity: 2, claude: 2, gemini: 1 },
+    { googleAio: 3, googleAiMode: 2, chatgpt: 4, perplexity: 3, claude: 2, gemini: 2 },
+    { googleAio: 3, googleAiMode: 2, chatgpt: 5, perplexity: 3, claude: 3, gemini: 2 },
+    { googleAio: 4, googleAiMode: 3, chatgpt: 5, perplexity: 4, claude: 3, gemini: 2 },
+    { googleAio: 5, googleAiMode: 3, chatgpt: 6, perplexity: 4, claude: 4, gemini: 3 },
+    { googleAio: 5, googleAiMode: 4, chatgpt: 7, perplexity: 5, claude: 4, gemini: 3 },
+    { googleAio: 6, googleAiMode: 5, chatgpt: 8, perplexity: 5, claude: 5, gemini: 4 },
   ]
   
   return days.map((day, index) => {
@@ -128,12 +168,12 @@ export function generateTrendData(): VisibilityTrendData[] {
     return {
       date: day,
       googleAio: values.googleAio,
+      googleAiMode: values.googleAiMode,
       chatgpt: values.chatgpt,
       perplexity: values.perplexity,
       claude: values.claude,
       gemini: values.gemini,
-      appleSiri: values.appleSiri,
-      total: values.googleAio + values.chatgpt + values.perplexity + values.claude + values.gemini + values.appleSiri,
+      total: values.googleAio + values.googleAiMode + values.chatgpt + values.perplexity + values.claude + values.gemini,
     }
   })
 }
@@ -204,45 +244,161 @@ export function formatNumber(num: number): string {
   return num.toString()
 }
 
-// NEW: Calculate Trust Metrics for CFO Header Cards
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// NEW: Dashboard Overview Metrics (Row 1 Cards — Visibility Score, SOV, Sentiment)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Calculate Share of Voice: your brand mentions / total mentions (yours + competitors) × 100
+ * In demo mode, uses competitor counts from citations. In production, will use real scan data.
+ */
+export function calculateShareOfVoice(citations: AICitation[]): number {
+  if (citations.length === 0) return 0
+  
+  // Count total competitor mentions across all citations
+  const totalCompetitorMentions = citations.reduce((sum, c) => sum + c.competitors.length, 0)
+  
+  // Your mentions = number of citations where YOU appear
+  const yourMentions = citations.length
+  
+  // Total = yours + all competitor appearances
+  const totalMentions = yourMentions + totalCompetitorMentions
+  
+  if (totalMentions === 0) return 0
+  return Math.round((yourMentions / totalMentions) * 100)
+}
+
+/**
+ * Calculate Net Sentiment: aggregate positive/neutral/negative across all citations.
+ * Score = ((positive - negative) / total) × 100  → range: -100 to +100
+ */
+export function calculateNetSentiment(citations: AICitation[]): NetSentiment {
+  if (citations.length === 0) {
+    return { positive: 0, neutral: 0, negative: 0, total: 0, score: 0, percentage: 0 }
+  }
+  
+  const positive = citations.filter(c => c.sentiment === 'positive').length
+  const neutral = citations.filter(c => c.sentiment === 'neutral').length
+  const negative = citations.filter(c => c.sentiment === 'negative').length
+  const total = citations.length
+  
+  // Net score: -100 (all negative) to +100 (all positive)
+  const score = Math.round(((positive - negative) / total) * 100)
+  
+  // Percentage positive (for simple card display)
+  const percentage = Math.round((positive / total) * 100)
+  
+  return { positive, neutral, negative, total, score, percentage }
+}
+
+/**
+ * Build competitor benchmarks from citation data.
+ * Groups competitor appearances and calculates their mock SOV/sentiment.
+ */
+export function calculateCompetitorBenchmarks(citations: AICitation[]): CompetitorBenchmark[] {
+  if (citations.length === 0) return []
+  
+  // Aggregate all competitor mentions
+  const competitorMap: Record<string, {
+    mentions: number
+    positions: number[]
+    platforms: Set<AIPlatform>
+  }> = {}
+  
+  citations.forEach(c => {
+    c.competitors.forEach(competitor => {
+      if (!competitorMap[competitor]) {
+        competitorMap[competitor] = { mentions: 0, positions: [], platforms: new Set() }
+      }
+      competitorMap[competitor].mentions++
+      competitorMap[competitor].positions.push(c.position + 1) // Competitor is 1 position behind
+      competitorMap[competitor].platforms.add(c.platform)
+    })
+  })
+  
+  // Calculate total for SOV
+  const yourMentions = citations.length
+  const allCompetitorMentions = Object.values(competitorMap).reduce((sum, c) => sum + c.mentions, 0)
+  const totalPool = yourMentions + allCompetitorMentions
+  
+  return Object.entries(competitorMap)
+    .map(([domain, data]) => ({
+      domain,
+      mentions: data.mentions,
+      avgPosition: Math.round((data.positions.reduce((s, p) => s + p, 0) / data.positions.length) * 10) / 10,
+      sentiment: 'neutral' as const,
+      platforms: Array.from(data.platforms),
+      shareOfVoice: totalPool > 0 ? Math.round((data.mentions / totalPool) * 100) : 0,
+    }))
+    .sort((a, b) => b.mentions - a.mentions)
+    .slice(0, 5) // Top 5 competitors
+}
+
+/**
+ * Calculate all dashboard overview metrics in one call.
+ * Used by the dashboard to populate Row 1 cards + competitor chart.
+ */
+export function calculateDashboardMetrics(citations: AICitation[]): DashboardMetrics {
+  const stats = calculateVisibilityStats(citations)
+  return {
+    visibilityScore: stats.visibilityScore,
+    shareOfVoice: calculateShareOfVoice(citations),
+    netSentiment: calculateNetSentiment(citations),
+    competitors: calculateCompetitorBenchmarks(citations),
+  }
+}
+
+// Calculate Trust Metrics from real citation data
 export function calculateTrustMetrics(citations: AICitation[]): TrustMetrics {
-  // Demo values - in production, these would come from actual hallucination checks
-  const totalChecks = citations.length + 5 // Simulating additional checks
-  const correctAnswers = Math.floor(totalChecks * 0.85) // 85% accuracy demo
-  const hallucinationCount = 1 // Demo: 1 hallucination detected
-  
-  // Trust Score: (Correct AI Answers / Total Checks) × 100
-  const trustScore = Math.round((correctAnswers / totalChecks) * 100)
-  
-  // Hallucination Risk based on count and severity
+  if (citations.length === 0) {
+    return {
+      trustScore: 0,
+      hallucinationRisk: 'low',
+      hallucinationCount: 0,
+      revenueAtRisk: 0,
+      aiReadinessScore: 0,
+      lastChecked: new Date().toISOString(),
+    }
+  }
+
+  // Trust Score: based on positive/neutral sentiment ratio across citations
+  const positiveCitations = citations.filter(c => c.sentiment === 'positive').length
+  const neutralCitations = citations.filter(c => c.sentiment === 'neutral').length
+  const negativeCitations = citations.filter(c => c.sentiment === 'negative').length
+  const trustScore = Math.round(((positiveCitations + neutralCitations) / citations.length) * 100)
+
+  // Hallucination count: negative citations indicate potential inaccuracies
+  const hallucinationCount = negativeCitations
+
+  // Hallucination Risk based on negative ratio
+  const negativeRatio = negativeCitations / citations.length
   let hallucinationRisk: HallucinationRisk = 'low'
-  if (hallucinationCount >= 3) hallucinationRisk = 'critical'
-  else if (hallucinationCount >= 2) hallucinationRisk = 'high'
-  else if (hallucinationCount >= 1) hallucinationRisk = 'medium'
-  
-  // Revenue at Risk: Traffic value from AI citations
-  // Formula: (Estimated monthly traffic from AI × Avg CPC × Commercial intent %)
-  const avgTrafficPerCitation = 150 // Demo value
-  const avgCPC = 0.5 // Demo value
-  const commercialIntentPercent = 0.4 // 40% of queries are commercial
-  const revenueAtRisk = Math.round(
-    citations.length * avgTrafficPerCitation * avgCPC * commercialIntentPercent
-  )
-  
-  // AI Readiness Score: Technical checks (demo values)
-  // In production: robots.txt + llms.txt + Schema + Speed
-  const robotsTxtScore = 25 // 25/25 points
-  const llmsTxtScore = 0 // 0/25 points (missing)
-  const schemaScore = 20 // 20/25 points
-  const speedScore = 23 // 23/25 points
-  const aiReadinessScore = robotsTxtScore + llmsTxtScore + schemaScore + speedScore // 68%
-  
+  if (negativeRatio >= 0.3) hallucinationRisk = 'critical'
+  else if (negativeRatio >= 0.2) hallucinationRisk = 'high'
+  else if (negativeRatio >= 0.1) hallucinationRisk = 'medium'
+
+  // Revenue at Risk: estimated from citation coverage gaps
+  // Uses platform coverage ratio and citation count to estimate risk
+  const platforms = new Set(citations.map(c => c.platform))
+  const totalPlatforms = 6 // Total tracked platforms
+  const coverageGap = totalPlatforms - platforms.size
+  const avgTrafficPerCitation = 120 // Conservative estimate per citation/month
+  const revenueAtRisk = Math.round(coverageGap * avgTrafficPerCitation * 0.5)
+
+  // AI Readiness Score: based on actual platform diversity + position quality
+  const platformDiversityScore = Math.round((platforms.size / totalPlatforms) * 40) // 0-40
+  const avgPosition = citations.reduce((sum, c) => sum + c.position, 0) / citations.length
+  const positionScore = Math.round(Math.max(0, 30 - (avgPosition - 1) * 10)) // 0-30
+  const citationTypeSet = new Set(citations.map(c => c.citationType))
+  const citationDiversityScore = Math.round(Math.min(30, citationTypeSet.size * 10)) // 0-30
+  const aiReadinessScore = Math.min(100, platformDiversityScore + positionScore + citationDiversityScore)
+
   return {
     trustScore,
     hallucinationRisk,
     hallucinationCount,
     revenueAtRisk,
     aiReadinessScore,
-    lastChecked: new Date().toISOString(),
+    lastChecked: citations[0]?.timestamp || new Date().toISOString(),
   }
 }

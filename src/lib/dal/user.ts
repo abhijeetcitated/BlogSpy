@@ -62,7 +62,7 @@ export interface UserDTO {
 export interface UserProfile extends UserDTO {
   plan: "free" | "pro" | "enterprise"
   credits: number
-  stripeCustomerId: string | null
+  lemonsqueezyCustomerId: string | null
   subscriptionStatus: string | null
 }
 
@@ -188,7 +188,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
   // Fetch additional profile data from database
   const { data: profile } = await supabase
     .from("user_profiles")
-    .select("plan, credits, stripe_customer_id, subscription_status")
+    .select("plan, credits, lemonsqueezy_customer_id, subscription_status")
     .eq("user_id", user.id)
     .single()
 
@@ -198,7 +198,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     ...baseDTO,
     plan: (profile?.plan as UserProfile["plan"]) || "free",
     credits: profile?.credits || 0,
-    stripeCustomerId: profile?.stripe_customer_id || null,
+    lemonsqueezyCustomerId: profile?.lemonsqueezy_customer_id || null,
     subscriptionStatus: profile?.subscription_status || null,
   }
 }

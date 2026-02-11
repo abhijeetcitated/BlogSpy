@@ -15,18 +15,14 @@ export {
   type AuditActionResponse,
 } from "./run-audit"
 
-export {
-  runDefenseCheck,
-  checkPlatformVisibility,
-  batchCheckVisibility,
-} from "./run-defense"
+// DELETED (2026-02-08): run-defense.ts — OpenRouter-dependent, no DataForSEO equivalent
+// Backups: backups/2026-02-08_ai-visibility-delete/run-defense.ts
 
 export {
   checkGoogleAIO,
   getRanking,
   getRankings,
   checkCitations,
-  checkSiriReadiness,
 } from "./run-tracker"
 
 export {

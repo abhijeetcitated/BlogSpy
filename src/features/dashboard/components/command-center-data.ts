@@ -3,25 +3,16 @@
 // ============================================
 
 import {
-  PenTool,
   TrendingUp,
   Search,
-  Network,
-  FileEdit,
-  Sparkles,
-  Eye,
-  Target,
-  Lightbulb,
-  Monitor,
-  Activity,
-  Brain,
   Youtube,
   Bot,
+  Target,
   ArrowUp,
   ArrowDown,
   FileText,
   CheckCircle,
-  AlertTriangle,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react"
 
@@ -60,17 +51,30 @@ export interface AgenticSuggestion {
   id: number
   type: string
   priority: "high" | "medium" | "low"
-  icon: LucideIcon
+  iconKey:
+    | "file_edit"
+    | "sparkles"
+    | "eye"
+    | "target"
+    | "lightbulb"
+    | "activity"
+    | "alert_triangle"
   iconColor: string
   bgColor: string
   borderColor: string
   title: string
   description: string
-  action: string
-  actionHref: string
+  evidence: string
+  ctaLabel: string
+  ctaHref: string
   impact: string
   impactColor: string
-  timeAgo: string
+  freshness: string
+  effort?: string
+}
+
+type DemoSuggestionInput = {
+  projectName: string
 }
 
 // ============================================
@@ -78,13 +82,6 @@ export interface AgenticSuggestion {
 // ============================================
 
 export const quickActions: QuickAction[] = [
-  { 
-    title: "Write Article", 
-    icon: PenTool, 
-    color: "from-blue-500/20 to-cyan-500/20", 
-    iconColor: "text-blue-400",
-    href: "/dashboard/creation/ai-writer"
-  },
   {
     title: "Check Rank",
     icon: TrendingUp,
@@ -97,7 +94,7 @@ export const quickActions: QuickAction[] = [
     icon: Search, 
     color: "from-orange-500/20 to-amber-500/20", 
     iconColor: "text-orange-400",
-    href: "/dashboard/research/keyword-magic"
+    href: "/dashboard/research/keyword-research"
   },
   { 
     title: "Video Hijack", 
@@ -111,7 +108,7 @@ export const quickActions: QuickAction[] = [
     icon: Bot, 
     color: "from-purple-500/20 to-violet-500/20", 
     iconColor: "text-purple-400",
-    href: "/dashboard/ai-visibility"
+    href: "/dashboard/tracking/ai-visibility"
   },
   { 
     title: "Gap Analysis", 
@@ -188,150 +185,83 @@ export const recentActivity: RecentActivity[] = [
 // ============================================
 // AGENTIC AI SUGGESTIONS
 // ============================================
+// Static data removed — suggestions are now generated dynamically
+// by src/features/dashboard/services/suggestion-engine.ts
+// and fetched via src/features/dashboard/actions/fetch-ai-suggestions.ts
 
-export const agenticSuggestions: AgenticSuggestion[] = [
-  {
-    id: 1,
-    type: "content_update",
-    priority: "high",
-    icon: FileEdit,
-    iconColor: "text-amber-400",
-    bgColor: "from-amber-500/10 to-orange-500/10",
-    borderColor: "border-amber-500/20 hover:border-amber-500/40",
-    title: "Update '10 Best SEO Tools' article",
-    description: "This article dropped from #3 to #8. Add a '2025 Update' section with new tools to recover ranking.",
-    action: "Auto-Draft Update",
-    actionHref: "/dashboard/creation/ai-writer?action=update&article=best-seo-tools",
-    impact: "+45% traffic potential",
-    impactColor: "text-emerald-400",
-    timeAgo: "Detected 2 hours ago"
-  },
-  {
-    id: 2,
-    type: "geo_opportunity",
-    priority: "high",
-    icon: Sparkles,
-    iconColor: "text-cyan-400",
-    bgColor: "from-cyan-500/10 to-emerald-500/10",
-    borderColor: "border-cyan-500/20 hover:border-cyan-500/40",
-    title: "🎯 GEO Score 87: 'best project management tools'",
-    description: "AI Overview cites a 2-year-old Reddit thread. High opportunity to get cited with fresh, comprehensive content.",
-    action: "Capture AI Citation",
-    actionHref: "/dashboard/creation/ai-writer?keyword=best-project-management-tools&geo=87",
-    impact: "GEO Score: 87/100",
-    impactColor: "text-cyan-400",
-    timeAgo: "High GEO opportunity"
-  },
-  {
-    id: 3,
-    type: "snippet_opportunity",
-    priority: "high",
-    icon: Eye,
-    iconColor: "text-purple-400",
-    bgColor: "from-purple-500/10 to-pink-500/10",
-    borderColor: "border-purple-500/20 hover:border-purple-500/40",
-    title: "Steal Featured Snippet for 'how to do keyword research'",
-    description: "Current snippet is a paragraph (52 words). Reformat your content to a numbered list to steal it.",
-    action: "View Snippet Strategy",
-    actionHref: "/dashboard/creation/snippet-stealer?keyword=how-to-do-keyword-research",
-    impact: "Position 0 opportunity",
-    impactColor: "text-purple-400",
-    timeAgo: "New opportunity"
-  },
-  {
-    id: 4,
-    type: "weak_spot",
-    priority: "medium",
-    icon: Target,
-    iconColor: "text-cyan-400",
-    bgColor: "from-cyan-500/10 to-blue-500/10",
-    borderColor: "border-cyan-500/20 hover:border-cyan-500/40",
-    title: "Easy Win: 'AI writing tools comparison' has Reddit at #2",
-    description: "A Reddit thread is ranking #2. Write a comprehensive comparison post to outrank this weak competitor.",
-    action: "Create Article",
-    actionHref: "/dashboard/creation/ai-writer?keyword=ai-writing-tools-comparison",
-    impact: "12,500 monthly searches",
-    impactColor: "text-cyan-400",
-    timeAgo: "Weak spot detected"
-  },
-  {
-    id: 5,
-    type: "ai_overview",
-    priority: "medium",
-    icon: Sparkles,
-    iconColor: "text-emerald-400",
-    bgColor: "from-emerald-500/10 to-teal-500/10",
-    borderColor: "border-emerald-500/20 hover:border-emerald-500/40",
-    title: "Missing from AI Overview for 'best crm software'",
-    description: "You rank #4 but aren't cited in the AI Overview. Add these entities: 'implementation time', 'pricing tiers', 'integrations'.",
-    action: "Optimize Content",
-    actionHref: "/dashboard/creation/on-page?url=best-crm-software",
-    impact: "AI visibility boost",
-    impactColor: "text-emerald-400",
-    timeAgo: "AI analysis complete"
-  },
-  {
-    id: 6,
-    type: "trend_alert",
-    priority: "low",
-    icon: Lightbulb,
-    iconColor: "text-yellow-400",
-    bgColor: "from-yellow-500/10 to-amber-500/10",
-    borderColor: "border-yellow-500/20 hover:border-yellow-500/40",
-    title: "Trending: 'Claude 4 vs GPT-5' searches up 340%",
-    description: "This topic will peak in 14 days. Publish now to capture early traffic before competition increases.",
-    action: "Write Now",
-    actionHref: "/dashboard/creation/ai-writer?keyword=claude-4-vs-gpt-5",
-    impact: "First mover advantage",
-    impactColor: "text-yellow-400",
-    timeAgo: "Trend detected today"
-  },
-  {
-    id: 7,
-    type: "pixel_rank",
-    priority: "medium",
-    icon: Monitor,
-    iconColor: "text-purple-400",
-    bgColor: "from-purple-500/10 to-indigo-500/10",
-    borderColor: "border-purple-500/20 hover:border-purple-500/40",
-    title: "📍 Hidden Below Fold: 'best ai tools'",
-    description: "You rank #3 but users can't see you without scrolling! AI boxes and videos push your result down. Get a featured snippet to appear higher.",
-    action: "Fix Visibility",
-    actionHref: "/dashboard/tracking/rank-tracker?keyword=best-ai-tools",
-    impact: "2x more clicks possible",
-    impactColor: "text-purple-400",
-    timeAgo: "Visibility issue detected"
-  },
-  {
-    id: 8,
-    type: "rtv_alert",
-    priority: "high",
-    icon: Activity,
-    iconColor: "text-orange-400",
-    bgColor: "from-orange-500/10 to-red-500/10",
-    borderColor: "border-orange-500/20 hover:border-orange-500/40",
-    title: "⚠️ Low Click Rate: 'best crm software'",
-    description: "This keyword shows 25K searches but you'll only get ~8K clicks. AI and Featured Snippets are stealing 65% of traffic. Target those features!",
-    action: "See Why",
-    actionHref: "/dashboard/research/overview/best-crm-software",
-    impact: "65% traffic being lost",
-    impactColor: "text-red-400",
-    timeAgo: "Click analysis"
-  },
-  {
-    id: 9,
-    type: "ai_citation",
-    priority: "high",
-    icon: Brain,
-    iconColor: "text-purple-400",
-    bgColor: "from-purple-500/10 to-pink-500/10",
-    borderColor: "border-purple-500/20 hover:border-purple-500/40",
-    title: "🧠 AI Citation: Reddit at #2 in 'best email marketing tools'",
-    description: "AI Overview cites a 14-month old Reddit thread. Opportunity score: 85%. Add these entities: 'deliverability rates', 'A/B testing', 'automation workflows'.",
-    action: "Capture Citation",
-    actionHref: "/dashboard/creation/ai-writer?keyword=best-email-marketing-tools&aio=true",
-    impact: "85% opportunity",
-    impactColor: "text-purple-400",
-    timeAgo: "Citation analysis"
-  }
-]
+export function getDemoAgenticSuggestions({ projectName }: DemoSuggestionInput): AgenticSuggestion[] {
+  return [
+    {
+      id: 1,
+      type: "rank_drop",
+      priority: "high",
+      iconKey: "file_edit",
+      iconColor: "text-amber-400",
+      bgColor: "from-amber-500/10 to-orange-500/10",
+      borderColor: "border-amber-500/20 hover:border-amber-500/40",
+      title: `Update '${projectName} pricing' article`,
+      description: "This page dropped from #4 to #9. Add fresh proof points and pricing comparison updates.",
+      evidence: "Position dropped #4 -> #9 in last 7 days",
+      ctaLabel: "Auto-Draft Update",
+      ctaHref: "/dashboard/research/keyword-magic?keyword=pricing",
+      impact: "+38% recovery potential",
+      impactColor: "text-emerald-400",
+      freshness: "2h ago",
+      effort: "~35 min content update",
+    },
+    {
+      id: 2,
+      type: "ai_overview_gap",
+      priority: "high",
+      iconKey: "sparkles",
+      iconColor: "text-emerald-400",
+      bgColor: "from-emerald-500/10 to-teal-500/10",
+      borderColor: "border-emerald-500/20 hover:border-emerald-500/40",
+      title: `AI citation gap for '${projectName} alternatives'`,
+      description: "You rank top-5 but are not cited in AI Overview. Add concise entities and proof snippets.",
+      evidence: "Rank #3 | No AI overview citation seen",
+      ctaLabel: "Check AI Visibility",
+      ctaHref: "/dashboard/ai-visibility",
+      impact: "Potential AI visibility boost",
+      impactColor: "text-emerald-400",
+      freshness: "Just now",
+      effort: "~10 min AI scan",
+    },
+    {
+      id: 3,
+      type: "snippet_opportunity",
+      priority: "medium",
+      iconKey: "eye",
+      iconColor: "text-purple-400",
+      bgColor: "from-purple-500/10 to-pink-500/10",
+      borderColor: "border-purple-500/20 hover:border-purple-500/40",
+      title: "Featured snippet opportunity",
+      description: "A paragraph snippet is currently ranking. Convert section into list format to steal Position 0.",
+      evidence: "Current position #2 | Snippet range keyword",
+      ctaLabel: "View Snippet Strategy",
+      ctaHref: "/dashboard/research/keyword-magic",
+      impact: "Position 0 opportunity",
+      impactColor: "text-purple-400",
+      freshness: "Today",
+      effort: "~20 min format optimization",
+    },
+    {
+      id: 4,
+      type: "trend_spike",
+      priority: "medium",
+      iconKey: "lightbulb",
+      iconColor: "text-yellow-400",
+      bgColor: "from-yellow-500/10 to-amber-500/10",
+      borderColor: "border-yellow-500/20 hover:border-yellow-500/40",
+      title: "Trend spike detected",
+      description: "Search demand is accelerating for this cluster. Publish before SERP competition thickens.",
+      evidence: "Growth +185% in tracked trend list",
+      ctaLabel: "Write Now",
+      ctaHref: "/dashboard/research/trends",
+      impact: "First mover advantage",
+      impactColor: "text-yellow-400",
+      freshness: "Trend detected",
+      effort: "~1.5 hrs new content",
+    },
+  ]
+}

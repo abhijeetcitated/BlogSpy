@@ -12,6 +12,7 @@ interface GapStatsBarProps {
     missing: number
     weak: number
     strong: number
+    shared: number
   }
 }
 
@@ -113,6 +114,28 @@ export function GapStatsBar({ gapFilter, onFilterChange, stats }: GapStatsBarPro
           )}
         >
           {stats.strong}
+        </span>
+      </button>
+      <button
+        onClick={() => onFilterChange("shared")}
+        className={cn(
+          "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all border",
+          gapFilter === "shared"
+            ? "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/40"
+            : "text-muted-foreground hover:text-foreground border-transparent"
+        )}
+      >
+        <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        <span>Shared</span>
+        <span
+          className={cn(
+            "text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-bold tabular-nums rounded-md border",
+            gapFilter === "shared"
+              ? "border-sky-500/50 text-sky-700 dark:text-sky-300 bg-sky-500/10"
+              : "border-border text-muted-foreground"
+          )}
+        >
+          {stats.shared}
         </span>
       </button>
     </div>

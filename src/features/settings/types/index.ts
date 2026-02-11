@@ -3,12 +3,12 @@
 export type SettingsTab = "general" | "billing" | "api" | "usage" | "notifications" | "integrations" | "alerts"
 
 export interface NotificationSettings {
-  weeklySeoReport: boolean
-  rankAlerts: boolean
-  decayAlerts: boolean
-  competitorAlerts: boolean
-  productUpdates: boolean
-  unsubscribeAll: boolean
+  weeklyreport: boolean
+  rankalerts: boolean
+  decayalerts: boolean
+  competitoralerts: boolean
+  productupdates: boolean
+  unsubscribeall: boolean
 }
 
 export interface UserProfile {

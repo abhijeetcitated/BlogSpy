@@ -9,12 +9,13 @@ test("has title", async ({ page }) => {
     await expect(page).toHaveTitle(/BlogSpy/);
 });
 
-test("dashboard redirects to login for unauth users (if strict mode enabled)", async ({ page }) => {
-    // NOTE: We recently enabled PLG (Guest) mode, so this test might need adjustment
-    // depending on strict settings.
-    // For now, let's just check that dashboard loads without crashing.
+test("dashboard redirects unauthenticated users to login", async ({ page }) => {
     await page.goto("/dashboard");
+    await expect(page).toHaveURL(/\/login(?:\?|$)/);
+    await expect(page).toHaveURL(/redirect=\/dashboard|redirect=%2Fdashboard/);
+});
 
-    // Expect url to either stay on dashboard (PLG) or go to login
-    // await expect(page).toHaveURL(/.*dashboard/); 
+test("auth callback does not trust external next targets", async ({ page }) => {
+    await page.goto("/auth/callback?code=invalid&next=https://evil.example");
+    await expect(page).toHaveURL(/\/error$/);
 });

@@ -1,15 +1,14 @@
 // AI Visibility Tracker Types
 // Track how your content appears in AI responses (ChatGPT, Claude, Perplexity, Google AIO, etc.)
 
-// Updated platforms: Added Google AIO, SearchGPT, Apple Siri. Removed You.com
+// 6 tracked AI platforms (all via DataForSEO)
 export type AIPlatform = 
-  | 'google-aio'   // Google AI Overviews (via Serper.dev)
-  | 'chatgpt'      // ChatGPT (via OpenRouter)
-  | 'perplexity'   // Perplexity (via OpenRouter)
-  | 'searchgpt'    // SearchGPT (via OpenRouter - Coming Soon)
-  | 'claude'       // Claude (via OpenRouter)
-  | 'gemini'       // Gemini (via OpenRouter)
-  | 'apple-siri'   // Apple Siri (Readiness check only - no API)
+  | 'google-aio'      // Google AI Overviews (via DataForSEO SERP Organic — ai_overview item)
+  | 'google-ai-mode'  // Google AI Mode (via DataForSEO SERP AI Mode endpoint)
+  | 'chatgpt'         // ChatGPT (via DataForSEO AI Optimization — LLM Responses Live)
+  | 'perplexity'      // Perplexity (via DataForSEO AI Optimization — LLM Responses Live)
+  | 'claude'          // Claude (via DataForSEO AI Optimization — LLM Responses Live)
+  | 'gemini'          // Gemini (via DataForSEO AI Optimization — LLM Responses Live)
 
 export type CitationType = 'direct-quote' | 'paraphrase' | 'reference' | 'recommendation' | 'source-link'
 
@@ -30,9 +29,7 @@ export interface AIPlatformConfig {
   marketShare: number // % of AI search market
   citationStyle: string
   description: string
-  apiSource: 'serper' | 'openrouter' | 'internal' // API source for tracking
-  isComingSoon?: boolean // For SearchGPT
-  isReadinessOnly?: boolean // For Apple Siri (no direct API)
+  apiSource: 'dataforseo' | 'internal' // API source for tracking
 }
 
 // NEW: Trust & Hallucination Stats for CFO Header Cards
@@ -144,12 +141,12 @@ export interface PlatformStats {
 
 export interface VisibilityTrendData {
   date: string
-  googleAio: number  // NEW: Google AI Overviews
+  googleAio: number  // Google AI Overviews
+  googleAiMode: number  // Google AI Mode (interactive)
   chatgpt: number
   perplexity: number
   claude: number
   gemini: number
-  appleSiri: number  // Apple Siri readiness
   total: number
 }
 
@@ -394,5 +391,129 @@ export interface VisibilityStats {
     visibilityRate: number
   }>
   trend: VisibilityTrend
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// DASHBOARD METRICS — Overview Row Cards (SOV, Sentiment, Competitor)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Net Sentiment aggregation across all citations
+ */
+export interface NetSentiment {
+  positive: number    // count of positive citations
+  neutral: number     // count of neutral citations
+  negative: number    // count of negative citations
+  total: number       // total citations analyzed
+  score: number       // -100 to +100 net score
+  percentage: number  // % positive (for card display)
+}
+
+/**
+ * Competitor benchmark data for comparison chart
+ */
+export interface CompetitorBenchmark {
+  domain: string
+  mentions: number
+  avgPosition: number
+  sentiment: 'positive' | 'neutral' | 'negative'
+  platforms: AIPlatform[]
+  shareOfVoice: number // 0-100 %
+}
+
+/**
+ * Dashboard overview metrics (Row 1 stat cards)
+ */
+export interface DashboardMetrics {
+  /** Visibility Score 0-100 (from calculateVisibilityStats) */
+  visibilityScore: number
+  /** Share of Voice: your mentions / total mentions × 100 */
+  shareOfVoice: number
+  /** Net Sentiment aggregation */
+  netSentiment: NetSentiment
+  /** Competitor benchmarks for comparison chart */
+  competitors: CompetitorBenchmark[]
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// SCAN RESULT TYPES (relocated from scan.service.ts)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Result from Google AIO/SERP check
+ */
+export interface GoogleDataResult {
+  status: "visible" | "hidden"
+  rank: number | null
+  snippet: string | null
+  source: "ai_overview" | "featured_snippet" | "knowledge_graph" | "organic" | null
+}
+
+/**
+ * Result from AI platform check (ChatGPT, Claude, Gemini, Perplexity)
+ */
+export interface AIResponseResult {
+  platform: AIPlatform
+  status: "visible" | "hidden"
+  snippet: string
+  citations?: string[]
+  mentionContext: string | null
+  sentiment: "positive" | "neutral" | "negative"
+  error?: string
+}
+
+/**
+ * Complete scan result for a keyword
+ */
+export interface FullScanResult {
+  keyword: string
+  brandName: string
+  timestamp: string
+  google: GoogleDataResult          // AI Overview (from Organic SERP)
+  googleAiMode: GoogleDataResult     // AI Mode (from AI Mode SERP)
+  chatgpt: AIResponseResult
+  claude: AIResponseResult
+  gemini: AIResponseResult
+  perplexity: AIResponseResult
+  overallScore: number
+  visiblePlatforms: number
+  totalPlatforms: number
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// CITATION SERVICE TYPES (relocated from citation.service.ts)
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+export interface PlatformCheckInput {
+  platform: AIPlatform
+  query: string
+  brandKeywords: string[]
+  competitorDomains?: string[]
+}
+
+export interface PlatformCheckResult {
+  success: boolean
+  result?: VisibilityCheckResult
+  error?: string
+}
+
+export interface FullVisibilityCheckInput {
+  query: string
+  config: AIVisibilityConfig
+  platforms?: AIPlatform[]
+}
+
+export interface FullVisibilityCheckResult {
+  query: string
+  results: Record<AIPlatform, VisibilityCheckResult>
+  summary: {
+    totalPlatforms: number
+    visibleOn: number
+    visibilityRate: number
+    totalCreditsUsed: number
+  }
+  timestamp: string
 }
 

@@ -19,11 +19,11 @@ function toStringId(value: unknown): string | null {
   return null
 }
 
-type PlanTier = "free" | "pro" | "enterprise"
+type PlanTier = "free" | "pro" | "agency"
 
 const PLAN_CREDITS: Record<Exclude<PlanTier, "free">, number> = {
   pro: 1000,
-  enterprise: 5000,
+  agency: 5000,
 }
 
 const PRO_VARIANTS = new Set(
@@ -33,7 +33,7 @@ const PRO_VARIANTS = new Set(
   ].filter(Boolean)
 )
 
-const ENTERPRISE_VARIANTS = new Set(
+const AGENCY_VARIANTS = new Set(
   [
     process.env.NEXT_PUBLIC_LS_AGENCY_VARIANT_ID,
     process.env.NEXT_PUBLIC_LS_AGENCY_YEARLY_VARIANT_ID,
@@ -45,13 +45,13 @@ function resolvePlanFromVariant(variantId: string | null): { tier: PlanTier; cre
   if (PRO_VARIANTS.has(variantId)) {
     return { tier: "pro", credits: PLAN_CREDITS.pro }
   }
-  if (ENTERPRISE_VARIANTS.has(variantId)) {
-    return { tier: "enterprise", credits: PLAN_CREDITS.enterprise }
+  if (AGENCY_VARIANTS.has(variantId)) {
+    return { tier: "agency", credits: PLAN_CREDITS.agency }
   }
   return null
 }
 
-async function resolveUserIdFromPayload({
+async function resolveUserFromPayload({
   admin,
   custom,
   attributes,
@@ -59,13 +59,11 @@ async function resolveUserIdFromPayload({
   admin: ReturnType<typeof createAdminClient>
   custom: Record<string, unknown>
   attributes: Record<string, unknown>
-}): Promise<string | null> {
+}): Promise<{ userId: string | null; email: string | null }> {
   const customUserId =
     (custom.userId as string | undefined) ??
     (custom.user_id as string | undefined) ??
     null
-
-  if (customUserId) return customUserId
 
   const email =
     (custom.userEmail as string | undefined) ??
@@ -74,7 +72,11 @@ async function resolveUserIdFromPayload({
     (attributes.customer_email as string | undefined) ??
     null
 
-  if (!email) return null
+  if (customUserId) {
+    return { userId: customUserId, email }
+  }
+
+  if (!email) return { userId: null, email: null }
 
   const { data: profile } = await admin
     .from("core_profiles")
@@ -82,7 +84,7 @@ async function resolveUserIdFromPayload({
     .eq("email", email)
     .maybeSingle()
 
-  return profile?.id ?? null
+  return { userId: profile?.id ?? null, email }
 }
 
 async function ensureBillCreditsRow(admin: ReturnType<typeof createAdminClient>, userId: string) {
@@ -127,6 +129,17 @@ async function logBillTransaction({
   }
 }
 
+async function updateBillingTier(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  tier: PlanTier
+) {
+  const { error } = await admin.from("core_profiles").update({ billing_tier: tier }).eq("id", userId)
+  if (error) {
+    throw error
+  }
+}
+
 export async function POST(request: Request) {
   const signature = request.headers.get("X-Signature")
   if (!signature) {
@@ -154,7 +167,7 @@ export async function POST(request: Request) {
     {}
 
   const admin = createAdminClient()
-  const userId = await resolveUserIdFromPayload({ admin, custom, attributes })
+  const { userId } = await resolveUserFromPayload({ admin, custom, attributes })
 
   if (!userId) {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 })
@@ -216,6 +229,10 @@ export async function POST(request: Request) {
       toStringId(attributes["variantId"]) ??
       null
 
+    if (!variantId) {
+      return NextResponse.json({ error: "Missing variant id" }, { status: 400 })
+    }
+
     const plan = resolvePlanFromVariant(variantId)
 
     if (!plan) {
@@ -224,6 +241,8 @@ export async function POST(request: Request) {
 
     const subscriptionId = toStringId(payload.data?.id) ?? "unknown"
     const idempotencyKey = `ls:subscription:${eventName}:${subscriptionId}`
+
+    await updateBillingTier(admin, userId, plan.tier)
 
     await ensureBillCreditsRow(admin, userId)
 
@@ -240,21 +259,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: updateCreditsError.message }, { status: 500 })
     }
 
-    const { error: updateProfileError } = await admin
-      .from("core_profiles")
-      .update({ billing_tier: plan.tier })
-      .eq("id", userId)
-
-    if (updateProfileError) {
-      return NextResponse.json({ error: updateProfileError.message }, { status: 500 })
-    }
-
     await logBillTransaction({
       admin,
       userId,
       amount: plan.credits,
       idempotencyKey,
-      type: "reset",
+      type: "purchase",
       description: `Subscription credits reset (${plan.tier})`,
       lemonsqueezyOrderId: subscriptionId,
     })
@@ -263,32 +273,7 @@ export async function POST(request: Request) {
   }
 
   if (eventName === "subscription_cancelled") {
-    const variantId =
-      toStringId(attributes["variant_id"]) ??
-      toStringId(attributes["variant"]) ??
-      toStringId(attributes["variantId"]) ??
-      null
-    const plan = resolvePlanFromVariant(variantId)
-
-    const { data: profile } = await admin
-      .from("core_profiles")
-      .select("billing_tier")
-      .eq("id", userId)
-      .maybeSingle()
-
-    const currentTier = (plan?.tier ?? profile?.billing_tier ?? "free").toString()
-    const cancellingTier = currentTier.includes("cancelling")
-      ? currentTier
-      : `${currentTier}_cancelling`
-
-    const { error: updateProfileError } = await admin
-      .from("core_profiles")
-      .update({ billing_tier: cancellingTier })
-      .eq("id", userId)
-
-    if (updateProfileError) {
-      return NextResponse.json({ error: updateProfileError.message }, { status: 500 })
-    }
+    await updateBillingTier(admin, userId, "free")
 
     return NextResponse.json({ ok: true })
   }

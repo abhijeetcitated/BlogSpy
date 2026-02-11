@@ -21,16 +21,23 @@ interface UIState {
   // Modals
   pricingModalOpen: boolean
   settingsModalOpen: boolean
+  createProjectModalOpen: boolean
   
   // Actions
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
   setTheme: (theme: "light" | "dark" | "system") => void
   toggleCommandPalette: () => void
+  openCommandPalette: () => void
+  closeCommandPalette: () => void
+  setCommandPaletteOpen: (open: boolean) => void
   openPricingModal: () => void
   closePricingModal: () => void
   openSettingsModal: () => void
   closeSettingsModal: () => void
+  openCreateProjectModal: () => void
+  closeCreateProjectModal: () => void
+  setCreateProjectModalOpen: (open: boolean) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -43,6 +50,7 @@ export const useUIStore = create<UIState>()(
       commandPaletteOpen: false,
       pricingModalOpen: false,
       settingsModalOpen: false,
+      createProjectModalOpen: false,
 
       // Actions
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
@@ -68,12 +76,20 @@ export const useUIStore = create<UIState>()(
       
       toggleCommandPalette: () => 
         set((state) => ({ commandPaletteOpen: !state.commandPaletteOpen })),
+
+      openCommandPalette: () => set({ commandPaletteOpen: true }),
+      closeCommandPalette: () => set({ commandPaletteOpen: false }),
+      setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
       
       openPricingModal: () => set({ pricingModalOpen: true }),
       closePricingModal: () => set({ pricingModalOpen: false }),
       
       openSettingsModal: () => set({ settingsModalOpen: true }),
       closeSettingsModal: () => set({ settingsModalOpen: false }),
+
+      openCreateProjectModal: () => set({ createProjectModalOpen: true }),
+      closeCreateProjectModal: () => set({ createProjectModalOpen: false }),
+      setCreateProjectModalOpen: (open) => set({ createProjectModalOpen: open }),
     }),
     {
       name: "blogspy-ui-storage",

@@ -1,39 +1,49 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 🔍 RUN CITATION - Server Actions for Citation Visibility Check
+ * 🔍 RUN CITATION — Platform Visibility Check via DataForSEO
  * ═══════════════════════════════════════════════════════════════════════════════════════════════
- * 
- * REFACTORED: Now uses authAction wrapper for consistent auth/rate-limiting.
- * 
- * @example
- * ```tsx
- * "use client"
- * import { runVisibilityCheck, checkPlatformNow } from "@/features/ai-visibility/actions"
- * 
- * // Full check across all platforms
- * const result = await runVisibilityCheck({
- *   query: "best seo tools",
- *   configId: "user-config-id"
- * })
- * ```
+ *
+ * Quick checks for individual or batch platform visibility.
+ * Uses DataForSEO LLM Mentions + Google AI Mode APIs.
+ *
+ * Cost: 2 credits for single check, 5 credits for batch (up to 10 keywords)
+ * Uses authAction for auth + rate limiting.
  */
 
 "use server"
 
 import { authAction, z } from "@/lib/safe-action"
+import { createAdminClient } from "@/lib/supabase/server"
+import { creditBanker } from "@/lib/services/credit-banker.service"
 import {
-  runFullVisibilityCheck,
-  quickPlatformCheck,
-  type FullVisibilityCheckResult
-} from "../services/citation.service"
-import { getVisibilityConfig } from "./save-config"
-import type { VisibilityCheckResult } from "../types"
+  checkSinglePlatform,
+  runVisibilityScan,
+} from "../services/dataforseo-visibility.service"
+import type {
+  VisibilityCheckResult,
+  FullVisibilityCheckResult,
+  AIPlatform,
+} from "../types"
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+const SINGLE_CHECK_COST = 2
+const BATCH_CHECK_COST = 5
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // SCHEMAS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-const platformEnum = z.enum(["chatgpt", "claude", "perplexity", "gemini", "google-aio", "searchgpt", "apple-siri"])
+const platformEnum = z.enum([
+  "chatgpt",
+  "claude",
+  "perplexity",
+  "gemini",
+  "google-aio",
+  "google-ai-mode",
+])
 
 const runVisibilityCheckSchema = z.object({
   query: z.string().min(3, "Query must be at least 3 characters"),
@@ -53,7 +63,7 @@ const batchCheckSchema = z.object({
 })
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// TYPES
+// TYPES (preserved for barrel exports)
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 export interface VisibilityActionResponse<T> {
@@ -64,145 +74,277 @@ export interface VisibilityActionResponse<T> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
-// SERVER ACTIONS (using authAction wrapper)
+// HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 /**
- * Run visibility check across multiple AI platforms.
- * Checks if brand/domain is mentioned in AI responses.
+ * Load config from DB to get brand keywords and domain.
+ */
+async function loadConfig(configId: string, userId: string) {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from("ai_visibility_configs")
+    .select("tracked_domain, brand_keywords, competitor_domains")
+    .eq("id", configId)
+    .eq("user_id", userId)
+    .single()
+
+  if (error || !data) return null
+  return {
+    trackedDomain: data.tracked_domain as string,
+    brandKeywords: data.brand_keywords as string[],
+    competitorDomains: (data.competitor_domains as string[]) ?? [],
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// SERVER ACTIONS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Run a full visibility check across all platforms for a query.
  */
 export const runVisibilityCheck = authAction
   .schema(runVisibilityCheckSchema)
-  .action(async ({ parsedInput }): Promise<VisibilityActionResponse<FullVisibilityCheckResult>> => {
-    try {
-      const { query, configId, platforms } = parsedInput
+  .action(async ({ parsedInput, ctx }): Promise<VisibilityActionResponse<FullVisibilityCheckResult>> => {
+    const config = await loadConfig(parsedInput.configId, ctx.userId)
+    if (!config) {
+      return { success: false, error: "Configuration not found" }
+    }
 
-      // Get user's visibility config
-      const configResult = await getVisibilityConfig({ configId })
-      
-      if (!configResult?.data?.success || !configResult.data.data) {
-        return {
-          success: false,
-          error: "Please set up your visibility configuration first",
+    // Deduct credits
+    const idempKey = `viz:${ctx.userId}:${parsedInput.query}:${Date.now()}`
+    const deduct = await creditBanker.deduct(
+      ctx.userId,
+      SINGLE_CHECK_COST,
+      "ai_visibility_check",
+      `Visibility check: "${parsedInput.query}"`,
+      { query: parsedInput.query },
+      idempKey
+    )
+
+    if (!deduct.success) {
+      return { success: false, error: "Insufficient credits" }
+    }
+
+    try {
+      const scanResult = await runVisibilityScan({
+        keyword: parsedInput.query,
+        brandDomain: config.trackedDomain,
+        brandKeywords: config.brandKeywords,
+        competitorDomains: config.competitorDomains,
+      })
+
+      // Map to FullVisibilityCheckResult format
+      const now = new Date().toISOString()
+      const platforms: AIPlatform[] = ["google-aio", "google-ai-mode", "chatgpt", "claude", "gemini", "perplexity"]
+      const results: Record<string, VisibilityCheckResult> = {}
+
+      for (const platform of platforms) {
+        const key = platform === "google-aio"
+          ? "google"
+          : platform === "google-ai-mode"
+            ? "googleAiMode"
+            : platform
+        const platformData = platform === "google-aio"
+          ? scanResult.scan.google
+          : platform === "google-ai-mode"
+            ? scanResult.scan.googleAiMode
+            : scanResult.scan[key as keyof typeof scanResult.scan]
+
+        if (!platformData || typeof platformData !== "object") continue
+
+        const isVisible = "status" in platformData && platformData.status === "visible"
+
+        results[platform] = {
+          platform,
+          isVisible,
+          mentionType: isVisible ? "brand-name" : undefined,
+          aiResponse: ("snippet" in platformData ? (platformData.snippet as string) : "") || "",
+          sentiment: "sentiment" in platformData ? (platformData.sentiment as "positive" | "neutral" | "negative") : "neutral",
+          creditsUsed: 0,
+          checkedAt: now,
         }
       }
 
-      const config = configResult.data.data
+      const visibleCount = Object.values(results).filter((r) => r.isVisible).length
 
-      // Run visibility check across platforms
-      const result = await runFullVisibilityCheck({
-        query: query.trim(),
-        config,
-        platforms,
-      })
-
-      return {
-        success: true,
-        data: result,
-        creditsUsed: result.summary.totalCreditsUsed,
+      const fullResult: FullVisibilityCheckResult = {
+        query: parsedInput.query,
+        results: results as Record<AIPlatform, VisibilityCheckResult>,
+        summary: {
+          totalPlatforms: platforms.length,
+          visibleOn: visibleCount,
+          visibilityRate: Math.round((visibleCount / platforms.length) * 100),
+          totalCreditsUsed: SINGLE_CHECK_COST,
+        },
+        timestamp: now,
       }
+
+      return { success: true, data: fullResult, creditsUsed: SINGLE_CHECK_COST }
     } catch (error) {
-      console.error("[runVisibilityCheck] Error:", error)
-      
-      const message = error instanceof Error ? error.message : "Unknown error"
-      
+      await creditBanker.refund(ctx.userId, SINGLE_CHECK_COST, idempKey, "Visibility check failed")
       return {
         success: false,
-        error: `Visibility check failed: ${message}`,
+        error: error instanceof Error ? error.message : "Check failed",
+        creditsUsed: 0,
       }
     }
   })
 
 /**
- * Quick check on a single AI platform.
- * Used for "Check Now" / "Refresh" button on platform cards.
+ * Quick check on a single AI platform (used by PlatformCheckButton).
  */
 export const checkPlatformNow = authAction
   .schema(checkPlatformSchema)
-  .action(async ({ parsedInput }): Promise<VisibilityActionResponse<VisibilityCheckResult>> => {
+  .action(async ({ parsedInput, ctx }): Promise<VisibilityActionResponse<VisibilityCheckResult>> => {
+    const config = await loadConfig(parsedInput.configId, ctx.userId)
+    if (!config) {
+      return { success: false, error: "Configuration not found" }
+    }
+
+    // Deduct 1 credit for single platform check
+    const idempKey = `plat:${ctx.userId}:${parsedInput.platform}:${Date.now()}`
+    const deduct = await creditBanker.deduct(
+      ctx.userId,
+      1,
+      "ai_visibility_platform_check",
+      `${parsedInput.platform} check: "${parsedInput.query}"`,
+      { platform: parsedInput.platform, query: parsedInput.query },
+      idempKey
+    )
+
+    if (!deduct.success) {
+      return { success: false, error: "Insufficient credits" }
+    }
+
     try {
-      const { platform, query, configId } = parsedInput
+      const result = await checkSinglePlatform(
+        parsedInput.platform as AIPlatform,
+        parsedInput.query,
+        config.trackedDomain,
+        config.brandKeywords
+      )
 
-      // Get user's visibility config
-      const configResult = await getVisibilityConfig({ configId })
-      
-      if (!configResult?.data?.success || !configResult.data.data) {
-        return {
-          success: false,
-          error: "Please set up your visibility configuration first",
-        }
-      }
-
-      const config = configResult.data.data
-
-      // Run quick check
-      const result = await quickPlatformCheck(platform, query.trim(), config)
+      const now = new Date().toISOString()
 
       return {
         success: true,
-        data: result,
-        creditsUsed: result.creditsUsed,
+        data: {
+          platform: parsedInput.platform as AIPlatform,
+          isVisible: result.status === "visible",
+          mentionType: result.status === "visible" ? "brand-name" : undefined,
+          aiResponse: result.snippet,
+          sentiment: result.sentiment,
+          creditsUsed: 1,
+          checkedAt: now,
+        },
+        creditsUsed: 1,
       }
     } catch (error) {
-      console.error("[checkPlatformNow] Error:", error)
-      
-      const message = error instanceof Error ? error.message : "Unknown error"
-      
+      await creditBanker.refund(ctx.userId, 1, idempKey, "Platform check failed")
       return {
         success: false,
-        error: `Platform check failed: ${message}`,
+        error: error instanceof Error ? error.message : "Platform check failed",
+        creditsUsed: 0,
       }
     }
   })
 
 /**
- * Batch check multiple keywords across all platforms.
- * Useful for scheduled/bulk checks.
+ * Batch visibility check across multiple keywords.
  */
 export const batchVisibilityCheck = authAction
   .schema(batchCheckSchema)
-  .action(async ({ parsedInput }): Promise<VisibilityActionResponse<{ results: Record<string, FullVisibilityCheckResult>; totalCredits: number }>> => {
+  .action(async ({ parsedInput, ctx }): Promise<VisibilityActionResponse<{
+    results: Record<string, FullVisibilityCheckResult>
+    totalCredits: number
+  }>> => {
+    const config = await loadConfig(parsedInput.configId, ctx.userId)
+    if (!config) {
+      return { success: false, error: "Configuration not found" }
+    }
+
+    const totalCost = BATCH_CHECK_COST * parsedInput.keywords.length
+
+    // Deduct credits for batch
+    const idempKey = `batch:${ctx.userId}:${Date.now()}`
+    const deduct = await creditBanker.deduct(
+      ctx.userId,
+      totalCost,
+      "ai_visibility_batch",
+      `Batch visibility check: ${parsedInput.keywords.length} keywords`,
+      { keywordCount: parsedInput.keywords.length },
+      idempKey
+    )
+
+    if (!deduct.success) {
+      return { success: false, error: `Insufficient credits. Need ${totalCost} credits.` }
+    }
+
     try {
-      const { keywords, configId } = parsedInput
-
-      // Get user's visibility config
-      const configResult = await getVisibilityConfig({ configId })
-      
-      if (!configResult?.data?.success || !configResult.data.data) {
-        return {
-          success: false,
-          error: "Please set up your visibility configuration first",
-        }
-      }
-
-      const config = configResult.data.data
       const results: Record<string, FullVisibilityCheckResult> = {}
-      let totalCredits = 0
 
-      // Run checks sequentially to avoid rate limits
-      for (const keyword of keywords) {
-        if (keyword.trim().length >= 3) {
-          const result = await runFullVisibilityCheck({
-            query: keyword.trim(),
-            config,
-          })
-          
-          results[keyword] = result
-          totalCredits += result.summary.totalCreditsUsed
+      // Run scans sequentially to avoid rate limits
+      for (const keyword of parsedInput.keywords) {
+        const scanResult = await runVisibilityScan({
+          keyword,
+          brandDomain: config.trackedDomain,
+          brandKeywords: config.brandKeywords,
+          competitorDomains: config.competitorDomains,
+        })
+
+        const platforms: AIPlatform[] = ["google-aio", "google-ai-mode", "chatgpt", "claude", "gemini", "perplexity"]
+        const platformResults: Record<string, VisibilityCheckResult> = {}
+        const now = new Date().toISOString()
+
+        for (const platform of platforms) {
+          const key = platform === "google-aio"
+            ? "google"
+            : platform === "google-ai-mode"
+              ? "googleAiMode"
+              : platform
+          const platformData = platform === "google-aio"
+            ? scanResult.scan.google
+            : platform === "google-ai-mode"
+              ? scanResult.scan.googleAiMode
+              : scanResult.scan[key as keyof typeof scanResult.scan]
+
+          if (!platformData || typeof platformData !== "object") continue
+
+          const isVisible = "status" in platformData && platformData.status === "visible"
+          platformResults[platform] = {
+            platform,
+            isVisible,
+            aiResponse: ("snippet" in platformData ? (platformData.snippet as string) : "") || "",
+            sentiment: "neutral",
+            creditsUsed: 0,
+            checkedAt: now,
+          }
+        }
+
+        const visibleCount = Object.values(platformResults).filter((r) => r.isVisible).length
+
+        results[keyword] = {
+          query: keyword,
+          results: platformResults as Record<AIPlatform, VisibilityCheckResult>,
+          summary: {
+            totalPlatforms: platforms.length,
+            visibleOn: visibleCount,
+            visibilityRate: Math.round((visibleCount / platforms.length) * 100),
+            totalCreditsUsed: BATCH_CHECK_COST,
+          },
+          timestamp: now,
         }
       }
 
-      return {
-        success: true,
-        data: { results, totalCredits },
-        creditsUsed: totalCredits,
-      }
+      return { success: true, data: { results, totalCredits: totalCost }, creditsUsed: totalCost }
     } catch (error) {
-      console.error("[batchVisibilityCheck] Error:", error)
-      
+      await creditBanker.refund(ctx.userId, totalCost, idempKey, "Batch check failed")
       return {
         success: false,
-        error: "Batch check failed",
+        error: error instanceof Error ? error.message : "Batch check failed",
+        creditsUsed: 0,
       }
     }
   })

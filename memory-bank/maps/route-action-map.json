@@ -1,0 +1,519 @@
+{
+  "summary": {
+    "generatedAt": "2026-02-07T08:57:47.692Z",
+    "totalScannedFiles": 1438,
+    "totalRoutesMapped": 69,
+    "totalDbTouchFiles": 52,
+    "totalIntegrationTouchFiles": 158
+  },
+  "routes": [
+    {
+      "routeFile": "src/app/(auth)/forgot-password/page.tsx",
+      "actionImports": [
+        "../actions/forgot-password"
+      ],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(auth)/layout.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(auth)/login/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(auth)/register/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(auth)/reset-password/page.tsx",
+      "actionImports": [
+        "../actions/reset-password"
+      ],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/supabase/client"
+      ]
+    },
+    {
+      "routeFile": "src/app/(auth)/verify-email/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(marketing)/about/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(marketing)/blog/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(marketing)/contact/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(marketing)/features/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(marketing)/layout.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(marketing)/privacy/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/(marketing)/terms/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/ai-writer/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/ai-writer"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/api/cron/cleanup/route.ts",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/cron/weekly-report/route.ts",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/services/notification.service",
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/debug-log/route.ts",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/prisma"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/keywords/research/route.ts",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/keyword-research/utils/input-parser"
+      ],
+      "libImports": [
+        "@/lib/seo/dataforseo",
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/settings/api-keys/route.ts",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/api/trend-spotter/analyze/route.ts",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/trend-spotter/services/trend-api",
+        "@/features/trend-spotter/utils/cache-logic",
+        "@/features/trend-spotter/utils/trend-math"
+      ],
+      "libImports": [
+        "@/lib/api/route-helpers",
+        "@/lib/credits",
+        "@/lib/rate-limit",
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/trend-spotter/region/route.ts",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/trend-spotter/services/trend-api"
+      ],
+      "libImports": [
+        "@/lib/api/route-helpers"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/video-hijack/search/route.ts",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/video-hijack/services/youtube.service"
+      ],
+      "libImports": [
+        "@/lib/rate-limit",
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/video-hijack/youtube/route.ts",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/video-hijack/services/youtube.service"
+      ],
+      "libImports": [
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/webhooks/lemon-squeezy/route.ts",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/billing/lemonsqueezy",
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/webhooks/qstash/route.ts",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/alerts"
+      ]
+    },
+    {
+      "routeFile": "src/app/api/webhooks/serp/route.ts",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/keyword-research/types",
+        "@/features/keyword-research/utils/data-mapper",
+        "@/features/keyword-research/utils/serp-feature-normalizer",
+        "@/features/keyword-research/utils/serp-parser"
+      ],
+      "libImports": [
+        "@/lib/seo/dataforseo",
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/auth/callback/route.ts",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/competitor-gap/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/content-decay/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/content-roadmap/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/ai-visibility/page.tsx",
+      "actionImports": [
+        "@/features/ai-visibility/actions",
+        "@/features/ai-visibility/actions/run-scan"
+      ],
+      "featureImports": [
+        "@/features/ai-visibility/actions",
+        "@/features/ai-visibility/actions/run-scan",
+        "@/features/ai-visibility/components",
+        "@/features/ai-visibility/services/scan.service",
+        "@/features/ai-visibility/types"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/billing/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/supabase/client"
+      ]
+    },
+    {
+      "routeFile": "src/app/dashboard/creation/ai-writer/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/creation/on-page/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/creation/schema-generator/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/schema-generator/components"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/creation/snippet-stealer/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/layout.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/supabase/server"
+      ]
+    },
+    {
+      "routeFile": "src/app/dashboard/monetization/content-roi/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/content-roi"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/monetization/earnings-calculator/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/monetization"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/dashboard/components/DashboardClient"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/research/affiliate-finder/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/affiliate-finder"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/research/content-calendar/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/content-calendar"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/research/gap-analysis/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/research/keyword-magic/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/research/overview/[keyword]/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/research/trends/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/research/video-hijack/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/settings/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/strategy/roadmap/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/strategy/topic-clusters/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/strategy/topic-clusters/results/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": [
+        "@/lib/utils"
+      ]
+    },
+    {
+      "routeFile": "src/app/dashboard/tracking/ai-visibility/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/ai-visibility"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/tracking/cannibalization/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/tracking/commerce-tracker/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/commerce-tracker"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/tracking/community-tracker/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/community-tracker"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/tracking/decay/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/tracking/news-tracker/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/news-tracker"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/tracking/rank-tracker/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/dashboard/tracking/social-tracker/page.tsx",
+      "actionImports": [],
+      "featureImports": [
+        "@/features/social-tracker"
+      ],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/keyword-magic/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/keyword-overview/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/on-page-checker/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/pricing/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/rank-tracker/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/settings/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/snippet-stealer/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/topic-clusters/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/trend-spotter/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    },
+    {
+      "routeFile": "src/app/trends/page.tsx",
+      "actionImports": [],
+      "featureImports": [],
+      "libImports": []
+    }
+  ]
+}

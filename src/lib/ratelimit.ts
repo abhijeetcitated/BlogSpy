@@ -1,7 +1,7 @@
 import "server-only"
 
 import { Ratelimit } from "@upstash/ratelimit"
-import { Redis } from "@upstash/redis"
+import { redis } from "@/lib/redis"
 import { createAdminClient } from "@/lib/supabase/server"
 
 type RateLimitPlan = "free" | "pro"
@@ -20,11 +20,6 @@ type RateLimitResult = {
   remaining: number
   reset: number
 }
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-})
 
 const freeLimiter = new Ratelimit({
   redis,

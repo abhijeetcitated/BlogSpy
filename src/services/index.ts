@@ -11,8 +11,6 @@ export type { ApiClientConfig, RequestOptions, ApiResponse, ApiError } from "./a
 export { authService } from "./auth.service"
 export type { User, AuthResponse, LoginCredentials, RegisterCredentials } from "./auth.service"
 
-// Stripe Service
-export { stripeService } from "./stripe.service"
 
 // NOTE: Server-only services (alerts, integrations, decay detection)
 // should be imported directly to avoid client bundle pollution.

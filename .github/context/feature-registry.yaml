@@ -1,0 +1,107 @@
+﻿# Feature Registry
+# Status values: active, beta, planned, deprecated
+# Risk tier defaults: T1, T2, T3
+
+features:
+  - id: dashboard
+    path: src/features/dashboard
+    app_routes:
+      - src/app/dashboard
+    default_tier: T2
+    status: active
+  - id: keyword-research
+    path: src/features/keyword-research
+    app_routes:
+      - src/app/dashboard/research/keyword-magic
+      - src/app/keyword-magic
+    default_tier: T3
+    status: active
+  - id: trend-spotter
+    path: src/features/trend-spotter
+    app_routes:
+      - src/app/dashboard/research/trends
+      - src/app/trend-spotter
+      - src/app/trends
+    default_tier: T3
+    status: active
+  - id: topic-clusters
+    path: src/features/topic-clusters
+    app_routes:
+      - src/app/dashboard/strategy/topic-clusters
+      - src/app/topic-clusters
+    default_tier: T2
+    status: active
+  - id: rank-tracker
+    path: src/features/rank-tracker
+    app_routes:
+      - src/app/dashboard/tracking/rank-tracker
+      - src/app/rank-tracker
+    default_tier: T3
+    status: active
+  - id: settings
+    path: src/features/settings
+    app_routes:
+      - src/app/dashboard/settings
+      - src/app/settings
+    default_tier: T3
+    status: active
+  - id: notifications
+    path: src/features/notifications
+    app_routes: []
+    default_tier: T2
+    status: active
+  - id: ai-visibility
+    path: src/features/ai-visibility
+    app_routes:
+      - src/app/dashboard/ai-visibility
+    default_tier: T3
+    status: active
+  - id: ai-writer
+    path: src/features/ai-writer
+    app_routes:
+      - src/app/ai-writer
+      - src/app/dashboard/creation/ai-writer
+    default_tier: T3
+    status: beta
+  - id: video-hijack
+    path: src/features/video-hijack
+    app_routes:
+      - src/app/dashboard/research/video-hijack
+    default_tier: T3
+    status: active
+  - id: social-tracker
+    path: src/features/social-tracker
+    app_routes:
+      - src/app/dashboard/tracking/social-tracker
+    default_tier: T2
+    status: active
+  - id: content-decay
+    path: src/features/content-decay
+    app_routes:
+      - src/app/content-decay
+      - src/app/dashboard/tracking/decay
+    default_tier: T2
+    status: active
+  - id: competitor-gap
+    path: src/features/competitor-gap
+    app_routes:
+      - src/app/competitor-gap
+      - src/app/dashboard/research/gap-analysis
+    default_tier: T2
+    status: active
+  - id: snippet-stealer
+    path: src/features/snippet-stealer
+    app_routes:
+      - src/app/snippet-stealer
+      - src/app/dashboard/creation/snippet-stealer
+    default_tier: T2
+    status: active
+  - id: on-page-checker
+    path: src/features/on-page-checker
+    app_routes:
+      - src/app/on-page-checker
+      - src/app/dashboard/creation/on-page
+    default_tier: T2
+    status: active
+
+# Extend this registry whenever a new feature folder or route is introduced.

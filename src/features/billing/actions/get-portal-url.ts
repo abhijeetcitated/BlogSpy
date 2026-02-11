@@ -15,7 +15,7 @@ export const getBillingPortalUrl = authenticatedAction
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     const fallbackUrl = parsedInput.redirectUrl ?? `${appUrl}/pricing`
 
-    const portalUrl = await getCustomerPortalUrlByEmail(ctx.email)
+    const portalUrl = await getCustomerPortalUrlByEmail(ctx.email ?? undefined)
 
     return {
       url: portalUrl ?? fallbackUrl,

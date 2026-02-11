@@ -30,10 +30,10 @@ interface EnvConfig {
   dataForSeoPassword: string
   dataForSeoApiUrl: string
 
-  // Payments (Stripe)
-  stripePublishableKey: string
-  stripeSecretKey: string
-  stripeWebhookSecret: string
+  // Payments (Lemon Squeezy)
+  lemonsqueezyApiKey: string
+  lemonsqueezyWebhookSecret: string
+  lemonsqueezyStoreId: string
 
   // Analytics
   googleAnalyticsId: string
@@ -100,10 +100,10 @@ export const env: EnvConfig = {
   dataForSeoPassword: getEnvVar("DATAFORSEO_PASSWORD"),
   dataForSeoApiUrl: getEnvVar("DATAFORSEO_API_URL", "https://api.dataforseo.com/v3"),
 
-  // Payments (Stripe)
-  stripePublishableKey: getEnvVar("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"),
-  stripeSecretKey: getEnvVar("STRIPE_SECRET_KEY"),
-  stripeWebhookSecret: getEnvVar("STRIPE_WEBHOOK_SECRET"),
+  // Payments (Lemon Squeezy)
+  lemonsqueezyApiKey: getEnvVar("LEMONSQUEEZY_API_KEY"),
+  lemonsqueezyWebhookSecret: getEnvVar("LEMONSQUEEZY_WEBHOOK_SECRET"),
+  lemonsqueezyStoreId: getEnvVar("LEMONSQUEEZY_STORE_ID"),
 
   // Analytics
   googleAnalyticsId: getEnvVar("NEXT_PUBLIC_GA_ID"),
@@ -144,7 +144,7 @@ export function validateEnv(): { valid: boolean; missing: string[] } {
       "databaseUrl",
       "dataForSeoLogin",
       "dataForSeoPassword",
-      "stripeSecretKey"
+      "lemonsqueezyApiKey"
     )
   }
 

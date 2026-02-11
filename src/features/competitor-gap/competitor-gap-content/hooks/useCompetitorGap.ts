@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { toast } from "sonner"
+import { useAction } from "next-safe-action/hooks"
 import type { GapKeyword, ForumIntelPost, SortField, SortDirection } from "../../types"
 import type { GapFilter } from "../utils/gap-utils"
 import {
@@ -13,6 +14,10 @@ import {
   formatNumber,
 } from "../utils/gap-utils"
 import { useKeywordStore } from "@/features/keyword-research/store"
+import {
+  runGapAnalysisAction,
+  verifyGapKeywordsAction,
+} from "@/app/dashboard/research/gap-analysis/actions"
 
 export type MainView = "gap-analysis" | "forum-intel"
 
@@ -22,6 +27,28 @@ interface UseCompetitorGapProps {
   selectedCountryCode?: string
 }
 
+type ActionResultEnvelope = {
+  data?: {
+    success?: boolean
+    error?: string
+    code?: string
+    retryAfterSeconds?: number
+  }
+  serverError?: string
+}
+
+function extractActionError(result: ActionResultEnvelope): string | null {
+  if (typeof result.serverError === "string" && result.serverError.length > 0) {
+    return result.serverError
+  }
+
+  if (result.data?.success === false) {
+    return result.data.error ?? "Request failed"
+  }
+
+  return null
+}
+
 export function useCompetitorGap({
   initialGapData,
   initialForumData,
@@ -29,16 +56,28 @@ export function useCompetitorGap({
 }: UseCompetitorGapProps) {
   const [gapData, setGapData] = useState<GapKeyword[]>(initialGapData)
   const [forumData, setForumData] = useState<ForumIntelPost[]>(initialForumData)
+  const [activeRunId, setActiveRunId] = useState<string | null>(null)
   const credits = useKeywordStore((state) => state.credits)
+
+  const {
+    executeAsync: executeRunGap,
+    status: runGapStatus,
+  } = useAction(runGapAnalysisAction)
+  const {
+    executeAsync: executeVerifyKeywords,
+    status: verifyKeywordsStatus,
+  } = useAction(verifyGapKeywordsAction)
+
   // Main View
   const [mainView, setMainView] = useState<MainView>("gap-analysis")
-  
+
   // Form State
   const [yourDomain, setYourDomain] = useState("")
   const [competitor1, setCompetitor1] = useState("")
   const [competitor2, setCompetitor2] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)
+
+  const isLoading = runGapStatus === "executing" || verifyKeywordsStatus === "executing"
 
   // Filters
   const [gapFilter, setGapFilter] = useState<GapFilter>("all")
@@ -74,64 +113,115 @@ export function useCompetitorGap({
 
   const forumStats = useMemo(() => ({
     total: forumData.length,
-    highOpp: forumData.filter(p => p.opportunityLevel === "high").length,
-    totalEngagement: forumData.reduce((sum, p) => sum + p.upvotes + p.comments, 0),
+    highOpp: forumData.filter((post) => post.opportunityLevel === "high").length,
+    totalEngagement: forumData.reduce((sum, post) => sum + post.upvotes + post.comments, 0),
   }), [forumData])
 
-  // Handlers
-  const mapGapItems = useCallback((items: any[]): GapKeyword[] => {
-    return items.map((item: any, index: number) => {
-      const comp1Rank = item.compRanks?.[0] ?? null
-      const comp2Rank = item.compRanks?.[1] ?? null
-      const source =
-        comp1Rank !== null && comp2Rank !== null
-          ? "both"
-          : comp1Rank !== null
-            ? "comp1"
-            : "comp2"
-
-      return {
-        id: `${item.keyword}-${index}`,
-        keyword: item.keyword,
-        intent: "informational",
-        gapType: item.gapType,
-        hasZeroClickRisk: item.hasZeroClickRisk,
-        yourRank: item.myRank ?? null,
-        comp1Rank,
-        comp2Rank,
-        volume: item.volume ?? 0,
-        kd: item.kd ?? 0,
-        cpc: item.cpc ?? 0,
-        trend: "stable",
-        source,
-      }
-    })
-  }, [])
-
-  const applyGapReport = useCallback((items: any[]) => {
-    const mapped = mapGapItems(items)
-    setGapData(mapped)
+  const applyGapReport = useCallback((items: GapKeyword[]) => {
+    setGapData(items)
     setHasAnalyzed(true)
     setSelectedGapRows(new Set())
     setAddedKeywords(new Set())
-  }, [mapGapItems])
+  }, [])
 
   const handleAnalyze = async (overrideCountryCode?: string) => {
-    if (!yourDomain.trim() || !competitor1.trim()) return
+    if (!yourDomain.trim() || !competitor1.trim()) {
+      return
+    }
+
     if (credits !== null && credits < 10) {
       toast.error("Insufficient credits", {
         description: "Gap analysis requires 10 credits.",
       })
       return
     }
+
+    void selectedCountryCode
     void overrideCountryCode
-    setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
-      setHasAnalyzed(true)
-      toast.info("This feature is being rebuilt in V2")
-    }, 800)
+
+    const result = await executeRunGap({
+      yourDomain,
+      competitor1,
+      competitor2,
+      // Keep full-gap as default for existing table parity (missing/weak/strong/shared).
+      mode: "full-gap",
+      forceRefresh: false,
+    })
+
+    const actionError = extractActionError(result)
+    if (actionError) {
+      toast.error("Analysis failed", { description: actionError })
+      return
+    }
+
+    const payload = result.data
+    if (!payload?.success || !payload.data) {
+      if (payload?.code === "GAP_QUEUED") {
+        toast.info("Analysis queued", {
+          description: payload.error ?? "High traffic detected. Please retry shortly.",
+        })
+        return
+      }
+
+      if (payload?.code === "GAP_IN_PROGRESS") {
+        toast.info("Analysis in progress", {
+          description: payload.error ?? "Same request is already being processed.",
+        })
+        return
+      }
+
+      toast.error("Analysis failed", {
+        description: payload?.error ?? "Could not run gap analysis.",
+      })
+      return
+    }
+
+    setGapData(payload.data.keywords)
+    setActiveRunId(payload.data.runId)
+    setHasAnalyzed(true)
+    setSelectedGapRows(new Set())
+    setAddedKeywords(new Set())
+
+    if (payload.data.source === "cache") {
+      toast.success("Loaded from cache", {
+        description: `${payload.data.summary.total} keywords`,
+      })
+    } else {
+      toast.success("Analysis complete", {
+        description: `${payload.data.summary.total} keywords found`,
+      })
+    }
   }
+
+  const handleVerifyTopKeywords = useCallback(async (topN: number = 5) => {
+    if (!activeRunId) {
+      toast.error("Run not found", { description: "Please analyze first." })
+      return
+    }
+
+    const result = await executeVerifyKeywords({
+      runId: activeRunId,
+      topN,
+    })
+
+    const actionError = extractActionError(result)
+    if (actionError) {
+      toast.error("Verification failed", { description: actionError })
+      return
+    }
+
+    if (!result.data?.success || !result.data.data) {
+      toast.error("Verification failed", {
+        description: result.data?.error ?? "Could not verify keyword ranks.",
+      })
+      return
+    }
+
+    setGapData(result.data.data.updatedKeywords)
+    toast.success("Verification complete", {
+      description: `${Math.min(topN, result.data.data.updatedKeywords.length)} keywords refreshed.`,
+    })
+  }, [activeRunId, executeVerifyKeywords])
 
   const handleGapSort = (field: SortField) => {
     if (gapSortField === field) {
@@ -153,7 +243,7 @@ export function useCompetitorGap({
 
   const handleGapSelectAll = useCallback((checked: boolean) => {
     if (checked) {
-      setSelectedGapRows(new Set(filteredGapKeywords.map((kw) => kw.id)))
+      setSelectedGapRows(new Set(filteredGapKeywords.map((keyword) => keyword.id)))
     } else {
       setSelectedGapRows(new Set())
     }
@@ -161,16 +251,16 @@ export function useCompetitorGap({
 
   const handleGapSelectRow = (id: string, checked: boolean) => {
     setSelectedGapRows((prev) => {
-      const newSet = new Set(prev)
-      if (checked) newSet.add(id)
-      else newSet.delete(id)
-      return newSet
+      const next = new Set(prev)
+      if (checked) next.add(id)
+      else next.delete(id)
+      return next
     })
   }
 
   const handleForumSelectAll = useCallback((checked: boolean) => {
     if (checked) {
-      setSelectedForumRows(new Set(filteredForumPosts.map((p) => p.id)))
+      setSelectedForumRows(new Set(filteredForumPosts.map((post) => post.id)))
     } else {
       setSelectedForumRows(new Set())
     }
@@ -178,10 +268,10 @@ export function useCompetitorGap({
 
   const handleForumSelectRow = (id: string, checked: boolean) => {
     setSelectedForumRows((prev) => {
-      const newSet = new Set(prev)
-      if (checked) newSet.add(id)
-      else newSet.delete(id)
-      return newSet
+      const next = new Set(prev)
+      if (checked) next.add(id)
+      else next.delete(id)
+      return next
     })
   }
 
@@ -189,7 +279,7 @@ export function useCompetitorGap({
     // View State
     mainView,
     setMainView,
-    
+
     // Form State
     yourDomain,
     setYourDomain,
@@ -200,7 +290,9 @@ export function useCompetitorGap({
     isLoading,
     hasAnalyzed,
     handleAnalyze,
-    
+    activeRunId,
+    handleVerifyTopKeywords,
+
     // Filters
     gapFilter,
     setGapFilter,
@@ -212,7 +304,7 @@ export function useCompetitorGap({
     setShowLowKD,
     showTrending,
     setShowTrending,
-    
+
     // Selection
     selectedGapRows,
     setSelectedGapRows,
@@ -225,7 +317,7 @@ export function useCompetitorGap({
     setGapData,
     setForumData,
     applyGapReport,
-    
+
     // Sorting
     gapSortField,
     gapSortDirection,
@@ -233,19 +325,19 @@ export function useCompetitorGap({
     forumSortField,
     forumSortDirection,
     handleForumSort,
-    
+
     // Computed
     gapStats,
     filteredGapKeywords,
     filteredForumPosts,
     forumStats,
-    
+
     // Handlers
     handleGapSelectAll,
     handleGapSelectRow,
     handleForumSelectAll,
     handleForumSelectRow,
-    
+
     // Utils
     formatNumber,
   }
