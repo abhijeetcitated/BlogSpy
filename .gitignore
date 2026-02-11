@@ -49,6 +49,10 @@ tmpclaude-*
 .cursor/
 .roo/
 .amazonq/
+.cursorrules
+.cursorignore
+.kilocodemodes
+.roomodes
 
 # local backups & generated audits/trees
 /backups/
@@ -60,5 +64,42 @@ tmpclaude-*
 /BLOGSPY_*.txt
 /BLOGSPY_*.md
 /project-tree-structure.txt
+/structure.txt
 /KEYWORD_EXPLORER_BLUEPRINT.md
 /KEYWORD_EXPLORER_*.md
+
+# dev documentation & planning
+/docs/
+/plans/
+/memory-bank/
+/screenshots/
+activeContext.md
+decisionLog.md
+*_BLUEPRINT*.md
+*MASTER*.md
+*_AUDIT*.md
+*_REPORT*.md
+*SECURITY_ARCHITECTURE*.md
+*EXECUTION_LEDGER*.md
+SETTINGS_BLUEPRINT.md
+SETTINGS_MASTER_PLAN.md
+SETTINGS_EXECUTION_LEDGER.md
+report.json
+build.log
+trend-spotter-graph.mmd
+*.png
+_PROJECT_STRUCTURE.ts
+
+# test & reports
+/playwright-report/
+/test-results/
+/tests/
+playwright.config.ts
+
+# MCP servers (dev tools only)
+/mcp-servers/
+
+# Python virtual environment
+.venv/
+*.pyc
+__pycache__/
