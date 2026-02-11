@@ -56,7 +56,7 @@ tmpclaude-*
 
 # local backups & generated audits/trees
 /backups/
-/assets/citated-home.png
+/assets/
 /*_TREE*.txt
 /*_TREE*.md
 /blogspy-*.txt
@@ -73,6 +73,7 @@ tmpclaude-*
 /plans/
 /memory-bank/
 /screenshots/
+AGENTS.md
 activeContext.md
 decisionLog.md
 *_BLUEPRINT*.md
