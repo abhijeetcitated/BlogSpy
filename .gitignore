@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -43,6 +44,11 @@ next-env.d.ts
 # local/editor + tool state
 .vscode/
 .kilocode/
+tmpclaude-*
+.tmp/
+.cursor/
+.roo/
+.amazonq/
 
 # local backups & generated audits/trees
 /backups/
